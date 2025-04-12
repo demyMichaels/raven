@@ -1,116 +1,182 @@
-@ -2,7 +2,8 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="theme-color" content="#5D5CDE">
     <title>Debit & Credit Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/marked@4.0.2/marked.min.js"></script>
-@ -48,6 +49,8 @@
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        debit: '#FF6B6B',
+                        credit: '#4ECB71',
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                    }
+                }
+            }
+        }
+
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .seesaw {
             position: relative;
             height: 120px;
             transition: transform 0.5s ease-in-out;
-            margin: 30px auto;
-            max-width: 280px;
         }
         
         .seesaw-beam {
-@ -84,6 +87,7 @@
+            position: absolute;
+            height: 10px;
+            width: 80%;
+            left: 10%;
+            top: 40%;
+            background: #888;
+            border-radius: 5px;
+            transform-origin: center;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .fulcrum {
+            position: absolute;
+            height: 30px;
+            width: 30px;
+            left: calc(50% - 15px);
+            top: calc(40% + 10px);
+            background: #666;
+            border-radius: 50% 50% 10% 10%;
+            z-index: -1;
+        }
+        
+        .side {
+            position: absolute;
+            height: 40px;
+            width: 40%;
+            top: calc(40% - 40px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-weight: bold;
             border-radius: 8px;
             transition: all 0.5s ease-in-out;
-            font-size: 0.875rem;
         }
         
         .left-side {
-@ -112,20 +116,32 @@
+            left: 10%;
+            background-color: rgb(255, 107, 107, 0.8);
+        }
+        
+        .right-side {
+            right: 10%;
+            background-color: rgb(78, 203, 113, 0.8);
+        }
+        
+        .weight {
+            position: absolute;
+            width: 50px;
+            height: 25px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
         
         .jar {
             position: relative;
             width: 80px;
             height: 100px;
-            width: 60px;
-            height: 80px;
             margin: 10px auto;
             background-color: rgba(200, 200, 255, 0.3);
             border-radius: 0 0 40px 40px;
-            border-radius: 0 0 30px 30px;
             border: 2px solid #aaa;
             overflow: hidden;
             transition: all 0.5s ease;
-        }
-        
-        @media (min-width: 640px) {
-            .jar {
-                width: 80px;
-                height: 100px;
-            }
-            
-            .side {
-                font-size: 1rem;
-            }
         }
         
         .jar-label {
             text-align: center;
             font-weight: bold;
             margin-bottom: 5px;
-            font-size: 0.875rem;
         }
         
         .jar-fill {
-@ -145,6 +161,14 @@
-            background-color: rgba(120, 119, 255, 0.5);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(93, 92, 222, 0.5);
+            transition: height 0.5s ease-in-out;
         }
         
-        /* Responsive table styles */
-        .responsive-table {
-            display: block;
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        .dark .jar {
+            border-color: #666;
+            background-color: rgba(100, 100, 150, 0.2);
+        }
+        
+        .dark .jar-fill {
+            background-color: rgba(120, 119, 255, 0.5);
         }
         
         /* Print styles */
         @media print {
             body * {
-@ -168,7 +192,13 @@
+                visibility: hidden;
+            }
+            .print-section, .print-section * {
+                visibility: visible;
+            }
+            .print-section {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        /* Slide animation */
         .slide-container {
             overflow: hidden;
             position: relative;
             height: 300px;
-            height: 370px;
-        }
-        
-        @media (min-width: 768px) {
-            .slide-container {
-                height: 300px;
-            }
         }
         
         .slide {
-@ -178,25 +208,42 @@
+            position: absolute;
+            width: 100%;
+            height: 100%;
             transition: transform 0.5s ease;
             padding: 20px;
-        }
-        
-        /* Fix for the mobile select dropdowns */
-        select {
-            -webkit-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.5rem center;
-            background-size: 1em;
-            padding-right: 2rem;
-        }
-        
-        /* Touch-friendly buttons */
-        .touch-button {
-            min-height: 44px;
-            min-width: 44px;
         }
     </style>
 </head>
@@ -119,10 +185,6 @@
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-primary mb-2">Debit & Credit Master</h1>
             <p class="text-xl">Learn accounting fundamentals the fun way!</p>
-    <div class="container mx-auto px-3 sm:px-4 py-6 sm:py-8 max-w-6xl">
-        <header class="text-center mb-6 sm:mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-primary mb-2">Debit & Credit Master</h1>
-            <p class="text-lg sm:text-xl">Learn accounting fundamentals the fun way!</p>
         </header>
         
         <div class="flex flex-wrap gap-4 mb-6">
@@ -130,40 +192,41 @@
             <button id="practice-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all">Practice</button>
             <button id="visual-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all">Visual Tools</button>
             <button id="print-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all">Print Materials</button>
-        <div class="flex flex-wrap gap-2 sm:gap-4 mb-6">
-            <button id="learn-btn" class="px-3 sm:px-4 py-2 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all touch-button">Learn</button>
-            <button id="practice-btn" class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all touch-button">Practice</button>
-            <button id="visual-btn" class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all touch-button">Visual Tools</button>
-            <button id="print-btn" class="px-3 sm:px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg focus:outline-none hover:bg-opacity-90 transition-all touch-button">Print Materials</button>
         </div>
         
         <!-- Learn Section -->
         <div id="learn-section" class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg mb-8">
             <h2 class="text-2xl font-bold mb-4">What Are Debits and Credits?</h2>
-        <div id="learn-section" class="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg mb-8">
-            <h2 class="text-xl sm:text-2xl font-bold mb-4">What Are Debits and Credits?</h2>
             
             <div class="mb-6">
                 <p class="mb-4">Most students think: <em>"Debit means take away, and credit means add."</em></p>
-@ -217,43 +264,43 @@
+                <p class="mb-4">But that's <strong>not always true</strong> in accounting!</p>
+                <p class="font-medium">In accounting: <strong>"Debit" and "Credit" just show which side of an account is affected -- the left side (debit) or the right side (credit).</strong></p>
+            </div>
+            
+            <div class="my-8">
+                <p class="mb-2">Imagine a <strong>seesaw</strong>. On the left, you have <span class="text-debit font-bold">Debit (Dr)</span>, and on the right, you have <span class="text-credit font-bold">Credit (Cr)</span>.</p>
+                
+                <div class="seesaw my-6">
+                    <div class="seesaw-beam" id="seesaw-beam"></div>
+                    <div class="fulcrum"></div>
+                    <div class="side left-side">DEBIT</div>
+                    <div class="side right-side">CREDIT</div>
+                </div>
+                
                 <p>Every time something happens in a business, the seesaw must stay <strong>balanced</strong> -- whatever you add on one side, you must match on the other.</p>
             </div>
             
             <h3 class="text-xl font-bold mt-8 mb-4">Think of an Account Like a Jar 🫙</h3>
-            <h3 class="text-lg sm:text-xl font-bold mt-8 mb-4">Think of an Account Like a Jar 🫙</h3>
             <p class="mb-4">Each type of account is like a different jar. What happens to that jar depends on whether you're <strong>adding to it or taking from it</strong> -- and whether it increases with <span class="text-debit font-bold">debits</span> or with <span class="text-credit font-bold">credits</span>.</p>
             
             <div class="overflow-x-auto mb-6">
-            <div class="responsive-table mb-6">
                 <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-600">
                     <thead>
                         <tr class="bg-gray-100 dark:bg-gray-700">
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Account Type</th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Debit Means</th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Credit Means</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Account Type</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Debit Means</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Credit Means</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,86 +234,69 @@
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">🏠 <strong>Assets</strong> (e.g. cash, buildings)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD to the jar (more assets)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT (fewer assets)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2">🏠 <strong>Assets</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD to the jar</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">💰 <strong>Liabilities</strong> (debts)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE AWAY (less debt)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD (more debt)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2">💰 <strong>Liabilities</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE AWAY</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">🧑‍💼 <strong>Owner's Equity</strong> (capital)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE AWAY (e.g. drawings)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD (owner invests)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2">🧑‍💼 <strong>Equity</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE AWAY</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">💸 <strong>Expenses</strong> (e.g. rent, salaries)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD (more spending)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT (refunds, etc.)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2">💸 <strong>Expenses</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">🤑 <strong>Income/Revenue</strong> (e.g. sales)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT (refunds)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD (you made money)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2">🤑 <strong>Income</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30">TAKE OUT</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30">ADD</td>
                         </tr>
                     </tbody>
                 </table>
-@ -263,7 +310,7 @@
+            </div>
+            
+            <div class="font-medium text-lg mb-4">
                 So, <strong>debit ≠ always "increase"</strong>, and <strong>credit ≠ always "decrease"</strong> -- it <strong>depends on the type of account</strong>.
             </div>
             
             <h3 class="text-xl font-bold mt-8 mb-4">Examples (with stories!)</h3>
-            <h3 class="text-lg sm:text-xl font-bold mt-8 mb-4">Examples (with stories!)</h3>
             
             <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-6">
                 <h4 class="font-bold mb-2">🔹 Cash Account (Asset)</h4>
-@ -272,7 +319,7 @@
+                <p class="mb-2">Mr. ROI receives <strong>₦10,000 cash</strong> from a customer.</p>
+                <ul class="list-disc pl-6 mb-2">
                     <li>Cash is an <strong>asset</strong> -- more cash means <strong class="text-debit">Debit Cash</strong>!</li>
                     <li>The customer is paying -- it's income, so <strong class="text-credit">Credit Sales</strong>.</li>
                 </ul>
                 <pre class="bg-white dark:bg-gray-800 p-2 rounded font-mono">DR. Cash Account ₦10,000  
-                <pre class="bg-white dark:bg-gray-800 p-2 rounded font-mono text-sm sm:text-base overflow-x-auto">DR. Cash Account ₦10,000  
 CR. Sales Account ₦10,000</pre>
             </div>
             
-@ -283,62 +330,62 @@ CR. Sales Account ₦10,000</pre>
+            <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-6">
+                <h4 class="font-bold mb-2">🔹 Paying Rent (Expense)</h4>
+                <p class="mb-2">Mr. ROI pays ₦5,000 for rent.</p>
+                <ul class="list-disc pl-6 mb-2">
                     <li>Rent is an <strong>expense</strong>, which increases with a <strong class="text-debit">debit</strong>.</li>
                     <li>He used <strong>cash</strong> or <strong>bank</strong>, which goes down -- <strong class="text-credit">credit</strong>.</li>
                 </ul>
                 <pre class="bg-white dark:bg-gray-800 p-2 rounded font-mono">DR. Rent Account ₦5,000  
-                <pre class="bg-white dark:bg-gray-800 p-2 rounded font-mono text-sm sm:text-base overflow-x-auto">DR. Rent Account ₦5,000  
 CR. Bank Account ₦5,000</pre>
             </div>
             
             <h3 class="text-xl font-bold mt-8 mb-4">Visualization Tip</h3>
-            <h3 class="text-lg sm:text-xl font-bold mt-8 mb-4">Visualization Tip</h3>
             <p class="mb-4">Use this visual table to help see what debit and credit do:</p>
             
             <div class="overflow-x-auto mb-6">
-            <div class="responsive-table mb-6">
                 <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-600">
                     <thead>
                         <tr class="bg-gray-100 dark:bg-gray-700">
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">Account Type</th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">DR (Left Side) 👉 Increases</th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left">CR (Right Side) 👉 Increases</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">Account Type</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">DR (Left) Increases</th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left">CR (Right) Increases</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -258,41 +304,26 @@ CR. Bank Account ₦5,000</pre>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2"><strong>Assets</strong></td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">✅ Yes</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">❌ No (decreases)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2"><strong>Assets</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">✅ Yes</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">❌ No</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2"><strong>Liabilities</strong></td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">❌ No (decreases)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">✅ Yes</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2"><strong>Liabilities</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">❌ No</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">✅ Yes</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2"><strong>Equity/Capital</strong></td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">❌ No (drawings)</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">✅ Yes (investment)</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2"><strong>Equity</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">❌ No</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">✅ Yes</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2"><strong>Income/Revenue</strong></td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">❌ No</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">✅ Yes</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2"><strong>Income</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">❌ No</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">✅ Yes</td>
                         </tr>
                         <tr>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2"><strong>Expenses</strong></td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">✅ Yes</td>
                             <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">❌ No</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2"><strong>Expenses</strong></td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">✅ Yes</td>
-                            <td class="border border-gray-300 dark:border-gray-600 px-3 py-2 text-center">❌ No</td>
                         </tr>
                     </tbody>
                 </table>
@@ -301,84 +332,118 @@ CR. Bank Account ₦5,000</pre>
             <h3 class="text-xl font-bold mt-8 mb-4">How to Remember It -- Fun Mnemonics 🎵</h3>
             <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-lg mb-6">
                 <h4 class="font-bold mb-2 text-xl">DEAD CLIC</h4>
-            <h3 class="text-lg sm:text-xl font-bold mt-8 mb-4">How to Remember It -- Fun Mnemonics 🎵</h3>
-            <div class="bg-gray-100 dark:bg-gray-700 p-4 sm:p-6 rounded-lg mb-6">
-                <h4 class="font-bold mb-2 text-lg sm:text-xl">DEAD CLIC</h4>
                 <p class="mb-4">A classic and catchy memory trick for students:</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <div class="bg-debit bg-opacity-20 p-4 rounded-lg">
                         <h5 class="text-center font-bold mb-2">D E A D</h5>
                         <p class="text-center mb-2">These accounts are <strong>Debited when increased</strong></p>
                         <div class="grid grid-cols-4 gap-2 text-center">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                             <div>
                                 <strong>D</strong>ebit
                             </div>
-@ -357,7 +404,7 @@ CR. Bank Account ₦5,000</pre>
+                            <div>
+                                <strong>E</strong>xpense
+                            </div>
+                            <div>
+                                <strong>A</strong>sset
+                            </div>
+                            <div>
+                                <strong>D</strong>rawings
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="bg-credit bg-opacity-20 p-4 rounded-lg">
                         <h5 class="text-center font-bold mb-2">C L I C</h5>
                         <p class="text-center mb-2">These accounts are <strong>Credited when increased</strong></p>
                         <div class="grid grid-cols-4 gap-2 text-center">
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                             <div>
                                 <strong>C</strong>redit
                             </div>
-@ -375,7 +422,7 @@ CR. Bank Account ₦5,000</pre>
+                            <div>
+                                <strong>L</strong>iability
+                            </div>
+                            <div>
+                                <strong>I</strong>ncome
+                            </div>
+                            <div>
+                                <strong>C</strong>apital
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <h3 class="text-xl font-bold mt-8 mb-4">In Simple Words…</h3>
-            <h3 class="text-lg sm:text-xl font-bold mt-8 mb-4">In Simple Words…</h3>
             <ul class="list-disc pl-6 space-y-2">
                 <li><strong>Debit</strong> is the <strong>left side</strong> of any account.</li>
                 <li><strong>Credit</strong> is the <strong>right side</strong> of any account.</li>
-@ -385,19 +432,19 @@ CR. Bank Account ₦5,000</pre>
+                <li>The effect of debit or credit <strong>depends on the type of account</strong>.</li>
+                <li><strong>Every transaction affects at least two accounts</strong> -- one debited, one credited -- and they <strong>must always balance</strong>.</li>
+            </ul>
         </div>
         
         <!-- Practice Section -->
         <div id="practice-section" class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg mb-8 hidden">
             <h2 class="text-2xl font-bold mb-6">Practice Debit & Credit Entries</h2>
-        <div id="practice-section" class="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg mb-8 hidden">
-            <h2 class="text-xl sm:text-2xl font-bold mb-6">Practice Debit & Credit Entries</h2>
             
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4">Transaction Exercise</h3>
                 <div id="transaction-question" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4">
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Transaction Exercise</h3>
-                <div id="transaction-question" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 text-base">
                     Loading transaction...
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="grid grid-cols-1 gap-4 mb-4">
                     <div>
                         <label class="block mb-1 font-medium">Debit Account:</label>
                         <select id="debit-account" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-base">
-                        <select id="debit-account" class="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 text-base">
                             <option value="">Select account</option>
                             <option value="Cash">Cash</option>
                             <option value="Bank">Bank</option>
-@ -418,7 +465,7 @@ CR. Bank Account ₦5,000</pre>
+                            <option value="Accounts Receivable">Accounts Receivable</option>
+                            <option value="Equipment">Equipment</option>
+                            <option value="Building">Building</option>
+                            <option value="Accounts Payable">Accounts Payable</option>
+                            <option value="Loan">Loan</option>
+                            <option value="Capital">Capital</option>
+                            <option value="Drawings">Drawings</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Fees Earned">Fees Earned</option>
+                            <option value="Rent Expense">Rent Expense</option>
+                            <option value="Salary Expense">Salary Expense</option>
+                            <option value="Utilities Expense">Utilities Expense</option>
+                        </select>
+                    </div>
                     
                     <div>
                         <label class="block mb-1 font-medium">Credit Account:</label>
                         <select id="credit-account" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-base">
-                        <select id="credit-account" class="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 text-base">
                             <option value="">Select account</option>
                             <option value="Cash">Cash</option>
                             <option value="Bank">Bank</option>
-@ -440,26 +487,26 @@ CR. Bank Account ₦5,000</pre>
+                            <option value="Accounts Receivable">Accounts Receivable</option>
+                            <option value="Equipment">Equipment</option>
+                            <option value="Building">Building</option>
+                            <option value="Accounts Payable">Accounts Payable</option>
+                            <option value="Loan">Loan</option>
+                            <option value="Capital">Capital</option>
+                            <option value="Drawings">Drawings</option>
+                            <option value="Sales">Sales</option>
+                            <option value="Fees Earned">Fees Earned</option>
+                            <option value="Rent Expense">Rent Expense</option>
+                            <option value="Salary Expense">Salary Expense</option>
+                            <option value="Utilities Expense">Utilities Expense</option>
+                        </select>
+                    </div>
+                </div>
                 
                 <div class="mb-4">
                     <label class="block mb-1 font-medium">Amount:</label>
                     <input type="number" id="transaction-amount" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" placeholder="Enter amount">
-                    <input type="number" id="transaction-amount" class="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" placeholder="Enter amount">
                 </div>
                 
                 <button id="check-answer" class="px-4 py-2 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all">Check Answer</button>
-                <button id="check-answer" class="w-full sm:w-auto px-4 py-3 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all touch-button">Check Answer</button>
                 
                 <div id="feedback" class="mt-4 p-3 rounded hidden"></div>
             </div>
@@ -386,8 +451,6 @@ CR. Bank Account ₦5,000</pre>
             <div class="mt-8">
                 <h3 class="text-xl font-bold mb-4">Account Classification Quiz</h3>
                 <div id="quiz-question" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4">
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Account Classification Quiz</h3>
-                <div id="quiz-question" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 text-base">
                     Loading question...
                 </div>
                 
@@ -397,58 +460,47 @@ CR. Bank Account ₦5,000</pre>
                     <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-value="equity">Equity</button>
                     <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-value="revenue">Revenue</button>
                     <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-value="expense">Expense</button>
-                    <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-button" data-value="asset">Asset</button>
-                    <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-button" data-value="liability">Liability</button>
-                    <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-button" data-value="equity">Equity</button>
-                    <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-button" data-value="revenue">Revenue</button>
-                    <button class="quiz-option p-3 border rounded text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors touch-button" data-value="expense">Expense</button>
                 </div>
                 
                 <div id="quiz-feedback" class="mt-4 p-3 rounded hidden"></div>
-@ -467,11 +514,11 @@ CR. Bank Account ₦5,000</pre>
+            </div>
         </div>
         
         <!-- Visual Tools Section -->
         <div id="visual-section" class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg mb-8 hidden">
             <h2 class="text-2xl font-bold mb-6">Visual Learning Tools</h2>
-        <div id="visual-section" class="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg mb-8 hidden">
-            <h2 class="text-xl sm:text-2xl font-bold mb-6">Visual Learning Tools</h2>
             
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4">Interactive Seesaw</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Interactive Seesaw</h3>
                 <p class="mb-2">See how transactions affect the accounting equation with this seesaw model.</p>
                 
                 <div class="seesaw my-6">
-@ -481,15 +528,15 @@ CR. Bank Account ₦5,000</pre>
+                    <div class="seesaw-beam" id="visual-seesaw-beam"></div>
+                    <div class="fulcrum"></div>
+                    <div class="side left-side">DEBIT</div>
                     <div class="side right-side">CREDIT</div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block mb-1 font-medium">Debit Amount:</label>
                         <input type="number" id="debit-weight" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" value="0" min="0">
-                        <input type="number" id="debit-weight" class="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" value="0" min="0">
                     </div>
                     
                     <div>
                         <label class="block mb-1 font-medium">Credit Amount:</label>
                         <input type="number" id="credit-weight" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" value="0" min="0">
-                        <input type="number" id="credit-weight" class="w-full p-3 border rounded dark:bg-gray-700 dark:border-gray-600 text-base" value="0" min="0">
                     </div>
                 </div>
                 
-@ -497,18 +544,18 @@ CR. Bank Account ₦5,000</pre>
+                <div id="seesaw-feedback" class="mt-4 text-center"></div>
             </div>
             
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4">Account Jars</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Account Jars</h3>
                 <p class="mb-2">See how debits and credits affect different types of accounts.</p>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
                     <div class="account-jar">
                         <div class="jar-label">Assets</div>
                         <div class="jar" id="asset-jar">
@@ -457,52 +509,50 @@ CR. Bank Account ₦5,000</pre>
                         <div class="flex justify-between mt-2">
                             <button class="jar-btn px-2 py-1 bg-debit text-white text-sm rounded" data-jar="asset" data-action="debit">Debit (+)</button>
                             <button class="jar-btn px-2 py-1 bg-credit text-white text-sm rounded" data-jar="asset" data-action="credit">Credit (-)</button>
-                            <button class="jar-btn px-2 py-1 bg-debit text-white text-xs sm:text-sm rounded touch-button" data-jar="asset" data-action="debit">Dr (+)</button>
-                            <button class="jar-btn px-2 py-1 bg-credit text-white text-xs sm:text-sm rounded touch-button" data-jar="asset" data-action="credit">Cr (-)</button>
                         </div>
                     </div>
                     
-@ -518,8 +565,8 @@ CR. Bank Account ₦5,000</pre>
+                    <div class="account-jar">
+                        <div class="jar-label">Liabilities</div>
+                        <div class="jar" id="liability-jar">
                             <div class="jar-fill" id="liability-fill" style="height: 40%;"></div>
                         </div>
                         <div class="flex justify-between mt-2">
                             <button class="jar-btn px-2 py-1 bg-debit text-white text-sm rounded" data-jar="liability" data-action="debit">Debit (-)</button>
                             <button class="jar-btn px-2 py-1 bg-credit text-white text-sm rounded" data-jar="liability" data-action="credit">Credit (+)</button>
-                            <button class="jar-btn px-2 py-1 bg-debit text-white text-xs sm:text-sm rounded touch-button" data-jar="liability" data-action="debit">Dr (-)</button>
-                            <button class="jar-btn px-2 py-1 bg-credit text-white text-xs sm:text-sm rounded touch-button" data-jar="liability" data-action="credit">Cr (+)</button>
                         </div>
                     </div>
                     
-@ -529,8 +576,8 @@ CR. Bank Account ₦5,000</pre>
+                    <div class="account-jar">
+                        <div class="jar-label">Equity</div>
+                        <div class="jar" id="equity-jar">
                             <div class="jar-fill" id="equity-fill" style="height: 40%;"></div>
                         </div>
                         <div class="flex justify-between mt-2">
                             <button class="jar-btn px-2 py-1 bg-debit text-white text-sm rounded" data-jar="equity" data-action="debit">Debit (-)</button>
                             <button class="jar-btn px-2 py-1 bg-credit text-white text-sm rounded" data-jar="equity" data-action="credit">Credit (+)</button>
-                            <button class="jar-btn px-2 py-1 bg-debit text-white text-xs sm:text-sm rounded touch-button" data-jar="equity" data-action="debit">Dr (-)</button>
-                            <button class="jar-btn px-2 py-1 bg-credit text-white text-xs sm:text-sm rounded touch-button" data-jar="equity" data-action="credit">Cr (+)</button>
                         </div>
                     </div>
                     
-@ -540,8 +587,8 @@ CR. Bank Account ₦5,000</pre>
+                    <div class="account-jar">
+                        <div class="jar-label">Expenses</div>
+                        <div class="jar" id="expense-jar">
                             <div class="jar-fill" id="expense-fill" style="height: 40%;"></div>
                         </div>
                         <div class="flex justify-between mt-2">
                             <button class="jar-btn px-2 py-1 bg-debit text-white text-sm rounded" data-jar="expense" data-action="debit">Debit (+)</button>
                             <button class="jar-btn px-2 py-1 bg-credit text-white text-sm rounded" data-jar="expense" data-action="credit">Credit (-)</button>
-                            <button class="jar-btn px-2 py-1 bg-debit text-white text-xs sm:text-sm rounded touch-button" data-jar="expense" data-action="debit">Dr (+)</button>
-                            <button class="jar-btn px-2 py-1 bg-credit text-white text-xs sm:text-sm rounded touch-button" data-jar="expense" data-action="credit">Cr (-)</button>
                         </div>
                     </div>
                     
-@ -551,23 +598,23 @@ CR. Bank Account ₦5,000</pre>
+                    <div class="account-jar">
+                        <div class="jar-label">Revenue</div>
+                        <div class="jar" id="revenue-jar">
                             <div class="jar-fill" id="revenue-fill" style="height: 40%;"></div>
                         </div>
                         <div class="flex justify-between mt-2">
                             <button class="jar-btn px-2 py-1 bg-debit text-white text-sm rounded" data-jar="revenue" data-action="debit">Debit (-)</button>
                             <button class="jar-btn px-2 py-1 bg-credit text-white text-sm rounded" data-jar="revenue" data-action="credit">Credit (+)</button>
-                            <button class="jar-btn px-2 py-1 bg-debit text-white text-xs sm:text-sm rounded touch-button" data-jar="revenue" data-action="debit">Dr (-)</button>
-                            <button class="jar-btn px-2 py-1 bg-credit text-white text-xs sm:text-sm rounded touch-button" data-jar="revenue" data-action="credit">Cr (+)</button>
                         </div>
                     </div>
                 </div>
@@ -510,7 +560,6 @@ CR. Bank Account ₦5,000</pre>
             
             <div class="mt-8">
                 <h3 class="text-xl font-bold mb-4">Comic Strip: Mr. ROI's Business Day</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Comic Strip: Mr. ROI's Business Day</h3>
                 
                 <div class="slide-container border rounded-lg bg-gray-50 dark:bg-gray-700">
                     <div class="slide" id="slide-1">
@@ -519,15 +568,16 @@ CR. Bank Account ₦5,000</pre>
                             <div class="w-full md:w-1/2">
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md h-48 flex items-center justify-center">
                                     <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <h4 class="font-bold text-base sm:text-lg mb-2">Morning: Starting the Day</h4>
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md h-36 sm:h-48 flex items-center justify-center">
-                                    <svg class="w-24 h-24 sm:w-32 sm:h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                         <!-- Store building -->
                                         <rect x="20" y="30" width="60" height="50" fill="#BBBBBB" class="dark:fill-gray-600" />
                                         <rect x="15" y="25" width="70" height="5" fill="#999999" class="dark:fill-gray-500" />
-@ -581,29 +628,29 @@ CR. Bank Account ₦5,000</pre>
+                                        <rect x="40" y="60" width="20" height="20" fill="#555555" class="dark:fill-gray-400" />
+                                        <!-- Store sign -->
+                                        <rect x="30" y="35" width="40" height="10" fill="#5D5CDE" />
+                                        <text x="50" y="43" text-anchor="middle" fill="white" font-size="6">ROI SHOP</text>
+                                        <!-- Mr. ROI -->
+                                        <circle cx="50" cy="70" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
+                                        <rect x="45" y="75" width="10" height="15" fill="#5D5CDE" />
                                     </svg>
                                 </div>
                             </div>
@@ -535,22 +585,16 @@ CR. Bank Account ₦5,000</pre>
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                     <p class="mb-2"><strong>Mr. ROI opens his shop and invests ₦50,000.</strong></p>
                                     <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md">
-                                    <p class="mb-2 text-sm sm:text-base"><strong>Mr. ROI opens his shop and invests ₦50,000.</strong></p>
-                                    <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm">
                                         <p>DR. Cash Account ₦50,000</p>
                                         <p>CR. Capital ₦50,000</p>
                                     </div>
                                     <p class="mt-2"><em>Asset (Cash) increases with DEBIT, Capital increases with CREDIT.</em></p>
-                                    <p class="mt-2 text-xs sm:text-sm"><em>Asset (Cash) increases with DEBIT, Capital increases with CREDIT.</em></p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-4">
                             <div></div>
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="2">Next →</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="2">Next →</button>
                         </div>
                     </div>
                     
@@ -560,15 +604,16 @@ CR. Bank Account ₦5,000</pre>
                             <div class="w-full md:w-1/2">
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md h-48 flex items-center justify-center">
                                     <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <h4 class="font-bold text-base sm:text-lg mb-2">Noon: Business Activities</h4>
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md h-36 sm:h-48 flex items-center justify-center">
-                                    <svg class="w-24 h-24 sm:w-32 sm:h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                         <!-- Customer -->
                                         <circle cx="35" cy="50" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
                                         <rect x="30" y="55" width="10" height="15" fill="#6B8E23" class="dark:fill-green-700" />
-@ -617,29 +664,29 @@ CR. Bank Account ₦5,000</pre>
+                                        <!-- Mr. ROI -->
+                                        <circle cx="65" cy="50" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
+                                        <rect x="60" y="55" width="10" height="15" fill="#5D5CDE" />
+                                        <!-- Cash -->
+                                        <rect x="42" y="47" width="16" height="8" fill="#4ECB71" class="dark:fill-green-500" rx="1" ry="1" />
+                                        <!-- Product -->
+                                        <rect x="45" y="65" width="10" height="10" fill="#FF6B6B" class="dark:fill-red-500" />
                                     </svg>
                                 </div>
                             </div>
@@ -576,23 +621,16 @@ CR. Bank Account ₦5,000</pre>
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                     <p class="mb-2"><strong>Mr. ROI sells products for ₦20,000 cash.</strong></p>
                                     <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md">
-                                    <p class="mb-2 text-sm sm:text-base"><strong>Mr. ROI sells products for ₦20,000 cash.</strong></p>
-                                    <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm">
                                         <p>DR. Cash Account ₦20,000</p>
                                         <p>CR. Sales ₦20,000</p>
                                     </div>
                                     <p class="mt-2"><em>Asset (Cash) increases with DEBIT, Revenue (Sales) increases with CREDIT.</em></p>
-                                    <p class="mt-2 text-xs sm:text-sm"><em>Asset (Cash) increases with DEBIT, Revenue (Sales) increases with CREDIT.</em></p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-4">
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="1">← Previous</button>
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="3">Next →</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="1">← Previous</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="3">Next →</button>
                         </div>
                     </div>
                     
@@ -602,15 +640,18 @@ CR. Bank Account ₦5,000</pre>
                             <div class="w-full md:w-1/2">
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md h-48 flex items-center justify-center">
                                     <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <h4 class="font-bold text-base sm:text-lg mb-2">Afternoon: Paying Expenses</h4>
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md h-36 sm:h-48 flex items-center justify-center">
-                                    <svg class="w-24 h-24 sm:w-32 sm:h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                         <!-- Landlord -->
                                         <circle cx="35" cy="50" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
                                         <rect x="30" y="55" width="10" height="15" fill="#8B4513" class="dark:fill-yellow-800" />
-@ -655,29 +702,29 @@ CR. Bank Account ₦5,000</pre>
+                                        <!-- Mr. ROI -->
+                                        <circle cx="65" cy="50" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
+                                        <rect x="60" y="55" width="10" height="15" fill="#5D5CDE" />
+                                        <!-- Cash -->
+                                        <rect x="42" y="47" width="16" height="8" fill="#4ECB71" class="dark:fill-green-500" rx="1" ry="1" />
+                                        <!-- Bill -->
+                                        <rect x="42" y="35" width="16" height="10" fill="#EEEEEE" class="dark:fill-gray-200" />
+                                        <line x1="45" y1="38" x2="55" y2="38" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
+                                        <line x1="45" y1="41" x2="55" y2="41" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
                                     </svg>
                                 </div>
                             </div>
@@ -618,23 +659,16 @@ CR. Bank Account ₦5,000</pre>
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                     <p class="mb-2"><strong>Mr. ROI pays ₦10,000 for rent.</strong></p>
                                     <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md">
-                                    <p class="mb-2 text-sm sm:text-base"><strong>Mr. ROI pays ₦10,000 for rent.</strong></p>
-                                    <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm">
                                         <p>DR. Rent Expense ₦10,000</p>
                                         <p>CR. Cash ₦10,000</p>
                                     </div>
                                     <p class="mt-2"><em>Expense (Rent) increases with DEBIT, Asset (Cash) decreases with CREDIT.</em></p>
-                                    <p class="mt-2 text-xs sm:text-sm"><em>Expense (Rent) increases with DEBIT, Asset (Cash) decreases with CREDIT.</em></p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-4">
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="2">← Previous</button>
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="4">Next →</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="2">← Previous</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="4">Next →</button>
                         </div>
                     </div>
                     
@@ -644,15 +678,17 @@ CR. Bank Account ₦5,000</pre>
                             <div class="w-full md:w-1/2">
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md h-48 flex items-center justify-center">
                                     <svg class="w-32 h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <h4 class="font-bold text-base sm:text-lg mb-2">Evening: Closing Time</h4>
-                        <div class="flex flex-col items-center gap-4">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md h-36 sm:h-48 flex items-center justify-center">
-                                    <svg class="w-24 h-24 sm:w-32 sm:h-32" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                                         <!-- Mr. ROI -->
                                         <circle cx="50" cy="50" r="5" fill="#FFC0CB" class="dark:fill-pink-300" />
                                         <rect x="45" y="55" width="10" height="15" fill="#5D5CDE" />
-@ -692,20 +739,20 @@ CR. Bank Account ₦5,000</pre>
+                                        <!-- Cash -->
+                                        <rect x="32" y="47" width="10" height="5" fill="#4ECB71" class="dark:fill-green-500" rx="1" ry="1" />
+                                        <!-- Ledger -->
+                                        <rect x="60" y="45" width="15" height="20" fill="#DDDDDD" class="dark:fill-gray-300" />
+                                        <line x1="63" y1="50" x2="72" y2="50" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
+                                        <line x1="63" y1="53" x2="72" y2="53" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
+                                        <line x1="63" y1="56" x2="72" y2="56" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
+                                        <line x1="63" y1="59" x2="72" y2="59" stroke="#333333" class="dark:stroke-gray-600" stroke-width="1" />
                                     </svg>
                                 </div>
                             </div>
@@ -660,48 +696,35 @@ CR. Bank Account ₦5,000</pre>
                                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
                                     <p class="mb-2"><strong>Mr. ROI takes ₦5,000 home for personal use.</strong></p>
                                     <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                            <div class="w-full">
-                                <div class="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg shadow-md">
-                                    <p class="mb-2 text-sm sm:text-base"><strong>Mr. ROI takes ₦5,000 home for personal use.</strong></p>
-                                    <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm">
                                         <p>DR. Drawings ₦5,000</p>
                                         <p>CR. Cash ₦5,000</p>
                                     </div>
                                     <p class="mt-2"><em>Drawings (reduction of equity) increases with DEBIT, Asset (Cash) decreases with CREDIT.</em></p>
-                                    <p class="mt-2 text-xs sm:text-sm"><em>Drawings (reduction of equity) increases with DEBIT, Asset (Cash) decreases with CREDIT.</em></p>
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-between mt-4">
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="3">← Previous</button>
                             <button class="slide-btn px-4 py-2 bg-primary text-white rounded" data-slide="1">Start Over</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="3">← Previous</button>
-                            <button class="slide-btn px-3 sm:px-4 py-2 bg-primary text-white rounded touch-button" data-slide="1">Start Over</button>
                         </div>
                     </div>
                 </div>
-@ -713,85 +760,78 @@ CR. Bank Account ₦5,000</pre>
+            </div>
         </div>
         
         <!-- Print Materials Section -->
         <div id="print-section" class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg mb-8 hidden">
             <h2 class="text-2xl font-bold mb-6">Printable Learning Materials</h2>
-        <div id="print-section" class="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg mb-8 hidden">
-            <h2 class="text-xl sm:text-2xl font-bold mb-6">Printable Learning Materials</h2>
             
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4">Dr-Cr Quick Reference Chart</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Dr-Cr Quick Reference Chart</h3>
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-600 print-section">
                     <div class="text-center mb-4">
                         <h2 class="text-2xl font-bold">Debit & Credit Quick Reference</h2>
                         <p class="text-sm">A handy guide for accounting students</p>
-                        <h2 class="text-xl sm:text-2xl font-bold">Debit & Credit Quick Reference</h2>
-                        <p class="text-xs sm:text-sm">A handy guide for accounting students</p>
                     </div>
                     
                     <div class="overflow-x-auto">
-                    <div class="responsive-table">
                         <table class="min-w-full border-collapse border border-gray-300 dark:border-gray-600">
                             <thead>
                                 <tr class="bg-gray-100 dark:bg-gray-700">
@@ -710,11 +733,6 @@ CR. Bank Account ₦5,000</pre>
                                     <th class="border border-gray-300 dark:border-gray-600 px-4 py-2">Debit (DR) Effect</th>
                                     <th class="border border-gray-300 dark:border-gray-600 px-4 py-2">Credit (CR) Effect</th>
                                     <th class="border border-gray-300 dark:border-gray-600 px-4 py-2">Examples</th>
-                                    <th class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-sm">Account Type</th>
-                                    <th class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-sm">Normal Balance</th>
-                                    <th class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-sm">Debit Effect</th>
-                                    <th class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-sm">Credit Effect</th>
-                                    <th class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-sm">Examples</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -725,18 +743,12 @@ CR. Bank Account ₦5,000</pre>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Cash, Bank, Equipment, Inventory</td>
                                 </tr>
-                            <tbody class="text-sm">
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold">Liabilities</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center">Credit</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Loans, Accounts Payable, Notes Payable</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 font-bold">Assets</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-center">Debit</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2">Cash, Bank, Equipment</td>
                                 </tr>
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold">Owner's Equity</td>
@@ -744,11 +756,6 @@ CR. Bank Account ₦5,000</pre>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Capital, Retained Earnings</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 font-bold">Liabilities</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-center">Credit</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2">Loans, Payables</td>
                                 </tr>
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold">Revenues</td>
@@ -756,11 +763,6 @@ CR. Bank Account ₦5,000</pre>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Sales, Service Revenue, Rent Income</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 font-bold">Equity</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-center">Credit</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2">Capital, Earnings</td>
                                 </tr>
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold">Expenses</td>
@@ -768,11 +770,6 @@ CR. Bank Account ₦5,000</pre>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Rent Expense, Salary Expense, Utilities</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 font-bold">Revenues</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-center">Credit</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2">Sales, Services</td>
                                 </tr>
                                 <tr>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 font-bold">Drawings</td>
@@ -780,11 +777,6 @@ CR. Bank Account ₦5,000</pre>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
                                     <td class="border border-gray-300 dark:border-gray-600 px-4 py-2">Owner's Drawings, Dividends</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 font-bold">Expenses</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 text-center">Debit</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-green-100 dark:bg-green-900 dark:bg-opacity-30 text-center">Increase (+)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2 bg-red-100 dark:bg-red-900 dark:bg-opacity-30 text-center">Decrease (-)</td>
-                                    <td class="border border-gray-300 dark:border-gray-600 px-2 sm:px-4 py-2">Rent, Salaries</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -795,37 +787,27 @@ CR. Bank Account ₦5,000</pre>
                             <h4 class="font-bold mb-2">Remember: DEAD CLIC</h4>
                             <p class="mb-2"><strong>D</strong>ebits increase: <strong>D</strong>ebit, <strong>E</strong>xpense, <strong>A</strong>sset, <strong>D</strong>rawings</p>
                             <p><strong>C</strong>redits increase: <strong>C</strong>redit, <strong>L</strong>iability, <strong>I</strong>ncome, <strong>C</strong>apital</p>
-                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h4 class="font-bold mb-2 text-sm">Remember: DEAD CLIC</h4>
-                            <p class="mb-2 text-xs sm:text-sm"><strong>D</strong>ebits increase: <strong>D</strong>ebit, <strong>E</strong>xpense, <strong>A</strong>sset, <strong>D</strong>rawings</p>
-                            <p class="text-xs sm:text-sm"><strong>C</strong>redits increase: <strong>C</strong>redit, <strong>L</strong>iability, <strong>I</strong>ncome, <strong>C</strong>apital</p>
                         </div>
                         
                         <div class="border border-gray-300 dark:border-gray-600 rounded p-4">
                             <h4 class="font-bold mb-2">Golden Rules</h4>
                             <ol class="list-decimal pl-4">
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h4 class="font-bold mb-2 text-sm">Golden Rules</h4>
-                            <ol class="list-decimal pl-4 text-xs sm:text-sm">
                                 <li>Debit what comes in, Credit what goes out</li>
                                 <li>Debit the receiver, Credit the giver</li>
                                 <li>Every transaction has at least 2 entries</li>
-@ -800,21 +840,21 @@ CR. Bank Account ₦5,000</pre>
+                                <li>Total Debits must equal Total Credits</li>
+                            </ol>
                         </div>
                     </div>
                 </div>
                 <button id="print-chart-btn" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print">Print Chart</button>
-                <button id="print-chart-btn" class="mt-4 w-full sm:w-auto px-4 py-3 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print touch-button">Print Chart</button>
             </div>
             
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4">Slide Handout</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Slide Handout</h3>
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-600 print-section">
                     <div class="text-center mb-6">
                         <h2 class="text-2xl font-bold">Debit & Credit Fundamentals</h2>
-                        <h2 class="text-xl sm:text-2xl font-bold">Debit & Credit Fundamentals</h2>
                         <p>Understanding the Basics of Accounting</p>
                     </div>
                     
@@ -833,24 +815,17 @@ CR. Bank Account ₦5,000</pre>
                         <div class="border border-gray-300 dark:border-gray-600 rounded p-4">
                             <h3 class="font-bold text-lg mb-2">What Are Debits & Credits?</h3>
                             <ul class="list-disc pl-4 space-y-1">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h3 class="font-bold text-base sm:text-lg mb-2">What Are Debits & Credits?</h3>
-                            <ul class="list-disc pl-4 space-y-1 text-sm">
                                 <li>Debit = Left side of account</li>
                                 <li>Credit = Right side of account</li>
                                 <li>Effect depends on account type</li>
-@ -822,114 +862,114 @@ CR. Bank Account ₦5,000</pre>
+                                <li>Every transaction must balance</li>
                             </ul>
                         </div>
                         
                         <div class="border border-gray-300 dark:border-gray-600 rounded p-4">
                             <h3 class="font-bold text-lg mb-2">The Accounting Equation</h3>
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h3 class="font-bold text-base sm:text-lg mb-2">The Accounting Equation</h3>
                             <p class="text-center font-bold my-2">Assets = Liabilities + Equity</p>
                             <ul class="list-disc pl-4 space-y-1">
-                            <ul class="list-disc pl-4 space-y-1 text-sm">
                                 <li>Assets: What business owns</li>
                                 <li>Liabilities: What business owes</li>
                                 <li>Equity: Owner's investment + profits</li>
@@ -861,41 +836,27 @@ CR. Bank Account ₦5,000</pre>
                             <h3 class="font-bold text-lg mb-2">Increases & Decreases</h3>
                             <p class="mb-2"><strong>Debit increases:</strong> Assets, Expenses, Drawings</p>
                             <p><strong>Credit increases:</strong> Liabilities, Equity, Revenue</p>
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h3 class="font-bold text-base sm:text-lg mb-2">Increases & Decreases</h3>
-                            <p class="mb-2 text-sm"><strong>Debit increases:</strong> Assets, Expenses, Drawings</p>
-                            <p class="text-sm"><strong>Credit increases:</strong> Liabilities, Equity, Revenue</p>
                         </div>
                         
                         <div class="border border-gray-300 dark:border-gray-600 rounded p-4">
                             <h3 class="font-bold text-lg mb-2">Common Transactions</h3>
                             <p class="mb-1"><strong>Buy supplies with cash:</strong></p>
                             <p class="pl-4 mb-2">DR. Supplies (Asset) / CR. Cash (Asset)</p>
-                        <div class="border border-gray-300 dark:border-gray-600 rounded p-3 sm:p-4">
-                            <h3 class="font-bold text-base sm:text-lg mb-2">Common Transactions</h3>
-                            <p class="mb-1 text-sm"><strong>Buy supplies with cash:</strong></p>
-                            <p class="pl-4 mb-2 text-sm">DR. Supplies (Asset) / CR. Cash (Asset)</p>
                             
                             <p class="mb-1"><strong>Make sales:</strong></p>
                             <p class="pl-4">DR. Cash (Asset) / CR. Sales (Revenue)</p>
-                            <p class="mb-1 text-sm"><strong>Make sales:</strong></p>
-                            <p class="pl-4 text-sm">DR. Cash (Asset) / CR. Sales (Revenue)</p>
                         </div>
                     </div>
                 </div>
                 <button id="print-slide-btn" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print">Print Slides</button>
-                <button id="print-slide-btn" class="mt-4 w-full sm:w-auto px-4 py-3 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print touch-button">Print Slides</button>
             </div>
             
             <div>
                 <h3 class="text-xl font-bold mb-4">Classroom Poster</h3>
-                <h3 class="text-lg sm:text-xl font-bold mb-4">Classroom Poster</h3>
                 <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-300 dark:border-gray-600 print-section">
                     <div class="text-center mb-4">
                         <h2 class="text-3xl font-bold text-primary">The Debit & Credit Dance</h2>
                         <p class="text-lg">How Accounts Move Together</p>
-                        <h2 class="text-2xl sm:text-3xl font-bold text-primary">The Debit & Credit Dance</h2>
-                        <p class="text-base sm:text-lg">How Accounts Move Together</p>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -906,32 +867,16 @@ CR. Bank Account ₦5,000</pre>
                                     <div class="text-3xl mb-2">🏠</div>
                                     <div class="font-bold">Assets</div>
                                     <div class="text-sm">Increases (+)</div>
-                    <div class="grid grid-cols-1 gap-4 mb-6">
-                        <div class="border-2 border-debit rounded-lg p-3 sm:p-4">
-                            <h3 class="text-lg sm:text-xl font-bold text-center mb-2">DEBIT (DR) Side</h3>
-                            <div class="grid grid-cols-3 gap-2 sm:gap-4">
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">🏠</div>
-                                    <div class="font-bold text-sm sm:text-base">Assets</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                                 <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                     <div class="text-3xl mb-2">💸</div>
                                     <div class="font-bold">Expenses</div>
                                     <div class="text-sm">Increases (+)</div>
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">💸</div>
-                                    <div class="font-bold text-sm sm:text-base">Expenses</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                                 <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                     <div class="text-3xl mb-2">🧑‍💼</div>
                                     <div class="font-bold">Drawings</div>
                                     <div class="text-sm">Increases (+)</div>
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">🧑‍💼</div>
-                                    <div class="font-bold text-sm sm:text-base">Drawings</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                             </div>
                         </div>
@@ -943,31 +888,16 @@ CR. Bank Account ₦5,000</pre>
                                     <div class="text-3xl mb-2">💰</div>
                                     <div class="font-bold">Liabilities</div>
                                     <div class="text-sm">Increases (+)</div>
-                        <div class="border-2 border-credit rounded-lg p-3 sm:p-4">
-                            <h3 class="text-lg sm:text-xl font-bold text-center mb-2">CREDIT (CR) Side</h3>
-                            <div class="grid grid-cols-3 gap-2 sm:gap-4">
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">💰</div>
-                                    <div class="font-bold text-sm sm:text-base">Liabilities</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                                 <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                     <div class="text-3xl mb-2">🤑</div>
                                     <div class="font-bold">Revenue</div>
                                     <div class="text-sm">Increases (+)</div>
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">🤑</div>
-                                    <div class="font-bold text-sm sm:text-base">Revenue</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                                 <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                     <div class="text-3xl mb-2">💼</div>
                                     <div class="font-bold">Capital</div>
                                     <div class="text-sm">Increases (+)</div>
-                                <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                    <div class="text-2xl sm:text-3xl mb-1 sm:mb-2">💼</div>
-                                    <div class="font-bold text-sm sm:text-base">Capital</div>
-                                    <div class="text-xs sm:text-sm">Increases (+)</div>
                                 </div>
                             </div>
                         </div>
@@ -980,50 +910,331 @@ CR. Bank Account ₦5,000</pre>
                                 <div class="font-bold mb-1">Buy Equipment</div>
                                 <div class="text-sm mb-1">DR. Equipment</div>
                                 <div class="text-sm">CR. Cash</div>
-                    <div class="border-2 border-gray-300 dark:border-gray-600 p-3 sm:p-4 rounded-lg">
-                        <h3 class="text-lg sm:text-xl font-bold text-center mb-3 sm:mb-4">Every Transaction Has Two Sides!</h3>
-                        <div class="grid grid-cols-2 gap-2 sm:gap-4">
-                            <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                <div class="font-bold mb-1 text-sm">Buy Equipment</div>
-                                <div class="text-xs sm:text-sm mb-1">DR. Equipment</div>
-                                <div class="text-xs sm:text-sm">CR. Cash</div>
                             </div>
                             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                 <div class="font-bold mb-1">Pay Rent</div>
                                 <div class="text-sm mb-1">DR. Rent Expense</div>
                                 <div class="text-sm">CR. Cash</div>
-                            <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                <div class="font-bold mb-1 text-sm">Pay Rent</div>
-                                <div class="text-xs sm:text-sm mb-1">DR. Rent Expense</div>
-                                <div class="text-xs sm:text-sm">CR. Cash</div>
                             </div>
                             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                 <div class="font-bold mb-1">Make Sales</div>
                                 <div class="text-sm mb-1">DR. Cash</div>
                                 <div class="text-sm">CR. Sales</div>
-                            <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                <div class="font-bold mb-1 text-sm">Make Sales</div>
-                                <div class="text-xs sm:text-sm mb-1">DR. Cash</div>
-                                <div class="text-xs sm:text-sm">CR. Sales</div>
                             </div>
                             <div class="bg-white dark:bg-gray-700 p-3 rounded-lg text-center shadow-md">
                                 <div class="font-bold mb-1">Owner Invests</div>
                                 <div class="text-sm mb-1">DR. Cash</div>
                                 <div class="text-sm">CR. Capital</div>
-                            <div class="bg-white dark:bg-gray-700 p-2 sm:p-3 rounded-lg text-center shadow-md">
-                                <div class="font-bold mb-1 text-sm">Owner Invests</div>
-                                <div class="text-xs sm:text-sm mb-1">DR. Cash</div>
-                                <div class="text-xs sm:text-sm">CR. Capital</div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <button id="print-poster-btn" class="mt-4 px-4 py-2 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print">Print Poster</button>
-                <button id="print-poster-btn" class="mt-4 w-full sm:w-auto px-4 py-3 bg-primary text-white rounded-lg focus:outline-none hover:bg-opacity-90 transition-all no-print touch-button">Print Poster</button>
             </div>
         </div>
     </div>
-@ -1238,3 +1278,4 @@ CR. Bank Account ₦5,000</pre>
+    
+    <script>
+        // Tab navigation
+        const sections = [
+            { id: 'learn-section', btn: 'learn-btn' },
+            { id: 'practice-section', btn: 'practice-btn' },
+            { id: 'visual-section', btn: 'visual-btn' },
+            { id: 'print-section', btn: 'print-btn' }
+        ];
+        
+        sections.forEach(section => {
+            document.getElementById(section.btn).addEventListener('click', () => {
+                // Hide all sections
+                sections.forEach(s => {
+                    document.getElementById(s.id).classList.add('hidden');
+                    document.getElementById(s.btn).classList.remove('bg-primary', 'text-white');
+                    document.getElementById(s.btn).classList.add('bg-gray-200', 'dark:bg-gray-700');
+                });
+                
+                // Show selected section
+                document.getElementById(section.id).classList.remove('hidden');
+                document.getElementById(section.btn).classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                document.getElementById(section.btn).classList.add('bg-primary', 'text-white');
+            });
+        });
+        
+        // Print handlers
+        document.getElementById('print-chart-btn').addEventListener('click', () => {
+            window.print();
+        });
+        
+        document.getElementById('print-slide-btn').addEventListener('click', () => {
+            window.print();
+        });
+        
+        document.getElementById('print-poster-btn').addEventListener('click', () => {
+            window.print();
+        });
+        
+        // Seesaw visualization
+        const seesawBeams = document.querySelectorAll('.seesaw-beam');
+        
+        // Practice section - Transactions
+        const transactions = [
+            {
+                description: "Mr. ROI received $5,000 cash from customers for services rendered.",
+                debitAccount: "Cash",
+                creditAccount: "Sales",
+                amount: 5000
+            },
+            {
+                description: "Mr. ROI purchased office supplies for $500 cash.",
+                debitAccount: "Supplies",
+                creditAccount: "Cash",
+                amount: 500
+            },
+            {
+                description: "Mr. ROI paid $1,200 for this month's rent.",
+                debitAccount: "Rent Expense",
+                creditAccount: "Cash",
+                amount: 1200
+            },
+            {
+                description: "Mr. ROI bought equipment worth $3,000 on credit.",
+                debitAccount: "Equipment",
+                creditAccount: "Accounts Payable",
+                amount: 3000
+            },
+            {
+                description: "Mr. ROI invested an additional $10,000 into his business.",
+                debitAccount: "Cash",
+                creditAccount: "Capital",
+                amount: 10000
+            },
+            {
+                description: "Mr. ROI paid $800 for employee salaries.",
+                debitAccount: "Salary Expense",
+                creditAccount: "Cash",
+                amount: 800
+            },
+            {
+                description: "Mr. ROI received $2,000 from a customer for services to be provided next month.",
+                debitAccount: "Cash",
+                creditAccount: "Unearned Revenue",
+                amount: 2000
+            },
+            {
+                description: "Mr. ROI took $1,500 cash from the business for personal use.",
+                debitAccount: "Drawings",
+                creditAccount: "Cash",
+                amount: 1500
+            }
+        ];
+        
+        let currentTransaction = 0;
+        
+        function displayTransaction() {
+            const transaction = transactions[currentTransaction];
+            document.getElementById('transaction-question').textContent = transaction.description;
+            document.getElementById('debit-account').value = '';
+            document.getElementById('credit-account').value = '';
+            document.getElementById('transaction-amount').value = '';
+            document.getElementById('feedback').classList.add('hidden');
+        }
+        
+        document.getElementById('check-answer').addEventListener('click', () => {
+            const transaction = transactions[currentTransaction];
+            const debitAccount = document.getElementById('debit-account').value;
+            const creditAccount = document.getElementById('credit-account').value;
+            const amount = parseInt(document.getElementById('transaction-amount').value);
+            const feedback = document.getElementById('feedback');
+            
+            feedback.classList.remove('hidden', 'bg-green-100', 'dark:bg-green-900', 'dark:bg-opacity-30', 'bg-red-100', 'dark:bg-red-900', 'dark:bg-opacity-30');
+            
+            if (debitAccount === transaction.debitAccount && 
+                creditAccount === transaction.creditAccount && 
+                amount === transaction.amount) {
+                feedback.textContent = "Correct! Perfect journal entry.";
+                feedback.classList.add('bg-green-100', 'dark:bg-green-900', 'dark:bg-opacity-30');
+                
+                // Move to next transaction
+                currentTransaction = (currentTransaction + 1) % transactions.length;
+                setTimeout(displayTransaction, 1500);
+            } else {
+                let errorMsg = "Not quite right. ";
+                
+                if (debitAccount !== transaction.debitAccount) {
+                    errorMsg += `The debit account should be "${transaction.debitAccount}". `;
+                }
+                
+                if (creditAccount !== transaction.creditAccount) {
+                    errorMsg += `The credit account should be "${transaction.creditAccount}". `;
+                }
+                
+                if (amount !== transaction.amount) {
+                    errorMsg += `The amount should be $${transaction.amount}. `;
+                }
+                
+                feedback.textContent = errorMsg;
+                feedback.classList.add('bg-red-100', 'dark:bg-red-900', 'dark:bg-opacity-30');
+            }
+        });
+        
+        // Quiz questions
+        const quizQuestions = [
+            {
+                question: "Which type of account is Cash?",
+                answer: "asset"
+            },
+            {
+                question: "Which type of account is Accounts Payable?",
+                answer: "liability"
+            },
+            {
+                question: "Which type of account is Sales Revenue?",
+                answer: "revenue"
+            },
+            {
+                question: "Which type of account is Rent Expense?",
+                answer: "expense"
+            },
+            {
+                question: "Which type of account is Owner's Capital?",
+                answer: "equity"
+            },
+            {
+                question: "Which type of account is Equipment?",
+                answer: "asset"
+            },
+            {
+                question: "Which type of account is Salary Expense?",
+                answer: "expense"
+            },
+            {
+                question: "Which type of account is Loan Payable?",
+                answer: "liability"
+            },
+            {
+                question: "Which type of account is Service Revenue?",
+                answer: "revenue"
+            },
+            {
+                question: "Which type of account is Owner's Drawings?",
+                answer: "equity"
+            }
+        ];
+        
+        let currentQuiz = 0;
+        
+        function displayQuiz() {
+            const quiz = quizQuestions[currentQuiz];
+            document.getElementById('quiz-question').textContent = quiz.question;
+            document.getElementById('quiz-feedback').classList.add('hidden');
+        }
+        
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', () => {
+                const selectedAnswer = option.getAttribute('data-value');
+                const correctAnswer = quizQuestions[currentQuiz].answer;
+                const feedback = document.getElementById('quiz-feedback');
+                
+                feedback.classList.remove('hidden', 'bg-green-100', 'dark:bg-green-900', 'dark:bg-opacity-30', 'bg-red-100', 'dark:bg-red-900', 'dark:bg-opacity-30');
+                
+                if (selectedAnswer === correctAnswer) {
+                    feedback.textContent = "Correct!";
+                    feedback.classList.add('bg-green-100', 'dark:bg-green-900', 'dark:bg-opacity-30');
+                    
+                    // Move to next question
+                    currentQuiz = (currentQuiz + 1) % quizQuestions.length;
+                    setTimeout(displayQuiz, 1500);
+                } else {
+                    feedback.textContent = `Not quite. Try again! Hint: Think about what this account represents.`;
+                    feedback.classList.add('bg-red-100', 'dark:bg-red-900', 'dark:bg-opacity-30');
+                }
+            });
+        });
+        
+        // Interactive seesaw
+        const debitWeight = document.getElementById('debit-weight');
+        const creditWeight = document.getElementById('credit-weight');
+        const visualSeesawBeam = document.getElementById('visual-seesaw-beam');
+        const seesawFeedback = document.getElementById('seesaw-feedback');
+        
+        function updateSeesaw() {
+            const debitValue = parseInt(debitWeight.value) || 0;
+            const creditValue = parseInt(creditWeight.value) || 0;
+            
+            const rotationDegree = Math.min(Math.max((debitValue - creditValue) / 10, -20), 20);
+            visualSeesawBeam.style.transform = `rotate(${rotationDegree}deg)`;
+            
+            if (debitValue === creditValue && debitValue > 0) {
+                seesawFeedback.textContent = "Perfect balance! This is a valid accounting entry.";
+                seesawFeedback.className = "mt-4 text-center text-green-600 dark:text-green-400 font-medium";
+            } else if (debitValue === creditValue) {
+                seesawFeedback.textContent = "Add some weight to see the seesaw in action!";
+                seesawFeedback.className = "mt-4 text-center";
+            } else {
+                seesawFeedback.textContent = "Unbalanced! Debits must equal credits in accounting.";
+                seesawFeedback.className = "mt-4 text-center text-red-600 dark:text-red-400 font-medium";
+            }
+        }
+        
+        debitWeight.addEventListener('input', updateSeesaw);
+        creditWeight.addEventListener('input', updateSeesaw);
+        
+        // Account jars
+        const jarFillLevels = {
+            asset: 40,
+            liability: 40,
+            equity: 40,
+            expense: 40,
+            revenue: 40
+        };
+        
+        document.querySelectorAll('.jar-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const jar = btn.getAttribute('data-jar');
+                const action = btn.getAttribute('data-action');
+                
+                // Get the current fill level
+                let fillLevel = jarFillLevels[jar];
+                
+                // Update based on action and jar type
+                if ((jar === 'asset' || jar === 'expense') && action === 'debit') {
+                    fillLevel = Math.min(fillLevel + 15, 95);
+                } else if ((jar === 'asset' || jar === 'expense') && action === 'credit') {
+                    fillLevel = Math.max(fillLevel - 15, 5);
+                } else if ((jar === 'liability' || jar === 'equity' || jar === 'revenue') && action === 'credit') {
+                    fillLevel = Math.min(fillLevel + 15, 95);
+                } else if ((jar === 'liability' || jar === 'equity' || jar === 'revenue') && action === 'debit') {
+                    fillLevel = Math.max(fillLevel - 15, 5);
+                }
+                
+                // Update the jar's fill level
+                document.getElementById(`${jar}-fill`).style.height = `${fillLevel}%`;
+                jarFillLevels[jar] = fillLevel;
+            });
+        });
+        
+        // Comic strip slide navigation
+        document.querySelectorAll('.slide-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const slideNum = btn.getAttribute('data-slide');
+                const allSlides = document.querySelectorAll('.slide');
+                
+                allSlides.forEach((slide, index) => {
+                    const slideId = slide.id.split('-')[1];
+                    
+                    if (slideId === slideNum) {
+                        slide.style.transform = 'translateX(0)';
+                    } else {
+                        const direction = slideId < slideNum ? '-100%' : '100%';
+                        slide.style.transform = `translateX(${direction})`;
+                    }
+                });
+            });
+        });
+        
+        // Initialize
+        displayTransaction();
+        displayQuiz();
+        updateSeesaw();
     </script>
 </body>
 </html>
