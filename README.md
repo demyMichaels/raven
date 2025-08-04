@@ -14,3 +14,8 @@ This would mean the learning center materials must be topnotch because we would 
 
 This would take our app from one used every quarter to everyday - that's where true scalability comes in. For every day apps, we will use the bite-sized unlocking structrue so student get access to other topics after they pass one.
 But for exam mode, they take initial test and get access to practice anyone.
+
+Later we will follow the principle of KISS for every page so that the source code is easily scalable and maintainable. Also follow Betty standard for commenting.
+
+
+This is obviously not scalable. To change the name from JAMB Pro to Raven, I'm having to re-edit all the places, I initially had JAMB Pro. I learnt to use variables and MACRO coding sometime ago to avoid issues like this but it's been years. Once you start editing in more than one line, thats ineffective coding.
