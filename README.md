@@ -19,3 +19,19 @@ Later we will follow the principle of KISS for every page so that the source cod
 
 
 This is obviously not scalable. To change the name from JAMB Pro to Raven, I'm having to re-edit all the places, I initially had JAMB Pro. I learnt to use variables and MACRO coding sometime ago to avoid issues like this but it's been years. Once you start editing in more than one line, thats ineffective coding.
+
+
+
+Code4Impact: 
+Backend= Seperate logic, design and data
+
+later on, we will add features whereby we see schools whose students are topping the leadership on a weekly basis.
+we are not replacing the teachers, we are here to support.
+The principals get to see a big picture view of the performance of her entire students - she sees the probability and the statistics
+
+
+Range - what's the gap between the highest and the lowest. Is the gap increasing over time or is it closing? If it's increasing and then they put in measures to close it, the app gives them opportunity to see if the gap is closing. This can be done right from SS1.
+
+
+this might be hard for public schools. 
+we'll have package that reduces the price for them - price differentiation
