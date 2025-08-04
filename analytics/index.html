@@ -1,1 +1,962 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven - Performance Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-navy: #0F2C59;
+            --consultancy-teal: #009F9D;
+            --warm-light-gray: #F8F9FA;
+            --charcoal: #2D3748;
+            --pale-sand: #D2C1A7;
+            --steel-blue: #5A7B9E;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--warm-light-gray);
+            color: var(--charcoal);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark {
+            --warm-light-gray: #1a1a1a;
+            --charcoal: #e2e8f0;
+            background-color: var(--warm-light-gray);
+            color: var(--charcoal);
+        }
+        
+        /* Material Design Shadows */
+        .material-1 { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+        .material-2 { box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23); }
+        .material-3 { box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); }
+        .material-4 { box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22); }
+        .material-5 { box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); }
+        
+        /* Material Design Typography Scale */
+        .headline-1 { font-size: 6rem; font-weight: 300; line-height: 1.16; letter-spacing: -0.015625em; }
+        .headline-2 { font-size: 3.75rem; font-weight: 300; line-height: 1.2; letter-spacing: -0.0083333333em; }
+        .headline-3 { font-size: 3rem; font-weight: 400; line-height: 1.16; letter-spacing: 0; }
+        .headline-4 { font-size: 2.125rem; font-weight: 400; line-height: 1.23; letter-spacing: 0.0073529412em; }
+        .headline-5 { font-size: 1.5rem; font-weight: 400; line-height: 1.33; letter-spacing: 0; }
+        .headline-6 { font-size: 1.25rem; font-weight: 500; line-height: 1.6; letter-spacing: 0.0075em; }
+        .subtitle-1 { font-size: 1rem; font-weight: 400; line-height: 1.75; letter-spacing: 0.00937em; }
+        .body-1 { font-size: 1rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.00937em; }
+        .body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.43; letter-spacing: 0.01071em; }
+        .button-text { font-size: 0.875rem; font-weight: 500; line-height: 1.25; letter-spacing: 0.02857em; text-transform: uppercase; }
+        
+        /* Chart Container Fixes */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .chart-container canvas {
+            max-height: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        /* Material Design Cards */
+        .material-card {
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dark .material-card {
+            background: #2d3748;
+        }
+        
+        .material-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Material Design Buttons */
+        .material-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .material-button:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 0.6s, height 0.6s, top 0.6s, left 0.6s;
+            transform: translate(-50%, -50%);
+        }
+        
+        .material-button:active:before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Performance Status Colors */
+        .status-excellent { background: linear-gradient(135deg, #10B981, #059669); }
+        .status-good { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .status-average { background: linear-gradient(135deg, #F59E0B, #D97706); }
+        .status-weak { background: linear-gradient(135deg, #EF4444, #DC2626); }
+        .status-unstarted { background: linear-gradient(135deg, #6B7280, #4B5563); }
+        
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--consultancy-teal);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Heatmap Grid */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Progress Indicators */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .headline-1 { font-size: 3rem; }
+            .headline-2 { font-size: 2.5rem; }
+            .headline-3 { font-size: 2rem; }
+            .headline-4 { font-size: 1.75rem; }
+            .headline-5 { font-size: 1.25rem; }
+            .headline-6 { font-size: 1.125rem; }
+            
+            .heatmap-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 6px;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .fab {
+                bottom: 16px;
+                right: 16px;
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 200px;
+            }
+            
+            .heatmap-grid {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-white dark:bg-gray-800 material-1 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <h1 class="headline-6 text-xl sm:text-2xl font-bold" style="color: var(--primary-navy);">
+                            Raven
+                        </h1>
+                    </div>
+                    <div class="hidden md:flex space-x-4">
+                        <button class="material-button px-4 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showDashboard()">
+                            Dashboard
+                        </button>
+                        <button class="material-button px-4 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showAnalytics()">
+                            Analytics
+                        </button>
+                        <button class="material-button px-4 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" onclick="showRecommendations()">
+                            Recommendations
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        <span class="font-medium hidden sm:inline">Progress:</span> 
+                        <span class="font-bold">68%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <!-- Dashboard View -->
+        <div id="dashboard-view">
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="body-2 text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Overall Score</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold" style="color: var(--consultancy-teal);">78%</p>
+                        </div>
+                        <div class="relative w-12 h-12 sm:w-16 sm:h-16">
+                            <svg class="progress-ring w-12 h-12 sm:w-16 sm:h-16" viewBox="0 0 84 84">
+                                <circle cx="42" cy="42" r="40" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                                <circle cx="42" cy="42" r="40" stroke="var(--consultancy-teal)" stroke-width="4" fill="none" 
+                                        class="progress-ring-circle" style="stroke-dashoffset: 55.3;"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs sm:text-sm font-semibold">78%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="body-2 text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Topics Mastered</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold" style="color: var(--steel-blue);">15/22</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="body-2 text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Weak Areas</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">3</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="body-2 text-gray-600 dark:text-gray-400 text-xs sm:text-sm">Study Streak</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold" style="color: var(--primary-navy);">12 days</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                            <i class="fas fa-fire text-orange-600 dark:text-orange-400 text-lg sm:text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Performance Heatmap -->
+            <div class="material-card material-2 p-4 sm:p-6 mb-6 sm:mb-8">
+                <h2 class="headline-5 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl">Mathematics Performance Heatmap</h2>
+                <div class="mb-4">
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-excellent"></div>
+                            <span>Excellent (80-100%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-good"></div>
+                            <span>Good (60-79%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-average"></div>
+                            <span>Average (40-59%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-weak"></div>
+                            <span>Weak (0-39%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-unstarted"></div>
+                            <span>Not Started</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="heatmap-container"></div>
+            </div>
+
+            <!-- Performance Analytics -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg">📈 Your Progress Journey</h3>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg">🎯 Subject Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="topicChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Subtopic Analytics -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg">🏆 Score Trends by Topic</h3>
+                    <div class="chart-container" style="height: 320px;">
+                        <canvas id="subtopicTrendChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="material-card material-2 p-4 sm:p-6">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg">⏱️ Time Efficiency Progress</h3>
+                    <div class="chart-container" style="height: 320px;">
+                        <canvas id="timeEfficiencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Insights -->
+            <div class="material-card material-2 p-4 sm:p-6 mb-6 sm:mb-8">
+                <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg">📊 Quick Performance Insights</h3>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div class="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">🚀</div>
+                        <div class="text-sm sm:text-lg font-bold text-green-700 dark:text-green-300">Most Improved</div>
+                        <div class="text-xs sm:text-sm text-green-600 dark:text-green-400">Trigonometry (+15%)</div>
+                    </div>
+                    <div class="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">⚡</div>
+                        <div class="text-sm sm:text-lg font-bold text-blue-700 dark:text-blue-300">Fastest Solver</div>
+                        <div class="text-xs sm:text-sm text-blue-600 dark:text-blue-400">Number Bases (1.2min avg)</div>
+                    </div>
+                    <div class="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">🎯</div>
+                        <div class="text-sm sm:text-lg font-bold text-purple-700 dark:text-purple-300">Most Consistent</div>
+                        <div class="text-xs sm:text-sm text-purple-600 dark:text-purple-400">Statistics (±3% variance)</div>
+                    </div>
+                    <div class="text-center p-3 sm:p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">📚</div>
+                        <div class="text-sm sm:text-lg font-bold text-orange-700 dark:text-orange-300">Study Sessions</div>
+                        <div class="text-xs sm:text-sm text-orange-600 dark:text-orange-400">47 this month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Panel -->
+            <div class="material-card material-2 p-4 sm:p-6">
+                <h2 class="headline-5 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl">Smart Recommendations</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                            <h3 class="font-semibold text-red-800 dark:text-red-300 text-sm sm:text-base">Priority Focus</h3>
+                        </div>
+                        <ul class="space-y-2">
+                            <li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• Differentiation (35%)</li>
+                            <li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• Integration (42%)</li>
+                            <li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• Logarithms (48%)</li>
+                        </ul>
+                        <button class="material-button w-full mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                            Start Practice
+                        </button>
+                    </div>
+
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <i class="fas fa-clock text-yellow-600 dark:text-yellow-400"></i>
+                            <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 text-sm sm:text-base">Due for Review</h3>
+                        </div>
+                        <ul class="space-y-2">
+                            <li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• Sets (Last: 5 days ago)</li>
+                            <li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• Matrices (Last: 7 days ago)</li>
+                            <li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• Permutation (Last: 3 days ago)</li>
+                        </ul>
+                        <button class="material-button w-full mt-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
+                            Review Now
+                        </button>
+                    </div>
+
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <i class="fas fa-trophy text-green-600 dark:text-green-400"></i>
+                            <h3 class="font-semibold text-green-800 dark:text-green-300 text-sm sm:text-base">Strong Areas</h3>
+                        </div>
+                        <ul class="space-y-2">
+                            <li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• Number Bases (92%)</li>
+                            <li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• Trigonometry (88%)</li>
+                            <li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• Polynomials (85%)</li>
+                        </ul>
+                        <button class="material-button w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                            Advanced Practice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab material-3" onclick="showQuickActions()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Quick Actions Modal -->
+    <div id="quickActionsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="material-card material-4 p-6 m-4 max-w-md w-full">
+            <h3 class="headline-6 font-semibold mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                <button class="material-button w-full p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <i class="fas fa-play mr-3 text-blue-600"></i>
+                    Start Quick Quiz
+                </button>
+                <button class="material-button w-full p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <i class="fas fa-clock mr-3 text-green-600"></i>
+                    Timed Practice
+                </button>
+                <button class="material-button w-full p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <i class="fas fa-chart-line mr-3 text-purple-600"></i>
+                    View Progress
+                </button>
+                <button class="material-button w-full p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <i class="fas fa-brain mr-3 text-orange-600"></i>
+                    Weak Areas Focus
+                </button>
+            </div>
+            <button class="material-button w-full mt-4 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md" onclick="hideQuickActions()">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Enhanced sample data for subtopics with time tracking
+        const subtopicsData = [
+            { topic: 'Numeration', subtopic: 'Number Bases', score: 92, attempts: 8, trend: 'improving', avgTimeMinutes: 1.2, timeProgress: [2.1, 1.8, 1.5, 1.3, 1.2], scoreHistory: [78, 82, 85, 89, 92] },
+            { topic: 'Numeration', subtopic: 'Fractions & Decimals', score: 76, attempts: 12, trend: 'stable', avgTimeMinutes: 2.1, timeProgress: [2.8, 2.5, 2.3, 2.1, 2.1], scoreHistory: [68, 72, 74, 75, 76] },
+            { topic: 'Numeration', subtopic: 'Indices & Logarithms', score: 48, attempts: 6, trend: 'declining', avgTimeMinutes: 3.8, timeProgress: [3.2, 3.5, 3.7, 3.8, 3.8], scoreHistory: [58, 55, 52, 50, 48] },
+            { topic: 'Numeration', subtopic: 'Sets', score: 83, attempts: 10, trend: 'improving', avgTimeMinutes: 1.8, timeProgress: [2.5, 2.2, 2.0, 1.9, 1.8], scoreHistory: [70, 75, 78, 81, 83] },
+            { topic: 'Algebra', subtopic: 'Polynomials', score: 85, attempts: 9, trend: 'improving', avgTimeMinutes: 2.3, timeProgress: [3.1, 2.8, 2.5, 2.4, 2.3], scoreHistory: [72, 76, 80, 83, 85] },
+            { topic: 'Algebra', subtopic: 'Variation', score: 71, attempts: 7, trend: 'stable', avgTimeMinutes: 2.7, timeProgress: [2.8, 2.7, 2.6, 2.7, 2.7], scoreHistory: [69, 70, 71, 70, 71] },
+            { topic: 'Algebra', subtopic: 'Inequalities', score: 67, attempts: 8, trend: 'improving', avgTimeMinutes: 2.5, timeProgress: [3.0, 2.8, 2.6, 2.5, 2.5], scoreHistory: [58, 61, 64, 66, 67] },
+            { topic: 'Algebra', subtopic: 'Progression', score: 58, attempts: 5, trend: 'stable', avgTimeMinutes: 3.1, timeProgress: [3.2, 3.1, 3.0, 3.1, 3.1], scoreHistory: [55, 57, 58, 57, 58] },
+            { topic: 'Algebra', subtopic: 'Binary Operators', score: 0, attempts: 0, trend: 'unstarted', avgTimeMinutes: 0, timeProgress: [], scoreHistory: [] },
+            { topic: 'Algebra', subtopic: 'Matrices', score: 74, attempts: 6, trend: 'stable', avgTimeMinutes: 2.8, timeProgress: [3.0, 2.9, 2.8, 2.8, 2.8], scoreHistory: [72, 73, 74, 73, 74] },
+            { topic: 'Geometry', subtopic: 'Euclidean Geometry', score: 79, attempts: 11, trend: 'improving', avgTimeMinutes: 2.6, timeProgress: [3.2, 3.0, 2.8, 2.7, 2.6], scoreHistory: [65, 70, 74, 77, 79] },
+            { topic: 'Geometry', subtopic: 'Coordinate Geometry', score: 62, attempts: 8, trend: 'stable', avgTimeMinutes: 3.5, timeProgress: [3.6, 3.5, 3.4, 3.5, 3.5], scoreHistory: [60, 61, 62, 61, 62] },
+            { topic: 'Geometry', subtopic: 'Trigonometry', score: 88, attempts: 15, trend: 'improving', avgTimeMinutes: 1.9, timeProgress: [2.8, 2.4, 2.1, 2.0, 1.9], scoreHistory: [73, 78, 82, 85, 88] },
+            { topic: 'Geometry', subtopic: 'Mensuration', score: 72, attempts: 9, trend: 'stable', avgTimeMinutes: 2.4, timeProgress: [2.5, 2.4, 2.3, 2.4, 2.4], scoreHistory: [70, 71, 72, 71, 72] },
+            { topic: 'Geometry', subtopic: 'Loci', score: 0, attempts: 0, trend: 'unstarted', avgTimeMinutes: 0, timeProgress: [], scoreHistory: [] },
+            { topic: 'Calculus', subtopic: 'Differentiation', score: 35, attempts: 4, trend: 'weak', avgTimeMinutes: 4.5, timeProgress: [4.8, 4.6, 4.5, 4.5], scoreHistory: [40, 38, 36, 35] },
+            { topic: 'Calculus', subtopic: 'Integration', score: 42, attempts: 3, trend: 'weak', avgTimeMinutes: 4.2, timeProgress: [4.5, 4.3, 4.2], scoreHistory: [38, 40, 42] },
+            { topic: 'Statistics', subtopic: 'Data Representation', score: 81, attempts: 7, trend: 'improving', avgTimeMinutes: 2.0, timeProgress: [2.8, 2.4, 2.2, 2.1, 2.0], scoreHistory: [68, 73, 76, 79, 81] },
+            { topic: 'Statistics', subtopic: 'Measure of Location', score: 69, attempts: 6, trend: 'stable', avgTimeMinutes: 2.9, timeProgress: [3.0, 2.9, 2.8, 2.9, 2.9], scoreHistory: [67, 68, 69, 68, 69] },
+            { topic: 'Statistics', subtopic: 'Measure of Dispersion', score: 0, attempts: 0, trend: 'unstarted', avgTimeMinutes: 0, timeProgress: [], scoreHistory: [] },
+            { topic: 'Statistics', subtopic: 'Permutation & Combination', score: 77, attempts: 8, trend: 'improving', avgTimeMinutes: 2.2, timeProgress: [2.9, 2.6, 2.4, 2.3, 2.2], scoreHistory: [64, 68, 72, 75, 77] },
+            { topic: 'Statistics', subtopic: 'Probability', score: 84, attempts: 10, trend: 'improving', avgTimeMinutes: 1.7, timeProgress: [2.5, 2.1, 1.9, 1.8, 1.7], scoreHistory: [71, 75, 79, 82, 84] }
+        ];
+
+        function getStatusClass(score, attempts) {
+            if (attempts === 0) return 'status-unstarted';
+            if (score >= 80) return 'status-excellent';
+            if (score >= 60) return 'status-good';
+            if (score >= 40) return 'status-average';
+            return 'status-weak';
+        }
+
+        function createHeatmap() {
+            const container = document.getElementById('heatmap-container');
+            const heatmapGrid = document.createElement('div');
+            heatmapGrid.className = 'heatmap-grid';
+
+            subtopicsData.forEach(item => {
+                const cell = document.createElement('div');
+                cell.className = `heatmap-cell ${getStatusClass(item.score, item.attempts)} material-1`;
+                cell.onclick = () => showSubtopicDetail(item);
+                
+                cell.innerHTML = `
+                    <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${item.subtopic}</div>
+                    <div class="text-lg font-bold text-white">${item.attempts > 0 ? item.score + '%' : 'Not Started'}</div>
+                    <div class="text-xs text-white opacity-75">${item.attempts} attempts</div>
+                `;
+                
+                heatmapGrid.appendChild(cell);
+            });
+
+            container.appendChild(heatmapGrid);
+        }
+
+        function showSubtopicDetail(subtopic) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="material-card material-4 p-6 max-w-lg w-full max-h-screen overflow-y-auto">
+                    <h3 class="headline-5 font-semibold mb-4">${subtopic.subtopic}</h3>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="text-2xl font-bold" style="color: var(--consultancy-teal);">${subtopic.score}%</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Average Score</div>
+                            </div>
+                            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="text-2xl font-bold" style="color: var(--steel-blue);">${subtopic.avgTimeMinutes.toFixed(1)}min</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400">Avg Time</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="text-sm font-medium mb-2">Performance Trend:</div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-${subtopic.trend === 'improving' ? 'arrow-up text-green-600' : subtopic.trend === 'declining' ? 'arrow-down text-red-600' : 'minus text-gray-600'}"></i>
+                                <span class="capitalize">${subtopic.trend}</span>
+                            </div>
+                        </div>
+                        ${subtopic.attempts > 0 ? `
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="text-sm font-medium mb-2">Recent Progress:</div>
+                            <div class="flex justify-between text-xs">
+                                ${subtopic.scoreHistory.slice(-5).map((score, i) => `
+                                    <div class="text-center">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs" style="background: ${score >= 80 ? '#10B981' : score >= 60 ? '#3B82F6' : score >= 40 ? '#F59E0B' : '#EF4444'}">${score}</div>
+                                        <div class="mt-1">Test ${i+1}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>` : ''}
+                        <div class="flex space-x-3">
+                            <button class="material-button flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                Practice Now
+                            </button>
+                            <button class="material-button flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md" onclick="this.closest('.fixed').remove()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function createTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Overall Performance (%)',
+                        data: [62, 65, 68, 71, 75, 78],
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#009F9D',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTopicChart() {
+            const ctx = document.getElementById('topicChart').getContext('2d');
+            
+            // Calculate average scores by topic
+            const topicScores = {};
+            subtopicsData.forEach(item => {
+                if (!topicScores[item.topic]) {
+                    topicScores[item.topic] = { total: 0, count: 0, attempts: 0 };
+                }
+                if (item.attempts > 0) {
+                    topicScores[item.topic].total += item.score;
+                    topicScores[item.topic].count++;
+                }
+                topicScores[item.topic].attempts += item.attempts;
+            });
+
+            const labels = Object.keys(topicScores);
+            const data = labels.map(topic => 
+                topicScores[topic].count > 0 
+                    ? Math.round(topicScores[topic].total / topicScores[topic].count)
+                    : 0
+            );
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#0F2C59',
+                            '#009F9D',
+                            '#5A7B9E',
+                            '#D2C1A7',
+                            '#2D3748'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSubtopicTrendChart() {
+            const ctx = document.getElementById('subtopicTrendChart').getContext('2d');
+            
+            // Get top performing and struggling topics
+            const strongTopics = subtopicsData
+                .filter(item => item.attempts > 0 && item.score >= 80)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3);
+            
+            const weakTopics = subtopicsData
+                .filter(item => item.attempts > 0 && item.score < 60)
+                .sort((a, b) => a.score - b.score)
+                .slice(0, 3);
+
+            const datasets = [];
+            
+            // Add strong topics in green
+            strongTopics.forEach((topic, index) => {
+                if (topic.scoreHistory.length > 0) {
+                    datasets.push({
+                        label: `${topic.subtopic} (Strong)`,
+                        data: topic.scoreHistory,
+                        borderColor: `rgba(16, 185, 129, ${1 - index * 0.3})`,
+                        backgroundColor: `rgba(16, 185, 129, ${0.1 - index * 0.03})`,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 3
+                    });
+                }
+            });
+
+            // Add weak topics in red
+            weakTopics.forEach((topic, index) => {
+                if (topic.scoreHistory.length > 0) {
+                    datasets.push({
+                        label: `${topic.subtopic} (Needs Work)`,
+                        data: topic.scoreHistory,
+                        borderColor: `rgba(239, 68, 68, ${1 - index * 0.3})`,
+                        backgroundColor: `rgba(239, 68, 68, ${0.1 - index * 0.03})`,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 3
+                    });
+                }
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Test 1', 'Test 2', 'Test 3', 'Test 4', 'Test 5'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTimeEfficiencyChart() {
+            const ctx = document.getElementById('timeEfficiencyChart').getContext('2d');
+            
+            // Get topics with time data
+            const topicsWithTime = subtopicsData
+                .filter(item => item.timeProgress.length > 0)
+                .sort((a, b) => a.avgTimeMinutes - b.avgTimeMinutes)
+                .slice(0, 6);
+
+            const datasets = topicsWithTime.map((topic, index) => ({
+                label: topic.subtopic,
+                data: topic.timeProgress,
+                borderColor: `hsl(${index * 60}, 70%, 50%)`,
+                backgroundColor: `hsla(${index * 60}, 70%, 50%, 0.1)`,
+                tension: 0.4,
+                fill: false,
+                pointRadius: 3
+            }));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Attempt 1', 'Attempt 2', 'Attempt 3', 'Attempt 4', 'Attempt 5'],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + ' min';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(1) + ' min';
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showQuickActions() {
+            document.getElementById('quickActionsModal').classList.remove('hidden');
+        }
+
+        function hideQuickActions() {
+            document.getElementById('quickActionsModal').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            console.log('Showing dashboard');
+        }
+
+        function showAnalytics() {
+            console.log('Showing analytics');
+        }
+
+        function showRecommendations() {
+            console.log('Showing recommendations');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            createHeatmap();
+            createTrendChart();
+            createTopicChart();
+            createSubtopicTrendChart();
+            createTimeEfficiencyChart();
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('quickActionsModal');
+            if (event.target === modal) {
+                hideQuickActions();
+            }
+        });
+    </script>
+</body>
+</html>
