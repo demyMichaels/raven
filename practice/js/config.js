@@ -8,35 +8,39 @@ export const CONFIG = {
 };
 
 export const SUBJECTS_META = {
+    english: { 
+        name: "English", 
+        icon: "📚", 
+        color: "bg-warning",
+        dataFile: "data/english.json"
+    },
+
     mathematics: { 
         name: "Mathematics", 
         icon: "🔢", 
         color: "bg-primary-500",
         dataFile: "data/mathematics.json"
     },
+
     physics: { 
         name: "Physics", 
         icon: "⚛️", 
         color: "bg-accent",
         dataFile: "data/physics.json"
     },
+
     chemistry: { 
         name: "Chemistry", 
         icon: "🧪", 
         color: "bg-primary",
         dataFile: "data/chemistry.json"
     },
+    
     biology: { 
         name: "Biology", 
         icon: "🧬", 
         color: "bg-success",
         dataFile: "data/biology.json"
-    },
-    english: { 
-        name: "English", 
-        icon: "📚", 
-        color: "bg-warning",
-        dataFile: "data/english.json"
     }
 };
 
