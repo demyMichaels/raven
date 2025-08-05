@@ -12,7 +12,7 @@ export const SUBJECTS_META = {
         name: "Mathematics", 
         icon: "🔢", 
         color: "bg-blue-500",
-        dataFile: "data/mathematics.json"
+        dataFile: "data/mathematics"
     },
     physics: { 
         name: "Physics", 
