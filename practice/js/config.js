@@ -25,6 +25,18 @@ export const SUBJECTS_META = {
         icon: "🧪", 
         color: "bg-purple-500",
         dataFile: "data/chemistry.json"
+    },
+        biology: { 
+        name: "Biology", 
+        icon: "🧪", 
+        color: "bg-blue-500",
+        dataFile: "data/biology.json"
+    },
+        english: { 
+        name: "English", 
+        icon: "🧪", 
+        color: "bg-purple-500",
+        dataFile: "data/english.json"
     }
 };
 
