@@ -35,3 +35,16 @@ Range - what's the gap between the highest and the lowest. Is the gap increasing
 
 this might be hard for public schools. 
 we'll have package that reduces the price for them - price differentiation
+
+
+
+
+Build a schema for all subjects and subtopics based on your structure so you can batch import questions.
+structure works well:
+Modular: Each question is part of a questions array under its subtopic.
+
+Separation of logic: solution includes steps and final_answer to help adaptive systems parse reasoning.
+
+Extensible: You can add tags, difficulty, image, explanation_audio, review_interval, or even ai_notes.
+
+
