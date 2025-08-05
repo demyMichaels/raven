@@ -1,7 +1,7 @@
 // js/config.js
 export const CONFIG = {
-    PRIMARY_COLOR: '#5D5CDE',
-    PRIMARY_DARK: '#4A49C5',
+    PRIMARY_COLOR: '#5cb9deff',
+    PRIMARY_DARK: '#c5ae49ff',
     DEFAULT_BOT: '@Claude-Sonnet-4',
     QUESTION_SHUFFLE: true,
     ANIMATION_DURATION: 300
