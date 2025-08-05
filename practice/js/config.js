@@ -11,7 +11,7 @@ export const SUBJECTS_META = {
     mathematics: { 
         name: "Mathematics", 
         icon: "🔢", 
-        color: "bg-data-500",
+        color: "bg-primary-500",
         dataFile: "data/mathematics.json"
     },
     physics: { 
