@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPath Physics - Adaptive Learning System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+        
+        .topic-node {
+            transition: all 0.3s ease;
+        }
+        
+        .topic-node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(93, 92, 222, 0.15);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #5D5CDE 0%, #8B7DFF 100%);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .dependency-graph {
+            min-height: 400px;
+            border: 2px dashed #e5e7eb;
+            border-radius: 12px;
+        }
+        
+        .dark .dependency-graph {
+            border-color: #374151;
+        }
+        
+        .status-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .8; }
+        }
+        
+        .checkpoint-progress {
+            background: linear-gradient(90deg, #10B981 0%, #34D399 100%);
+        }
+        
+        .degradation-warning {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { box-shadow: 0 0 5px rgba(251, 191, 36, 0.5); }
+            to { box-shadow: 0 0 20px rgba(251, 191, 36, 0.8); }
+        }
+
+        .badge-earned {
+            animation: badgeEarn 0.8s ease-out;
+        }
+
+        @keyframes badgeEarn {
+            0% { transform: scale(0.5) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .badge-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .badge-card {
+            background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .badge-card.unlocked {
+            background: linear-gradient(145deg, #fef3c7 0%, #fbbf24 100%);
+            border-color: #f59e0b;
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-card:hover.unlocked {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .dark .badge-card {
+            background: linear-gradient(145deg, #374151 0%, #1f2937 100%);
+            border-color: #4b5563;
+        }
+
+        .dark .badge-card.unlocked {
+            background: linear-gradient(145deg, #92400e 0%, #d97706 100%);
+            border-color: #f59e0b;
+        }
+
+        .social-poster {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-poster::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-light': '#8B7DFF',
+                        background: {
+                            light: '#FFFFFF',
+                            dark: '#181818'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">⚡</span>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white">SmartPath Physics</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Progress: <span id="overall-progress" class="font-semibold text-primary">0%</span>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Badges: <span id="badge-count" class="font-semibold text-yellow-500">0</span>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Streak: <span id="learning-streak" class="font-semibold text-orange-500">0 days</span>
+                    </div>
+                    <button id="badge-gallery-btn" class="px-4 py-2 text-sm bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors">
+                        🏅 Badges
+                    </button>
+                    <button id="view-toggle" class="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        Graph View
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Message -->
+        <div id="welcome-banner" class="mb-6 p-4 bg-gradient-to-r from-primary to-primary-light text-white rounded-xl shadow-lg">
+            <h2 class="text-lg font-semibold mb-2">🚀 Welcome to SmartPath Physics!</h2>
+            <p class="text-sm opacity-90">Master physics topics and earn legendary badges! Share your achievements and build your physics reputation!</p>
+        </div>
+
+        <!-- Badge Showcase -->
+        <div id="recent-badge" class="mb-6 p-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-xl shadow-lg hidden">
+            <div class="flex items-center space-x-4">
+                <div class="text-4xl badge-earned" id="badge-icon">🏅</div>
+                <div>
+                    <h3 class="text-lg font-semibold">🎉 New Badge Earned!</h3>
+                    <p class="text-sm opacity-90" id="badge-description"></p>
+                    <button onclick="shareBadge()" class="mt-2 px-4 py-1 bg-white bg-opacity-20 rounded-lg text-sm hover:bg-opacity-30 transition-colors">
+                        📤 Share Achievement
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkpoint Progress -->
+        <div class="mb-8">
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Checkpoint Progress</h2>
+                <div id="checkpoint-container" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Inactivity Alerts -->
+        <div id="inactivity-alert" class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl hidden">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">😴</span>
+                <div>
+                    <h3 class="font-semibold text-yellow-800 dark:text-yellow-200">Welcome back!</h3>
+                    <p class="text-sm text-yellow-700 dark:text-yellow-300" id="inactivity-message"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Due Alert -->
+        <div id="review-alert" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl hidden">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📅</span>
+                <div>
+                    <h3 class="font-semibold text-blue-800 dark:text-blue-200">Time for Review!</h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-300" id="review-message"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="mb-8">
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Learning Journey</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="mastered-count">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Mastered</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="unlocked-count">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Available</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-yellow-600" id="review-count">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Review Due</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-600" id="degraded-count">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Degraded</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-400" id="locked-count">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Locked</div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div id="progress-bar" class="progress-bar h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Topic Map/List -->
+            <div class="lg:col-span-2">
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Physics Topics</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Master topics to earn legendary physics badges!</p>
+                    </div>
+                    
+                    <!-- List View -->
+                    <div id="list-view" class="p-6">
+                        <div id="topics-container" class="space-y-4"></div>
+                    </div>
+                    
+                    <!-- Graph View -->
+                    <div id="graph-view" class="p-6 hidden">
+                        <div id="dependency-graph" class="dependency-graph"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Current Focus -->
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Focus</h3>
+                    <div id="current-focus" class="text-sm text-gray-600 dark:text-gray-400">
+                        Select a topic to begin learning
+                    </div>
+                </div>
+
+                <!-- Latest Badges -->
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">🏅 Latest Badges</h3>
+                    <div id="latest-badges" class="space-y-2"></div>
+                </div>
+
+                <!-- Spaced Repetition Schedule -->
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">📅 Review Schedule</h3>
+                    <div id="review-schedule" class="space-y-2"></div>
+                </div>
+
+                <!-- Recommended Actions -->
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recommendations</h3>
+                    <div id="recommendations" class="space-y-3">
+                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                            Complete your first topic to get personalized recommendations
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+                    <div id="activity-log" class="space-y-2 text-sm"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badge Gallery Modal -->
+    <div id="badge-gallery-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">🏅 Physics Legends Badge Gallery</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Collect badges by mastering physics topics!</p>
+            </div>
+            <div class="p-6">
+                <div id="badge-gallery-content" class="badge-gallery"></div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button id="badge-gallery-close" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Sharing Modal -->
+    <div id="sharing-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">🎉 Share Your Achievement!</h3>
+                <div id="social-poster" class="social-poster mb-6">
+                    <div style="position: relative; z-index: 1;">
+                        <div class="text-6xl mb-4" id="poster-badge-icon">🏅</div>
+                        <h4 class="text-xl font-bold mb-2" id="poster-badge-name">Badge Earned!</h4>
+                        <p class="text-sm opacity-90 mb-3" id="poster-scientist-name">Physics Legend</p>
+                        <div class="text-xs opacity-75" id="poster-quote">"Quote from scientist"</div>
+                        <div class="mt-4 text-xs">
+                            <div class="font-semibold">SmartPath Physics</div>
+                            <div>Certified Physics Achiever</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="shareToWhatsApp()" class="w-full p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        📱 Share on WhatsApp
+                    </button>
+                    <button onclick="downloadPoster()" class="w-full p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        📥 Download Poster
+                    </button>
+                    <button onclick="copyShareText()" class="w-full p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors">
+                        📋 Copy Share Text
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button id="sharing-close" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 id="quiz-title" class="text-xl font-semibold text-gray-900 dark:text-white">Topic Quiz</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Dynamic questions - each attempt is unique!</p>
+                <div class="mt-2 text-xs text-blue-600 dark:text-blue-400" id="quiz-info"></div>
+            </div>
+            <div class="p-6">
+                <div id="quiz-content"></div>
+                <div class="flex justify-between items-center mt-6">
+                    <button id="quiz-cancel" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button id="quiz-submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors">
+                        Submit Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-xl max-w-lg w-full mx-4">
+            <div class="p-6">
+                <div id="feedback-content"></div>
+                <div class="flex justify-end mt-6">
+                    <button id="feedback-close" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-light transition-colors">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Physics Legends Badge System
+        const physicsLegends = {
+            'measurement': {
+                scientist: 'Galileo Galilei',
+                badgeName: 'Galileo Badge',
+                icon: '🔭',
+                description: 'Master of measurement and observation',
+                quote: 'Measure what can be measured, and make measurable what cannot be measured.',
+                unlocked: false,
+                earnedDate: null
+            },
+            'scalars-vectors': {
+                scientist: 'René Descartes',
+                badgeName: 'Descartes Badge',
+                icon: '📐',
+                description: 'Pioneer of coordinate systems',
+                quote: 'I think, therefore I am... in coordinate space!',
+                unlocked: false,
+                earnedDate: null
+            },
+            'linear-motion': {
+                scientist: 'Galileo Galilei',
+                badgeName: 'Motion Master',
+                icon: '⚡',
+                description: 'First to study motion mathematically',
+                quote: 'And yet it moves!',
+                unlocked: false,
+                earnedDate: null
+            },
+            'projectiles': {
+                scientist: 'Tartaglia',
+                badgeName: 'Trajectory Expert',
+                icon: '🎯',
+                description: 'Master of projectile paths',
+                quote: 'Every shot follows a perfect parabola.',
+                unlocked: false,
+                earnedDate: null
+            },
+            'newtons-laws': {
+                scientist: 'Isaac Newton',
+                badgeName: 'Newton Badge',
+                icon: '🍎',
+                description: 'Discoverer of the laws of motion',
+                quote: 'If I have seen further, it is by standing on the shoulders of giants.',
+                unlocked: false,
+                earnedDate: null
+            }
+        };
+
+        // Checkpoint System
+        const checkpoints = {
+            'foundations-motion': {
+                id: 'foundations-motion',
+                name: 'Foundations of Motion',
+                topics: ['measurement', 'scalars-vectors', 'linear-motion', 'projectiles', 'newtons-laws'],
+                order: 1,
+                unlocked: true
+            },
+            'advanced-mechanics': {
+                id: 'advanced-mechanics',
+                name: 'Advanced Mechanics & Circular Dynamics',
+                topics: ['friction', 'equilibrium', 'simple-harmonic', 'work-energy', 'circular-motion'],
+                order: 2,
+                unlocked: false
+            },
+            'matter-thermal': {
+                id: 'matter-thermal',
+                name: 'Properties of Matter & Thermal Physics',
+                topics: ['gravitational-field', 'density-pressure', 'elasticity', 'surface-tension', 'temperature-heat', 'gas-laws'],
+                order: 3,
+                unlocked: false
+            },
+            'electricity-magnetism': {
+                id: 'electricity-magnetism',
+                name: 'Electricity & Magnetism',
+                topics: ['electrostatics', 'current-electricity', 'electric-circuits', 'magnetic-fields', 'electromagnetic-field'],
+                order: 4,
+                unlocked: false
+            },
+            'waves-light': {
+                id: 'waves-light',
+                name: 'Waves, Light & Modern Physics',
+                topics: ['ac-circuits', 'heat-transfer', 'wave-properties', 'light-waves', 'optical-instruments', 'sound-waves'],
+                order: 5,
+                unlocked: false
+            },
+            'atomic-nuclear': {
+                id: 'atomic-nuclear',
+                name: 'Atomic, Nuclear & Electronics',
+                topics: ['matter-duality', 'atomic-models', 'atomic-structure', 'radioactivity', 'electronics-intro'],
+                order: 6,
+                unlocked: false
+            }
+        };
+
+        // Enhanced Physics Topics with Learning Data
+        const physicsTopics = {
+            'measurement': {
+                id: 'measurement',
+                name: 'Measurement, Units, Dimensions',
+                category: 'Measurement & Vectors',
+                checkpoint: 'foundations-motion',
+                prerequisites: [],
+                dependents: ['scalars-vectors'],
+                status: 'unlocked',
+                description: 'Fundamental concepts of measurement, units, and dimensional analysis',
+                difficulty: 1,
+                lastAttempt: null,
+                nextReview: null,
+                totalAttempts: 0,
+                bestScore: 0,
+                averageScore: 0,
+                reviewStreak: 0,
+                degraded: false
+            },
+            'scalars-vectors': {
+                id: 'scalars-vectors',
+                name: 'Scalars and Vectors',
+                category: 'Measurement & Vectors',
+                checkpoint: 'foundations-motion',
+                prerequisites: ['measurement'],
+                dependents: ['linear-motion', 'newtons-laws'],
+                status: 'locked',
+                description: 'Understanding scalar and vector quantities and their operations',
+                difficulty: 2,
+                lastAttempt: null,
+                nextReview: null,
+                totalAttempts: 0,
+                bestScore: 0,
+                averageScore: 0,
+                reviewStreak: 0,
+                degraded: false
+            },
+            'linear-motion': {
+                id: 'linear-motion',
+                name: 'Linear Motion',
+                category: 'Motion',
+                checkpoint: 'foundations-motion',
+                prerequisites: ['scalars-vectors'],
+                dependents: ['projectiles', 'newtons-laws'],
+                status: 'locked',
+                description: 'Motion in one dimension, velocity, acceleration, and kinematic equations',
+                difficulty: 3,
+                lastAttempt: null,
+                nextReview: null,
+                totalAttempts: 0,
+                bestScore: 0,
+                averageScore: 0,
+                reviewStreak: 0,
+                degraded: false
+            },
+            'projectiles': {
+                id: 'projectiles',
+                name: 'Projectile Motion',
+                category: 'Motion',
+                checkpoint: 'foundations-motion',
+                prerequisites: ['linear-motion'],
+                dependents: [],
+                status: 'locked',
+                description: 'Motion in two dimensions under gravity',
+                difficulty: 4,
+                lastAttempt: null,
+                nextReview: null,
+                totalAttempts: 0,
+                bestScore: 0,
+                averageScore: 0,
+                reviewStreak: 0,
+                degraded: false
+            },
+            'newtons-laws': {
+                id: 'newtons-laws',
+                name: "Newton's Laws of Motion",
+                category: 'Newtonian Mechanics',
+                checkpoint: 'foundations-motion',
+                prerequisites: ['linear-motion', 'scalars-vectors'],
+                dependents: ['circular-motion'],
+                status: 'locked',
+                description: 'The three fundamental laws governing motion and forces',
+                difficulty: 4,
+                lastAttempt: null,
+                nextReview: null,
+                totalAttempts: 0,
+                bestScore: 0,
+                averageScore: 0,
+                reviewStreak: 0,
+                degraded: false
+            }
+        };
+
+        // Dynamic Question Templates
+        const questionTemplates = {
+            'measurement': [
+                {
+                    template: "Convert {value} {fromUnit} to {toUnit}.",
+                    type: 'conversion',
+                    generator: () => {
+                        const conversions = [
+                            { from: 'm', to: 'cm', factor: 100 },
+                            { from: 'km', to: 'm', factor: 1000 },
+                            { from: 'g', to: 'kg', factor: 0.001 },
+                            { from: 's', to: 'ms', factor: 1000 }
+                        ];
+                        const conv = conversions[Math.floor(Math.random() * conversions.length)];
+                        const value = Math.round((Math.random() * 50 + 1) * 10) / 10;
+                        return {
+                            question: `Convert ${value} ${conv.from} to ${conv.to}.`,
+                            answer: value * conv.factor,
+                            options: [
+                                value * conv.factor,
+                                value * conv.factor * 10,
+                                value / conv.factor,
+                                value * conv.factor / 10
+                            ].sort(() => Math.random() - 0.5)
+                        };
+                    }
+                },
+                {
+                    template: "What is the dimensional formula for {quantity}?",
+                    type: 'dimensional',
+                    generator: () => {
+                        const quantities = [
+                            { name: 'velocity', formula: '[LT⁻¹]' },
+                            { name: 'acceleration', formula: '[LT⁻²]' },
+                            { name: 'force', formula: '[MLT⁻²]' },
+                            { name: 'energy', formula: '[ML²T⁻²]' }
+                        ];
+                        const q = quantities[Math.floor(Math.random() * quantities.length)];
+                        return {
+                            question: `What is the dimensional formula for ${q.name}?`,
+                            answer: q.formula,
+                            options: [q.formula, '[ML²T⁻¹]', '[MLT⁻¹]', '[L²T⁻²]']
+                        };
+                    }
+                }
+            ],
+            'scalars-vectors': [
+                {
+                    template: "Which of the following is a vector quantity?",
+                    type: 'identification',
+                    generator: () => {
+                        const vectors = ['velocity', 'acceleration', 'force', 'displacement'];
+                        const scalars = ['speed', 'distance', 'mass', 'time'];
+                        const correct = vectors[Math.floor(Math.random() * vectors.length)];
+                        const options = [correct, ...scalars.slice(0, 3)].sort(() => Math.random() - 0.5);
+                        return {
+                            question: "Which of the following is a vector quantity?",
+                            answer: correct,
+                            options: options
+                        };
+                    }
+                },
+                {
+                    template: "Find the magnitude of the resultant of two perpendicular vectors.",
+                    type: 'calculation',
+                    generator: () => {
+                        const a = Math.floor(Math.random() * 10) + 1;
+                        const b = Math.floor(Math.random() * 10) + 1;
+                        const resultant = Math.sqrt(a*a + b*b);
+                        return {
+                            question: `Two perpendicular vectors have magnitudes ${a} and ${b}. What is the magnitude of their resultant?`,
+                            answer: Math.round(resultant * 10) / 10,
+                            options: [
+                                Math.round(resultant * 10) / 10,
+                                a + b,
+                                Math.abs(a - b),
+                                Math.round((a * b) * 10) / 10
+                            ]
+                        };
+                    }
+                }
+            ],
+            'linear-motion': [
+                {
+                    template: "Calculate velocity using kinematic equations.",
+                    type: 'kinematics',
+                    generator: () => {
+                        const u = Math.floor(Math.random() * 20);
+                        const a = Math.floor(Math.random() * 10) + 1;
+                        const t = Math.floor(Math.random() * 10) + 1;
+                        const v = u + a * t;
+                        return {
+                            question: `A body starts with velocity ${u} m/s and accelerates at ${a} m/s² for ${t} seconds. What is its final velocity?`,
+                            answer: v,
+                            options: [v, u + t, a * t, u * a].sort(() => Math.random() - 0.5)
+                        };
+                    }
+                }
+            ]
+        };
+
+        // Learning System State
+        let learningState = {
+            currentTopic: null,
+            isGraphView: false,
+            activityLog: [],
+            lastActiveDate: new Date(),
+            learningStreak: 0,
+            currentCheckpoint: 'foundations-motion',
+            lastEarnedBadge: null
+        };
+
+        // Initialize dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Badge System Functions
+        function earnBadge(topicId) {
+            const badge = physicsLegends[topicId];
+            if (badge && !badge.unlocked) {
+                badge.unlocked = true;
+                badge.earnedDate = new Date().toISOString();
+                learningState.lastEarnedBadge = topicId;
+                
+                showBadgeEarned(topicId);
+                logActivity(`🏅 Earned ${badge.badgeName}!`);
+                updateLatestBadges();
+                updateBadgeCount();
+                return true;
+            }
+            return false;
+        }
+
+        function showBadgeEarned(topicId) {
+            const badge = physicsLegends[topicId];
+            const recentBadge = document.getElementById('recent-badge');
+            
+            document.getElementById('badge-icon').textContent = badge.icon;
+            document.getElementById('badge-description').textContent = `You've earned the ${badge.badgeName} for mastering ${physicsTopics[topicId].name}!`;
+            
+            recentBadge.classList.remove('hidden');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                recentBadge.classList.add('hidden');
+            }, 10000);
+        }
+
+        function updateBadgeCount() {
+            const earnedBadges = Object.values(physicsLegends).filter(b => b.unlocked).length;
+            document.getElementById('badge-count').textContent = earnedBadges;
+        }
+
+        function updateLatestBadges() {
+            const container = document.getElementById('latest-badges');
+            const earnedBadges = Object.entries(physicsLegends)
+                .filter(([_, badge]) => badge.unlocked)
+                .sort((a, b) => new Date(b[1].earnedDate) - new Date(a[1].earnedDate))
+                .slice(0, 3);
+            
+            if (earnedBadges.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-600 dark:text-gray-400">No badges earned yet</div>';
+                return;
+            }
+            
+            container.innerHTML = earnedBadges.map(([topicId, badge]) => `
+                <div class="flex items-center space-x-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                    <span class="text-xl">${badge.icon}</span>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">${badge.badgeName}</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">${badge.scientist}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderBadgeGallery() {
+            const container = document.getElementById('badge-gallery-content');
+            
+            container.innerHTML = Object.entries(physicsLegends).map(([topicId, badge]) => `
+                <div class="badge-card ${badge.unlocked ? 'unlocked' : ''} rounded-xl p-4 text-center">
+                    <div class="text-4xl mb-2 ${badge.unlocked ? '' : 'grayscale opacity-50'}">${badge.icon}</div>
+                    <h4 class="font-semibold text-sm mb-1 ${badge.unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}">${badge.badgeName}</h4>
+                    <p class="text-xs mb-2 ${badge.unlocked ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}">${badge.scientist}</p>
+                    ${badge.unlocked ? `
+                        <div class="text-xs text-green-600 dark:text-green-400 font-medium">✅ Earned</div>
+                        <div class="text-xs text-gray-500 mt-1">${new Date(badge.earnedDate).toLocaleDateString()}</div>
+                    ` : `
+                        <div class="text-xs text-gray-500">🔒 Locked</div>
+                        <div class="text-xs text-gray-400 mt-1">Master ${physicsTopics[topicId]?.name || 'this topic'}</div>
+                    `}
+                </div>
+            `).join('');
+        }
+
+        // Social Sharing Functions
+        function shareBadge() {
+            if (learningState.lastEarnedBadge) {
+                const badge = physicsLegends[learningState.lastEarnedBadge];
+                setupSocialPoster(badge);
+                document.getElementById('sharing-modal').classList.remove('hidden');
+            }
+        }
+
+        function setupSocialPoster(badge) {
+            document.getElementById('poster-badge-icon').textContent = badge.icon;
+            document.getElementById('poster-badge-name').textContent = badge.badgeName;
+            document.getElementById('poster-scientist-name').textContent = badge.scientist;
+            document.getElementById('poster-quote').textContent = `"${badge.quote}"`;
+        }
+
+        function shareToWhatsApp() {
+            const badge = physicsLegends[learningState.lastEarnedBadge];
+            const text = `🏅 I just earned the ${badge.badgeName} on SmartPath Physics! 
+
+${badge.scientist}: "${badge.quote}"
+
+Join me in mastering physics with adaptive learning! 🚀`;
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        function downloadPoster() {
+            // In a real app, this would generate and download an image
+            // For now, we'll simulate the download
+            const badge = physicsLegends[learningState.lastEarnedBadge];
+            const link = document.createElement('a');
+            link.download = `${badge.badgeName.replace(/\s+/g, '_')}_Achievement.png`;
+            // In a real implementation, you'd generate an actual image blob here
+            link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(`${badge.badgeName} Achievement Certificate`);
+            link.click();
+            
+            showCustomAlert('Download Started', 'Your achievement poster is being prepared for download!');
+        }
+
+        function copyShareText() {
+            const badge = physicsLegends[learningState.lastEarnedBadge];
+            const text = `🏅 I just earned the ${badge.badgeName} on SmartPath Physics! 
+
+${badge.scientist}: "${badge.quote}"
+
+Join me in mastering physics with adaptive learning! 🚀`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showCustomAlert('Copied!', 'Share text copied to clipboard. Paste it anywhere to share your achievement!');
+            });
+        }
+
+        function showCustomAlert(title, message) {
+            // Custom alert implementation since alert() is not supported
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
+            alertDiv.innerHTML = `
+                <h4 class="font-semibold">${title}</h4>
+                <p class="text-sm mt-1">${message}</p>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // Spaced Repetition Algorithm
+        function calculateNextReview(score, attempts) {
+            const baseSchedule = {
+                100: 7,
+                90: 6,
+                80: 5,
+                70: 4,
+                50: 3,
+                0: 1
+            };
+            
+            let days = 1;
+            for (const [threshold, schedDays] of Object.entries(baseSchedule)) {
+                if (score >= parseInt(threshold)) {
+                    days = schedDays;
+                    break;
+                }
+            }
+            
+            // Adjust based on attempt history
+            const consistencyBonus = Math.min(attempts, 5) * 0.5;
+            days = Math.floor(days + consistencyBonus);
+            
+            const nextReview = new Date();
+            nextReview.setDate(nextReview.getDate() + days);
+            return nextReview;
+        }
+
+        // Inactivity and Degradation System
+        function checkInactivity() {
+            const now = new Date();
+            const lastActive = new Date(learningState.lastActiveDate);
+            const daysSinceActive = Math.floor((now - lastActive) / (1000 * 60 * 60 * 24));
+            
+            if (daysSinceActive >= 10) {
+                // Reset to last checkpoint
+                resetToCheckpoint();
+                showInactivityAlert(`It's been ${daysSinceActive} days! We've returned you to your last checkpoint. Don't worry - your brain will catch up quickly!`);
+            } else if (daysSinceActive >= 5) {
+                // Degrade some topics
+                degradeTopics();
+                showInactivityAlert(`We noticed you've been away for ${daysSinceActive} days. Some topics need refreshing to keep your memory sharp!`);
+            }
+            
+            // Reset streak if more than 2 days
+            if (daysSinceActive > 2) {
+                learningState.learningStreak = 0;
+            }
+        }
+
+        function degradeTopics() {
+            Object.values(physicsTopics).forEach(topic => {
+                if (topic.status === 'mastered' && topic.lastAttempt) {
+                    const daysSinceAttempt = Math.floor((new Date() - new Date(topic.lastAttempt)) / (1000 * 60 * 60 * 24));
+                    if (daysSinceAttempt >= 7) {
+                        topic.degraded = true;
+                        topic.status = 'needs_review';
+                    }
+                }
+            });
+        }
+
+        function resetToCheckpoint() {
+            const currentCheckpointTopics = checkpoints[learningState.currentCheckpoint].topics;
+            Object.values(physicsTopics).forEach(topic => {
+                if (!currentCheckpointTopics.includes(topic.id)) {
+                    if (topic.status === 'mastered' || topic.status === 'unlocked') {
+                        topic.status = 'locked';
+                        topic.degraded = false;
+                    }
+                }
+            });
+        }
+
+        function showInactivityAlert(message) {
+            document.getElementById('inactivity-message').textContent = message;
+            document.getElementById('inactivity-alert').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('inactivity-alert').classList.add('hidden');
+            }, 10000);
+        }
+
+        // Core Learning System Functions
+        function checkPrerequisites(topicId) {
+            const topic = physicsTopics[topicId];
+            return topic.prerequisites.every(prereq => 
+                physicsTopics[prereq].status === 'mastered' && !physicsTopics[prereq].degraded
+            );
+        }
+
+        function unlockDependents(topicId) {
+            const topic = physicsTopics[topicId];
+            topic.dependents.forEach(dependent => {
+                if (checkPrerequisites(dependent)) {
+                    physicsTopics[dependent].status = 'unlocked';
+                }
+            });
+        }
+
+        function checkCheckpointCompletion(checkpointId) {
+            const checkpoint = checkpoints[checkpointId];
+            const allMastered = checkpoint.topics.every(topicId => 
+                physicsTopics[topicId] && physicsTopics[topicId].status === 'mastered'
+            );
+            
+            if (allMastered) {
+                // Unlock next checkpoint
+                const nextCheckpoint = Object.values(checkpoints).find(cp => cp.order === checkpoint.order + 1);
+                if (nextCheckpoint) {
+                    nextCheckpoint.unlocked = true;
+                    learningState.currentCheckpoint = nextCheckpoint.id;
+                    showFeedback(
+                        '🎉 Checkpoint Completed!',
+                        `<div class="text-center">
+                            <p class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">Amazing progress!</p>
+                            <p class="text-gray-600 dark:text-gray-400 mb-4">You've completed the <strong>${checkpoint.name}</strong> checkpoint!</p>
+                            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                <p class="text-sm text-green-700 dark:text-green-300">Checkpoint saved! If you take a break, you'll return here.</p>
+                            </div>
+                        </div>`
+                    );
+                    logActivity(`🎯 Completed checkpoint: ${checkpoint.name}`);
+                }
+            }
+        }
+
+        function handleTopicFailure(topicId, score) {
+            const topic = physicsTopics[topicId];
+            topic.status = 'needs_review';
+            topic.lastAttempt = new Date().toISOString();
+            topic.totalAttempts++;
+            topic.nextReview = calculateNextReview(score, topic.totalAttempts);
+            
+            // Update average score
+            topic.averageScore = ((topic.averageScore * (topic.totalAttempts - 1)) + score) / topic.totalAttempts;
+            
+            const needsReview = [];
+            topic.prerequisites.forEach(prereq => {
+                if (physicsTopics[prereq].status !== 'mastered' || physicsTopics[prereq].degraded) {
+                    physicsTopics[prereq].status = 'needs_review';
+                    needsReview.push(physicsTopics[prereq].name);
+                }
+            });
+
+            logActivity(`📚 ${topic.name} needs more practice (${score}%)`);
+            return needsReview;
+        }
+
+        function handleTopicSuccess(topicId, score) {
+            const topic = physicsTopics[topicId];
+            topic.status = 'mastered';
+            topic.degraded = false;
+            topic.lastAttempt = new Date().toISOString();
+            topic.totalAttempts++;
+            topic.nextReview = calculateNextReview(score, topic.totalAttempts);
+            topic.bestScore = Math.max(topic.bestScore, score);
+            
+            // Update average score
+            topic.averageScore = ((topic.averageScore * (topic.totalAttempts - 1)) + score) / topic.totalAttempts;
+            
+            // Update learning streak
+            learningState.learningStreak++;
+            learningState.lastActiveDate = new Date();
+            
+            // Earn badge for this topic
+            earnBadge(topicId);
+            
+            unlockDependents(topicId);
+            checkCheckpointCompletion(topic.checkpoint);
+            logActivity(`✅ Mastered ${topic.name}! (${score}%)`);
+        }
+
+        function getTopicsDueForReview() {
+            const now = new Date();
+            return Object.values(physicsTopics).filter(topic => 
+                topic.nextReview && new Date(topic.nextReview) <= now && topic.status === 'mastered'
+            );
+        }
+
+        function logActivity(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            learningState.activityLog.unshift({
+                message,
+                timestamp
+            });
+            if (learningState.activityLog.length > 10) {
+                learningState.activityLog = learningState.activityLog.slice(0, 10);
+            }
+            updateActivityLog();
+        }
+
+        function getStatusIcon(status, degraded = false) {
+            if (degraded) return '⚠️';
+            switch(status) {
+                case 'mastered': return '✅';
+                case 'unlocked': return '🟦';
+                case 'needs_review': return '📚';
+                case 'locked': return '🔒';
+                default: return '❓';
+            }
+        }
+
+        function getStatusColor(status, degraded = false) {
+            if (degraded) return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+            switch(status) {
+                case 'mastered': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+                case 'unlocked': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+                case 'needs_review': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+                case 'locked': return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+                default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+            }
+        }
+
+        function updateProgress() {
+            const topics = Object.values(physicsTopics);
+            const mastered = topics.filter(t => t.status === 'mastered' && !t.degraded).length;
+            const unlocked = topics.filter(t => t.status === 'unlocked').length;
+            const needsReview = topics.filter(t => t.status === 'needs_review').length;
+            const degraded = topics.filter(t => t.degraded).length;
+            const locked = topics.filter(t => t.status === 'locked').length;
+            
+            const progress = Math.round((mastered / topics.length) * 100);
+            
+            document.getElementById('mastered-count').textContent = mastered;
+            document.getElementById('unlocked-count').textContent = unlocked;
+            document.getElementById('review-count').textContent = needsReview;
+            document.getElementById('degraded-count').textContent = degraded;
+            document.getElementById('locked-count').textContent = locked;
+            document.getElementById('overall-progress').textContent = `${progress}%`;
+            document.getElementById('learning-streak').textContent = `${learningState.learningStreak} days`;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function updateCheckpointProgress() {
+            const container = document.getElementById('checkpoint-container');
+            let html = '';
+            
+            Object.values(checkpoints).sort((a, b) => a.order - b.order).forEach(checkpoint => {
+                const topics = checkpoint.topics.map(id => physicsTopics[id]).filter(Boolean);
+                const mastered = topics.filter(t => t.status === 'mastered' && !t.degraded).length;
+                const total = topics.length;
+                const progress = total > 0 ? Math.round((mastered / total) * 100) : 0;
+                const isActive = checkpoint.id === learningState.currentCheckpoint;
+                
+                html += `
+                    <div class="p-4 border-2 ${isActive ? 'border-primary bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'} rounded-lg ${checkpoint.unlocked ? '' : 'opacity-60'}">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold text-gray-900 dark:text-white">${checkpoint.order}. ${checkpoint.name}</h4>
+                            <span class="text-sm ${checkpoint.unlocked ? 'text-green-600' : 'text-gray-400'}">${mastered}/${total}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                            <div class="checkpoint-progress h-2 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400">
+                            ${checkpoint.unlocked ? (progress === 100 ? '✅ Complete' : `${progress}% Complete`) : '🔒 Locked'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function updateReviewSchedule() {
+            const container = document.getElementById('review-schedule');
+            const dueTopics = getTopicsDueForReview();
+            const upcomingReviews = Object.values(physicsTopics)
+                .filter(t => t.nextReview && new Date(t.nextReview) > new Date())
+                .sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview))
+                .slice(0, 3);
+            
+            let html = '';
+            
+            if (dueTopics.length > 0) {
+                html += '<div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 mb-3">';
+                html += '<div class="font-medium text-red-800 dark:text-red-200 text-sm mb-2">📅 Due Now</div>';
+                dueTopics.forEach(topic => {
+                    html += `<div class="text-sm text-red-700 dark:text-red-300 cursor-pointer hover:underline" onclick="startQuiz('${topic.id}')">${topic.name}</div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (upcomingReviews.length > 0) {
+                html += '<div class="space-y-2">';
+                upcomingReviews.forEach(topic => {
+                    const reviewDate = new Date(topic.nextReview).toLocaleDateString();
+                    html += `
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-700 dark:text-gray-300">${topic.name}</span>
+                            <span class="text-gray-500 dark:text-gray-400">${reviewDate}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            if (!html) {
+                html = '<div class="text-sm text-gray-600 dark:text-gray-400">No reviews scheduled</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateRecommendations() {
+            const container = document.getElementById('recommendations');
+            const needsReview = Object.values(physicsTopics).filter(t => t.status === 'needs_review');
+            const degraded = Object.values(physicsTopics).filter(t => t.degraded);
+            const unlocked = Object.values(physicsTopics).filter(t => t.status === 'unlocked');
+            const dueReviews = getTopicsDueForReview();
+            
+            let html = '';
+            
+            if (dueReviews.length > 0) {
+                html += '<div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 mb-3">';
+                html += '<div class="font-medium text-red-800 dark:text-red-200 text-sm mb-2">🚨 Review Due</div>';
+                dueReviews.slice(0, 2).forEach(topic => {
+                    html += `<div class="text-sm text-red-700 dark:text-red-300 cursor-pointer hover:underline" onclick="startQuiz('${topic.id}')">${topic.name}</div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (degraded.length > 0) {
+                html += '<div class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 mb-3">';
+                html += '<div class="font-medium text-orange-800 dark:text-orange-200 text-sm mb-2">⚠️ Degraded Topics</div>';
+                degraded.slice(0, 2).forEach(topic => {
+                    html += `<div class="text-sm text-orange-700 dark:text-orange-300 cursor-pointer hover:underline" onclick="startQuiz('${topic.id}')">${topic.name}</div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (needsReview.length > 0) {
+                html += '<div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-3">';
+                html += '<div class="font-medium text-yellow-800 dark:text-yellow-200 text-sm mb-2">📚 Needs Practice</div>';
+                needsReview.slice(0, 2).forEach(topic => {
+                    html += `<div class="text-sm text-yellow-700 dark:text-yellow-300 cursor-pointer hover:underline" onclick="startQuiz('${topic.id}')">${topic.name}</div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (unlocked.length > 0) {
+                html += '<div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">';
+                html += '<div class="font-medium text-blue-800 dark:text-blue-200 text-sm mb-2">🎯 Ready to Learn</div>';
+                unlocked.slice(0, 2).forEach(topic => {
+                    const badge = physicsLegends[topic.id];
+                    html += `<div class="text-sm text-blue-700 dark:text-blue-300 cursor-pointer hover:underline" onclick="startQuiz('${topic.id}')">
+                        ${badge ? badge.icon : '🎯'} ${topic.name}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+            
+            if (!html) {
+                html = '<div class="text-sm text-gray-600 dark:text-gray-400">Great job! Keep up the momentum! 🎉</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateActivityLog() {
+            const container = document.getElementById('activity-log');
+            
+            container.innerHTML = learningState.activityLog.map(activity => `
+                <div class="flex justify-between items-start">
+                    <span class="text-gray-700 dark:text-gray-300 flex-1">${activity.message}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">${activity.timestamp}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderTopicList() {
+            const container = document.getElementById('topics-container');
+            const categories = {};
+            
+            // Group topics by category
+            Object.values(physicsTopics).forEach(topic => {
+                if (!categories[topic.category]) {
+                    categories[topic.category] = [];
+                }
+                categories[topic.category].push(topic);
+            });
+            
+            let html = '';
+            Object.entries(categories).forEach(([category, topics]) => {
+                html += `
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">${category}</h4>
+                        <div class="space-y-2">
+                `;
+                
+                topics.forEach(topic => {
+                    const isClickable = (topic.status === 'unlocked' || topic.status === 'needs_review' || topic.degraded) && !topic.degraded;
+                    const needsReview = topic.status === 'needs_review' || topic.degraded;
+                    const dueForReview = topic.nextReview && new Date(topic.nextReview) <= new Date();
+                    const badge = physicsLegends[topic.id];
+                    
+                    html += `
+                        <div class="topic-node p-4 rounded-lg border-2 ${isClickable ? 'cursor-pointer hover:border-primary border-gray-200 dark:border-gray-700' : 'cursor-not-allowed opacity-60 border-gray-200 dark:border-gray-700'} 
+                             ${needsReview ? 'degradation-warning border-yellow-400' : ''} 
+                             ${dueForReview ? 'ring-2 ring-blue-400' : ''}" 
+                             onclick="${isClickable ? `startQuiz('${topic.id}')` : `showLockedTopic('${topic.id}')`}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="text-xl">${getStatusIcon(topic.status, topic.degraded)}</span>
+                                        <div>
+                                            <h5 class="font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+                                                <span>${topic.name}</span>
+                                                ${badge && badge.unlocked ? `<span class="text-lg">${badge.icon}</span>` : ''}
+                                                ${dueForReview ? '<span class="ml-2 text-xs text-blue-600">Due for review</span>' : ''}
+                                            </h5>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">${topic.description}</p>
+                                            ${badge && !badge.unlocked ? `
+                                                <div class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                                                    🏅 Earn ${badge.badgeName} by mastering this topic!
+                                                </div>
+                                            ` : ''}
+                                            ${topic.totalAttempts > 0 ? `
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Best: ${topic.bestScore}% | Avg: ${Math.round(topic.averageScore)}% | Attempts: ${topic.totalAttempts}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end space-y-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(topic.status, topic.degraded)}">
+                                        ${topic.degraded ? 'Degraded' : topic.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </span>
+                                    <div class="flex space-x-1">
+                                        ${Array.from({length: topic.difficulty}, () => '<span class="w-2 h-2 bg-orange-400 rounded-full"></span>').join('')}
+                                    </div>
+                                    ${topic.nextReview ? `
+                                        <div class="text-xs text-gray-500">
+                                            Next: ${new Date(topic.nextReview).toLocaleDateString()}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            ${topic.prerequisites.length > 0 ? `
+                                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Requires: ${topic.prerequisites.map(p => physicsTopics[p].name).join(', ')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function showLockedTopic(topicId) {
+            const topic = physicsTopics[topicId];
+            const missingPrereqs = topic.prerequisites.filter(p => 
+                physicsTopics[p].status !== 'mastered' || physicsTopics[p].degraded
+            );
+            
+            showFeedback(
+                'Topic Locked 🔒',
+                `<div class="text-center">
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">You need to master the following topics first:</p>
+                    <div class="space-y-2">
+                        ${missingPrereqs.map(p => `
+                            <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-700 dark:text-blue-300">
+                                ${physicsTopics[p].name}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`
+            );
+        }
+
+        function generateDynamicQuiz(topicId) {
+            const templates = questionTemplates[topicId] || [];
+            if (templates.length === 0) {
+                // Fallback for topics without dynamic questions
+                return [{
+                    question: `What do you understand about ${physicsTopics[topicId].name}?`,
+                    options: ["I understand it well", "I need more practice", "I'm confused", "I haven't studied it"],
+                    correct: 0
+                }];
+            }
+            
+            const numQuestions = Math.min(3, templates.length);
+            const selectedTemplates = templates.slice().sort(() => Math.random() - 0.5).slice(0, numQuestions);
+            
+            return selectedTemplates.map(template => {
+                const generated = template.generator();
+                const correctIndex = generated.options.indexOf(generated.answer);
+                return {
+                    question: generated.question,
+                    options: generated.options,
+                    correct: correctIndex >= 0 ? correctIndex : 0
+                };
+            });
+        }
+
+        function startQuiz(topicId) {
+            const topic = physicsTopics[topicId];
+            const badge = physicsLegends[topicId];
+            learningState.currentTopic = topicId;
+            
+            document.getElementById('quiz-title').textContent = `${topic.name} - Knowledge Check`;
+            
+            let infoText = '';
+            if (topic.degraded) {
+                infoText = '⚠️ This topic has been degraded due to inactivity. Complete this quiz to restore it.';
+            } else if (topic.status === 'needs_review') {
+                infoText = '📚 This topic needs review based on your previous performance.';
+            } else {
+                infoText = `🎯 New topic! Master this to earn the ${badge?.badgeName || 'achievement badge'}!`;
+            }
+            document.getElementById('quiz-info').textContent = infoText;
+            
+            const questions = generateDynamicQuiz(topicId);
+            
+            let html = '';
+            questions.forEach((q, index) => {
+                html += `
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-3">${index + 1}. ${q.question}</h4>
+                        <div class="space-y-2">
+                `;
+                
+                q.options.forEach((option, optIndex) => {
+                    html += `
+                        <label class="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                            <input type="radio" name="question_${index}" value="${optIndex}" class="mr-3 text-primary">
+                            <span class="text-gray-700 dark:text-gray-300">${option}</span>
+                        </label>
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            // Store current questions for scoring
+            window.currentQuizQuestions = questions;
+            
+            document.getElementById('quiz-content').innerHTML = html;
+            document.getElementById('quiz-modal').classList.remove('hidden');
+        }
+
+        function submitQuiz() {
+            const topicId = learningState.currentTopic;
+            const questions = window.currentQuizQuestions || [];
+            
+            let correct = 0;
+            let total = questions.length;
+            
+            questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="question_${index}"]:checked`);
+                if (selected && parseInt(selected.value) === q.correct) {
+                    correct++;
+                }
+            });
+            
+            const score = Math.round((correct / total) * 100);
+            const passed = score >= 70; // 70% passing grade
+            
+            document.getElementById('quiz-modal').classList.add('hidden');
+            
+            if (passed) {
+                handleTopicSuccess(topicId, score);
+                const badge = physicsLegends[topicId];
+                showFeedback(
+                    'Excellent Work! 🎉',
+                    `<div class="text-center">
+                        <p class="text-lg font-semibold text-green-600 dark:text-green-400 mb-2">Score: ${score}%</p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">You've successfully mastered ${physicsTopics[topicId].name}!</p>
+                        ${badge && badge.unlocked ? `
+                            <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-4 border border-yellow-200 dark:border-yellow-800">
+                                <div class="text-4xl mb-2">${badge.icon}</div>
+                                <p class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">${badge.badgeName} Earned!</p>
+                                <p class="text-sm text-yellow-600 dark:text-yellow-400">${badge.scientist}</p>
+                            </div>
+                        ` : ''}
+                        <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <p class="text-sm text-green-700 dark:text-green-300">
+                                Next review scheduled for: ${new Date(physicsTopics[topicId].nextReview).toLocaleDateString()}
+                            </p>
+                        </div>
+                    </div>`
+                );
+            } else {
+                const needsReview = handleTopicFailure(topicId, score);
+                showFeedback(
+                    'Keep Learning! 📚',
+                    `<div class="text-center">
+                        <p class="text-lg font-semibold text-yellow-600 dark:text-yellow-400 mb-2">Score: ${score}%</p>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">You need more practice with ${physicsTopics[topicId].name}.</p>
+                        <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-3">
+                            <p class="text-sm text-yellow-700 dark:text-yellow-300">
+                                Next attempt scheduled for: ${new Date(physicsTopics[topicId].nextReview).toLocaleDateString()}
+                            </p>
+                        </div>
+                        ${needsReview.length > 0 ? `
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                <p class="text-sm text-blue-700 dark:text-blue-300 mb-2">We recommend reviewing these prerequisite topics:</p>
+                                <div class="space-y-1">
+                                    ${needsReview.map(topic => `<div class="text-sm font-medium">${topic}</div>`).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>`
+                );
+            }
+            
+            updateUI();
+        }
+
+        function showFeedback(title, content) {
+            document.getElementById('feedback-content').innerHTML = `
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">${title}</h3>
+                ${content}
+            `;
+            document.getElementById('feedback-modal').classList.remove('hidden');
+        }
+
+        function toggleView() {
+            learningState.isGraphView = !learningState.isGraphView;
+            const listView = document.getElementById('list-view');
+            const graphView = document.getElementById('graph-view');
+            const toggleBtn = document.getElementById('view-toggle');
+            
+            if (learningState.isGraphView) {
+                listView.classList.add('hidden');
+                graphView.classList.remove('hidden');
+                toggleBtn.textContent = 'List View';
+                renderDependencyGraph();
+            } else {
+                listView.classList.remove('hidden');
+                graphView.classList.add('hidden');
+                toggleBtn.textContent = 'Graph View';
+            }
+        }
+
+        function renderDependencyGraph() {
+            const container = document.getElementById('dependency-graph');
+            
+            const nodes = Object.values(physicsTopics).map(topic => ({
+                id: topic.id,
+                label: topic.name,
+                color: getNodeColor(topic.status, topic.degraded),
+                font: { color: '#333333' },
+                borderWidth: topic.degraded ? 3 : (topic.status === 'needs_review' ? 2 : 1),
+                borderWidthSelected: 4
+            }));
+            
+            const edges = [];
+            Object.values(physicsTopics).forEach(topic => {
+                topic.prerequisites.forEach(prereq => {
+                    edges.push({
+                        from: prereq,
+                        to: topic.id,
+                        arrows: 'to',
+                        color: { color: '#999999' }
+                    });
+                });
+            });
+            
+            const data = { nodes, edges };
+            const options = {
+                layout: {
+                    hierarchical: {
+                        direction: 'UD',
+                        sortMethod: 'directed'
+                    }
+                },
+                physics: false,
+                nodes: {
+                    shape: 'box',
+                    margin: 10,
+                    widthConstraint: { maximum: 150 }
+                },
+                edges: {
+                    smooth: true
+                }
+            };
+            
+            const network = new vis.Network(container, data, options);
+            
+            network.on('click', function(params) {
+                if (params.nodes.length > 0) {
+                    const topicId = params.nodes[0];
+                    const topic = physicsTopics[topicId];
+                    if (topic.status === 'unlocked' || topic.status === 'needs_review' || topic.degraded) {
+                        startQuiz(topicId);
+                    } else if (topic.status === 'locked') {
+                        showLockedTopic(topicId);
+                    }
+                }
+            });
+        }
+
+        function getNodeColor(status, degraded = false) {
+            if (degraded) return '#F59E0B'; // orange
+            switch(status) {
+                case 'mastered': return '#10B981'; // green
+                case 'unlocked': return '#3B82F6'; // blue
+                case 'needs_review': return '#EAB308'; // yellow
+                case 'locked': return '#9CA3AF'; // gray
+                default: return '#9CA3AF';
+            }
+        }
+
+        function updateUI() {
+            updateProgress();
+            updateCheckpointProgress();
+            updateReviewSchedule();
+            updateRecommendations();
+            updateLatestBadges();
+            updateBadgeCount();
+            renderTopicList();
+            if (learningState.isGraphView) {
+                renderDependencyGraph();
+            }
+            
+            // Check for due reviews
+            const dueReviews = getTopicsDueForReview();
+            if (dueReviews.length > 0) {
+                document.getElementById('review-message').textContent = `You have ${dueReviews.length} topic(s) due for review to maintain your mastery.`;
+                document.getElementById('review-alert').classList.remove('hidden');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('view-toggle').addEventListener('click', toggleView);
+        document.getElementById('badge-gallery-btn').addEventListener('click', () => {
+            renderBadgeGallery();
+            document.getElementById('badge-gallery-modal').classList.remove('hidden');
+        });
+        document.getElementById('badge-gallery-close').addEventListener('click', () => {
+            document.getElementById('badge-gallery-modal').classList.add('hidden');
+        });
+        document.getElementById('sharing-close').addEventListener('click', () => {
+            document.getElementById('sharing-modal').classList.add('hidden');
+        });
+        document.getElementById('quiz-cancel').addEventListener('click', () => {
+            document.getElementById('quiz-modal').classList.add('hidden');
+        });
+        document.getElementById('quiz-submit').addEventListener('click', submitQuiz);
+        document.getElementById('feedback-close').addEventListener('click', () => {
+            document.getElementById('feedback-modal').classList.add('hidden');
+        });
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            checkInactivity();
+            updateUI();
+            logActivity('🚀 Started adaptive learning journey');
+            
+            // Set up periodic inactivity checks (every hour in real app, every 10 seconds for demo)
+            setInterval(checkInactivity, 10000);
+        });
+    </script>
+</body>
+</html>
