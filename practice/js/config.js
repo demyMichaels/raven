@@ -11,7 +11,7 @@ export const SUBJECTS_META = {
     english: { 
         name: "English", 
         icon: "📚", 
-        color: "bg-warning",
+        color: "bg-primary",
         dataFile: "data/english.json"
     },
 
