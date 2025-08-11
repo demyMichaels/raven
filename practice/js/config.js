@@ -21,6 +21,7 @@ export const SUBJECTS_META = {
         color: "bg-primary-500",
         dataFile: "data/mathematics.json"
     },
+    
 
     physics: { 
         name: "Physics", 
