@@ -16,243 +16,58 @@
 </nav>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeepSeek AI Chatbot</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE',
-                    }
-                }
-            }
-        }
-    </script>
+    <title>DeepSeek Test Chatbot</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        #chat { max-width: 500px; margin: auto; }
+        .message { padding: 8px; margin: 5px 0; border-radius: 5px; }
+        .user { background: #d0f0c0; text-align: right; }
+        .bot { background: #f0f0f0; text-align: left; }
+    </style>
 </head>
-<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-primary mb-2">DeepSeek AI Chatbot</h1>
-            <p class="text-gray-600 dark:text-gray-400">Chat with DeepSeek AI through Poe</p>
-        </div>
-
-        <!-- Bot Selection -->
-        <div class="mb-6">
-            <label for="botSelect" class="block text-sm font-medium mb-2">Select AI Bot:</label>
-            <select id="botSelect" class="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
-                <option value="DeepSeek-R1">DeepSeek-R1</option>
-                <option value="Claude-Sonnet-4">Claude-Sonnet-4</option>
-                <option value="GPT-4o">GPT-4o</option>
-                <option value="GPT-4o-mini">GPT-4o-mini</option>
-            </select>
-        </div>
-
-        <!-- Chat Interface -->
-        <div id="chatInterface">
-            <!-- Chat Messages -->
-            <div id="chatMessages" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4 h-96 overflow-y-auto">
-                <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-                    Start a conversation with AI!
-                </div>
-            </div>
-
-            <!-- Message Input -->
-            <div class="flex gap-3">
-                <input 
-                    type="text" 
-                    id="messageInput" 
-                    placeholder="Type your message..." 
-                    class="flex-1 px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                >
-                <button 
-                    id="sendMessage" 
-                    class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Send
-                </button>
-            </div>
-
-            <!-- Clear Chat Button -->
-            <div class="mt-4 text-center">
-                <button 
-                    id="clearChat" 
-                    class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                    Clear Chat
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Modal -->
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-            <p id="modalText" class="text-gray-700 dark:text-gray-300 mb-4"></p>
-            <div class="flex justify-end">
-                <button 
-                    id="modalOk" 
-                    class="px-4 py-2 bg-primary text-white hover:bg-purple-700 rounded-lg"
-                >
-                    OK
-                </button>
-            </div>
-        </div>
-    </div>
+<body>
+    <div id="chat"></div>
+    <input id="input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
 
     <script>
-        // Dark mode setup
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
+        const API_KEY = "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"; // <--- put your key here
 
-        // Custom modal function
-        function showModal(message) {
-            const modal = document.getElementById('modal');
-            const modalText = document.getElementById('modalText');
-            modalText.textContent = message;
-            modal.classList.remove('hidden');
-        }
-
-        // DOM elements
-        const chatMessages = document.getElementById('chatMessages');
-        const messageInput = document.getElementById('messageInput');
-        const sendMessageBtn = document.getElementById('sendMessage');
-        const clearChatBtn = document.getElementById('clearChat');
-        const modalOkBtn = document.getElementById('modalOk');
-        const botSelect = document.getElementById('botSelect');
-
-        let currentLoadingMessageId = null;
-
-        // Modal close handler
-        modalOkBtn.addEventListener('click', () => {
-            document.getElementById('modal').classList.add('hidden');
-        });
-
-        // Register handler for bot responses
-        window.Poe.registerHandler("chat-handler", (result) => {
-            const msg = result.responses[0];
-            
-            if (msg.status === "error") {
-                if (currentLoadingMessageId) {
-                    updateMessageInChat(currentLoadingMessageId, `Error: ${msg.statusText || 'Failed to get response'}`);
-                    currentLoadingMessageId = null;
-                }
-                showModal(`Error: ${msg.statusText || 'Failed to get response from AI'}`);
-                sendMessageBtn.disabled = false;
-            } else if (msg.status === "incomplete") {
-                // Update with streaming content
-                if (currentLoadingMessageId) {
-                    updateMessageInChat(currentLoadingMessageId, msg.content || 'Thinking...');
-                }
-            } else if (msg.status === "complete") {
-                // Update with final content
-                if (currentLoadingMessageId) {
-                    updateMessageInChat(currentLoadingMessageId, msg.content);
-                    currentLoadingMessageId = null;
-                }
-                sendMessageBtn.disabled = false;
-            }
-        });
-
-        // Send Message
         async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message) return;
+            const input = document.getElementById("input");
+            const userMessage = input.value.trim();
+            if (!userMessage) return;
 
-            const selectedBot = botSelect.value;
+            appendMessage(userMessage, "user");
+            input.value = "";
 
-            // Add user message to chat
-            addMessageToChat('user', message);
-            messageInput.value = '';
-            sendMessageBtn.disabled = true;
+            const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "deepseek-chat",
+                    messages: [{ role: "user", content: userMessage }]
+                })
+            });
 
-            // Add loading message
-            currentLoadingMessageId = addMessageToChat('assistant', 'Thinking...');
-
-            try {
-                await window.Poe.sendUserMessage(`@${selectedBot} ${message}`, {
-                    handler: "chat-handler",
-                    stream: true,
-                    openChat: false
-                });
-            } catch (error) {
-                console.error('Error sending message:', error);
-                if (currentLoadingMessageId) {
-                    updateMessageInChat(currentLoadingMessageId, `Error: ${error.message}`);
-                    currentLoadingMessageId = null;
-                }
-                showModal(`Failed to send message: ${error.message}`);
-                sendMessageBtn.disabled = false;
-            }
+            const data = await res.json();
+            const botMessage = data.choices[0].message.content;
+            appendMessage(botMessage, "bot");
         }
 
-        // Add message to chat
-        function addMessageToChat(role, content) {
-            const messageId = Date.now();
-            const messageDiv = document.createElement('div');
-            messageDiv.id = `message-${messageId}`;
-            messageDiv.className = `mb-4 ${role === 'user' ? 'text-right' : 'text-left'}`;
-            
-            const bubbleClass = role === 'user' 
-                ? 'bg-primary text-white ml-12' 
-                : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 mr-12';
-            
-            messageDiv.innerHTML = `
-                <div class="inline-block p-3 rounded-lg ${bubbleClass} max-w-full">
-                    <div class="text-xs opacity-70 mb-1">${role === 'user' ? 'You' : botSelect.value}</div>
-                    <div class="whitespace-pre-wrap">${content}</div>
-                </div>
-            `;
-
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-
-            // Clear empty state
-            const emptyState = chatMessages.querySelector('.text-center.text-gray-500');
-            if (emptyState) {
-                emptyState.remove();
-            }
-
-            return messageId;
+        function appendMessage(text, sender) {
+            const chat = document.getElementById("chat");
+            const div = document.createElement("div");
+            div.className = `message ${sender}`;
+            div.textContent = text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
         }
-
-        // Update message in chat
-        function updateMessageInChat(messageId, newContent) {
-            const messageDiv = document.getElementById(`message-${messageId}`);
-            if (messageDiv) {
-                const contentDiv = messageDiv.querySelector('.whitespace-pre-wrap');
-                contentDiv.textContent = newContent;
-            }
-        }
-
-        // Event listeners
-        sendMessageBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-
-        // Clear chat
-        clearChatBtn.addEventListener('click', () => {
-            chatMessages.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Start a conversation with AI!</div>';
-            currentLoadingMessageId = null;
-        });
     </script>
 </body>
 </html>
