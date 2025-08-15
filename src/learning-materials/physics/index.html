@@ -33,7 +33,7 @@
     <button onclick="sendMessage()">Send</button>
 
     <script>
-        const API_KEY = "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"; // <--- put your key here
+        const API_KEY = "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"; // Replace with your key
 
         async function sendMessage() {
             const input = document.getElementById("input");
@@ -43,21 +43,38 @@
             appendMessage(userMessage, "user");
             input.value = "";
 
-            const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${API_KEY}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    model: "deepseek-chat",
-                    messages: [{ role: "user", content: userMessage }]
-                })
-            });
+            appendMessage("...", "bot"); // loading placeholder
 
-            const data = await res.json();
-            const botMessage = data.choices[0].message.content;
-            appendMessage(botMessage, "bot");
+            try {
+                const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "system", content: "You are a helpful AI assistant." },
+                            { role: "user", content: userMessage }
+                        ]
+                    })
+                });
+
+                const data = await res.json();
+                console.log("API Response:", data);
+
+                if (data.error) {
+                    appendMessage(`Error: ${data.error.message}`, "bot");
+                } else {
+                    const botMessage = data.choices[0].message.content;
+                    replaceLastBotMessage(botMessage);
+                }
+
+            } catch (error) {
+                console.error("Request failed:", error);
+                replaceLastBotMessage("⚠️ Connection error.");
+            }
         }
 
         function appendMessage(text, sender) {
@@ -67,6 +84,12 @@
             div.textContent = text;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
+        }
+
+        function replaceLastBotMessage(text) {
+            const chat = document.getElementById("chat");
+            const lastMessage = chat.querySelector(".message.bot:last-child");
+            if (lastMessage) lastMessage.textContent = text;
         }
     </script>
 </body>
