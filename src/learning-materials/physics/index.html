@@ -40,17 +40,26 @@
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-primary mb-2">DeepSeek AI Chatbot</h1>
-            <p class="text-gray-600 dark:text-gray-400">Chat with DeepSeek AI using your API key</p>
+            <p class="text-gray-600 dark:text-gray-400">Chat with DeepSeek AI through Poe</p>
         </div>
 
-
+        <!-- Bot Selection -->
+        <div class="mb-6">
+            <label for="botSelect" class="block text-sm font-medium mb-2">Select AI Bot:</label>
+            <select id="botSelect" class="w-full px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+                <option value="DeepSeek-R1">DeepSeek-R1</option>
+                <option value="Claude-Sonnet-4">Claude-Sonnet-4</option>
+                <option value="GPT-4o">GPT-4o</option>
+                <option value="GPT-4o-mini">GPT-4o-mini</option>
+            </select>
+        </div>
 
         <!-- Chat Interface -->
         <div id="chatInterface">
             <!-- Chat Messages -->
             <div id="chatMessages" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4 h-96 overflow-y-auto">
                 <div class="text-center text-gray-500 dark:text-gray-400 py-8">
-                    Start a conversation with DeepSeek AI!
+                    Start a conversation with AI!
                 </div>
             </div>
 
@@ -118,21 +127,45 @@
             modal.classList.remove('hidden');
         }
 
-        // API Key - Replace with your actual DeepSeek API key
-        const apiKey = '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';
-
         // DOM elements
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendMessageBtn = document.getElementById('sendMessage');
         const clearChatBtn = document.getElementById('clearChat');
         const modalOkBtn = document.getElementById('modalOk');
+        const botSelect = document.getElementById('botSelect');
 
-        let conversationHistory = [];
+        let currentLoadingMessageId = null;
 
         // Modal close handler
         modalOkBtn.addEventListener('click', () => {
             document.getElementById('modal').classList.add('hidden');
+        });
+
+        // Register handler for bot responses
+        window.Poe.registerHandler("chat-handler", (result) => {
+            const msg = result.responses[0];
+            
+            if (msg.status === "error") {
+                if (currentLoadingMessageId) {
+                    updateMessageInChat(currentLoadingMessageId, `Error: ${msg.statusText || 'Failed to get response'}`);
+                    currentLoadingMessageId = null;
+                }
+                showModal(`Error: ${msg.statusText || 'Failed to get response from AI'}`);
+                sendMessageBtn.disabled = false;
+            } else if (msg.status === "incomplete") {
+                // Update with streaming content
+                if (currentLoadingMessageId) {
+                    updateMessageInChat(currentLoadingMessageId, msg.content || 'Thinking...');
+                }
+            } else if (msg.status === "complete") {
+                // Update with final content
+                if (currentLoadingMessageId) {
+                    updateMessageInChat(currentLoadingMessageId, msg.content);
+                    currentLoadingMessageId = null;
+                }
+                sendMessageBtn.disabled = false;
+            }
         });
 
         // Send Message
@@ -140,55 +173,31 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
+            const selectedBot = botSelect.value;
+
             // Add user message to chat
             addMessageToChat('user', message);
             messageInput.value = '';
             sendMessageBtn.disabled = true;
 
             // Add loading message
-            const loadingId = addMessageToChat('assistant', 'Thinking...');
+            currentLoadingMessageId = addMessageToChat('assistant', 'Thinking...');
 
             try {
-                const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: 'deepseek-chat',
-                        messages: [
-                            ...conversationHistory,
-                            { role: 'user', content: message }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 2000
-                    })
+                await window.Poe.sendUserMessage(`@${selectedBot} ${message}`, {
+                    handler: "chat-handler",
+                    stream: true,
+                    openChat: false
                 });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                const aiResponse = data.choices[0].message.content;
-
-                // Update conversation history
-                conversationHistory.push(
-                    { role: 'user', content: message },
-                    { role: 'assistant', content: aiResponse }
-                );
-
-                // Replace loading message with actual response
-                updateMessageInChat(loadingId, aiResponse);
-
             } catch (error) {
-                console.error('Error:', error);
-                updateMessageInChat(loadingId, `Error: ${error.message}`);
+                console.error('Error sending message:', error);
+                if (currentLoadingMessageId) {
+                    updateMessageInChat(currentLoadingMessageId, `Error: ${error.message}`);
+                    currentLoadingMessageId = null;
+                }
                 showModal(`Failed to send message: ${error.message}`);
+                sendMessageBtn.disabled = false;
             }
-
-            sendMessageBtn.disabled = false;
         }
 
         // Add message to chat
@@ -204,7 +213,7 @@
             
             messageDiv.innerHTML = `
                 <div class="inline-block p-3 rounded-lg ${bubbleClass} max-w-full">
-                    <div class="text-xs opacity-70 mb-1">${role === 'user' ? 'You' : 'DeepSeek AI'}</div>
+                    <div class="text-xs opacity-70 mb-1">${role === 'user' ? 'You' : botSelect.value}</div>
                     <div class="whitespace-pre-wrap">${content}</div>
                 </div>
             `;
@@ -241,8 +250,8 @@
 
         // Clear chat
         clearChatBtn.addEventListener('click', () => {
-            conversationHistory = [];
-            chatMessages.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Start a conversation with DeepSeek AI!</div>';
+            chatMessages.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-8">Start a conversation with AI!</div>';
+            currentLoadingMessageId = null;
         });
     </script>
 </body>
