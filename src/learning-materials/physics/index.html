@@ -156,11 +156,62 @@
             }
         });
 
-        // Sound System
+        // Type definitions using JSDoc for better TypeScript-like behavior
+        
+        /**
+         * @typedef {Object} Vector2D
+         * @property {number} x
+         * @property {number} y
+         */
+        
+        /**
+         * @typedef {Object} GameTarget
+         * @property {number} x
+         * @property {number} y
+         * @property {number} size
+         */
+        
+        /**
+         * @typedef {Object} GameObstacle
+         * @property {number} x
+         * @property {number} y
+         * @property {number} width
+         * @property {number} height
+         */
+        
+        /**
+         * @typedef {Object} GameBall
+         * @property {Matter.Body} body
+         * @property {number} mass
+         * @property {number} radius
+         * @property {number} ke
+         * @property {number} initialKE
+         */
+        
+        /**
+         * @typedef {Object} Trail
+         * @property {number} x
+         * @property {number} y
+         * @property {number} size
+         * @property {number} alpha
+         * @property {number} life
+         */
+        
+        /**
+         * @typedef {Object} LevelConfig
+         * @property {number} targetKE
+         * @property {GameTarget[]} targets
+         * @property {GameObstacle[]} obstacles
+         */
+
+        // Sound System with proper typing
         class SoundSystem {
+            /** @type {AudioContext | null} */
+            audioContext = null;
+            /** @type {boolean} */
+            enabled = true;
+            
             constructor() {
-                this.audioContext = null;
-                this.enabled = true;
                 this.setupAudio();
             }
             
@@ -173,6 +224,12 @@
                 }
             }
             
+            /**
+             * @param {number} frequency
+             * @param {number} duration
+             * @param {OscillatorType} type
+             * @param {number} volume
+             */
             playTone(frequency, duration, type = 'sine', volume = 0.3) {
                 if (!this.enabled || !this.audioContext) return;
                 
@@ -202,12 +259,14 @@
                 }
             }
             
+            /** @param {number} velocity */
             playBounce(velocity) {
                 // Pop sound with frequency based on velocity
                 const frequency = Math.max(150, Math.min(800, velocity * 100));
                 this.playTone(frequency, 0.15, 'square', 0.3);
             }
             
+            /** @param {boolean} success */
             playHit(success) {
                 if (success) {
                     // Success chord
@@ -228,17 +287,86 @@
                 });
             }
             
+            /** @returns {boolean} */
             toggle() {
                 this.enabled = !this.enabled;
                 return this.enabled;
             }
         }
 
-        // Game State
+        // Game State with proper typing
         class BounceLabGame {
+            /** @type {HTMLCanvasElement} */
+            canvas;
+            /** @type {CanvasRenderingContext2D} */
+            ctx;
+            /** @type {Matter.Engine} */
+            engine;
+            /** @type {Matter.World} */
+            world;
+            /** @type {SoundSystem} */
+            sound;
+            
+            // Game state
+            /** @type {number} */
+            currentLevel = 1;
+            /** @type {number} */
+            mass = 5;
+            /** @type {number} */
+            velocity = 0;
+            /** @type {number} */
+            maxVelocity = 20;
+            /** @type {number} */
+            scale = 10;
+            /** @type {number} */
+            targetKE = 0;
+            
+            // Physics objects
+            /** @type {GameBall[]} */
+            balls = [];
+            /** @type {Matter.Body[]} */
+            ballBodies = [];
+            /** @type {GameTarget[]} */
+            targets = [];
+            /** @type {GameObstacle[]} */
+            obstacles = [];
+            /** @type {Matter.Body[]} */
+            obstacleBodies = [];
+            /** @type {Trail[]} */
+            trails = [];
+            /** @type {Matter.Body[]} */
+            boundaries = [];
+            
+            // Input state
+            /** @type {boolean} */
+            isDragging = false;
+            /** @type {Vector2D} */
+            dragStart = { x: 0, y: 0 };
+            /** @type {Vector2D} */
+            dragCurrent = { x: 0, y: 0 };
+            /** @type {Vector2D} */
+            cannonPos = { x: 100, y: 0 };
+            
+            // Game timing
+            /** @type {number} */
+            lastTime = 0;
+            /** @type {boolean} */
+            gameRunning = false;
+            /** @type {number} */
+            canvasWidth = 0;
+            /** @type {number} */
+            canvasHeight = 0;
+            
             constructor() {
-                this.canvas = document.getElementById('gameCanvas');
-                this.ctx = this.canvas.getContext('2d');
+                const canvas = document.getElementById('gameCanvas');
+                const ctx = canvas?.getContext('2d');
+                
+                if (!canvas || !ctx) {
+                    throw new Error('Canvas or context not found');
+                }
+                
+                this.canvas = canvas;
+                this.ctx = ctx;
                 this.setupCanvas();
                 
                 // Initialize Matter.js
@@ -248,32 +376,6 @@
                 
                 // Sound system
                 this.sound = new SoundSystem();
-                
-                // Game state
-                this.currentLevel = 1;
-                this.mass = 5; // kg
-                this.velocity = 0; // m/s
-                this.maxVelocity = 20;
-                this.scale = 10; // pixels per meter
-                
-                // Physics objects
-                this.balls = [];
-                this.ballBodies = [];
-                this.targets = [];
-                this.obstacles = [];
-                this.obstacleBodies = [];
-                this.trails = [];
-                this.boundaries = [];
-                
-                // Input state
-                this.isDragging = false;
-                this.dragStart = { x: 0, y: 0 };
-                this.dragCurrent = { x: 0, y: 0 };
-                this.cannonPos = { x: 100, y: 0 };
-                
-                // Game timing
-                this.lastTime = 0;
-                this.gameRunning = false;
                 
                 this.setupPhysics();
                 this.setupLevel();
@@ -331,12 +433,13 @@
             setupLevel() {
                 // Clear existing physics bodies
                 this.ballBodies.forEach(body => Matter.World.remove(this.world, body));
-                this.obstaclebodies.forEach(body => Matter.World.remove(this.world, body));
+                this.obstacleBodies.forEach(body => Matter.World.remove(this.world, body));
                 this.ballBodies = [];
                 this.balls = [];
                 this.obstacleBodies = [];
                 this.trails = [];
                 
+                /** @type {LevelConfig[]} */
                 const levels = [
                     { targetKE: 20, targets: [{ x: 300, y: 200, size: 30 }], obstacles: [] },
                     { targetKE: 50, targets: [{ x: 350, y: 150, size: 25 }], obstacles: [{ x: 200, y: 300, width: 20, height: 100 }] },
@@ -363,12 +466,19 @@
                             friction: 0.3
                         }
                     );
-                    this.obstaclebodies.push(body);
+                    this.obstacleBodies.push(body);
                     Matter.World.add(this.world, body);
                 });
                 
-                document.getElementById('currentLevel').textContent = this.currentLevel;
-                document.getElementById('targetKE').textContent = `${this.targetKE} J`;
+                this.updateUIElements();
+            }
+            
+            updateUIElements() {
+                const currentLevelEl = document.getElementById('currentLevel');
+                const targetKEEl = document.getElementById('targetKE');
+                
+                if (currentLevelEl) currentLevelEl.textContent = this.currentLevel.toString();
+                if (targetKEEl) targetKEEl.textContent = `${this.targetKE} J`;
                 this.updateKE();
             }
             
@@ -376,31 +486,36 @@
                 const massDown = document.getElementById('massDown');
                 const massUp = document.getElementById('massUp');
                 const soundToggle = document.getElementById('soundToggle');
+                const modalClose = document.getElementById('modalClose');
+                const nextLevel = document.getElementById('nextLevel');
                 
-                massDown.addEventListener('click', () => {
+                massDown?.addEventListener('click', () => {
                     this.mass = Math.max(1, this.mass - 1);
                     this.updateMass();
                 });
                 
-                massUp.addEventListener('click', () => {
+                massUp?.addEventListener('click', () => {
                     this.mass = Math.min(10, this.mass + 1);
                     this.updateMass();
                 });
                 
-                soundToggle.addEventListener('click', () => {
+                soundToggle?.addEventListener('click', () => {
                     const enabled = this.sound.toggle();
-                    soundToggle.textContent = enabled ? '🔊' : '🔇';
+                    if (soundToggle) soundToggle.textContent = enabled ? '🔊' : '🔇';
                 });
                 
-                document.getElementById('modalClose').addEventListener('click', () => {
-                    document.getElementById('educationModal').classList.add('hidden');
+                modalClose?.addEventListener('click', () => {
+                    const modal = document.getElementById('educationModal');
+                    modal?.classList.add('hidden');
                 });
                 
-                document.getElementById('nextLevel').addEventListener('click', () => {
+                nextLevel?.addEventListener('click', () => {
                     this.currentLevel++;
                     this.setupLevel();
-                    document.getElementById('levelComplete').classList.add('hidden');
-                    document.getElementById('instructions').classList.remove('hidden');
+                    const levelCompleteModal = document.getElementById('levelComplete');
+                    const instructions = document.getElementById('instructions');
+                    levelCompleteModal?.classList.add('hidden');
+                    instructions?.classList.remove('hidden');
                 });
             }
             
@@ -409,15 +524,19 @@
                 this.canvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     const touch = e.touches[0];
-                    const rect = this.canvas.getBoundingClientRect();
-                    this.startDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+                    if (touch) {
+                        const rect = this.canvas.getBoundingClientRect();
+                        this.startDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+                    }
                 });
                 
                 this.canvas.addEventListener('touchmove', (e) => {
                     e.preventDefault();
                     const touch = e.touches[0];
-                    const rect = this.canvas.getBoundingClientRect();
-                    this.updateDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+                    if (touch) {
+                        const rect = this.canvas.getBoundingClientRect();
+                        this.updateDrag(touch.clientX - rect.left, touch.clientY - rect.top);
+                    }
                 });
                 
                 this.canvas.addEventListener('touchend', (e) => {
@@ -443,16 +562,19 @@
                 });
             }
             
+            /** @param {number} x @param {number} y */
             startDrag(x, y) {
                 const distance = Math.sqrt((x - this.cannonPos.x) ** 2 + (y - this.cannonPos.y) ** 2);
                 if (distance < 50 && this.ballBodies.length === 0) {
                     this.isDragging = true;
                     this.dragStart = { x, y };
                     this.dragCurrent = { x, y };
-                    document.getElementById('instructions').classList.add('hidden');
+                    const instructions = document.getElementById('instructions');
+                    instructions?.classList.add('hidden');
                 }
             }
             
+            /** @param {number} x @param {number} y */
             updateDrag(x, y) {
                 if (this.isDragging) {
                     this.dragCurrent = { x, y };
@@ -499,6 +621,7 @@
                     // Set initial velocity
                     Matter.Body.setVelocity(ballBody, { x: vx, y: vy });
                     
+                    /** @type {GameBall} */
                     const ball = {
                         body: ballBody,
                         mass: this.mass,
@@ -520,19 +643,29 @@
             }
             
             updateMass() {
-                document.getElementById('massValue').textContent = this.mass;
+                const massValueEl = document.getElementById('massValue');
+                if (massValueEl) massValueEl.textContent = this.mass.toString();
                 this.updateKE();
             }
             
             updateKE() {
                 const ke = 0.5 * this.mass * this.velocity * this.velocity;
-                document.getElementById('currentKE').textContent = `${Math.round(ke)} J`;
-                document.getElementById('velocityValue').textContent = Math.round(this.velocity);
-                document.getElementById('velocityBar').style.width = `${(this.velocity / this.maxVelocity) * 100}%`;
+                const currentKEEl = document.getElementById('currentKE');
+                const velocityValueEl = document.getElementById('velocityValue');
+                const velocityBarEl = document.getElementById('velocityBar');
+                
+                if (currentKEEl) currentKEEl.textContent = `${Math.round(ke)} J`;
+                if (velocityValueEl) velocityValueEl.textContent = Math.round(this.velocity).toString();
+                if (velocityBarEl) velocityBarEl.style.width = `${(this.velocity / this.maxVelocity) * 100}%`;
             }
             
+            /** @param {number} actualKE */
             showEducationModal(actualKE) {
                 const modal = document.getElementById('educationModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalContent = document.getElementById('modalContent');
+                const modalFormula = document.getElementById('modalFormula');
+                
                 const error = Math.abs(actualKE - this.targetKE);
                 const errorPercent = (error / this.targetKE) * 100;
                 
@@ -550,14 +683,15 @@
                         "Close attempt! Fine-tune your mass and velocity for better accuracy.";
                 }
                 
-                document.getElementById('modalTitle').textContent = title;
-                document.getElementById('modalContent').textContent = content;
-                document.getElementById('modalFormula').textContent = 
+                if (modalTitle) modalTitle.textContent = title;
+                if (modalContent) modalContent.textContent = content;
+                if (modalFormula) modalFormula.textContent = 
                     `KE = ½ × ${this.mass}kg × (${Math.round(this.velocity)}m/s)² = ${Math.round(actualKE)}J`;
                 
-                modal.classList.remove('hidden');
+                modal?.classList.remove('hidden');
             }
             
+            /** @param {GameBall} ball @returns {boolean} */
             checkTargetHit(ball) {
                 for (let target of this.targets) {
                     const distance = Math.sqrt((ball.body.position.x - target.x) ** 2 + (ball.body.position.y - target.y) ** 2);
@@ -583,17 +717,19 @@
                 return false;
             }
             
+            /** @param {number} stars @param {number} errorPercent */
             showLevelComplete(stars, errorPercent) {
                 const modal = document.getElementById('levelComplete');
                 const starsElement = document.getElementById('stars');
                 const performance = document.getElementById('performance');
                 
-                starsElement.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-                performance.textContent = `Accuracy: ${Math.max(0, 100 - errorPercent).toFixed(1)}%`;
+                if (starsElement) starsElement.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+                if (performance) performance.textContent = `Accuracy: ${Math.max(0, 100 - errorPercent).toFixed(1)}%`;
                 
-                modal.classList.remove('hidden');
+                modal?.classList.remove('hidden');
             }
             
+            /** @param {number} deltaTime */
             updatePhysics(deltaTime) {
                 // Update Matter.js engine
                 Matter.Engine.update(this.engine, 16.67); // ~60fps
@@ -739,6 +875,7 @@
                 }
             }
             
+            /** @param {number} currentTime */
             gameLoop(currentTime = 0) {
                 const deltaTime = Math.min((currentTime - this.lastTime) / 1000, 0.016); // Cap at 60fps
                 this.lastTime = currentTime;
@@ -754,7 +891,11 @@
         
         // Start the game when page loads
         window.addEventListener('load', () => {
-            new BounceLabGame();
+            try {
+                new BounceLabGame();
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+            }
         });
     </script>
 </body>
