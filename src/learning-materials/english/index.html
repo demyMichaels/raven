@@ -20,6 +20,7 @@
     <style>
         .component-btn {
             transition: all 0.2s ease;
+            touch-action: manipulation;
         }
         .component-btn:hover {
             transform: translateY(-2px);
@@ -37,6 +38,7 @@
                 transparent 1px
             );
             background-size: 20px 20px;
+            touch-action: pan-x pan-y;
         }
         .oscilloscope-grid {
             background-image: 
@@ -49,7 +51,7 @@
             transition: all 0.2s ease;
         }
         .terminal:hover {
-            r: 6;
+            r: 8;
             fill: #22c55e;
         }
         .terminal.connecting {
@@ -62,6 +64,7 @@
             stroke-width: 3;
             fill: none;
             transition: stroke 0.2s ease;
+            pointer-events: none;
         }
         .connection-wire.energized {
             stroke: #f59e0b;
@@ -70,6 +73,7 @@
         .current-particle {
             fill: #22c55e;
             filter: drop-shadow(0 0 4px #22c55e);
+            pointer-events: none;
         }
         .component-selected {
             stroke: #5D5CDE !important;
@@ -91,6 +95,41 @@
         }
         .mode-indicator.active {
             opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .mode-indicator {
+                top: 10px;
+                right: 10px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+        }
+        .sidebar-mobile {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        .sidebar-mobile.open {
+            transform: translateX(0);
+        }
+        .mobile-overlay {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-overlay {
+                display: block;
+            }
+        }
+        /* Increase touch targets for mobile */
+        .terminal {
+            r: 6;
+        }
+        @media (max-width: 768px) {
+            .terminal {
+                r: 8;
+            }
+        }
+        .component-group {
+            touch-action: none;
         }
     </style>
 </head>
@@ -114,99 +153,116 @@
 
     <div class="flex flex-col h-screen">
         <!-- Header -->
-        <header class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+        <header class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 md:p-4">
             <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    ⚡ ravenCircuit
-                </h1>
-                <div class="flex items-center space-x-4">
-                    <button id="connectBtn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
-                        🔗 Connect Mode
+                <div class="flex items-center">
+                    <button id="menuBtn" class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded mr-2">
+                        ☰
                     </button>
-                    <button id="playBtn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
-                        ▶️ Run Simulation
+                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                        ⚡ ravenCircuit
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-1 md:space-x-4">
+                    <button id="connectBtn" class="px-2 py-1 md:px-4 md:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">🔗 Connect Mode</span>
+                        <span class="md:hidden">🔗</span>
                     </button>
-                    <button id="stopBtn" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
-                        ⏹️ Stop
+                    <button id="playBtn" class="px-2 py-1 md:px-4 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">▶️ Run</span>
+                        <span class="md:hidden">▶️</span>
                     </button>
-                    <button id="clearBtn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                        🗑️ Clear
+                    <button id="stopBtn" class="px-2 py-1 md:px-4 md:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">⏹️ Stop</span>
+                        <span class="md:hidden">⏹️</span>
+                    </button>
+                    <button id="clearBtn" class="px-2 py-1 md:px-4 md:py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">🗑️ Clear</span>
+                        <span class="md:hidden">🗑️</span>
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="flex flex-1 overflow-hidden">
+        <div class="flex flex-1 overflow-hidden relative">
+            <!-- Mobile Overlay -->
+            <div id="mobileOverlay" class="mobile-overlay fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+            
             <!-- Component Library Sidebar -->
-            <div class="w-64 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Components</h2>
-                
-                <div class="space-y-3">
-                    <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
-                            data-component="battery">
-                        <div class="flex items-center">
-                            <span class="text-2xl mr-3">🔋</span>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">Battery</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Voltage Source</div>
+            <div id="sidebar" class="sidebar-mobile md:sidebar-desktop fixed md:relative z-50 md:z-auto w-64 h-full md:h-auto bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Components</h2>
+                        <button id="closeSidebar" class="md:hidden text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl">✕</button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="battery">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🔋</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Battery</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Voltage Source</div>
+                                </div>
                             </div>
-                        </div>
-                    </button>
+                        </button>
 
-                    <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
-                            data-component="resistor">
-                        <div class="flex items-center">
-                            <span class="text-2xl mr-3">📶</span>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">Resistor</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Resistance Element</div>
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="resistor">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">📶</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Resistor</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Resistance Element</div>
+                                </div>
                             </div>
-                        </div>
-                    </button>
+                        </button>
 
-                    <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
-                            data-component="capacitor">
-                        <div class="flex items-center">
-                            <span class="text-2xl mr-3">⚡</span>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">Capacitor</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Energy Storage</div>
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="capacitor">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">⚡</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Capacitor</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Energy Storage</div>
+                                </div>
                             </div>
-                        </div>
-                    </button>
+                        </button>
 
-                    <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
-                            data-component="ground">
-                        <div class="flex items-center">
-                            <span class="text-2xl mr-3">⏚</span>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">Ground</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Reference Point</div>
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="ground">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">⏚</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Ground</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Reference Point</div>
+                                </div>
                             </div>
-                        </div>
-                    </button>
+                        </button>
 
-                    <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
-                            data-component="switch">
-                        <div class="flex items-center">
-                            <span class="text-2xl mr-3">🔀</span>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">Switch</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">Open/Close Circuit</div>
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="switch">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🔀</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Switch</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Open/Close Circuit</div>
+                                </div>
                             </div>
-                        </div>
-                    </button>
-                </div>
+                        </button>
+                    </div>
 
-                <div class="mt-6">
-                    <h3 class="text-md font-semibold mb-3 text-gray-900 dark:text-white">Instructions</h3>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-                        <p>• Drag components to canvas</p>
-                        <p>• Click "Connect Mode" to wire components</p>
-                        <p>• Click terminals (red dots) to connect</p>
-                        <p>• Green particles show current flow</p>
-                        <p>• Double-click components to edit properties</p>
-                        <p>• Always add ground for complete circuit</p>
+                    <div class="mt-6">
+                        <h3 class="text-md font-semibold mb-3 text-gray-900 dark:text-white">Instructions</h3>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                            <p>• Tap components to add to canvas</p>
+                            <p>• Tap "Connect Mode" to wire components</p>
+                            <p>• Tap terminals (red dots) to connect</p>
+                            <p>• Green particles show current flow</p>
+                            <p>• Double-tap components to edit properties</p>
+                            <p>• Always add ground for complete circuit</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -216,7 +272,7 @@
                 <!-- Circuit Canvas -->
                 <div class="flex-1 relative">
                     <div class="canvas-container h-full bg-white dark:bg-gray-900">
-                        <svg id="circuitSVG" class="w-full h-full cursor-crosshair" style="background: inherit;">
+                        <svg id="circuitSVG" class="w-full h-full" style="background: inherit;">
                             <defs>
                                 <marker id="arrowhead" markerWidth="10" markerHeight="7" 
                                         refX="9" refY="3.5" orient="auto">
@@ -231,21 +287,21 @@
                 </div>
 
                 <!-- Oscilloscope Panel -->
-                <div id="oscilloscopePanel" class="h-64 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 hidden">
+                <div id="oscilloscopePanel" class="h-48 md:h-64 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 hidden">
                     <div class="h-full flex">
-                        <div class="flex-1 p-4">
+                        <div class="flex-1 p-2 md:p-4">
                             <div class="flex items-center justify-between mb-2">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Oscilloscope</h3>
+                                <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">Oscilloscope</h3>
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm text-gray-600 dark:text-gray-400">Component:</span>
                                     <span id="selectedComponent" class="text-sm font-medium text-gray-900 dark:text-white">None</span>
-                                    <button id="closeOscilloscope" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">✕</button>
+                                    <button id="closeOscilloscope" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-lg p-1">✕</button>
                                 </div>
                             </div>
-                            <div class="oscilloscope-grid h-48 bg-black border border-gray-300 dark:border-gray-600 relative overflow-hidden">
+                            <div class="oscilloscope-grid h-32 md:h-48 bg-black border border-gray-300 dark:border-gray-600 relative overflow-hidden">
                                 <canvas id="oscilloscopeCanvas" class="w-full h-full"></canvas>
-                                <div class="absolute bottom-2 left-2 text-green-400 text-xs">Current (A)</div>
-                                <div class="absolute bottom-2 right-2 text-green-400 text-xs">Time (s)</div>
+                                <div class="absolute bottom-1 left-1 text-green-400 text-xs">Current (A)</div>
+                                <div class="absolute bottom-1 right-1 text-green-400 text-xs">Time (s)</div>
                             </div>
                         </div>
                     </div>
@@ -255,8 +311,8 @@
     </div>
 
     <!-- Component Properties Modal -->
-    <div id="propertiesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+    <div id="propertiesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Component Properties</h3>
             <div id="propertiesContent"></div>
             <div class="flex justify-end space-x-3 mt-4">
@@ -290,7 +346,14 @@
                 this.oscilloscopeTime = 0;
                 this.maxDataPoints = 200;
                 
+                // Touch/mouse state
+                this.isDragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.lastTouchTime = 0;
+                this.tapTimeout = null;
+                
                 this.setupEventListeners();
+                this.setupMobileNavigation();
                 this.animationLoop();
             }
             
@@ -300,13 +363,18 @@
                     btn.addEventListener('click', (e) => {
                         const type = e.currentTarget.dataset.component;
                         this.addComponent(type, 150, 150);
+                        this.closeMobileSidebar();
                     });
                 });
                 
-                // SVG events
-                this.svg.addEventListener('mousedown', this.handleMouseDown.bind(this));
-                this.svg.addEventListener('mousemove', this.handleMouseMove.bind(this));
-                this.svg.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                // Unified event handlers for mouse and touch
+                this.svg.addEventListener('mousedown', this.handlePointerDown.bind(this));
+                this.svg.addEventListener('mousemove', this.handlePointerMove.bind(this));
+                this.svg.addEventListener('mouseup', this.handlePointerUp.bind(this));
+                
+                this.svg.addEventListener('touchstart', this.handlePointerDown.bind(this), { passive: false });
+                this.svg.addEventListener('touchmove', this.handlePointerMove.bind(this), { passive: false });
+                this.svg.addEventListener('touchend', this.handlePointerUp.bind(this), { passive: false });
                 
                 // Control buttons
                 document.getElementById('connectBtn').addEventListener('click', () => this.toggleConnectionMode());
@@ -327,6 +395,116 @@
                 document.getElementById('saveProperties').addEventListener('click', () => {
                     this.saveComponentProperties();
                 });
+            }
+            
+            setupMobileNavigation() {
+                const menuBtn = document.getElementById('menuBtn');
+                const sidebar = document.getElementById('sidebar');
+                const closeSidebar = document.getElementById('closeSidebar');
+                const mobileOverlay = document.getElementById('mobileOverlay');
+                
+                menuBtn.addEventListener('click', () => {
+                    sidebar.classList.add('open');
+                    mobileOverlay.classList.remove('hidden');
+                });
+                
+                closeSidebar.addEventListener('click', () => {
+                    this.closeMobileSidebar();
+                });
+                
+                mobileOverlay.addEventListener('click', () => {
+                    this.closeMobileSidebar();
+                });
+            }
+            
+            closeMobileSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const mobileOverlay = document.getElementById('mobileOverlay');
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.add('hidden');
+            }
+            
+            getPointerPosition(e) {
+                const rect = this.svg.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+            
+            handlePointerDown(e) {
+                e.preventDefault();
+                
+                const pos = this.getPointerPosition(e);
+                const target = e.target.closest('[id^="comp-"]');
+                
+                if (this.connectionMode) {
+                    return;
+                }
+                
+                if (target) {
+                    const componentId = target.id.replace('comp-', '');
+                    const component = this.components.find(c => c.id == componentId);
+                    
+                    if (component) {
+                        // Handle double-tap for mobile
+                        const currentTime = Date.now();
+                        const timeDiff = currentTime - this.lastTouchTime;
+                        
+                        if (timeDiff < 300 && timeDiff > 0) {
+                            // Double tap
+                            this.showComponentProperties(component);
+                            return;
+                        }
+                        
+                        this.lastTouchTime = currentTime;
+                        this.startDrag(component, pos);
+                    }
+                } else {
+                    this.selectedComponent = null;
+                    this.clearHighlights();
+                }
+            }
+            
+            handlePointerMove(e) {
+                e.preventDefault();
+                
+                if (this.isDragging && this.draggedComponent && !this.connectionMode) {
+                    const pos = this.getPointerPosition(e);
+                    const newX = pos.x - this.dragOffset.x;
+                    const newY = pos.y - this.dragOffset.y;
+                    
+                    this.moveComponent(this.draggedComponent, newX, newY);
+                }
+            }
+            
+            handlePointerUp(e) {
+                e.preventDefault();
+                this.isDragging = false;
+                this.draggedComponent = null;
+                this.dragOffset = { x: 0, y: 0 };
+            }
+            
+            startDrag(component, pos) {
+                this.isDragging = true;
+                this.draggedComponent = component;
+                this.selectedComponent = component;
+                this.highlightComponent(component);
+                
+                this.dragOffset = {
+                    x: pos.x - component.x,
+                    y: pos.y - component.y
+                };
             }
             
             addComponent(type, x, y) {
@@ -372,6 +550,7 @@
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 group.setAttribute('id', `comp-${component.id}`);
                 group.setAttribute('transform', `translate(${component.x}, ${component.y})`);
+                group.setAttribute('class', 'component-group');
                 group.style.cursor = 'move';
                 
                 // Add component visual
@@ -382,7 +561,7 @@
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', terminal.x - component.x);
                     circle.setAttribute('cy', terminal.y - component.y);
-                    circle.setAttribute('r', 4);
+                    circle.setAttribute('r', window.innerWidth <= 768 ? 8 : 6);
                     circle.setAttribute('fill', '#ef4444');
                     circle.setAttribute('stroke', '#dc2626');
                     circle.setAttribute('stroke-width', '1');
@@ -395,19 +574,13 @@
                         this.handleTerminalClick(terminal, component);
                     });
                     
+                    circle.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
                     group.appendChild(circle);
-                });
-                
-                // Add component interactions
-                group.addEventListener('mousedown', (e) => {
-                    if (!this.connectionMode) {
-                        this.startDrag(component, e);
-                    }
-                });
-                
-                group.addEventListener('dblclick', (e) => {
-                    e.stopPropagation();
-                    this.showComponentProperties(component);
                 });
                 
                 this.componentsGroup.appendChild(group);
@@ -652,13 +825,16 @@
                 
                 // Click handler for switch
                 group.style.cursor = 'pointer';
-                group.addEventListener('click', (e) => {
-                    if (!this.connectionMode) {
+                const switchClickHandler = (e) => {
+                    if (!this.connectionMode && !this.isDragging) {
                         e.stopPropagation();
                         component.properties.closed = !component.properties.closed;
                         this.redrawComponent(component);
                     }
-                });
+                };
+                
+                group.addEventListener('click', switchClickHandler);
+                group.addEventListener('touchend', switchClickHandler);
             }
             
             toggleConnectionMode() {
@@ -667,17 +843,15 @@
                 const indicator = document.getElementById('modeIndicator');
                 
                 if (this.connectionMode) {
-                    btn.textContent = '🔗 Exit Connect';
+                    btn.innerHTML = '<span class="hidden md:inline">🔗 Exit Connect</span><span class="md:hidden">✕</span>';
                     btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                     btn.classList.add('bg-red-500', 'hover:bg-red-600');
                     indicator.classList.add('active');
-                    this.svg.style.cursor = 'crosshair';
                 } else {
-                    btn.textContent = '🔗 Connect Mode';
+                    btn.innerHTML = '<span class="hidden md:inline">🔗 Connect Mode</span><span class="md:hidden">🔗</span>';
                     btn.classList.remove('bg-red-500', 'hover:bg-red-600');
                     btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
                     indicator.classList.remove('active');
-                    this.svg.style.cursor = 'default';
                     this.cancelConnection();
                 }
             }
@@ -738,43 +912,6 @@
                     this.tempConnection.remove();
                     this.tempConnection = null;
                 }
-            }
-            
-            startDrag(component, e) {
-                this.draggedComponent = component;
-                this.selectedComponent = component;
-                this.highlightComponent(component);
-                
-                const rect = this.svg.getBoundingClientRect();
-                this.dragOffset = {
-                    x: e.clientX - rect.left - component.x,
-                    y: e.clientY - rect.top - component.y
-                };
-            }
-            
-            handleMouseDown(e) {
-                if (this.connectionMode) return;
-                
-                const target = e.target.closest('[id^="comp-"]');
-                if (!target) {
-                    this.selectedComponent = null;
-                    this.clearHighlights();
-                }
-            }
-            
-            handleMouseMove(e) {
-                if (this.draggedComponent && !this.connectionMode) {
-                    const rect = this.svg.getBoundingClientRect();
-                    const newX = e.clientX - rect.left - this.dragOffset.x;
-                    const newY = e.clientY - rect.top - this.dragOffset.y;
-                    
-                    this.moveComponent(this.draggedComponent, newX, newY);
-                }
-            }
-            
-            handleMouseUp(e) {
-                this.draggedComponent = null;
-                this.dragOffset = null;
             }
             
             moveComponent(component, newX, newY) {
@@ -885,7 +1022,7 @@
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     circle.setAttribute('cx', terminal.x - component.x);
                     circle.setAttribute('cy', terminal.y - component.y);
-                    circle.setAttribute('r', 4);
+                    circle.setAttribute('r', window.innerWidth <= 768 ? 8 : 6);
                     circle.setAttribute('fill', '#ef4444');
                     circle.setAttribute('stroke', '#dc2626');
                     circle.setAttribute('stroke-width', '1');
@@ -894,6 +1031,12 @@
                     circle.setAttribute('data-component-id', component.id);
                     
                     circle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
+                    circle.addEventListener('touchend', (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         this.handleTerminalClick(terminal, component);
                     });
@@ -933,7 +1076,6 @@
                 }
                 
                 // Simple series circuit analysis for demonstration
-                // In a real implementation, you'd use nodal analysis or mesh analysis
                 let totalVoltage = 0;
                 let totalResistance = 0;
                 
