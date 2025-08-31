@@ -1,1 +1,1219 @@
-<h2>fundamentals</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ravenCircuit - Interactive Circuit Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE'
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    <style>
+        .component-btn {
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+        }
+        .component-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(93, 92, 222, 0.3);
+        }
+        .canvas-container {
+            background: linear-gradient(
+                0deg,
+                rgba(156, 163, 175, 0.1) 1px,
+                transparent 1px
+            ),
+            linear-gradient(
+                90deg,
+                rgba(156, 163, 175, 0.1) 1px,
+                transparent 1px
+            );
+            background-size: 20px 20px;
+            touch-action: pan-x pan-y;
+        }
+        .oscilloscope-grid {
+            background-image: 
+                linear-gradient(rgba(34, 197, 94, 0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(34, 197, 94, 0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .terminal {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .terminal:hover {
+            r: 8;
+            fill: #22c55e;
+        }
+        .terminal.connecting {
+            fill: #22c55e;
+            stroke: #22c55e;
+            stroke-width: 2;
+        }
+        .connection-wire {
+            stroke: #4b5563;
+            stroke-width: 3;
+            fill: none;
+            transition: stroke 0.2s ease;
+            pointer-events: none;
+        }
+        .connection-wire.energized {
+            stroke: #f59e0b;
+            filter: drop-shadow(0 0 4px #f59e0b);
+        }
+        .current-particle {
+            fill: #22c55e;
+            filter: drop-shadow(0 0 4px #22c55e);
+            pointer-events: none;
+        }
+        .component-selected {
+            stroke: #5D5CDE !important;
+            stroke-width: 3 !important;
+            filter: drop-shadow(0 0 6px #5D5CDE);
+        }
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #22c55e;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .mode-indicator.active {
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .mode-indicator {
+                top: 10px;
+                right: 10px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+        }
+        .sidebar-mobile {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        .sidebar-mobile.open {
+            transform: translateX(0);
+        }
+        .mobile-overlay {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-overlay {
+                display: block;
+            }
+        }
+        /* Increase touch targets for mobile */
+        .terminal {
+            r: 6;
+        }
+        @media (max-width: 768px) {
+            .terminal {
+                r: 8;
+            }
+        }
+        .component-group {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 transition-colors duration-200">
+    <!-- Dark mode detection -->
+    <script>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+    <!-- Mode Indicator -->
+    <div id="modeIndicator" class="mode-indicator">Connection Mode</div>
+
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-2 md:p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="menuBtn" class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded mr-2">
+                        ☰
+                    </button>
+                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                        ⚡ ravenCircuit
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-1 md:space-x-4">
+                    <button id="connectBtn" class="px-2 py-1 md:px-4 md:py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">🔗 Connect Mode</span>
+                        <span class="md:hidden">🔗</span>
+                    </button>
+                    <button id="playBtn" class="px-2 py-1 md:px-4 md:py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">▶️ Run</span>
+                        <span class="md:hidden">▶️</span>
+                    </button>
+                    <button id="stopBtn" class="px-2 py-1 md:px-4 md:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">⏹️ Stop</span>
+                        <span class="md:hidden">⏹️</span>
+                    </button>
+                    <button id="clearBtn" class="px-2 py-1 md:px-4 md:py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm md:text-base">
+                        <span class="hidden md:inline">🗑️ Clear</span>
+                        <span class="md:hidden">🗑️</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden relative">
+            <!-- Mobile Overlay -->
+            <div id="mobileOverlay" class="mobile-overlay fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+            
+            <!-- Component Library Sidebar -->
+            <div id="sidebar" class="sidebar-mobile md:sidebar-desktop fixed md:relative z-50 md:z-auto w-64 h-full md:h-auto bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Components</h2>
+                        <button id="closeSidebar" class="md:hidden text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl">✕</button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="battery">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🔋</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Battery</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Voltage Source</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="resistor">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">📶</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Resistor</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Resistance Element</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="capacitor">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">⚡</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Capacitor</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Energy Storage</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="ground">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">⏚</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Ground</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Reference Point</div>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="component-btn w-full p-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 text-left"
+                                data-component="switch">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">🔀</span>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">Switch</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Open/Close Circuit</div>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="mt-6">
+                        <h3 class="text-md font-semibold mb-3 text-gray-900 dark:text-white">Instructions</h3>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                            <p>• Tap components to add to canvas</p>
+                            <p>• Tap "Connect Mode" to wire components</p>
+                            <p>• Tap terminals (red dots) to connect</p>
+                            <p>• Green particles show current flow</p>
+                            <p>• Double-tap components to edit properties</p>
+                            <p>• Always add ground for complete circuit</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col">
+                <!-- Circuit Canvas -->
+                <div class="flex-1 relative">
+                    <div class="canvas-container h-full bg-white dark:bg-gray-900">
+                        <svg id="circuitSVG" class="w-full h-full" style="background: inherit;">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                                        refX="9" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+                                </marker>
+                            </defs>
+                            <g id="connections"></g>
+                            <g id="components"></g>
+                            <g id="particles"></g>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Oscilloscope Panel -->
+                <div id="oscilloscopePanel" class="h-48 md:h-64 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 hidden">
+                    <div class="h-full flex">
+                        <div class="flex-1 p-2 md:p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-base md:text-lg font-semibold text-gray-900 dark:text-white">Oscilloscope</h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">Component:</span>
+                                    <span id="selectedComponent" class="text-sm font-medium text-gray-900 dark:text-white">None</span>
+                                    <button id="closeOscilloscope" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-lg p-1">✕</button>
+                                </div>
+                            </div>
+                            <div class="oscilloscope-grid h-32 md:h-48 bg-black border border-gray-300 dark:border-gray-600 relative overflow-hidden">
+                                <canvas id="oscilloscopeCanvas" class="w-full h-full"></canvas>
+                                <div class="absolute bottom-1 left-1 text-green-400 text-xs">Current (A)</div>
+                                <div class="absolute bottom-1 right-1 text-green-400 text-xs">Time (s)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Component Properties Modal -->
+    <div id="propertiesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Component Properties</h3>
+            <div id="propertiesContent"></div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button id="cancelProperties" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">Cancel</button>
+                <button id="saveProperties" class="px-4 py-2 bg-primary text-white hover:bg-blue-600 rounded">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RavenCircuit {
+            constructor() {
+                this.svg = document.getElementById('circuitSVG');
+                this.componentsGroup = document.getElementById('components');
+                this.connectionsGroup = document.getElementById('connections');
+                this.particlesGroup = document.getElementById('particles');
+                
+                this.components = [];
+                this.connections = [];
+                this.currentParticles = [];
+                this.isSimulating = false;
+                this.selectedComponent = null;
+                this.draggedComponent = null;
+                this.connectionMode = false;
+                this.startTerminal = null;
+                this.tempConnection = null;
+                
+                this.oscilloscopeCanvas = document.getElementById('oscilloscopeCanvas');
+                this.oscCtx = this.oscilloscopeCanvas.getContext('2d');
+                this.oscilloscopeData = [];
+                this.oscilloscopeTime = 0;
+                this.maxDataPoints = 200;
+                
+                // Touch/mouse state
+                this.isDragging = false;
+                this.dragOffset = { x: 0, y: 0 };
+                this.lastTouchTime = 0;
+                this.tapTimeout = null;
+                
+                this.setupEventListeners();
+                this.setupMobileNavigation();
+                this.animationLoop();
+            }
+            
+            setupEventListeners() {
+                // Component library buttons
+                document.querySelectorAll('[data-component]').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const type = e.currentTarget.dataset.component;
+                        this.addComponent(type, 150, 150);
+                        this.closeMobileSidebar();
+                    });
+                });
+                
+                // Unified event handlers for mouse and touch
+                this.svg.addEventListener('mousedown', this.handlePointerDown.bind(this));
+                this.svg.addEventListener('mousemove', this.handlePointerMove.bind(this));
+                this.svg.addEventListener('mouseup', this.handlePointerUp.bind(this));
+                
+                this.svg.addEventListener('touchstart', this.handlePointerDown.bind(this), { passive: false });
+                this.svg.addEventListener('touchmove', this.handlePointerMove.bind(this), { passive: false });
+                this.svg.addEventListener('touchend', this.handlePointerUp.bind(this), { passive: false });
+                
+                // Control buttons
+                document.getElementById('connectBtn').addEventListener('click', () => this.toggleConnectionMode());
+                document.getElementById('playBtn').addEventListener('click', () => this.startSimulation());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopSimulation());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearCircuit());
+                
+                // Oscilloscope
+                document.getElementById('closeOscilloscope').addEventListener('click', () => {
+                    document.getElementById('oscilloscopePanel').classList.add('hidden');
+                });
+                
+                // Properties modal
+                document.getElementById('cancelProperties').addEventListener('click', () => {
+                    document.getElementById('propertiesModal').classList.add('hidden');
+                });
+                
+                document.getElementById('saveProperties').addEventListener('click', () => {
+                    this.saveComponentProperties();
+                });
+            }
+            
+            setupMobileNavigation() {
+                const menuBtn = document.getElementById('menuBtn');
+                const sidebar = document.getElementById('sidebar');
+                const closeSidebar = document.getElementById('closeSidebar');
+                const mobileOverlay = document.getElementById('mobileOverlay');
+                
+                menuBtn.addEventListener('click', () => {
+                    sidebar.classList.add('open');
+                    mobileOverlay.classList.remove('hidden');
+                });
+                
+                closeSidebar.addEventListener('click', () => {
+                    this.closeMobileSidebar();
+                });
+                
+                mobileOverlay.addEventListener('click', () => {
+                    this.closeMobileSidebar();
+                });
+            }
+            
+            closeMobileSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const mobileOverlay = document.getElementById('mobileOverlay');
+                sidebar.classList.remove('open');
+                mobileOverlay.classList.add('hidden');
+            }
+            
+            getPointerPosition(e) {
+                const rect = this.svg.getBoundingClientRect();
+                let clientX, clientY;
+                
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            }
+            
+            handlePointerDown(e) {
+                e.preventDefault();
+                
+                const pos = this.getPointerPosition(e);
+                const target = e.target.closest('[id^="comp-"]');
+                
+                if (this.connectionMode) {
+                    return;
+                }
+                
+                if (target) {
+                    const componentId = target.id.replace('comp-', '');
+                    const component = this.components.find(c => c.id == componentId);
+                    
+                    if (component) {
+                        // Handle double-tap for mobile
+                        const currentTime = Date.now();
+                        const timeDiff = currentTime - this.lastTouchTime;
+                        
+                        if (timeDiff < 300 && timeDiff > 0) {
+                            // Double tap
+                            this.showComponentProperties(component);
+                            return;
+                        }
+                        
+                        this.lastTouchTime = currentTime;
+                        this.startDrag(component, pos);
+                    }
+                } else {
+                    this.selectedComponent = null;
+                    this.clearHighlights();
+                }
+            }
+            
+            handlePointerMove(e) {
+                e.preventDefault();
+                
+                if (this.isDragging && this.draggedComponent && !this.connectionMode) {
+                    const pos = this.getPointerPosition(e);
+                    const newX = pos.x - this.dragOffset.x;
+                    const newY = pos.y - this.dragOffset.y;
+                    
+                    this.moveComponent(this.draggedComponent, newX, newY);
+                }
+            }
+            
+            handlePointerUp(e) {
+                e.preventDefault();
+                this.isDragging = false;
+                this.draggedComponent = null;
+                this.dragOffset = { x: 0, y: 0 };
+            }
+            
+            startDrag(component, pos) {
+                this.isDragging = true;
+                this.draggedComponent = component;
+                this.selectedComponent = component;
+                this.highlightComponent(component);
+                
+                this.dragOffset = {
+                    x: pos.x - component.x,
+                    y: pos.y - component.y
+                };
+            }
+            
+            addComponent(type, x, y) {
+                const component = {
+                    id: Date.now() + Math.random(),
+                    type: type,
+                    x: x,
+                    y: y,
+                    rotation: 0,
+                    properties: this.getDefaultProperties(type),
+                    terminals: this.getTerminals(type, x, y),
+                    connections: [],
+                    current: 0,
+                    voltage: 0
+                };
+                
+                this.components.push(component);
+                this.drawComponent(component);
+            }
+            
+            getDefaultProperties(type) {
+                const defaults = {
+                    battery: { voltage: 9.0, internal_resistance: 0.1 },
+                    resistor: { resistance: 1000 },
+                    capacitor: { capacitance: 0.001 },
+                    ground: { resistance: 0 },
+                    switch: { closed: true, resistance: 0.01 }
+                };
+                return defaults[type] || {};
+            }
+            
+            getTerminals(type, x, y) {
+                if (type === 'ground') {
+                    return [{ id: Date.now(), x: x, y: y - 20, component: null, connected: [] }];
+                }
+                return [
+                    { id: Date.now(), x: x - 40, y: y, component: null, connected: [] },
+                    { id: Date.now() + 1, x: x + 40, y: y, component: null, connected: [] }
+                ];
+            }
+            
+            drawComponent(component) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('id', `comp-${component.id}`);
+                group.setAttribute('transform', `translate(${component.x}, ${component.y})`);
+                group.setAttribute('class', 'component-group');
+                group.style.cursor = 'move';
+                
+                // Add component visual
+                this.drawComponentVisual(group, component);
+                
+                // Add terminals
+                component.terminals.forEach(terminal => {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', terminal.x - component.x);
+                    circle.setAttribute('cy', terminal.y - component.y);
+                    circle.setAttribute('r', window.innerWidth <= 768 ? 8 : 6);
+                    circle.setAttribute('fill', '#ef4444');
+                    circle.setAttribute('stroke', '#dc2626');
+                    circle.setAttribute('stroke-width', '1');
+                    circle.setAttribute('class', 'terminal');
+                    circle.setAttribute('data-terminal-id', terminal.id);
+                    circle.setAttribute('data-component-id', component.id);
+                    
+                    circle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
+                    circle.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
+                    group.appendChild(circle);
+                });
+                
+                this.componentsGroup.appendChild(group);
+            }
+            
+            drawComponentVisual(group, component) {
+                const isDark = document.documentElement.classList.contains('dark');
+                const strokeColor = isDark ? '#ffffff' : '#000000';
+                const fillColor = isDark ? '#ffffff' : '#000000';
+                
+                switch (component.type) {
+                    case 'battery':
+                        this.drawBattery(group, component, strokeColor, fillColor);
+                        break;
+                    case 'resistor':
+                        this.drawResistor(group, component, strokeColor, fillColor);
+                        break;
+                    case 'capacitor':
+                        this.drawCapacitor(group, component, strokeColor, fillColor);
+                        break;
+                    case 'ground':
+                        this.drawGround(group, component, strokeColor, fillColor);
+                        break;
+                    case 'switch':
+                        this.drawSwitch(group, component, strokeColor, fillColor);
+                        break;
+                }
+            }
+            
+            drawBattery(group, component, strokeColor, fillColor) {
+                // Long positive terminal
+                const longLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                longLine.setAttribute('x1', '10');
+                longLine.setAttribute('y1', '-15');
+                longLine.setAttribute('x2', '10');
+                longLine.setAttribute('y2', '15');
+                longLine.setAttribute('stroke', strokeColor);
+                longLine.setAttribute('stroke-width', '3');
+                group.appendChild(longLine);
+                
+                // Short negative terminal
+                const shortLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                shortLine.setAttribute('x1', '-10');
+                shortLine.setAttribute('y1', '-10');
+                shortLine.setAttribute('x2', '-10');
+                shortLine.setAttribute('y2', '10');
+                shortLine.setAttribute('stroke', strokeColor);
+                shortLine.setAttribute('stroke-width', '3');
+                group.appendChild(shortLine);
+                
+                // Connecting wires
+                const leftWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                leftWire.setAttribute('x1', '-40');
+                leftWire.setAttribute('y1', '0');
+                leftWire.setAttribute('x2', '-10');
+                leftWire.setAttribute('y2', '0');
+                leftWire.setAttribute('stroke', strokeColor);
+                leftWire.setAttribute('stroke-width', '2');
+                group.appendChild(leftWire);
+                
+                const rightWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                rightWire.setAttribute('x1', '10');
+                rightWire.setAttribute('y1', '0');
+                rightWire.setAttribute('x2', '40');
+                rightWire.setAttribute('y2', '0');
+                rightWire.setAttribute('stroke', strokeColor);
+                rightWire.setAttribute('stroke-width', '2');
+                group.appendChild(rightWire);
+                
+                // Labels
+                const plusLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                plusLabel.setAttribute('x', '20');
+                plusLabel.setAttribute('y', '5');
+                plusLabel.setAttribute('fill', fillColor);
+                plusLabel.setAttribute('font-size', '12');
+                plusLabel.setAttribute('font-weight', 'bold');
+                plusLabel.textContent = '+';
+                group.appendChild(plusLabel);
+                
+                const minusLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                minusLabel.setAttribute('x', '-20');
+                minusLabel.setAttribute('y', '5');
+                minusLabel.setAttribute('fill', fillColor);
+                minusLabel.setAttribute('font-size', '12');
+                minusLabel.setAttribute('font-weight', 'bold');
+                minusLabel.textContent = '-';
+                group.appendChild(minusLabel);
+                
+                // Voltage label
+                const voltageLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                voltageLabel.setAttribute('x', '0');
+                voltageLabel.setAttribute('y', '-25');
+                voltageLabel.setAttribute('fill', fillColor);
+                voltageLabel.setAttribute('font-size', '10');
+                voltageLabel.setAttribute('text-anchor', 'middle');
+                voltageLabel.textContent = `${component.properties.voltage}V`;
+                group.appendChild(voltageLabel);
+            }
+            
+            drawResistor(group, component, strokeColor, fillColor) {
+                // Zigzag pattern
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M-40,0 L-20,0 L-15,-8 L-10,8 L-5,-8 L0,8 L5,-8 L10,8 L15,-8 L20,0 L40,0');
+                path.setAttribute('stroke', strokeColor);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('fill', 'none');
+                group.appendChild(path);
+                
+                // Value label
+                const valueLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                valueLabel.setAttribute('x', '0');
+                valueLabel.setAttribute('y', '-15');
+                valueLabel.setAttribute('fill', fillColor);
+                valueLabel.setAttribute('font-size', '10');
+                valueLabel.setAttribute('text-anchor', 'middle');
+                valueLabel.textContent = `${component.properties.resistance}Ω`;
+                group.appendChild(valueLabel);
+            }
+            
+            drawCapacitor(group, component, strokeColor, fillColor) {
+                // Left plate
+                const leftPlate = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                leftPlate.setAttribute('x1', '-5');
+                leftPlate.setAttribute('y1', '-15');
+                leftPlate.setAttribute('x2', '-5');
+                leftPlate.setAttribute('y2', '15');
+                leftPlate.setAttribute('stroke', strokeColor);
+                leftPlate.setAttribute('stroke-width', '3');
+                group.appendChild(leftPlate);
+                
+                // Right plate
+                const rightPlate = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                rightPlate.setAttribute('x1', '5');
+                rightPlate.setAttribute('y1', '-15');
+                rightPlate.setAttribute('x2', '5');
+                rightPlate.setAttribute('y2', '15');
+                rightPlate.setAttribute('stroke', strokeColor);
+                rightPlate.setAttribute('stroke-width', '3');
+                group.appendChild(rightPlate);
+                
+                // Connecting wires
+                const leftWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                leftWire.setAttribute('x1', '-40');
+                leftWire.setAttribute('y1', '0');
+                leftWire.setAttribute('x2', '-5');
+                leftWire.setAttribute('y2', '0');
+                leftWire.setAttribute('stroke', strokeColor);
+                leftWire.setAttribute('stroke-width', '2');
+                group.appendChild(leftWire);
+                
+                const rightWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                rightWire.setAttribute('x1', '5');
+                rightWire.setAttribute('y1', '0');
+                rightWire.setAttribute('x2', '40');
+                rightWire.setAttribute('y2', '0');
+                rightWire.setAttribute('stroke', strokeColor);
+                rightWire.setAttribute('stroke-width', '2');
+                group.appendChild(rightWire);
+                
+                // Value label
+                const valueLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                valueLabel.setAttribute('x', '0');
+                valueLabel.setAttribute('y', '-25');
+                valueLabel.setAttribute('fill', fillColor);
+                valueLabel.setAttribute('font-size', '10');
+                valueLabel.setAttribute('text-anchor', 'middle');
+                valueLabel.textContent = `${component.properties.capacitance}F`;
+                group.appendChild(valueLabel);
+            }
+            
+            drawGround(group, component, strokeColor, fillColor) {
+                // Ground symbol
+                const lines = [
+                    { x1: 0, y1: -20, x2: 0, y2: 10 },
+                    { x1: -15, y1: 10, x2: 15, y2: 10 },
+                    { x1: -10, y1: 15, x2: 10, y2: 15 },
+                    { x1: -5, y1: 20, x2: 5, y2: 20 }
+                ];
+                
+                lines.forEach(lineData => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', lineData.x1);
+                    line.setAttribute('y1', lineData.y1);
+                    line.setAttribute('x2', lineData.x2);
+                    line.setAttribute('y2', lineData.y2);
+                    line.setAttribute('stroke', strokeColor);
+                    line.setAttribute('stroke-width', '2');
+                    group.appendChild(line);
+                });
+            }
+            
+            drawSwitch(group, component, strokeColor, fillColor) {
+                // Base wire
+                const leftWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                leftWire.setAttribute('x1', '-40');
+                leftWire.setAttribute('y1', '0');
+                leftWire.setAttribute('x2', '-10');
+                leftWire.setAttribute('y2', '0');
+                leftWire.setAttribute('stroke', strokeColor);
+                leftWire.setAttribute('stroke-width', '2');
+                group.appendChild(leftWire);
+                
+                const rightWire = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                rightWire.setAttribute('x1', '10');
+                rightWire.setAttribute('y1', '0');
+                rightWire.setAttribute('x2', '40');
+                rightWire.setAttribute('y2', '0');
+                rightWire.setAttribute('stroke', strokeColor);
+                rightWire.setAttribute('stroke-width', '2');
+                group.appendChild(rightWire);
+                
+                // Switch blade
+                const blade = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                blade.setAttribute('x1', '-10');
+                blade.setAttribute('y1', '0');
+                if (component.properties.closed) {
+                    blade.setAttribute('x2', '10');
+                    blade.setAttribute('y2', '0');
+                } else {
+                    blade.setAttribute('x2', '5');
+                    blade.setAttribute('y2', '-10');
+                }
+                blade.setAttribute('stroke', strokeColor);
+                blade.setAttribute('stroke-width', '3');
+                blade.setAttribute('stroke-linecap', 'round');
+                group.appendChild(blade);
+                
+                // Contact points
+                const leftContact = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                leftContact.setAttribute('cx', '-10');
+                leftContact.setAttribute('cy', '0');
+                leftContact.setAttribute('r', '2');
+                leftContact.setAttribute('fill', strokeColor);
+                group.appendChild(leftContact);
+                
+                const rightContact = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                rightContact.setAttribute('cx', '10');
+                rightContact.setAttribute('cy', '0');
+                rightContact.setAttribute('r', '2');
+                rightContact.setAttribute('fill', strokeColor);
+                group.appendChild(rightContact);
+                
+                // Click handler for switch
+                group.style.cursor = 'pointer';
+                const switchClickHandler = (e) => {
+                    if (!this.connectionMode && !this.isDragging) {
+                        e.stopPropagation();
+                        component.properties.closed = !component.properties.closed;
+                        this.redrawComponent(component);
+                    }
+                };
+                
+                group.addEventListener('click', switchClickHandler);
+                group.addEventListener('touchend', switchClickHandler);
+            }
+            
+            toggleConnectionMode() {
+                this.connectionMode = !this.connectionMode;
+                const btn = document.getElementById('connectBtn');
+                const indicator = document.getElementById('modeIndicator');
+                
+                if (this.connectionMode) {
+                    btn.innerHTML = '<span class="hidden md:inline">🔗 Exit Connect</span><span class="md:hidden">✕</span>';
+                    btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                    btn.classList.add('bg-red-500', 'hover:bg-red-600');
+                    indicator.classList.add('active');
+                } else {
+                    btn.innerHTML = '<span class="hidden md:inline">🔗 Connect Mode</span><span class="md:hidden">🔗</span>';
+                    btn.classList.remove('bg-red-500', 'hover:bg-red-600');
+                    btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    indicator.classList.remove('active');
+                    this.cancelConnection();
+                }
+            }
+            
+            handleTerminalClick(terminal, component) {
+                if (!this.connectionMode) return;
+                
+                if (!this.startTerminal) {
+                    // Start connection
+                    this.startTerminal = { terminal, component };
+                    document.querySelector(`[data-terminal-id="${terminal.id}"]`).classList.add('connecting');
+                } else {
+                    // Complete connection
+                    if (this.startTerminal.terminal.id !== terminal.id) {
+                        this.createConnection(this.startTerminal, { terminal, component });
+                    }
+                    this.cancelConnection();
+                }
+            }
+            
+            createConnection(start, end) {
+                const connection = {
+                    id: Date.now(),
+                    startTerminal: start.terminal,
+                    endTerminal: end.terminal,
+                    startComponent: start.component,
+                    endComponent: end.component,
+                    current: 0
+                };
+                
+                this.connections.push(connection);
+                
+                // Update terminal connections
+                start.terminal.connected.push(end.terminal);
+                end.terminal.connected.push(start.terminal);
+                
+                this.drawConnection(connection);
+            }
+            
+            drawConnection(connection) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('id', `conn-${connection.id}`);
+                line.setAttribute('x1', connection.startTerminal.x);
+                line.setAttribute('y1', connection.startTerminal.y);
+                line.setAttribute('x2', connection.endTerminal.x);
+                line.setAttribute('y2', connection.endTerminal.y);
+                line.setAttribute('class', 'connection-wire');
+                
+                this.connectionsGroup.appendChild(line);
+            }
+            
+            cancelConnection() {
+                if (this.startTerminal) {
+                    document.querySelector(`[data-terminal-id="${this.startTerminal.terminal.id}"]`).classList.remove('connecting');
+                    this.startTerminal = null;
+                }
+                if (this.tempConnection) {
+                    this.tempConnection.remove();
+                    this.tempConnection = null;
+                }
+            }
+            
+            moveComponent(component, newX, newY) {
+                const deltaX = newX - component.x;
+                const deltaY = newY - component.y;
+                
+                component.x = newX;
+                component.y = newY;
+                
+                // Update terminal positions
+                component.terminals.forEach(terminal => {
+                    terminal.x += deltaX;
+                    terminal.y += deltaY;
+                });
+                
+                // Update component visual
+                const group = document.getElementById(`comp-${component.id}`);
+                group.setAttribute('transform', `translate(${newX}, ${newY})`);
+                
+                // Update connected wires
+                this.connections.forEach(connection => {
+                    if (connection.startComponent.id === component.id || connection.endComponent.id === component.id) {
+                        const line = document.getElementById(`conn-${connection.id}`);
+                        line.setAttribute('x1', connection.startTerminal.x);
+                        line.setAttribute('y1', connection.startTerminal.y);
+                        line.setAttribute('x2', connection.endTerminal.x);
+                        line.setAttribute('y2', connection.endTerminal.y);
+                    }
+                });
+            }
+            
+            highlightComponent(component) {
+                this.clearHighlights();
+                const group = document.getElementById(`comp-${component.id}`);
+                group.classList.add('component-selected');
+            }
+            
+            clearHighlights() {
+                document.querySelectorAll('.component-selected').forEach(el => {
+                    el.classList.remove('component-selected');
+                });
+            }
+            
+            showComponentProperties(component) {
+                const modal = document.getElementById('propertiesModal');
+                const content = document.getElementById('propertiesContent');
+                
+                let html = `<div class="space-y-4">`;
+                
+                Object.entries(component.properties).forEach(([key, value]) => {
+                    const label = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    if (typeof value === 'boolean') {
+                        html += `
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           id="prop_${key}" 
+                                           ${value ? 'checked' : ''}
+                                           class="mr-2">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">${label}</span>
+                                </label>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">${label}</label>
+                                <input type="number" 
+                                       id="prop_${key}" 
+                                       value="${value}" 
+                                       step="any"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += `</div>`;
+                content.innerHTML = html;
+                modal.classList.remove('hidden');
+            }
+            
+            saveComponentProperties() {
+                if (!this.selectedComponent) return;
+                
+                Object.keys(this.selectedComponent.properties).forEach(key => {
+                    const input = document.getElementById(`prop_${key}`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            this.selectedComponent.properties[key] = input.checked;
+                        } else {
+                            this.selectedComponent.properties[key] = parseFloat(input.value) || 0;
+                        }
+                    }
+                });
+                
+                this.redrawComponent(this.selectedComponent);
+                document.getElementById('propertiesModal').classList.add('hidden');
+            }
+            
+            redrawComponent(component) {
+                const group = document.getElementById(`comp-${component.id}`);
+                group.innerHTML = '';
+                this.drawComponentVisual(group, component);
+                
+                // Re-add terminals
+                component.terminals.forEach(terminal => {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', terminal.x - component.x);
+                    circle.setAttribute('cy', terminal.y - component.y);
+                    circle.setAttribute('r', window.innerWidth <= 768 ? 8 : 6);
+                    circle.setAttribute('fill', '#ef4444');
+                    circle.setAttribute('stroke', '#dc2626');
+                    circle.setAttribute('stroke-width', '1');
+                    circle.setAttribute('class', 'terminal');
+                    circle.setAttribute('data-terminal-id', terminal.id);
+                    circle.setAttribute('data-component-id', component.id);
+                    
+                    circle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
+                    circle.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.handleTerminalClick(terminal, component);
+                    });
+                    
+                    group.appendChild(circle);
+                });
+            }
+            
+            startSimulation() {
+                this.isSimulating = true;
+                this.calculateCircuit();
+                this.startCurrentAnimation();
+                document.getElementById('playBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+            }
+            
+            stopSimulation() {
+                this.isSimulating = false;
+                this.clearCurrentParticles();
+                this.clearWireHighlights();
+                document.getElementById('playBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+            }
+            
+            calculateCircuit() {
+                // Reset all currents
+                this.components.forEach(comp => comp.current = 0);
+                this.connections.forEach(conn => conn.current = 0);
+                
+                // Find power sources and ground
+                const batteries = this.components.filter(c => c.type === 'battery');
+                const grounds = this.components.filter(c => c.type === 'ground');
+                
+                if (batteries.length === 0 || grounds.length === 0) {
+                    console.log('Circuit needs at least one battery and one ground');
+                    return;
+                }
+                
+                // Simple series circuit analysis for demonstration
+                let totalVoltage = 0;
+                let totalResistance = 0;
+                
+                batteries.forEach(battery => {
+                    totalVoltage += battery.properties.voltage;
+                    totalResistance += battery.properties.internal_resistance || 0.1;
+                });
+                
+                // Add resistance from other components in series
+                this.components.forEach(comp => {
+                    if (comp.type === 'resistor') {
+                        totalResistance += comp.properties.resistance;
+                    } else if (comp.type === 'switch' && comp.properties.closed) {
+                        totalResistance += comp.properties.resistance || 0.01;
+                    } else if (comp.type === 'switch' && !comp.properties.closed) {
+                        totalResistance = Infinity; // Open circuit
+                    }
+                });
+                
+                const current = totalResistance === Infinity ? 0 : totalVoltage / totalResistance;
+                
+                // Set current for all components and connections
+                this.components.forEach(comp => comp.current = current);
+                this.connections.forEach(conn => conn.current = current);
+                
+                console.log(`Circuit analysis: V=${totalVoltage}V, R=${totalResistance}Ω, I=${current}A`);
+            }
+            
+            startCurrentAnimation() {
+                this.clearCurrentParticles();
+                
+                if (!this.isSimulating) return;
+                
+                // Highlight energized connections
+                this.connections.forEach(connection => {
+                    if (Math.abs(connection.current) > 0.001) {
+                        const line = document.getElementById(`conn-${connection.id}`);
+                        line.classList.add('energized');
+                        
+                        // Create current particles
+                        this.createCurrentParticles(connection);
+                    }
+                });
+            }
+            
+            createCurrentParticles(connection) {
+                const numParticles = Math.max(1, Math.min(3, Math.floor(Math.abs(connection.current) * 1000)));
+                const speed = Math.abs(connection.current) * 50;
+                
+                for (let i = 0; i < numParticles; i++) {
+                    const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    particle.setAttribute('r', '3');
+                    particle.setAttribute('class', 'current-particle');
+                    
+                    const startX = connection.startTerminal.x;
+                    const startY = connection.startTerminal.y;
+                    const endX = connection.endTerminal.x;
+                    const endY = connection.endTerminal.y;
+                    
+                    // Position particles along the wire
+                    const progress = i / numParticles;
+                    const x = startX + (endX - startX) * progress;
+                    const y = startY + (endY - startY) * progress;
+                    
+                    particle.setAttribute('cx', x);
+                    particle.setAttribute('cy', y);
+                    
+                    particle.connectionId = connection.id;
+                    particle.speed = speed;
+                    particle.direction = connection.current >= 0 ? 1 : -1;
+                    particle.progress = progress;
+                    
+                    this.particlesGroup.appendChild(particle);
+                    this.currentParticles.push(particle);
+                }
+            }
+            
+            animateCurrentParticles() {
+                if (!this.isSimulating) return;
+                
+                this.currentParticles.forEach(particle => {
+                    const connection = this.connections.find(c => c.id == particle.connectionId);
+                    if (!connection) return;
+                    
+                    particle.progress += particle.speed * particle.direction * 0.0005;
+                    
+                    // Wrap around
+                    if (particle.progress > 1) {
+                        particle.progress = 0;
+                    } else if (particle.progress < 0) {
+                        particle.progress = 1;
+                    }
+                    
+                    // Calculate position
+                    const startX = connection.startTerminal.x;
+                    const startY = connection.startTerminal.y;
+                    const endX = connection.endTerminal.x;
+                    const endY = connection.endTerminal.y;
+                    
+                    const x = startX + (endX - startX) * particle.progress;
+                    const y = startY + (endY - startY) * particle.progress;
+                    
+                    particle.setAttribute('cx', x);
+                    particle.setAttribute('cy', y);
+                });
+            }
+            
+            clearCurrentParticles() {
+                this.currentParticles.forEach(particle => particle.remove());
+                this.currentParticles = [];
+            }
+            
+            clearWireHighlights() {
+                document.querySelectorAll('.connection-wire').forEach(wire => {
+                    wire.classList.remove('energized');
+                });
+            }
+            
+            clearCircuit() {
+                this.stopSimulation();
+                this.components = [];
+                this.connections = [];
+                this.selectedComponent = null;
+                this.componentsGroup.innerHTML = '';
+                this.connectionsGroup.innerHTML = '';
+                this.particlesGroup.innerHTML = '';
+            }
+            
+            animationLoop() {
+                this.animateCurrentParticles();
+                requestAnimationFrame(() => this.animationLoop());
+            }
+        }
+        
+        // Initialize the circuit when the page loads
+        window.addEventListener('load', () => {
+            window.ravenCircuit = new RavenCircuit();
+        });
+    </script>
+</body>
+</html>
