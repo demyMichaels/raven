@@ -72,6 +72,24 @@
                 </div>
             </div>
 
+            <!-- Video Quality Notice -->
+            <section class="mb-6">
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <div class="flex items-start">
+                        <span class="text-yellow-600 dark:text-yellow-400 mr-2">💡</span>
+                        <div>
+                            <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 mb-1">Video Quality Options</h3>
+                            <p class="text-yellow-700 dark:text-yellow-300 text-sm">
+                                Use the quality buttons below each video for different bandwidth needs:
+                                <strong>📱 Low Quality</strong> (144p-240p) for slow connections, 
+                                <strong>💻 Auto Quality</strong> for adaptive streaming, 
+                                <strong>🖥️ High Quality</strong> (720p-1080p) for fast connections.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Learning Objectives -->
             <section class="mb-8">
                 <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Learning Objectives</h2>
@@ -95,8 +113,6 @@
         </main>
     </div>
 
-
-    
     <script>
         // Editable video data structure
         let videoData = {
@@ -285,15 +301,20 @@
             
             return `
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow">
-                    <div class="aspect-video bg-gray-100 dark:bg-gray-700 relative">
+                    <div class="aspect-video bg-gray-100 dark:bg-gray-700 relative group">
                         ${videoId ? `
                             <iframe 
-                                src="https://www.youtube.com/embed/${videoId}" 
+                                src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1" 
                                 class="w-full h-full" 
                                 frameborder="0" 
                                 allowfullscreen
-                                loading="lazy">
+                                loading="lazy"
+                                title="${video.title}">
                             </iframe>
+                            <!-- Quality hint overlay -->
+                            <div class="absolute top-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                Click ⚙️ for quality
+                            </div>
                         ` : `
                             <div class="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
                                 <span>Invalid video URL</span>
@@ -305,9 +326,22 @@
                         <span class="inline-block px-2 py-1 text-xs rounded-full border ${typeClass}">
                             ${video.type}
                         </span>
-                        <a href="${video.url}" target="_blank" class="block mt-2 text-primary hover:text-primary-600 text-sm">
-                            Open in YouTube ↗
-                        </a>
+                        <div class="mt-3 space-y-2">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="https://www.youtube.com/watch?v=${videoId}&vq=small" target="_blank" class="text-xs bg-red-100 hover:bg-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-700 dark:text-red-300 px-2 py-1 rounded border border-red-300 dark:border-red-700">
+                                    📱 Low Quality
+                                </a>
+                                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank" class="text-xs bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-1 rounded border border-blue-300 dark:border-blue-700">
+                                    💻 Auto Quality
+                                </a>
+                                <a href="https://www.youtube.com/watch?v=${videoId}&vq=hd720" target="_blank" class="text-xs bg-green-100 hover:bg-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded border border-green-300 dark:border-green-700">
+                                    🖥️ High Quality
+                                </a>
+                            </div>
+                            <button onclick="toggleQualityInfo(this)" class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary underline">
+                                How to change quality?
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -423,6 +457,29 @@
                 location.reload();
             });
         });
+
+        // Quality information toggle
+        function toggleQualityInfo(button) {
+            const existingInfo = button.parentNode.querySelector('.quality-info');
+            if (existingInfo) {
+                existingInfo.remove();
+                return;
+            }
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'quality-info mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600';
+            infoDiv.innerHTML = `
+                <div class="space-y-2">
+                    <p><strong>Method 1:</strong> Click the quality buttons above to open YouTube directly at the desired quality.</p>
+                    <p><strong>Method 2:</strong> In the embedded player, right-click → Settings → Quality to manually select resolution (144p, 240p, 360p, 480p, 720p, 1080p).</p>
+                    <p><strong>For Mobile:</strong> Tap the video, then tap the gear icon (⚙️) → Quality.</p>
+                    <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                        <p class="text-gray-500 dark:text-gray-400">💡 <strong>Tip:</strong> Low quality saves data, Auto adapts to your connection speed, High quality provides best experience.</p>
+                    </div>
+                </div>
+            `;
+            button.parentNode.appendChild(infoDiv);
+        }
 
         // Initial render
         renderContent();
