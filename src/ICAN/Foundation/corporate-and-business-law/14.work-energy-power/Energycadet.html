@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Academy Racing Championships</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;600;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(135deg, #0f0f23, #1a1a3e, #2d1b69);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Academy Branding */
+        .academy-logo {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 200;
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 14px;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+        }
+
+        /* Story Screens */
+        .story-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(15,15,35,0.95), rgba(26,26,62,0.95));
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .story-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .story-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            font-weight: 900;
+            color: #ffff00;
+            text-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .story-content {
+            max-width: 600px;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #e0e0ff;
+        }
+
+        .story-button {
+            background: linear-gradient(45deg, #5D5CDE, #8B7FFF);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Exo 2', sans-serif;
+            border: 2px solid #ffffff40;
+        }
+
+        .story-button:hover {
+            background: linear-gradient(45deg, #7B7AFF, #ABA7FF);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(93, 92, 222, 0.4);
+        }
+
+        /* Professor Energy */
+        .professor-container {
+            position: absolute;
+            bottom: 100px;
+            right: 15px;
+            z-index: 250;
+            transition: all 0.3s ease;
+        }
+
+        .professor-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border: 3px solid #ffff00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+        }
+
+        .professor-dialogue {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #ff6b35;
+            border-radius: 15px;
+            padding: 12px 16px;
+            max-width: 250px;
+            font-size: 13px;
+            line-height: 1.4;
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: transform 0.3s ease;
+        }
+
+        .professor-dialogue.show {
+            transform: scale(1);
+        }
+
+        .professor-dialogue::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #ff6b35;
+        }
+
+        /* Mission HUD */
+        .mission-hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 8px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mission-info {
+            background: rgba(93, 92, 222, 0.2);
+            border: 2px solid #5D5CDE;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .rank-display {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            align-self: center;
+            border: 2px solid #ffff00;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.4);
+        }
+
+        .hud-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 8px;
+            align-items: start;
+        }
+
+        .speed-display {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 2px solid #ffff00;
+            box-shadow: 0 0 15px rgba(255, 107, 53, 0.6);
+            font-weight: 900;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .energy-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #00ffff;
+            font-size: 13px;
+        }
+
+        .energy-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .energy-label {
+            min-width: 30px;
+            font-size: 12px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 12px;
+            border: 1px solid #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #333;
+            min-width: 80px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .kinetic-bar { background: linear-gradient(90deg, #ff0080, #ff4040); }
+        .potential-bar { background: linear-gradient(90deg, #0080ff, #40ff40); }
+        .power-bar { background: linear-gradient(90deg, #ffff00, #ff8000); }
+
+        .energy-value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 11px;
+        }
+
+        .physics-display {
+            font-size: 13px;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #00ff00;
+            line-height: 1.3;
+        }
+
+        .physics-display div {
+            margin-bottom: 2px;
+        }
+
+        /* Progress Tracking */
+        .progress-container {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 90;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid #5D5CDE;
+            border-radius: 15px;
+            padding: 8px 16px;
+            font-size: 12px;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5D5CDE, #8B7FFF);
+            transition: width 0.5s ease;
+        }
+
+        /* Controls */
+        .controls {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #4a4a8a, #6a6aaa);
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            font-family: 'Orbitron', monospace;
+            touch-action: manipulation;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .control-btn.power-up {
+            background: linear-gradient(135deg, #ff4040, #ff8040);
+            border-color: #ffff00;
+            box-shadow: 0 4px 12px rgba(255, 64, 64, 0.5);
+        }
+
+        .control-btn.power-down {
+            background: linear-gradient(135deg, #4040ff, #8040ff);
+            border-color: #00ffff;
+            box-shadow: 0 4px 12px rgba(64, 64, 255, 0.5);
+        }
+
+        /* Achievement Notifications */
+        .achievement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(45deg, #ffff00, #ff8000);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-weight: 800;
+            font-size: 16px;
+            z-index: 400;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255, 255, 0, 0.8);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .achievement.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* SVG Game Area */
+        .game-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .terrain-grass { fill: #2d5016; }
+        .terrain-dirt { fill: #8b4513; }
+        .terrain-ice { fill: #87ceeb; }
+
+        .car-body { fill: #ff0040; stroke: #fff; stroke-width: 2; }
+        .car-detail { fill: #ffff00; }
+        .wheel { fill: #333; stroke: #666; stroke-width: 1; }
+
+        .opponent-car { fill: #0080ff; }
+
+        .track-marker {
+            fill: none;
+            stroke: #ffff00;
+            stroke-width: 3;
+            stroke-dasharray: 20,10;
+            opacity: 0.8;
+        }
+
+        .particle {
+            fill: #ff8040;
+            opacity: 0.8;
+        }
+
+        .learning-particle {
+            fill: #00ffff;
+            opacity: 0.9;
+            animation: sparkle 1s ease-out forwards;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes sparkle {
+            0% { opacity: 0.9; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(0.5) translateY(-20px); }
+        }
+
+        /* Mobile-First Responsive Breakpoints */
+        @media (min-width: 768px) {
+            .academy-logo {
+                font-size: 16px;
+                top: 12px;
+                left: 12px;
+            }
+
+            .story-title {
+                font-size: 36px;
+            }
+
+            .story-content {
+                font-size: 18px;
+            }
+
+            .professor-avatar {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+
+            .professor-dialogue {
+                max-width: 300px;
+                font-size: 14px;
+                padding: 15px 20px;
+            }
+
+            .mission-hud {
+                padding: 12px;
+            }
+
+            .hud-grid {
+                gap: 12px;
+            }
+
+            .speed-display {
+                font-size: 18px;
+                padding: 10px 20px;
+            }
+
+            .energy-panel {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .controls {
+                gap: 20px;
+                bottom: 20px;
+            }
+
+            .control-btn {
+                width: 75px;
+                height: 75px;
+                font-size: 16px;
+            }
+
+            .progress-container {
+                top: 100px;
+                font-size: 14px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .professor-container {
+                right: 20px;
+                bottom: 120px;
+            }
+
+            .professor-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 32px;
+            }
+
+            .professor-dialogue {
+                max-width: 350px;
+                font-size: 15px;
+            }
+
+            .hud-grid {
+                padding: 0 20px;
+            }
+
+            .energy-panel {
+                font-size: 15px;
+                padding: 15px;
+            }
+
+            .physics-display {
+                font-size: 14px;
+                padding: 12px;
+            }
+        }
+
+        /* Dark mode support */
+        .dark .story-screen {
+            background: linear-gradient(135deg, rgba(24,24,24,0.95), rgba(45,45,45,0.95));
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Academy Logo -->
+        <div class="academy-logo">⚡ ENERGY ACADEMY</div>
+
+        <!-- Story Screens -->
+        <div class="story-screen" id="introScreen">
+            <div class="story-title">🏁 ENERGY ACADEMY</div>
+            <div class="story-title">RACING CHAMPIONSHIPS</div>
+            <div class="story-content">
+                Welcome, Cadet! You've been enrolled in the prestigious Energy Academy where future engineers master physics through high-tech racing simulations.
+                <br><br>
+                Your mission: Learn to harness Kinetic Energy, Potential Energy, and Power to become the ultimate Physics Racing Champion!
+                <br><br>
+                The Academy's AI has been programmed with perfect physics knowledge. Can you outrace it by understanding energy better than ever before?
+            </div>
+            <button class="story-button" onclick="startAcademy()">BEGIN TRAINING</button>
+        </div>
+
+        <div class="story-screen hidden" id="missionBriefing">
+            <div class="story-title">📋 MISSION BRIEFING</div>
+            <div class="story-content" id="missionDescription"></div>
+            <div class="story-content" id="missionObjective"></div>
+            <button class="story-button" onclick="startMission()">START MISSION</button>
+        </div>
+
+        <div class="story-screen hidden" id="missionComplete">
+            <div class="story-title">🎉 MISSION COMPLETE!</div>
+            <div class="story-content" id="missionResults"></div>
+            <button class="story-button" onclick="nextMission()">CONTINUE</button>
+        </div>
+
+        <div class="story-screen hidden" id="graduationScreen">
+            <div class="story-title">🎓 GRADUATION!</div>
+            <div class="story-content">
+                Congratulations, Champion! You've mastered all physics concepts and graduated from Energy Academy!
+                <br><br>
+                You're now a certified Physics Racing Master. Continue racing to perfect your skills!
+            </div>
+            <button class="story-button" onclick="freePlay()">FREE PLAY MODE</button>
+        </div>
+
+        <!-- Mission HUD -->
+        <div class="mission-hud">
+            <div class="rank-display" id="rankDisplay">CADET</div>
+            <div class="mission-info" id="missionInfo">Mission 1: Basic Energy Training</div>
+            
+            <div class="hud-grid">
+                <div class="speed-display">
+                    <div>SPEED: <span id="speedValue">0</span> m/s</div>
+                </div>
+                
+                <div class="energy-panel">
+                    <div class="energy-bar">
+                        <span class="energy-label">KE:</span>
+                        <div class="bar">
+                            <div class="bar-fill kinetic-bar" id="kineticBar" style="width: 0%"></div>
+                        </div>
+                        <span class="energy-value" id="kineticValue">0 J</span>
+                    </div>
+                    <div class="energy-bar">
+                        <span class="energy-label">PE:</span>
+                        <div class="bar">
+                            <div class="bar-fill potential-bar" id="potentialBar" style="width: 0%"></div>
+                        </div>
+                        <span class="energy-value" id="potentialValue">0 J</span>
+                    </div>
+                    <div class="energy-bar">
+                        <span class="energy-label">PWR:</span>
+                        <div class="bar">
+                            <div class="bar-fill power-bar" id="powerBar" style="width: 50%"></div>
+                        </div>
+                        <span class="energy-value" id="powerValue">5 kW</span>
+                    </div>
+                </div>
+
+                <div class="physics-display">
+                    <div><strong>Height:</strong> <span id="heightValue">0</span> m</div>
+                    <div><strong>Force:</strong> <span id="forceValue">0</span> N</div>
+                    <div><strong>Work:</strong> <span id="workValue">0</span> J</div>
+                    <div><strong>Surface:</strong> <span id="terrainType">GRASS</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Tracking -->
+        <div class="progress-container" id="progressContainer">
+            <div id="progressText">Mission Progress</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Professor Energy -->
+        <div class="professor-container">
+            <div class="professor-avatar" onclick="toggleProfessor()">🧪</div>
+            <div class="professor-dialogue" id="professorDialogue">
+                Hello Cadet! I'm Professor Energy. Tap me anytime for physics guidance!
+            </div>
+        </div>
+
+        <!-- Achievement Notification -->
+        <div class="achievement" id="achievement"></div>
+
+        <!-- Game SVG -->
+        <svg class="game-svg" viewBox="0 0 1200 600" id="gameSvg">
+            <defs>
+                <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#87CEEB;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#98FB98;stop-opacity:1" />
+                </linearGradient>
+                
+                <linearGradient id="hillGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#228B22;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#006400;stop-opacity:1" />
+                </linearGradient>
+
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/> 
+                    </feMerge>
+                </filter>
+
+                <filter id="academyGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                    <feMerge> 
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/> 
+                    </feMerge>
+                </filter>
+            </defs>
+
+            <!-- Sky -->
+            <rect width="1200" height="300" fill="url(#skyGradient)"/>
+
+            <!-- Academy Buildings (Background) -->
+            <rect x="50" y="200" width="80" height="100" fill="#1a1a3e" opacity="0.6"/>
+            <rect x="60" y="180" width="20" height="20" fill="#ffff00" opacity="0.8"/>
+            <rect x="90" y="180" width="20" height="20" fill="#ffff00" opacity="0.8"/>
+            
+            <rect x="1000" y="180" width="100" height="120" fill="#1a1a3e" opacity="0.6"/>
+            <rect x="1020" y="160" width="25" height="20" fill="#ffff00" opacity="0.8"/>
+            <rect x="1055" y="160" width="25" height="20" fill="#ffff00" opacity="0.8"/>
+
+            <!-- Hills and Track -->
+            <path id="trackPath" d="M 0,400 Q 200,350 400,380 Q 600,320 800,360 Q 1000,300 1200,340" 
+                  fill="none" stroke="#666" stroke-width="40" opacity="0.3"/>
+                  
+            <path id="terrainPath" d="M 0,400 Q 200,350 400,380 Q 600,320 800,360 Q 1000,300 1200,340 L 1200,600 L 0,600 Z" 
+                  fill="url(#hillGradient)"/>
+
+            <!-- Track markers -->
+            <path class="track-marker" d="M 0,400 Q 200,350 400,380 Q 600,320 800,360 Q 1000,300 1200,340"/>
+
+            <!-- Terrain sections -->
+            <rect x="0" y="375" width="300" height="25" class="terrain-grass"/>
+            <rect x="300" y="355" width="200" height="25" class="terrain-dirt"/>
+            <rect x="500" y="345" width="200" height="25" class="terrain-ice"/>
+            <rect x="700" y="335" width="300" height="25" class="terrain-grass"/>
+            <rect x="1000" y="275" width="200" height="25" class="terrain-dirt"/>
+
+            <!-- Player car -->
+            <g id="playerCar" transform="translate(100, 380)">
+                <ellipse class="car-body" cx="0" cy="0" rx="25" ry="12"/>
+                <rect class="car-detail" x="-20" y="-8" width="40" height="4" rx="2"/>
+                <rect class="car-detail" x="-15" y="-4" width="30" height="3" rx="2"/>
+                <circle class="wheel" cx="-15" cy="8" r="6"/>
+                <circle class="wheel" cx="15" cy="8" r="6"/>
+                <circle cx="-25" cy="0" r="3" fill="#ff8040" opacity="0.8" filter="url(#glow)"/>
+            </g>
+
+            <!-- Opponent car (Academy AI) -->
+            <g id="opponentCar" transform="translate(50, 385)">
+                <ellipse class="opponent-car" cx="0" cy="0" rx="22" ry="10" stroke="#fff" stroke-width="2"/>
+                <rect fill="#ffff00" x="-18" y="-6" width="36" height="3" rx="2"/>
+                <circle class="wheel" cx="-12" cy="6" r="5"/>
+                <circle class="wheel" cx="12" cy="6" r="5"/>
+                <text x="0" y="-20" text-anchor="middle" font-size="8" fill="#00ffff" font-family="Orbitron">AI</text>
+            </g>
+
+            <!-- Particles -->
+            <g id="particles"></g>
+        </svg>
+
+        <!-- Controls -->
+        <div class="controls">
+            <button class="control-btn power-down" id="powerDown">PWR-</button>
+            <button class="control-btn power-up" id="powerUp">PWR+</button>
+        </div>
+    </div>
+
+    <script>
+        class EnergyAcademyRacer {
+            constructor() {
+                this.car = {
+                    x: 100,
+                    y: 380,
+                    velocity: 0,
+                    mass: 800,
+                    power: 5000,
+                    maxPower: 10000,
+                    minPower: 1000
+                };
+                
+                this.opponent = {
+                    x: 50,
+                    y: 385,
+                    velocity: 8
+                };
+
+                this.physics = {
+                    gravity: 10,
+                    trackLength: 1200,
+                    height: 0,
+                    work: 0,
+                    force: 0
+                };
+
+                this.terrainTypes = [
+                    {name: 'GRASS', friction: 0.7, start: 0, end: 300},
+                    {name: 'DIRT', friction: 0.9, start: 300, end: 500},
+                    {name: 'ICE', friction: 0.3, start: 500, end: 700},
+                    {name: 'GRASS', friction: 0.7, start: 700, end: 1000},
+                    {name: 'DIRT', friction: 0.9, start: 1000, end: 1200}
+                ];
+
+                this.gameState = {
+                    running: false,
+                    currentMission: 1,
+                    missionStartTime: 0,
+                    missionProgress: 0,
+                    professorVisible: false,
+                    rank: 'CADET',
+                    inStoryMode: true
+                };
+
+                this.missions = [
+                    {
+                        id: 1,
+                        title: "Basic Energy Training",
+                        description: "Learn to control your speed on the academy's training track. Master the relationship between power input and velocity.",
+                        objective: "Maintain a steady speed of 15 m/s for 10 seconds",
+                        checkComplete: () => this.checkMission1(),
+                        rank: 'CADET'
+                    },
+                    {
+                        id: 2,
+                        title: "Friction Mastery",
+                        description: "Navigate through different terrain types while managing energy efficiency. Each surface affects your car differently!",
+                        objective: "Complete one full lap while maintaining 80% energy efficiency",
+                        checkComplete: () => this.checkMission2(),
+                        rank: 'APPRENTICE'
+                    },
+                    {
+                        id: 3,
+                        title: "Hill Climb Challenge",
+                        description: "Experience the beautiful dance between kinetic and potential energy as you climb and descend hills.",
+                        objective: "Reach the highest point with optimal power management",
+                        checkComplete: () => this.checkMission3(),
+                        rank: 'ENGINEER'
+                    },
+                    {
+                        id: 4,
+                        title: "Efficiency Trial",
+                        description: "Race against the Academy AI while using minimal energy. Strategy beats raw power!",
+                        objective: "Beat the AI while using 20% less total power",
+                        checkComplete: () => this.checkMission4(),
+                        rank: 'PHYSICS MASTER'
+                    },
+                    {
+                        id: 5,
+                        title: "Championship Final",
+                        description: "The ultimate test! Combine all your physics knowledge in a complex multi-terrain championship race.",
+                        objective: "Beat the AI by 3+ seconds in the final race",
+                        checkComplete: () => this.checkMission5(),
+                        rank: 'CHAMPION'
+                    }
+                ];
+
+                this.professorDialogues = [
+                    "Remember: Power = Force × Velocity. More power doesn't always mean more speed!",
+                    "Watch how kinetic energy converts to potential energy on hills!",
+                    "Different terrains have different friction coefficients. Ice is slippery!",
+                    "Energy efficiency is key! Sometimes less power is more strategic.",
+                    "Notice how the energy bars change as you race. That's physics in action!",
+                    "Your car's mass affects acceleration: F = ma. Heavier cars need more force!",
+                    "Work = Force × Distance. The work you do becomes kinetic energy!",
+                    "On ice, friction is low, so you need less power to maintain speed.",
+                    "Going uphill? Kinetic energy transforms into potential energy!",
+                    "The AI uses perfect physics calculations. Can you do better with intuition?"
+                ];
+
+                this.missionData = {
+                    mission1: { timeAtSpeed: 0, targetSpeed: 15, tolerance: 1 },
+                    mission2: { startEnergy: 0, totalEnergyUsed: 0, lapsCompleted: 0 },
+                    mission3: { maxHeight: 0, powerEfficiency: 0 },
+                    mission4: { playerTotalPower: 0, aiTotalPower: 0, raceStarted: false },
+                    mission5: { playerTime: 0, aiTime: 0, raceComplete: false }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                // Start with intro screen visible
+            }
+
+            setupEventListeners() {
+                document.getElementById('powerUp').addEventListener('click', () => this.adjustPower(1000));
+                document.getElementById('powerDown').addEventListener('click', () => this.adjustPower(-1000));
+                
+                document.addEventListener('keydown', (e) => {
+                    if (this.gameState.inStoryMode) return;
+                    
+                    switch(e.key) {
+                        case 'ArrowUp':
+                        case 'w':
+                        case 'W':
+                            e.preventDefault();
+                            this.adjustPower(1000);
+                            break;
+                        case 'ArrowDown':
+                        case 's':
+                        case 'S':
+                            e.preventDefault();
+                            this.adjustPower(-1000);
+                            break;
+                    }
+                });
+
+                this.setupTouchControls();
+            }
+
+            setupTouchControls() {
+                const powerUpBtn = document.getElementById('powerUp');
+                const powerDownBtn = document.getElementById('powerDown');
+                
+                [powerUpBtn, powerDownBtn].forEach(btn => {
+                    btn.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        btn.style.transform = 'scale(0.95)';
+                    }, { passive: false });
+                    
+                    btn.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        btn.style.transform = 'scale(1)';
+                    }, { passive: false });
+                });
+                
+                powerUpBtn.addEventListener('touchstart', () => {
+                    if (!this.gameState.inStoryMode) this.adjustPower(1000);
+                });
+                powerDownBtn.addEventListener('touchstart', () => {
+                    if (!this.gameState.inStoryMode) this.adjustPower(-1000);
+                });
+            }
+
+            showScreen(screenId) {
+                document.querySelectorAll('.story-screen').forEach(screen => {
+                    screen.classList.add('hidden');
+                });
+                document.getElementById(screenId).classList.remove('hidden');
+                this.gameState.inStoryMode = true;
+            }
+
+            hideAllScreens() {
+                document.querySelectorAll('.story-screen').forEach(screen => {
+                    screen.classList.add('hidden');
+                });
+                this.gameState.inStoryMode = false;
+            }
+
+            showMissionBriefing() {
+                const mission = this.missions[this.gameState.currentMission - 1];
+                document.getElementById('missionDescription').textContent = mission.description;
+                document.getElementById('missionObjective').innerHTML = `<strong>Objective:</strong> ${mission.objective}`;
+                this.showScreen('missionBriefing');
+                this.updateRank(mission.rank);
+            }
+
+            updateRank(rank) {
+                this.gameState.rank = rank;
+                document.getElementById('rankDisplay').textContent = rank;
+                this.showAchievement(`Promoted to ${rank}!`);
+            }
+
+            showAchievement(text) {
+                const achievement = document.getElementById('achievement');
+                achievement.textContent = text;
+                achievement.classList.add('show');
+                setTimeout(() => {
+                    achievement.classList.remove('show');
+                }, 3000);
+            }
+
+            updateMissionInfo() {
+                const mission = this.missions[this.gameState.currentMission - 1];
+                if (mission) {
+                    document.getElementById('missionInfo').textContent = `Mission ${mission.id}: ${mission.title}`;
+                }
+            }
+
+            updateProgress(percentage) {
+                this.gameState.missionProgress = percentage;
+                document.getElementById('progressFill').style.width = `${percentage}%`;
+                document.getElementById('progressText').textContent = `Mission Progress: ${Math.round(percentage)}%`;
+            }
+
+            toggleProfessor() {
+                const dialogue = document.getElementById('professorDialogue');
+                
+                if (this.gameState.professorVisible) {
+                    dialogue.classList.remove('show');
+                    this.gameState.professorVisible = false;
+                } else {
+                    const randomDialogue = this.professorDialogues[Math.floor(Math.random() * this.professorDialogues.length)];
+                    dialogue.textContent = randomDialogue;
+                    dialogue.classList.add('show');
+                    this.gameState.professorVisible = true;
+                    
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        if (this.gameState.professorVisible) {
+                            dialogue.classList.remove('show');
+                            this.gameState.professorVisible = false;
+                        }
+                    }, 5000);
+                }
+            }
+
+            professorComment(message) {
+                const dialogue = document.getElementById('professorDialogue');
+                dialogue.textContent = message;
+                dialogue.classList.add('show');
+                this.gameState.professorVisible = true;
+                
+                setTimeout(() => {
+                    dialogue.classList.remove('show');
+                    this.gameState.professorVisible = false;
+                }, 4000);
+            }
+
+            adjustPower(delta) {
+                if (this.gameState.inStoryMode) return;
+                
+                this.car.power = Math.max(this.car.minPower, 
+                    Math.min(this.car.maxPower, this.car.power + delta));
+                this.createParticles();
+                this.createLearningParticles();
+                
+                // Mission-specific tracking
+                if (this.gameState.currentMission === 4) {
+                    this.missionData.mission4.playerTotalPower += Math.abs(delta);
+                }
+                
+                // Professor feedback
+                if (delta > 0 && this.car.power === this.car.maxPower) {
+                    this.professorComment("Maximum power! Notice how acceleration decreases at higher speeds due to P = F×v relationship.");
+                } else if (delta < 0 && this.car.power === this.car.minPower) {
+                    this.professorComment("Minimum power! You'll slow down due to friction, but kinetic energy keeps you moving.");
+                }
+            }
+
+            getCurrentTerrain() {
+                for (let terrain of this.terrainTypes) {
+                    if (this.car.x >= terrain.start && this.car.x < terrain.end) {
+                        return terrain;
+                    }
+                }
+                return this.terrainTypes[0];
+            }
+
+            calculateHeight() {
+                const normalizedX = this.car.x / this.physics.trackLength;
+                return 50 * Math.sin(normalizedX * Math.PI * 2) + 100;
+            }
+
+            updatePhysics() {
+                if (this.gameState.inStoryMode) return;
+                
+                const terrain = this.getCurrentTerrain();
+                this.physics.height = this.calculateHeight();
+                
+                if (this.car.velocity > 0.1) {
+                    this.physics.force = this.car.power / this.car.velocity;
+                } else {
+                    this.physics.force = this.car.power / 0.1;
+                }
+
+                const frictionForce = this.physics.force * terrain.friction;
+                const acceleration = frictionForce / this.car.mass;
+                
+                this.car.velocity += acceleration * 0.016;
+                this.car.velocity = Math.max(0, Math.min(25, this.car.velocity));
+                
+                this.car.x += this.car.velocity * 0.5;
+                
+                const distance = this.car.velocity * 0.5 * 0.016;
+                this.physics.work += frictionForce * distance;
+                
+                this.car.y = this.getTrackY(this.car.x);
+                
+                // Update opponent
+                this.opponent.x += this.opponent.velocity * 0.5;
+                this.opponent.y = this.getTrackY(this.opponent.x);
+                
+                // Reset positions
+                if (this.car.x > this.physics.trackLength) {
+                    this.car.x = 0;
+                    this.physics.work = 0;
+                    
+                    // Mission 2: Lap completion
+                    if (this.gameState.currentMission === 2) {
+                        this.missionData.mission2.lapsCompleted++;
+                    }
+                }
+                if (this.opponent.x > this.physics.trackLength) this.opponent.x = 0;
+
+                // Update mission progress
+                this.updateMissionProgress();
+            }
+
+            getTrackY(x) {
+                const normalizedX = x / this.physics.trackLength;
+                return 380 - 30 * Math.sin(normalizedX * Math.PI * 2);
+            }
+
+            updateMissionProgress() {
+                const mission = this.missions[this.gameState.currentMission - 1];
+                if (mission && mission.checkComplete()) {
+                    this.completeMission();
+                }
+            }
+
+            checkMission1() {
+                const data = this.missionData.mission1;
+                const currentSpeed = this.car.velocity;
+                
+                if (Math.abs(currentSpeed - data.targetSpeed) <= data.tolerance) {
+                    data.timeAtSpeed += 0.016;
+                    this.updateProgress((data.timeAtSpeed / 10) * 100);
+                    
+                    if (data.timeAtSpeed >= 10) {
+                        return true;
+                    }
+                } else {
+                    data.timeAtSpeed = Math.max(0, data.timeAtSpeed - 0.032);
+                    this.updateProgress((data.timeAtSpeed / 10) * 100);
+                }
+                return false;
+            }
+
+            checkMission2() {
+                const data = this.missionData.mission2;
+                if (data.startEnergy === 0) {
+                    data.startEnergy = this.calculateTotalEnergy();
+                }
+                
+                const currentEnergy = this.calculateTotalEnergy();
+                const efficiency = (currentEnergy / data.startEnergy) * 100;
+                
+                this.updateProgress(Math.min(100, efficiency));
+                
+                return data.lapsCompleted >= 1 && efficiency >= 80;
+            }
+
+            checkMission3() {
+                const data = this.missionData.mission3;
+                const currentHeight = this.physics.height / 10;
+                
+                if (currentHeight > data.maxHeight) {
+                    data.maxHeight = currentHeight;
+                }
+                
+                const progress = Math.min(100, (data.maxHeight / 15) * 100);
+                this.updateProgress(progress);
+                
+                return data.maxHeight >= 15;
+            }
+
+            checkMission4() {
+                const data = this.missionData.mission4;
+                
+                if (!data.raceStarted && (this.car.x > 50 || this.opponent.x > 50)) {
+                    data.raceStarted = true;
+                }
+                
+                if (data.raceStarted) {
+                    const powerEfficiency = data.playerTotalPower > 0 ? 
+                        Math.max(0, 100 - ((data.playerTotalPower / 50000) * 100)) : 100;
+                    this.updateProgress(powerEfficiency);
+                    
+                    // Simple race completion check
+                    if (this.car.x > this.physics.trackLength * 2) {
+                        return powerEfficiency >= 80;
+                    }
+                }
+                return false;
+            }
+
+            checkMission5() {
+                const data = this.missionData.mission5;
+                
+                // Final championship race
+                if (this.car.x > this.physics.trackLength * 1.5 && this.opponent.x > this.physics.trackLength * 1.5) {
+                    const playerWins = this.car.x > this.opponent.x;
+                    const timeDifference = Math.abs(this.car.x - this.opponent.x) / this.car.velocity;
+                    
+                    this.updateProgress(playerWins ? 100 : 50);
+                    
+                    return playerWins && timeDifference >= 3;
+                }
+                
+                const raceProgress = Math.min(100, (this.car.x / (this.physics.trackLength * 1.5)) * 100);
+                this.updateProgress(raceProgress);
+                return false;
+            }
+
+            calculateTotalEnergy() {
+                const kineticEnergy = 0.5 * this.car.mass * Math.pow(this.car.velocity, 2);
+                const potentialEnergy = this.car.mass * this.physics.gravity * (this.physics.height / 10);
+                return kineticEnergy + potentialEnergy;
+            }
+
+            completeMission() {
+                const mission = this.missions[this.gameState.currentMission - 1];
+                
+                document.getElementById('missionResults').innerHTML = `
+                    <strong>Excellent work, ${this.gameState.rank}!</strong><br><br>
+                    You've successfully completed "${mission.title}"<br><br>
+                    You've demonstrated mastery of: ${this.getMissionLearnings(this.gameState.currentMission)}
+                `;
+                
+                this.showScreen('missionComplete');
+                this.gameState.running = false;
+                
+                // Achievement notification
+                this.showAchievement(`Mission ${this.gameState.currentMission} Complete!`);
+            }
+
+            getMissionLearnings(missionId) {
+                const learnings = [
+                    "Power and velocity relationships",
+                    "Friction effects on different terrains",
+                    "Kinetic and potential energy conversion",
+                    "Energy efficiency and strategic power management",
+                    "Advanced physics racing techniques"
+                ];
+                return learnings[missionId - 1] || "Advanced physics concepts";
+            }
+
+            updateDisplay() {
+                document.getElementById('speedValue').textContent = this.car.velocity.toFixed(1);
+                document.getElementById('heightValue').textContent = (this.physics.height / 10).toFixed(1);
+                document.getElementById('forceValue').textContent = this.physics.force.toFixed(0);
+                document.getElementById('workValue').textContent = (this.physics.work / 1000).toFixed(1) + 'k';
+                document.getElementById('terrainType').textContent = this.getCurrentTerrain().name;
+
+                const kineticEnergy = 0.5 * this.car.mass * Math.pow(this.car.velocity, 2);
+                const potentialEnergy = this.car.mass * this.physics.gravity * (this.physics.height / 10);
+                
+                if (kineticEnergy >= 1000) {
+                    document.getElementById('kineticValue').textContent = (kineticEnergy / 1000).toFixed(1) + ' kJ';
+                } else {
+                    document.getElementById('kineticValue').textContent = kineticEnergy.toFixed(0) + ' J';
+                }
+                
+                if (potentialEnergy >= 1000) {
+                    document.getElementById('potentialValue').textContent = (potentialEnergy / 1000).toFixed(1) + ' kJ';
+                } else {
+                    document.getElementById('potentialValue').textContent = potentialEnergy.toFixed(0) + ' J';
+                }
+                
+                document.getElementById('powerValue').textContent = (this.car.power / 1000).toFixed(1) + ' kW';
+
+                const maxEnergy = 50000;
+                document.getElementById('kineticBar').style.width = `${Math.min(100, (kineticEnergy / maxEnergy) * 100)}%`;
+                document.getElementById('potentialBar').style.width = `${Math.min(100, (potentialEnergy / maxEnergy) * 100)}%`;
+                document.getElementById('powerBar').style.width = `${(this.car.power / this.car.maxPower) * 100}%`;
+
+                document.getElementById('playerCar').setAttribute('transform', 
+                    `translate(${this.car.x}, ${this.car.y})`);
+                document.getElementById('opponentCar').setAttribute('transform', 
+                    `translate(${this.opponent.x}, ${this.opponent.y})`);
+            }
+
+            createParticles() {
+                const particlesGroup = document.getElementById('particles');
+                
+                for (let i = 0; i < 3; i++) {
+                    const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    particle.setAttribute('class', 'particle');
+                    particle.setAttribute('cx', this.car.x - 30);
+                    particle.setAttribute('cy', this.car.y + Math.random() * 10 - 5);
+                    particle.setAttribute('r', Math.random() * 3 + 1);
+                    
+                    particlesGroup.appendChild(particle);
+                    
+                    setTimeout(() => {
+                        particle.setAttribute('opacity', 0);
+                        setTimeout(() => particle.remove(), 300);
+                    }, 100 + i * 50);
+                }
+            }
+
+            createLearningParticles() {
+                const particlesGroup = document.getElementById('particles');
+                
+                // Create learning energy particles
+                for (let i = 0; i < 2; i++) {
+                    const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    particle.setAttribute('class', 'learning-particle');
+                    particle.setAttribute('cx', this.car.x + Math.random() * 20 - 10);
+                    particle.setAttribute('cy', this.car.y - 15 + Math.random() * 10);
+                    particle.setAttribute('r', 2);
+                    
+                    particlesGroup.appendChild(particle);
+                    
+                    setTimeout(() => particle.remove(), 1000);
+                }
+            }
+
+            startGame() {
+                this.gameState.running = true;
+                this.gameState.missionStartTime = Date.now();
+                this.updateMissionInfo();
+                this.gameLoop();
+            }
+
+            gameLoop() {
+                if (!this.gameState.running && !this.gameState.inStoryMode) return;
+                
+                this.updatePhysics();
+                this.updateDisplay();
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // Global functions for story navigation
+        let game;
+
+        function startAcademy() {
+            game = new EnergyAcademyRacer();
+            game.showMissionBriefing();
+        }
+
+        function startMission() {
+            game.hideAllScreens();
+            game.startGame();
+        }
+
+        function nextMission() {
+            game.gameState.currentMission++;
+            
+            if (game.gameState.currentMission > game.missions.length) {
+                game.showScreen('graduationScreen');
+            } else {
+                // Reset mission data
+                game.missionData = {
+                    mission1: { timeAtSpeed: 0, targetSpeed: 15, tolerance: 1 },
+                    mission2: { startEnergy: 0, totalEnergyUsed: 0, lapsCompleted: 0 },
+                    mission3: { maxHeight: 0, powerEfficiency: 0 },
+                    mission4: { playerTotalPower: 0, aiTotalPower: 0, raceStarted: false },
+                    mission5: { playerTime: 0, aiTime: 0, raceComplete: false }
+                };
+                
+                // Reset car position
+                game.car.x = 100;
+                game.car.velocity = 0;
+                game.opponent.x = 50;
+                game.updateProgress(0);
+                
+                game.showMissionBriefing();
+            }
+        }
+
+        function freePlay() {
+            game.hideAllScreens();
+            game.gameState.currentMission = 0;
+            document.getElementById('missionInfo').textContent = "Free Play Mode - Master Your Skills!";
+            document.getElementById('progressContainer').style.display = 'none';
+            game.startGame();
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            // Game will be initialized when startAcademy() is called
+        });
+
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>
