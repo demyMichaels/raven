@@ -363,7 +363,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-between items-center mt-8">
+            <div id="quizNavigation" class="flex justify-between items-center mt-8">
                 <button id="explainBtn" class="material-button bg-accent hover:bg-accent-600 text-white px-6 py-3 rounded-lg button-text flex items-center space-x-2 shadow-material-1 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                     <span class="material-icons">psychology</span>
                     <span>Explain This</span>
@@ -714,6 +714,11 @@
             subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
 
             saveAnalyticsData();
+            
+            // Auto-refresh analytics if currently viewing
+            if (currentView === 'analytics') {
+                renderAnalytics();
+            }
         }
 
         function getTopicProgress(subjectId, topicName) {
@@ -1034,14 +1039,20 @@
             };
         }
 
-        // Show quiz results
+        // Show quiz results - Fixed to properly hide navigation
         function showQuizResults(score) {
             document.getElementById('finalScore').textContent = `${Math.round(score.percentage)}%`;
             document.getElementById('scoreDetails').textContent = `${score.correct} out of ${score.total} correct`;
             
+            // Hide the main quiz elements
             document.getElementById('quizResults').classList.remove('hidden');
             document.querySelector('#quizInterface .material-card').classList.add('hidden');
-            document.querySelector('#quizInterface .flex.justify-between').classList.add('hidden');
+            
+            // Hide navigation buttons container
+            const navigationContainer = document.getElementById('quizNavigation');
+            if (navigationContainer) {
+                navigationContainer.classList.add('hidden');
+            }
         }
 
         // Analytics Functions
@@ -1328,7 +1339,13 @@
             quizInterface.classList.remove('hidden');
             document.getElementById('quizResults').classList.add('hidden');
             document.querySelector('#quizInterface .material-card').classList.remove('hidden');
-            document.querySelector('#quizInterface .flex.justify-between').classList.remove('hidden');
+            
+            // Show navigation buttons when starting quiz
+            const navigationContainer = document.getElementById('quizNavigation');
+            if (navigationContainer) {
+                navigationContainer.classList.remove('hidden');
+            }
+            
             currentView = 'quiz';
         }
 
