@@ -694,33 +694,96 @@
             return 'quiz';
         }
 
-        // Analytics Storage Functions
+        // Analytics Storage Functions - Improved for better persistence
         function saveAnalyticsData() {
             try {
                 const dataToSave = JSON.stringify(analyticsData);
-                document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000`;
+                
+                // Try multiple storage methods for better reliability
+                // Method 1: Standard cookie
+                document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
+                
+                // Method 2: Backup in window object (survives page refreshes in same session)
+                window.ravenAnalyticsBackup = analyticsData;
+                
+                // Method 3: Backup in a more persistent cookie with different name
+                document.cookie = `ravenBackup=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
+                
+                console.log('✅ Analytics data saved successfully');
+                console.log('📊 Current quiz count:', analyticsData.quizResults.length);
+                console.log('📈 Topics tracked:', Object.keys(analyticsData.topicProgress).length);
+                
+                return true;
             } catch (error) {
-                console.log('Unable to save analytics data:', error);
+                console.error('❌ Failed to save analytics data:', error);
+                return false;
             }
         }
 
         function loadAnalyticsData() {
             try {
-                const cookies = document.cookie.split(';');
-                const analyticsCookie = cookies.find(cookie => cookie.trim().startsWith('ravenAnalytics='));
-                if (analyticsCookie) {
-                    const data = decodeURIComponent(analyticsCookie.split('=')[1]);
-                    analyticsData = JSON.parse(data);
+                console.log('🔄 Loading analytics data...');
+                
+                // Method 1: Try main cookie first
+                let loadedData = tryLoadFromCookie('ravenAnalytics');
+                
+                // Method 2: Try backup cookie if main failed
+                if (!loadedData) {
+                    loadedData = tryLoadFromCookie('ravenBackup');
+                    console.log('📋 Loaded from backup cookie');
                 }
+                
+                // Method 3: Try window backup if cookies failed
+                if (!loadedData && window.ravenAnalyticsBackup) {
+                    loadedData = window.ravenAnalyticsBackup;
+                    console.log('💾 Loaded from window backup');
+                }
+                
+                if (loadedData && validateAnalyticsData(loadedData)) {
+                    analyticsData = loadedData;
+                    console.log('✅ Analytics data loaded successfully');
+                    console.log('📊 Loaded quiz count:', analyticsData.quizResults.length);
+                    console.log('📈 Loaded topics:', Object.keys(analyticsData.topicProgress).length);
+                    return true;
+                }
+                
+                throw new Error('No valid data found');
+                
             } catch (error) {
-                console.log('Unable to load analytics data:', error);
+                console.log('⚠️ Initializing with empty analytics data:', error.message);
                 analyticsData = {
                     quizResults: [],
                     topicProgress: {},
                     subjectProgress: {},
                     timeSpent: {}
                 };
+                return false;
             }
+        }
+
+        function tryLoadFromCookie(cookieName) {
+            try {
+                const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+                const targetCookie = cookies.find(cookie => cookie.startsWith(cookieName + '='));
+                
+                if (targetCookie) {
+                    const encodedData = targetCookie.split('=')[1];
+                    const decodedData = decodeURIComponent(encodedData);
+                    return JSON.parse(decodedData);
+                }
+                return null;
+            } catch (error) {
+                console.warn(`Failed to load from ${cookieName}:`, error);
+                return null;
+            }
+        }
+
+        function validateAnalyticsData(data) {
+            return data && 
+                   typeof data === 'object' && 
+                   Array.isArray(data.quizResults) &&
+                   typeof data.topicProgress === 'object' &&
+                   typeof data.subjectProgress === 'object';
         }
 
         // Function to refresh all views that show progress data
@@ -797,14 +860,20 @@
             subjectProgress.averageScore = Math.round(subjectProgress.totalScore / subjectProgress.attempts * 100) / 100; // Fixed rounding
             subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
 
-            saveAnalyticsData();
+            // Save data with improved method
+            const saveSuccess = saveAnalyticsData();
+            if (saveSuccess) {
+                console.log('✅ Quiz result saved and persisted');
+            } else {
+                console.warn('⚠️ Quiz result saved but persistence may have failed');
+            }
             
             // Always refresh all views that might show progress data
             refreshAllProgressViews();
 
             // Debug logging
-            console.log(`Quiz completed: ${score.percentage}%`);
-            console.log(`Topic progress for ${topicKey}:`, topicProgress);
+            console.log(`🎯 Quiz completed: ${score.percentage}%`);
+            console.log(`📚 Topic progress for ${topicKey}:`, topicProgress);
         }
 
         function getTopicProgress(subjectId, topicName) {
@@ -819,10 +888,12 @@
 
         // Initialize the app
         async function init() {
+            console.log('🚀 Initializing Raven Learning Platform...');
             loadAnalyticsData();
             renderSubjects();
             setupEventListeners();
             loadProgress();
+            console.log('✅ App initialized successfully');
         }
 
         // Render subjects
