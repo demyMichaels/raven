@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -195,6 +196,50 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Analytics styles */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .chart-container canvas {
+            max-height: 100% !important;
+            max-width: 100% !important;
+        }
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .heatmap-cell:hover {
+            transform: scale(1.05);
+        }
+        .status-excellent { background: linear-gradient(135deg, #10B981, #059669); }
+        .status-good { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+        .status-average { background: linear-gradient(135deg, #F59E0B, #D97706); }
+        .status-weak { background: linear-gradient(135deg, #EF4444, #DC2626); }
+        .status-unstarted { background: linear-gradient(135deg, #6B7280, #4B5563); }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
@@ -220,6 +265,7 @@
                     <button id="practiceBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Practice</button>
                     <button id="tutorBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">AI Tutor</button>
                     <button id="progressBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Progress</button>
+                    <button id="analyticsBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Analytics</button>
                 </nav>
 
                 <!-- User Actions -->
@@ -397,6 +443,132 @@
                 </div>
             </div>
         </div>
+
+        <!-- Analytics Interface -->
+        <div id="analyticsInterface" class="hidden">
+            <div class="text-center mb-8 sm:mb-12 fade-in">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-material-3">
+                    <span class="material-icons text-white text-2xl sm:text-3xl">analytics</span>
+                </div>
+                <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">Performance Analytics</h2>
+                <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+                    Deep insights into your learning patterns and performance metrics.
+                </p>
+            </div>
+
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Overall Score</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-accent" id="analyticsOverallScore">--%</p>
+                        </div>
+                        <div class="relative w-12 h-12 sm:w-16 sm:h-16">
+                            <svg class="progress-ring w-12 h-12 sm:w-16 sm:h-16" viewBox="0 0 84 84">
+                                <circle cx="42" cy="42" r="40" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                                <circle cx="42" cy="42" r="40" stroke="#009F9D" stroke-width="4" fill="none" 
+                                        class="progress-ring-circle" id="analyticsProgressCircle"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs sm:text-sm font-semibold" id="analyticsProgressText">--%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Topics Mastered</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-data" id="analyticsMasteredCount">--/--</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <span class="material-icons text-green-600 dark:text-green-400 text-lg sm:text-xl">check_circle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Weak Areas</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-error" id="analyticsWeakCount">--</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                            <span class="material-icons text-red-600 dark:text-red-400 text-lg sm:text-xl">warning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Avg Time</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary" id="analyticsAvgTime">--min</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                            <span class="material-icons text-orange-600 dark:text-orange-400 text-lg sm:text-xl">schedule</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Heatmap -->
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-material-2">
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Performance Heatmap</h2>
+                <div class="mb-4">
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-excellent"></div>
+                            <span>Excellent (80-100%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-good"></div>
+                            <span>Good (60-79%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-average"></div>
+                            <span>Average (40-59%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-weak"></div>
+                            <span>Weak (0-39%)</span>
+                        </div>
+                        <div class="flex items-center space-x-1 sm:space-x-2">
+                            <div class="w-3 h-3 sm:w-4 sm:h-4 rounded status-unstarted"></div>
+                            <span>Not Started</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="analyticsHeatmap"></div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">📈 Progress Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="analyticsTrendChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">🎯 Subject Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="analyticsSubjectChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Smart Recommendations</h2>
+                <div id="analyticsRecommendations" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <!-- Recommendations will be populated here -->
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Loading Modal -->
@@ -432,6 +604,14 @@
         let userAnswers = [];
         let quizStartTime = null;
 
+        // Analytics data
+        let analyticsData = {
+            quizResults: [],
+            topicProgress: {},
+            subjectProgress: {},
+            timeSpent: {}
+        };
+
         // Available subjects (you can modify this list based on your data files)
         const availableSubjects = [
             { id: 'mathematics', name: 'Mathematics', icon: '🔢', file: 'data/mathematics.json' },
@@ -439,6 +619,7 @@
             { id: 'chemistry', name: 'Chemistry', icon: '🧪', file: 'data/chemistry.json' },
             { id: 'biology', name: 'Biology', icon: '🧬', file: 'data/biology.json' },
             { id: 'english', name: 'English', icon: '📝', file: 'data/english.json' },
+            { id: 'english-2', name: 'English Literature', icon: '📚', file: 'data/english-2.json' }
         ];
 
         // DOM Elements
@@ -447,10 +628,107 @@
         const quizInterface = document.getElementById('quizInterface');
         const tutorInterface = document.getElementById('tutorInterface');
         const progressInterface = document.getElementById('progressInterface');
+        const analyticsInterface = document.getElementById('analyticsInterface');
         const loadingModal = document.getElementById('loadingModal');
+
+        // Analytics Storage Functions
+        function saveAnalyticsData() {
+            try {
+                const dataToSave = JSON.stringify(analyticsData);
+                document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000`;
+            } catch (error) {
+                console.log('Unable to save analytics data:', error);
+            }
+        }
+
+        function loadAnalyticsData() {
+            try {
+                const cookies = document.cookie.split(';');
+                const analyticsCookie = cookies.find(cookie => cookie.trim().startsWith('ravenAnalytics='));
+                if (analyticsCookie) {
+                    const data = decodeURIComponent(analyticsCookie.split('=')[1]);
+                    analyticsData = JSON.parse(data);
+                }
+            } catch (error) {
+                console.log('Unable to load analytics data:', error);
+                analyticsData = {
+                    quizResults: [],
+                    topicProgress: {},
+                    subjectProgress: {},
+                    timeSpent: {}
+                };
+            }
+        }
+
+        function saveQuizResult(score) {
+            const result = {
+                id: Date.now(),
+                subject: currentSubject.id,
+                subjectName: currentSubject.name,
+                topic: currentTopic.name,
+                score: score.percentage,
+                correct: score.correct,
+                total: score.total,
+                timeSpent: score.timeSpent,
+                date: new Date().toISOString(),
+                questions: currentQuestions.length
+            };
+
+            analyticsData.quizResults.push(result);
+
+            // Update topic progress
+            const topicKey = `${currentSubject.id}_${currentTopic.name}`;
+            if (!analyticsData.topicProgress[topicKey]) {
+                analyticsData.topicProgress[topicKey] = {
+                    bestScore: 0,
+                    attempts: 0,
+                    averageScore: 0,
+                    totalScore: 0,
+                    averageTime: 0,
+                    totalTime: 0
+                };
+            }
+
+            const topicProgress = analyticsData.topicProgress[topicKey];
+            topicProgress.attempts++;
+            topicProgress.totalScore += score.percentage;
+            topicProgress.averageScore = topicProgress.totalScore / topicProgress.attempts;
+            topicProgress.bestScore = Math.max(topicProgress.bestScore, score.percentage);
+            topicProgress.totalTime += score.timeSpent;
+            topicProgress.averageTime = topicProgress.totalTime / topicProgress.attempts;
+
+            // Update subject progress
+            if (!analyticsData.subjectProgress[currentSubject.id]) {
+                analyticsData.subjectProgress[currentSubject.id] = {
+                    bestScore: 0,
+                    attempts: 0,
+                    averageScore: 0,
+                    totalScore: 0
+                };
+            }
+
+            const subjectProgress = analyticsData.subjectProgress[currentSubject.id];
+            subjectProgress.attempts++;
+            subjectProgress.totalScore += score.percentage;
+            subjectProgress.averageScore = subjectProgress.totalScore / subjectProgress.attempts;
+            subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
+
+            saveAnalyticsData();
+        }
+
+        function getTopicProgress(subjectId, topicName) {
+            const topicKey = `${subjectId}_${topicName}`;
+            return analyticsData.topicProgress[topicKey] || {
+                bestScore: 0,
+                attempts: 0,
+                averageScore: 0,
+                averageTime: 0
+            };
+        }
 
         // Initialize the app
         async function init() {
+            loadAnalyticsData();
             renderSubjects();
             setupEventListeners();
             loadProgress();
@@ -486,13 +764,17 @@
                 const icon = subjectIcons[subject.id] || 'school';
                 const color = subjectColors[subject.id] || 'from-primary to-primary-600';
                 
+                // Get subject progress for display
+                const subjectProgress = analyticsData.subjectProgress[subject.id];
+                const progressText = subjectProgress ? `Avg: ${Math.round(subjectProgress.averageScore)}%` : 'Not started';
+                
                 subjectCard.innerHTML = `
                     <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center shadow-material-1">
                         <span class="material-icons text-white">${icon}</span>
                     </div>
                     <div class="flex-1">
                         <div class="button-text text-neutral-800 dark:text-white mb-1">${subject.name}</div>
-                        <div class="caption text-neutral-500 dark:text-neutral-400">Practice questions & comprehensive guides</div>
+                        <div class="caption text-neutral-500 dark:text-neutral-400">${progressText}</div>
                     </div>
                     <span class="material-icons text-neutral-400">arrow_forward_ios</span>
                 `;
@@ -544,13 +826,13 @@
             Object.entries(categories).forEach(([category, categoryTopics]) => {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'col-span-full mb-6';
-                categoryDiv.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-blue-600 dark:text-blue-400">${category}</h3>`;
+                categoryDiv.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-primary dark:text-primary-400">${category}</h3>`;
                 topicGrid.appendChild(categoryDiv);
 
                 categoryTopics.forEach((topic, index) => {
                     const topicCard = document.createElement('div');
                     const questionCount = topic.questions ? topic.questions.length : 0;
-                    const progressData = getTopicProgress(currentSubject.id, topic.id);
+                    const progressData = getTopicProgress(currentSubject.id, topic.name);
                     
                     topicCard.className = `material-card stagger-animation material-button w-full flex items-center space-x-4 p-4 sm:p-6 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 touch-target bg-white dark:bg-neutral-800 ${questionCount > 0 ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
                     
@@ -561,9 +843,9 @@
                         <div class="flex-1">
                             <div class="button-text text-neutral-800 dark:text-white mb-1">${topic.name}</div>
                             <div class="caption text-neutral-500 dark:text-neutral-400">${questionCount} questions available</div>
-                            ${progressData.attempted > 0 ? 
+                            ${progressData.attempts > 0 ? 
                                 `<div class="mt-2">
-                                    <div class="caption text-neutral-400">Best Score: ${Math.round(progressData.bestScore)}%</div>
+                                    <div class="caption text-neutral-400">Best: ${Math.round(progressData.bestScore)}% | Avg: ${Math.round(progressData.averageScore)}%</div>
                                     <div class="progress-bar mt-1 h-1">
                                         <div class="progress-fill" style="width: ${progressData.bestScore}%"></div>
                                     </div>
@@ -607,7 +889,7 @@
             showQuizInterface();
         }
 
-        // Render current question
+        // Render current question with fixed option formatting
         function renderQuestion() {
             const question = currentQuestions[currentQuestionIndex];
             if (!question) return;
@@ -621,15 +903,18 @@
             const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
             document.getElementById('progressFill').style.width = `${progress}%`;
 
-            // Render options
+            // Render options with proper formatting
             const optionsContainer = document.getElementById('questionOptions');
             optionsContainer.innerHTML = '';
 
             question.options.forEach((option, index) => {
                 const optionBtn = document.createElement('div');
-                optionBtn.className = 'option-btn';
+                optionBtn.className = 'option-btn material-button p-4 rounded-lg border-2 border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white cursor-pointer touch-target';
                 optionBtn.innerHTML = `
-                    <span class="font-medium">${String.fromCharCode(65 + index)}.</span> ${option}
+                    <div class="flex items-center space-x-3">
+                        <span class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-medium text-sm">${String.fromCharCode(65 + index)}</span>
+                        <span class="body-1 flex-1">${option}</span>
+                    </div>
                 `;
                 
                 const isSelected = userAnswers[currentQuestionIndex] === index;
@@ -755,23 +1040,274 @@
             document.getElementById('scoreDetails').textContent = `${score.correct} out of ${score.total} correct`;
             
             document.getElementById('quizResults').classList.remove('hidden');
-            document.querySelector('.question-card').classList.add('hidden');
+            document.querySelector('#quizInterface .material-card').classList.add('hidden');
             document.querySelector('#quizInterface .flex.justify-between').classList.add('hidden');
         }
 
-        // Save quiz result to local storage (since we can't use localStorage, we'll skip this)
-        function saveQuizResult(score) {
-            // In a real implementation, this would save to a backend or local storage
-            console.log('Quiz result:', score);
+        // Analytics Functions
+        function renderAnalytics() {
+            renderAnalyticsOverview();
+            renderAnalyticsHeatmap();
+            renderAnalyticsCharts();
+            renderAnalyticsRecommendations();
         }
 
-        // Get topic progress (placeholder implementation)
-        function getTopicProgress(subjectId, topicId) {
-            // In a real implementation, this would load from storage
-            return {
-                attempted: 0,
-                bestScore: 0
-            };
+        function renderAnalyticsOverview() {
+            if (analyticsData.quizResults.length === 0) {
+                document.getElementById('analyticsOverallScore').textContent = '--';
+                document.getElementById('analyticsProgressText').textContent = '--';
+                document.getElementById('analyticsMasteredCount').textContent = '--/--';
+                document.getElementById('analyticsWeakCount').textContent = '--';
+                document.getElementById('analyticsAvgTime').textContent = '--min';
+                return;
+            }
+
+            // Calculate overall statistics
+            const totalQuizzes = analyticsData.quizResults.length;
+            const averageScore = analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes;
+            const averageTime = analyticsData.quizResults.reduce((sum, result) => sum + result.timeSpent, 0) / totalQuizzes / 60000; // Convert to minutes
+
+            // Count mastered topics (>= 80% best score)
+            const topicProgressEntries = Object.values(analyticsData.topicProgress);
+            const masteredTopics = topicProgressEntries.filter(progress => progress.bestScore >= 80).length;
+            const totalTopics = topicProgressEntries.length;
+
+            // Count weak areas (< 60% average score)
+            const weakTopics = topicProgressEntries.filter(progress => progress.averageScore < 60 && progress.attempts > 0).length;
+
+            // Update UI
+            document.getElementById('analyticsOverallScore').textContent = `${Math.round(averageScore)}%`;
+            document.getElementById('analyticsProgressText').textContent = `${Math.round(averageScore)}%`;
+            document.getElementById('analyticsMasteredCount').textContent = `${masteredTopics}/${totalTopics}`;
+            document.getElementById('analyticsWeakCount').textContent = weakTopics;
+            document.getElementById('analyticsAvgTime').textContent = `${averageTime.toFixed(1)}min`;
+
+            // Update progress circle
+            const progressCircle = document.getElementById('analyticsProgressCircle');
+            const circumference = 2 * Math.PI * 40;
+            const offset = circumference - (averageScore / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function renderAnalyticsHeatmap() {
+            const container = document.getElementById('analyticsHeatmap');
+            container.innerHTML = '';
+
+            if (Object.keys(analyticsData.topicProgress).length === 0) {
+                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No quiz data available. Complete some quizzes to see your heatmap!</p>';
+                return;
+            }
+
+            const heatmapGrid = document.createElement('div');
+            heatmapGrid.className = 'heatmap-grid';
+
+            Object.entries(analyticsData.topicProgress).forEach(([topicKey, progress]) => {
+                const [subjectId, topicName] = topicKey.split('_');
+                const subject = availableSubjects.find(s => s.id === subjectId);
+                
+                const cell = document.createElement('div');
+                cell.className = `heatmap-cell ${getStatusClass(progress.bestScore, progress.attempts)} material-1`;
+                
+                cell.innerHTML = `
+                    <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${topicName}</div>
+                    <div class="text-lg font-bold text-white">${progress.attempts > 0 ? Math.round(progress.bestScore) + '%' : 'Not Started'}</div>
+                    <div class="text-xs text-white opacity-75">${progress.attempts} attempts</div>
+                `;
+                
+                heatmapGrid.appendChild(cell);
+            });
+
+            container.appendChild(heatmapGrid);
+        }
+
+        function renderAnalyticsCharts() {
+            if (analyticsData.quizResults.length === 0) return;
+
+            // Trend Chart
+            const trendCtx = document.getElementById('analyticsTrendChart').getContext('2d');
+            const recentResults = analyticsData.quizResults.slice(-10);
+            const trendLabels = recentResults.map((_, index) => `Quiz ${index + 1}`);
+            const trendData = recentResults.map(result => result.score);
+
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: trendLabels,
+                    datasets: [{
+                        label: 'Score (%)',
+                        data: trendData,
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#009F9D',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Subject Performance Chart
+            const subjectCtx = document.getElementById('analyticsSubjectChart').getContext('2d');
+            const subjectScores = {};
+            
+            analyticsData.quizResults.forEach(result => {
+                if (!subjectScores[result.subjectName]) {
+                    subjectScores[result.subjectName] = { total: 0, count: 0 };
+                }
+                subjectScores[result.subjectName].total += result.score;
+                subjectScores[result.subjectName].count++;
+            });
+
+            const subjectLabels = Object.keys(subjectScores);
+            const subjectData = subjectLabels.map(subject => 
+                Math.round(subjectScores[subject].total / subjectScores[subject].count)
+            );
+
+            new Chart(subjectCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: subjectLabels,
+                    datasets: [{
+                        data: subjectData,
+                        backgroundColor: [
+                            '#0F2C59',
+                            '#009F9D',
+                            '#5A7B9E',
+                            '#D2C1A7',
+                            '#2D3748'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderAnalyticsRecommendations() {
+            const container = document.getElementById('analyticsRecommendations');
+            
+            if (Object.keys(analyticsData.topicProgress).length === 0) {
+                container.innerHTML = '<p class="col-span-full text-neutral-600 dark:text-neutral-400">Complete some quizzes to get personalized recommendations!</p>';
+                return;
+            }
+
+            // Get weak areas (< 60% average score)
+            const weakAreas = Object.entries(analyticsData.topicProgress)
+                .filter(([_, progress]) => progress.averageScore < 60 && progress.attempts > 0)
+                .sort((a, b) => a[1].averageScore - b[1].averageScore)
+                .slice(0, 3);
+
+            // Get areas for review (last attempted > 7 days ago) - simulate with random selection for demo
+            const reviewAreas = Object.entries(analyticsData.topicProgress)
+                .filter(([_, progress]) => progress.attempts > 0 && progress.averageScore >= 60)
+                .slice(0, 3);
+
+            // Get strong areas (>= 80% best score)
+            const strongAreas = Object.entries(analyticsData.topicProgress)
+                .filter(([_, progress]) => progress.bestScore >= 80)
+                .sort((a, b) => b[1].bestScore - a[1].bestScore)
+                .slice(0, 3);
+
+            container.innerHTML = `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <span class="material-icons text-red-600 dark:text-red-400">warning</span>
+                        <h3 class="font-semibold text-red-800 dark:text-red-300 text-sm sm:text-base">Priority Focus</h3>
+                    </div>
+                    <ul class="space-y-2">
+                        ${weakAreas.length > 0 ? weakAreas.map(([key, progress]) => {
+                            const topicName = key.split('_')[1];
+                            return `<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• ${topicName} (${Math.round(progress.averageScore)}%)</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">No weak areas identified</li>'}
+                    </ul>
+                    <button class="material-button w-full mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                        Start Practice
+                    </button>
+                </div>
+
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <span class="material-icons text-yellow-600 dark:text-yellow-400">schedule</span>
+                        <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 text-sm sm:text-base">Due for Review</h3>
+                    </div>
+                    <ul class="space-y-2">
+                        ${reviewAreas.length > 0 ? reviewAreas.map(([key, progress]) => {
+                            const topicName = key.split('_')[1];
+                            return `<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• ${topicName} (${Math.round(progress.averageScore)}%)</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">No topics due for review</li>'}
+                    </ul>
+                    <button class="material-button w-full mt-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
+                        Review Now
+                    </button>
+                </div>
+
+                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <span class="material-icons text-green-600 dark:text-green-400">emoji_events</span>
+                        <h3 class="font-semibold text-green-800 dark:text-green-300 text-sm sm:text-base">Strong Areas</h3>
+                    </div>
+                    <ul class="space-y-2">
+                        ${strongAreas.length > 0 ? strongAreas.map(([key, progress]) => {
+                            const topicName = key.split('_')[1];
+                            return `<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• ${topicName} (${Math.round(progress.bestScore)}%)</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">No strong areas yet</li>'}
+                    </ul>
+                    <button class="material-button w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
+                        Advanced Practice
+                    </button>
+                </div>
+            `;
+        }
+
+        function getStatusClass(score, attempts) {
+            if (attempts === 0) return 'status-unstarted';
+            if (score >= 80) return 'status-excellent';
+            if (score >= 60) return 'status-good';
+            if (score >= 40) return 'status-average';
+            return 'status-weak';
         }
 
         // Navigation functions
@@ -791,7 +1327,7 @@
             hideAllViews();
             quizInterface.classList.remove('hidden');
             document.getElementById('quizResults').classList.add('hidden');
-            document.querySelector('.question-card').classList.remove('hidden');
+            document.querySelector('#quizInterface .material-card').classList.remove('hidden');
             document.querySelector('#quizInterface .flex.justify-between').classList.remove('hidden');
             currentView = 'quiz';
         }
@@ -809,12 +1345,20 @@
             renderProgress();
         }
 
+        function showAnalyticsInterface() {
+            hideAllViews();
+            analyticsInterface.classList.remove('hidden');
+            currentView = 'analytics';
+            renderAnalytics();
+        }
+
         function hideAllViews() {
             subjectSelection.classList.add('hidden');
             topicSelection.classList.add('hidden');
             quizInterface.classList.add('hidden');
             tutorInterface.classList.add('hidden');
             progressInterface.classList.add('hidden');
+            analyticsInterface.classList.add('hidden');
         }
 
         function showLoading() {
@@ -828,12 +1372,15 @@
         function showError(message) {
             // Create a simple error modal
             const errorModal = document.createElement('div');
-            errorModal.className = 'modal';
+            errorModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
             errorModal.innerHTML = `
-                <div class="modal-content">
-                    <h3 class="text-lg font-semibold mb-4 text-red-600">Error</h3>
-                    <p class="mb-4">${message}</p>
-                    <button class="primary-btn" onclick="this.closest('.modal').remove()">OK</button>
+                <div class="material-card bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-material-4 max-w-sm w-full">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="material-icons text-red-600">error</span>
+                        <h3 class="headline-6 font-semibold text-red-600">Error</h3>
+                    </div>
+                    <p class="body-1 mb-4 text-neutral-800 dark:text-white">${message}</p>
+                    <button class="material-button w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600" onclick="this.closest('.fixed').remove()">OK</button>
                 </div>
             `;
             document.body.appendChild(errorModal);
@@ -854,9 +1401,50 @@
         }
 
         function renderProgress() {
-            // Placeholder for rendering progress statistics
-            document.getElementById('overallStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
-            document.getElementById('subjectStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+            if (analyticsData.quizResults.length === 0) {
+                document.getElementById('overallStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
+                document.getElementById('subjectStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+                return;
+            }
+
+            // Basic progress stats
+            const totalQuizzes = analyticsData.quizResults.length;
+            const averageScore = Math.round(analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes);
+            
+            document.getElementById('overallStats').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span>Total Quizzes:</span>
+                        <span class="font-medium">${totalQuizzes}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Average Score:</span>
+                        <span class="font-medium">${averageScore}%</span>
+                    </div>
+                </div>
+            `;
+
+            // Subject breakdown
+            const subjectBreakdown = {};
+            analyticsData.quizResults.forEach(result => {
+                if (!subjectBreakdown[result.subjectName]) {
+                    subjectBreakdown[result.subjectName] = { total: 0, count: 0 };
+                }
+                subjectBreakdown[result.subjectName].total += result.score;
+                subjectBreakdown[result.subjectName].count++;
+            });
+
+            const subjectStatsHTML = Object.entries(subjectBreakdown).map(([subject, data]) => {
+                const avg = Math.round(data.total / data.count);
+                return `
+                    <div class="flex justify-between py-1">
+                        <span>${subject}:</span>
+                        <span class="font-medium">${avg}%</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('subjectStats').innerHTML = `<div class="space-y-2">${subjectStatsHTML}</div>`;
         }
 
         // Setup event listeners
@@ -865,6 +1453,7 @@
             document.getElementById('practiceBtn').addEventListener('click', showSubjectSelection);
             document.getElementById('tutorBtn').addEventListener('click', showTutorInterface);
             document.getElementById('progressBtn').addEventListener('click', showProgressInterface);
+            document.getElementById('analyticsBtn').addEventListener('click', showAnalyticsInterface);
 
             // Back buttons
             document.getElementById('backToSubjects').addEventListener('click', showSubjectSelection);
@@ -933,7 +1522,7 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `mb-3 flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
             
-            const bgColor = sender === 'user' ? 'bg-blue-600 text-white' : 'bg-blue-100 dark:bg-blue-900';
+            const bgColor = sender === 'user' ? 'bg-primary text-white' : 'bg-blue-100 dark:bg-blue-900';
             messageDiv.innerHTML = `<div class="${bgColor} p-3 rounded-lg max-w-xs">${message}</div>`;
             
             container.appendChild(messageDiv);
