@@ -631,6 +631,69 @@
         const analyticsInterface = document.getElementById('analyticsInterface');
         const loadingModal = document.getElementById('loadingModal');
 
+        // Topic icon mapping function
+        function getTopicIcon(topicName, category) {
+            const name = topicName.toLowerCase();
+            const cat = category.toLowerCase();
+            
+            // Mathematics topics
+            if (cat.includes('algebra') || name.includes('algebra')) return 'functions';
+            if (cat.includes('geometry') || name.includes('geometry')) return 'crop_free';
+            if (cat.includes('trigonometry') || name.includes('trigonometry')) return 'change_history';
+            if (cat.includes('calculus') || name.includes('calculus')) return 'show_chart';
+            if (cat.includes('statistics') || name.includes('statistic')) return 'bar_chart';
+            if (cat.includes('probability') || name.includes('probability')) return 'casino';
+            if (name.includes('number') || name.includes('arithmetic')) return 'pin';
+            
+            // Physics topics  
+            if (name.includes('motion') || name.includes('mechanics')) return 'sports_motorsports';
+            if (name.includes('force') || name.includes('newton')) return 'fitness_center';
+            if (name.includes('energy')) return 'bolt';
+            if (name.includes('wave') || name.includes('sound')) return 'graphic_eq';
+            if (name.includes('electric') || name.includes('magnetic')) return 'electric_bolt';
+            if (name.includes('light') || name.includes('optic')) return 'highlight';
+            if (name.includes('thermal') || name.includes('heat')) return 'whatshot';
+            if (name.includes('quantum') || name.includes('atomic')) return 'scatter_plot';
+            
+            // Chemistry topics
+            if (name.includes('atom') || name.includes('periodic')) return 'blur_on';
+            if (name.includes('bond') || name.includes('molecular')) return 'link';
+            if (name.includes('reaction') || name.includes('equation')) return 'shuffle';
+            if (name.includes('acid') || name.includes('base') || name.includes('ph')) return 'science';
+            if (name.includes('organic')) return 'eco';
+            if (name.includes('solution') || name.includes('concentration')) return 'opacity';
+            if (name.includes('gas') || name.includes('pressure')) return 'air';
+            
+            // Biology topics
+            if (name.includes('cell') || name.includes('cellular')) return 'grain';
+            if (name.includes('dna') || name.includes('genetic')) return 'memory';
+            if (name.includes('evolution') || name.includes('natural selection')) return 'trending_up';
+            if (name.includes('ecosystem') || name.includes('environment')) return 'nature';
+            if (name.includes('photosynthesis') || name.includes('plant')) return 'local_florist';
+            if (name.includes('respiration') || name.includes('breathing')) return 'air';
+            if (name.includes('reproduction') || name.includes('development')) return 'child_friendly';
+            if (name.includes('anatomy') || name.includes('physiology')) return 'accessibility';
+            
+            // English topics
+            if (name.includes('grammar') || name.includes('syntax')) return 'spellcheck';
+            if (name.includes('literature') || name.includes('poem') || name.includes('poetry')) return 'auto_stories';
+            if (name.includes('writing') || name.includes('essay')) return 'edit';
+            if (name.includes('reading') || name.includes('comprehension')) return 'chrome_reader_mode';
+            if (name.includes('vocabulary') || name.includes('word')) return 'translate';
+            if (name.includes('shakespeare') || name.includes('drama')) return 'theater_comedy';
+            if (name.includes('novel') || name.includes('fiction')) return 'menu_book';
+            
+            // Default icons by subject
+            if (cat.includes('math')) return 'calculate';
+            if (cat.includes('physics')) return 'science';
+            if (cat.includes('chemistry')) return 'science';
+            if (cat.includes('biology')) return 'biotech';
+            if (cat.includes('english')) return 'translate';
+            
+            // Ultimate fallback
+            return 'quiz';
+        }
+
         // Analytics Storage Functions
         function saveAnalyticsData() {
             try {
@@ -697,7 +760,7 @@
 
             analyticsData.quizResults.push(result);
 
-            // Update topic progress
+            // Update topic progress - Fixed averaging calculation
             const topicKey = `${currentSubject.id}_${currentTopic.name}`;
             if (!analyticsData.topicProgress[topicKey]) {
                 analyticsData.topicProgress[topicKey] = {
@@ -713,12 +776,12 @@
             const topicProgress = analyticsData.topicProgress[topicKey];
             topicProgress.attempts++;
             topicProgress.totalScore += score.percentage;
-            topicProgress.averageScore = topicProgress.totalScore / topicProgress.attempts;
+            topicProgress.averageScore = Math.round(topicProgress.totalScore / topicProgress.attempts * 100) / 100; // Fixed rounding
             topicProgress.bestScore = Math.max(topicProgress.bestScore, score.percentage);
             topicProgress.totalTime += score.timeSpent;
             topicProgress.averageTime = topicProgress.totalTime / topicProgress.attempts;
 
-            // Update subject progress
+            // Update subject progress - Fixed averaging calculation
             if (!analyticsData.subjectProgress[currentSubject.id]) {
                 analyticsData.subjectProgress[currentSubject.id] = {
                     bestScore: 0,
@@ -731,13 +794,17 @@
             const subjectProgress = analyticsData.subjectProgress[currentSubject.id];
             subjectProgress.attempts++;
             subjectProgress.totalScore += score.percentage;
-            subjectProgress.averageScore = subjectProgress.totalScore / subjectProgress.attempts;
+            subjectProgress.averageScore = Math.round(subjectProgress.totalScore / subjectProgress.attempts * 100) / 100; // Fixed rounding
             subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
 
             saveAnalyticsData();
             
             // Always refresh all views that might show progress data
             refreshAllProgressViews();
+
+            // Debug logging
+            console.log(`Quiz completed: ${score.percentage}%`);
+            console.log(`Topic progress for ${topicKey}:`, topicProgress);
         }
 
         function getTopicProgress(subjectId, topicName) {
@@ -790,7 +857,7 @@
                 
                 // Get subject progress for display
                 const subjectProgress = analyticsData.subjectProgress[subject.id];
-                const progressText = subjectProgress ? `Avg: ${Math.round(subjectProgress.averageScore)}%` : 'Not started';
+                const progressText = subjectProgress ? `Avg: ${Math.round(subjectProgress.averageScore)}% | ${subjectProgress.attempts} attempts` : 'Not started';
                 
                 subjectCard.innerHTML = `
                     <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center shadow-material-1">
@@ -860,16 +927,19 @@
                     
                     topicCard.className = `material-card stagger-animation material-button w-full flex items-center space-x-4 p-4 sm:p-6 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 touch-target bg-white dark:bg-neutral-800 ${questionCount > 0 ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
                     
+                    // Get appropriate icon for topic
+                    const topicIcon = getTopicIcon(topic.name, topic.category);
+                    
                     topicCard.innerHTML = `
                         <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-accent to-accent-600 rounded-lg flex items-center justify-center shadow-material-1">
-                            <span class="material-icons text-white text-sm sm:text-base">quiz</span>
+                            <span class="material-icons text-white text-sm sm:text-base">${topicIcon}</span>
                         </div>
                         <div class="flex-1">
                             <div class="button-text text-neutral-800 dark:text-white mb-1">${topic.name}</div>
                             <div class="caption text-neutral-500 dark:text-neutral-400">${questionCount} questions available</div>
                             ${progressData.attempts > 0 ? 
                                 `<div class="mt-2">
-                                    <div class="caption text-neutral-400">Best: ${Math.round(progressData.bestScore)}% | Avg: ${Math.round(progressData.averageScore)}%</div>
+                                    <div class="caption text-neutral-400">Best: ${Math.round(progressData.bestScore)}% | Avg: ${Math.round(progressData.averageScore)}% | ${progressData.attempts} attempts</div>
                                     <div class="progress-bar mt-1 h-1">
                                         <div class="progress-fill" style="width: ${progressData.bestScore}%"></div>
                                     </div>
