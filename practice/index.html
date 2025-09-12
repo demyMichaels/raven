@@ -694,26 +694,59 @@
             return 'quiz';
         }
 
-        // Analytics Storage Functions - Improved for better persistence
+        // Analytics Storage Functions - Using localStorage as primary method
         function saveAnalyticsData() {
             try {
                 const dataToSave = JSON.stringify(analyticsData);
+                let savedSuccessfully = false;
                 
-                // Try multiple storage methods for better reliability
-                // Method 1: Standard cookie
-                document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
+                // Method 1: Try localStorage first (preferred)
+                try {
+                    if (typeof(Storage) !== "undefined" && localStorage) {
+                        localStorage.setItem('ravenAnalytics', dataToSave);
+                        console.log('✅ Data saved to localStorage');
+                        savedSuccessfully = true;
+                    }
+                } catch (localStorageError) {
+                    console.warn('⚠️ localStorage not available:', localStorageError.message);
+                }
                 
-                // Method 2: Backup in window object (survives page refreshes in same session)
+                // Method 2: Try sessionStorage as fallback
+                if (!savedSuccessfully) {
+                    try {
+                        if (typeof(Storage) !== "undefined" && sessionStorage) {
+                            sessionStorage.setItem('ravenAnalytics', dataToSave);
+                            console.log('📋 Data saved to sessionStorage (fallback)');
+                            savedSuccessfully = true;
+                        }
+                    } catch (sessionStorageError) {
+                        console.warn('⚠️ sessionStorage not available:', sessionStorageError.message);
+                    }
+                }
+                
+                // Method 3: Cookie fallback
+                if (!savedSuccessfully) {
+                    try {
+                        document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
+                        console.log('🍪 Data saved to cookies (fallback)');
+                        savedSuccessfully = true;
+                    } catch (cookieError) {
+                        console.warn('⚠️ Cookie storage failed:', cookieError.message);
+                    }
+                }
+                
+                // Method 4: Window object as last resort
                 window.ravenAnalyticsBackup = analyticsData;
                 
-                // Method 3: Backup in a more persistent cookie with different name
-                document.cookie = `ravenBackup=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
+                if (savedSuccessfully) {
+                    console.log('📊 Current quiz count:', analyticsData.quizResults.length);
+                    console.log('📈 Topics tracked:', Object.keys(analyticsData.topicProgress).length);
+                    
+                    // Test localStorage availability explicitly
+                    testLocalStorageAvailability();
+                }
                 
-                console.log('✅ Analytics data saved successfully');
-                console.log('📊 Current quiz count:', analyticsData.quizResults.length);
-                console.log('📈 Topics tracked:', Object.keys(analyticsData.topicProgress).length);
-                
-                return true;
+                return savedSuccessfully;
             } catch (error) {
                 console.error('❌ Failed to save analytics data:', error);
                 return false;
@@ -723,25 +756,52 @@
         function loadAnalyticsData() {
             try {
                 console.log('🔄 Loading analytics data...');
+                let loadedData = null;
                 
-                // Method 1: Try main cookie first
-                let loadedData = tryLoadFromCookie('ravenAnalytics');
-                
-                // Method 2: Try backup cookie if main failed
-                if (!loadedData) {
-                    loadedData = tryLoadFromCookie('ravenBackup');
-                    console.log('📋 Loaded from backup cookie');
+                // Method 1: Try localStorage first
+                try {
+                    if (typeof(Storage) !== "undefined" && localStorage) {
+                        const data = localStorage.getItem('ravenAnalytics');
+                        if (data) {
+                            loadedData = JSON.parse(data);
+                            console.log('✅ Data loaded from localStorage');
+                        }
+                    }
+                } catch (localStorageError) {
+                    console.warn('⚠️ Failed to load from localStorage:', localStorageError.message);
                 }
                 
-                // Method 3: Try window backup if cookies failed
+                // Method 2: Try sessionStorage if localStorage failed
+                if (!loadedData) {
+                    try {
+                        if (typeof(Storage) !== "undefined" && sessionStorage) {
+                            const data = sessionStorage.getItem('ravenAnalytics');
+                            if (data) {
+                                loadedData = JSON.parse(data);
+                                console.log('📋 Data loaded from sessionStorage');
+                            }
+                        }
+                    } catch (sessionStorageError) {
+                        console.warn('⚠️ Failed to load from sessionStorage:', sessionStorageError.message);
+                    }
+                }
+                
+                // Method 3: Try cookies if storage APIs failed
+                if (!loadedData) {
+                    loadedData = tryLoadFromCookie('ravenAnalytics');
+                    if (loadedData) {
+                        console.log('🍪 Data loaded from cookies');
+                    }
+                }
+                
+                // Method 4: Try window backup
                 if (!loadedData && window.ravenAnalyticsBackup) {
                     loadedData = window.ravenAnalyticsBackup;
-                    console.log('💾 Loaded from window backup');
+                    console.log('💾 Data loaded from window backup');
                 }
                 
                 if (loadedData && validateAnalyticsData(loadedData)) {
                     analyticsData = loadedData;
-                    console.log('✅ Analytics data loaded successfully');
                     console.log('📊 Loaded quiz count:', analyticsData.quizResults.length);
                     console.log('📈 Loaded topics:', Object.keys(analyticsData.topicProgress).length);
                     return true;
@@ -775,6 +835,45 @@
             } catch (error) {
                 console.warn(`Failed to load from ${cookieName}:`, error);
                 return null;
+            }
+        }
+
+        function testLocalStorageAvailability() {
+            try {
+                if (typeof(Storage) !== "undefined") {
+                    // Test if localStorage is actually working
+                    const testKey = 'ravenTest_' + Date.now();
+                    localStorage.setItem(testKey, 'test');
+                    const retrieved = localStorage.getItem(testKey);
+                    localStorage.removeItem(testKey);
+                    
+                    if (retrieved === 'test') {
+                        console.log('✅ localStorage is working properly');
+                        return true;
+                    } else {
+                        console.warn('⚠️ localStorage test failed - data not retrieved correctly');
+                        return false;
+                    }
+                } else {
+                    console.warn('⚠️ Web Storage not supported');
+                    return false;
+                }
+            } catch (error) {
+                console.warn('⚠️ localStorage test error:', error.message);
+                return false;
+            }
+        }
+
+        // Function to manually clear stored data (for debugging)
+        function clearStoredData() {
+            try {
+                if (localStorage) localStorage.removeItem('ravenAnalytics');
+                if (sessionStorage) sessionStorage.removeItem('ravenAnalytics');
+                document.cookie = 'ravenAnalytics=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                window.ravenAnalyticsBackup = undefined;
+                console.log('🗑️ All stored data cleared');
+            } catch (error) {
+                console.error('Failed to clear data:', error);
             }
         }
 
