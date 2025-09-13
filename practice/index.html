@@ -240,6 +240,24 @@
             stroke-dashoffset: 251.2;
             transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Mobile menu styles */
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        .mobile-menu-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), visibility 0.3s;
+        }
+        .mobile-menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
@@ -268,8 +286,13 @@
                     <button id="analyticsBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Analytics</button>
                 </nav>
 
-                <!-- User Actions -->
+                <!-- User Actions & Mobile Menu Button -->
                 <div class="flex items-center space-x-2 sm:space-x-3">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="md:hidden material-button touch-target w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors">
+                        <span class="material-icons text-sm sm:text-lg" id="mobileMenuIcon">menu</span>
+                    </button>
+                    
                     <button class="material-button touch-target w-8 h-8 sm:w-10 sm:h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600">
                         <span class="material-icons text-sm sm:text-lg">notifications</span>
                     </button>
@@ -280,6 +303,55 @@
             </div>
         </div>
     </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden">
+        <!-- Mobile Navigation Menu -->
+        <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 h-full w-80 max-w-full bg-white dark:bg-neutral-800 shadow-material-5 z-50">
+            <div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+                <h2 class="headline-6 text-neutral-800 dark:text-white">Menu</h2>
+                <button id="closeMobileMenu" class="material-button touch-target w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            
+            <nav class="p-4">
+                <div class="space-y-2">
+                    <button id="mobilePracticeBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
+                        <span class="material-icons">quiz</span>
+                        <span class="button-text">Practice</span>
+                    </button>
+                    
+                    <button id="mobileTutorBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
+                        <span class="material-icons">psychology</span>
+                        <span class="button-text">AI Tutor</span>
+                    </button>
+                    
+                    <button id="mobileProgressBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
+                        <span class="material-icons">trending_up</span>
+                        <span class="button-text">Progress</span>
+                    </button>
+                    
+                    <button id="mobileAnalyticsBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
+                        <span class="material-icons">analytics</span>
+                        <span class="button-text">Analytics</span>
+                    </button>
+                </div>
+                
+                <div class="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center space-x-3 p-4">
+                        <div class="w-12 h-12 bg-accent rounded-full flex items-center justify-center shadow-material-1">
+                            <span class="text-white font-medium">DM</span>
+                        </div>
+                        <div>
+                            <div class="subtitle-1 font-medium text-neutral-800 dark:text-white">Your Account</div>
+                            <div class="caption text-neutral-600 dark:text-neutral-400">Manage settings</div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
 
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <!-- Subject Selection -->
@@ -630,6 +702,38 @@
         const progressInterface = document.getElementById('progressInterface');
         const analyticsInterface = document.getElementById('analyticsInterface');
         const loadingModal = document.getElementById('loadingModal');
+
+        // Mobile menu elements
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const closeMobileMenu = document.getElementById('closeMobileMenu');
+        const mobileMenuIcon = document.getElementById('mobileMenuIcon');
+
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            const isOpen = mobileMenuOverlay.classList.contains('open');
+            
+            if (isOpen) {
+                closeMobileMenuFunc();
+            } else {
+                openMobileMenuFunc();
+            }
+        }
+
+        function openMobileMenuFunc() {
+            mobileMenuOverlay.classList.add('open');
+            mobileMenu.classList.add('open');
+            mobileMenuIcon.textContent = 'close';
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeMobileMenuFunc() {
+            mobileMenuOverlay.classList.remove('open');
+            mobileMenu.classList.remove('open');
+            mobileMenuIcon.textContent = 'menu';
+            document.body.style.overflow = ''; // Restore scrolling
+        }
 
         // Topic icon mapping function
         function getTopicIcon(topicName, category) {
@@ -1585,12 +1689,14 @@
             hideAllViews();
             subjectSelection.classList.remove('hidden');
             currentView = 'subjects';
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function showTopicSelection() {
             hideAllViews();
             topicSelection.classList.remove('hidden');
             currentView = 'topics';
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function showQuizInterface() {
@@ -1606,12 +1712,14 @@
             }
             
             currentView = 'quiz';
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function showTutorInterface() {
             hideAllViews();
             tutorInterface.classList.remove('hidden');
             currentView = 'tutor';
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function showProgressInterface() {
@@ -1619,6 +1727,7 @@
             progressInterface.classList.remove('hidden');
             currentView = 'progress';
             renderProgress();
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function showAnalyticsInterface() {
@@ -1626,6 +1735,7 @@
             analyticsInterface.classList.remove('hidden');
             currentView = 'analytics';
             renderAnalytics();
+            closeMobileMenuFunc(); // Close mobile menu when navigating
         }
 
         function hideAllViews() {
@@ -1725,11 +1835,28 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Navigation buttons
+            // Desktop navigation buttons
             document.getElementById('practiceBtn').addEventListener('click', showSubjectSelection);
             document.getElementById('tutorBtn').addEventListener('click', showTutorInterface);
             document.getElementById('progressBtn').addEventListener('click', showProgressInterface);
             document.getElementById('analyticsBtn').addEventListener('click', showAnalyticsInterface);
+
+            // Mobile navigation buttons
+            document.getElementById('mobilePracticeBtn').addEventListener('click', showSubjectSelection);
+            document.getElementById('mobileTutorBtn').addEventListener('click', showTutorInterface);
+            document.getElementById('mobileProgressBtn').addEventListener('click', showProgressInterface);
+            document.getElementById('mobileAnalyticsBtn').addEventListener('click', showAnalyticsInterface);
+
+            // Mobile menu functionality
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
+            
+            // Close mobile menu when clicking on overlay
+            mobileMenuOverlay.addEventListener('click', (e) => {
+                if (e.target === mobileMenuOverlay) {
+                    closeMobileMenuFunc();
+                }
+            });
 
             // Back buttons
             document.getElementById('backToSubjects').addEventListener('click', showSubjectSelection);
@@ -1747,6 +1874,20 @@
             document.getElementById('tutorInput').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     sendTutorMessage();
+                }
+            });
+
+            // Close mobile menu on window resize if it becomes desktop size
+            window.addEventListener('resize', () => {
+                if (window.innerWidth >= 768) { // md breakpoint
+                    closeMobileMenuFunc();
+                }
+            });
+
+            // Prevent body scroll when mobile menu is open
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mobileMenuOverlay.classList.contains('open')) {
+                    closeMobileMenuFunc();
                 }
             });
         }
