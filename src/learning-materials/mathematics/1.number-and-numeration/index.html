@@ -1,745 +1,775 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central Bank Policy Analysis</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#5D5CDE',
-                        secondary: '#4338ca',
-                        academicBlue: '#0A4D68',
-                        academicGold: '#DDA94B',
-                    },
-                    fontFamily: {
-                        'serif': ['Merriweather', 'Georgia', 'serif'],
-                        'sans': ['Inter', 'system-ui', 'sans-serif'],
-                    }
-                },
-            },
-        }
-        
-        // Check for dark mode preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-    </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Hub - JAMB Prep Pro</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap');
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-        }
-        
-        h1, h2, h3, h4 {
-            font-family: 'Merriweather', Georgia, serif;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 400px;
-            width: 100%;
-            margin: 20px 0;
-        }
-        
-        .dark .chart-container {
-            background-color: #262626;
-            border-radius: 0.5rem;
-            padding: 1rem;
-        }
-        
-        .academic-container {
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-        
-        .academic-section {
-            margin-bottom: 2rem;
-        }
-        
-        .academic-heading {
-            color: #0A4D68;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-        
-        .dark .academic-heading {
-            color: #8BB8E8;
-        }
-        
-        .citation {
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-        }
-        
-        .dark .citation {
-            color: #aaa;
-        }
-        
-        .stat-highlight {
-            font-weight: 700;
-            color: #0A4D68;
-        }
-        
-        .dark .stat-highlight {
-            color: #8BB8E8;
-        }
-        
-        .chart-title {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            font-style: italic;
-            font-size: 0.95rem;
-        }
-        
-        .source-note {
-            text-align: right;
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 0.5rem;
-            font-style: italic;
-        }
-        
-        .dark .source-note {
-            color: #aaa;
-        }
-        
-        .section-divider {
-            border-top: 1px solid #e5e7eb;
-            margin: 2rem 0;
-        }
-        
-        .dark .section-divider {
-            border-color: #374151;
-        }
-        
-        /* Smooth scrolling for navigation */
-        html {
-            scroll-behavior: smooth;
-        }
-        
-        .key-figure {
-            background-color: rgba(10, 77, 104, 0.1);
-            border-left: 4px solid #0A4D68;
-            padding: 0.5rem 1rem;
-            margin: 1rem 0;
-            font-weight: 500;
-        }
-        
-        .dark .key-figure {
-            background-color: rgba(139, 184, 232, 0.1);
-            border-left-color: #8BB8E8;
-        }
-        
-        .academic-list li {
-            margin-bottom: 0.75rem;
-            position: relative;
-            padding-left: 1.5rem;
-        }
-        
-        .academic-list li::before {
-            content: "•";
-            position: absolute;
-            left: 0.5rem;
-            color: #0A4D68;
-        }
-        
-        .dark .academic-list li::before {
-            color: #8BB8E8;
-        }
-        
-        /* Print styles */
-        @media print {
-            .no-print {
-                display: none;
-            }
-            
-            body {
-                font-size: 12pt;
-            }
-            
-            section {
-                page-break-inside: avoid;
-                margin-bottom: 20px;
-            }
-        }
-        
-        .section-title {
-            border-bottom: 2px solid #5D5CDE;
-            padding-bottom: 0.5rem;
-        }
-        
-        .chart-caption {
-            text-align: center;
-            font-style: italic;
-            margin-top: 0.5rem;
-            color: #64748b;
-        }
-        
-        .academic-image {
-            max-width: 100%;
-            border-radius: 4px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        
-        .table-container {
-            overflow-x: auto;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border: 1px solid #e2e8f0;
-        }
-        
-        th {
-            background-color: #f1f5f9;
-            font-weight: bold;
-        }
-        
-        .dark th {
-            background-color: #334155;
-        }
-        
-        .dark th, .dark td {
-            border-color: #475569;
-        }
-        
-        /* Dark mode styles */
-        .dark body {
-            background-color: #1e293b;
-            color: #f1f5f9;
-        }
-        
-        .dark .section-title {
-            border-bottom-color: #5D5CDE;
-        }
-        
-        .dark .citation {
-            color: #94a3b8;
-        }
-        
-        .dark .chart-caption {
-            color: #94a3b8;
-        }
-        
-        .dark .bg-white {
-            background-color: #334155;
-        }
-        
-        .dark .border {
-            border-color: #475569;
-        }
-        
-        .dark .text-gray-700 {
-            color: #e2e8f0;
-        }
-    </style>
+<script>
+tailwind.config = {
+darkMode: 'class',
+theme: {
+extend: {
+colors: {
+// Raven Professional Brand Colors
+primary: {
+DEFAULT: "#0F2C59", // Deep Navy - Trust, Authority, Stability
+50: "#f0f3f8",
+100: "#d6e1ee",
+500: "#0F2C59",
+600: "#0a2549",
+700: "#081e39",
+},
+accent: {
+DEFAULT: "#009F9D", // Consultancy Teal - Innovation, Precision
+50: "#e6f7f7",
+100: "#b3ebea",
+500: "#009F9D",
+600: "#008280",
+700: "#006663",
+},
+neutral: {
+25: "#FEFEFE",
+50: "#F8F9FA", // Warm Light Gray - Cleanliness, Clarity
+100: "#F1F3F4",
+200: "#E8EAED",
+300: "#DADCE0",
+400: "#BDC1C6",
+500: "#9AA0A6",
+600: "#80868B",
+700: "#5F6368",
+800: "#2D3748", // Charcoal - Sophistication, Legibility
+900: "#1F2937",
+},
+premium: {
+DEFAULT: "#D2C1A7", // Pale Sand - Warmth, Approachability
+50: "#fbf9f6",
+100: "#f4efe6",
+500: "#D2C1A7",
+600: "#c4b095",
+700: "#b69f83",
+},
+data: {
+DEFAULT: "#5A7B9E", // Steel Blue - Logic, Intelligence
+50: "#f2f5f9",
+100: "#e1e9f2",
+500: "#5A7B9E",
+600: "#4d6a87",
+700: "#405970",
+},
+success: "#22c55e",
+warning: "#f59e0b",
+error: "#ef4444",
+},
+boxShadow: {
+'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+'material-4': '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
+'material-5': '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
+},
+fontFamily: {
+'sans': ['Roboto', 'system-ui', 'sans-serif'],
+},
+borderRadius: {
+'material': '4px',
+}
+}
+}
+}
+</script>
+
+<style>
+.fade-in {
+animation: fadeIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.material-card {
+transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.material-card:hover {
+box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.material-button {
+transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+position: relative;
+overflow: hidden;
+}
+
+.material-button:active {
+transform: scale(0.98);
+}
+
+/* Learning Module Specific Styles */
+.learning-progress {
+background: linear-gradient(90deg, #009F9D 0%, #4ade80 100%);
+}
+
+.topic-completion {
+transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.concept-card {
+background: linear-gradient(135deg, rgba(15, 44, 89, 0.05) 0%, rgba(0, 159, 157, 0.05) 100%);
+border: 1px solid rgba(0, 159, 157, 0.2);
+}
+
+.interactive-element {
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+.interactive-element:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Consumer Behavior Specific Styles */
+.utility-card {
+background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);
+border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.indifference-curve {
+stroke-width: 3;
+fill: none;
+transition: all 0.3s ease;
+}
+
+.budget-line {
+stroke-width: 2;
+stroke-dasharray: 5,5;
+transition: all 0.3s ease;
+}
+
+.draggable-item {
+cursor: grab;
+transition: all 0.2s ease;
+}
+
+.draggable-item:active {
+cursor: grabbing;
+transform: scale(1.05);
+}
+
+.drop-zone {
+transition: all 0.2s ease;
+border: 2px dashed transparent;
+}
+
+.drop-zone.highlight {
+border-color: #009F9D;
+background-color: rgba(0, 159, 157, 0.1);
+}
+
+/* Material Design Typography Scale */
+.headline-1 { font-size: 6rem; font-weight: 300; line-height: 1.167; letter-spacing: -1.5px; }
+.headline-2 { font-size: 3.75rem; font-weight: 300; line-height: 1.2; letter-spacing: -0.5px; }
+.headline-3 { font-size: 3rem; font-weight: 400; line-height: 1.167; letter-spacing: 0; }
+.headline-4 { font-size: 2.125rem; font-weight: 400; line-height: 1.235; letter-spacing: 0.25px; }
+.headline-5 { font-size: 1.5rem; font-weight: 400; line-height: 1.334; letter-spacing: 0; }
+.headline-6 { font-size: 1.25rem; font-weight: 500; line-height: 1.6; letter-spacing: 0.15px; }
+.subtitle-1 { font-size: 1rem; font-weight: 400; line-height: 1.75; letter-spacing: 0.15px; }
+.subtitle-2 { font-size: 0.875rem; font-weight: 500; line-height: 1.57; letter-spacing: 0.1px; }
+.body-1 { font-size: 1rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.5px; }
+.body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.43; letter-spacing: 0.25px; }
+.button-text { font-size: 0.875rem; font-weight: 500; line-height: 1.75; letter-spacing: 1.25px; text-transform: uppercase; }
+.caption { font-size: 0.75rem; font-weight: 400; line-height: 1.66; letter-spacing: 0.4px; }
+.overline { font-size: 0.75rem; font-weight: 400; line-height: 2.66; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Dark mode enhancements */
+.dark .material-card {
+background-color: #1F2937;
+border-color: #374151;
+}
+
+.dark .material-card:hover {
+box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+</style>
 </head>
-<body class="font-sans bg-light text-secondary dark:bg-dark dark:text-light">
-    <div class="container mx-auto px-4 py-8 max-w-5xl academic-container">
-        <!-- Header -->
-        <header class="mb-10 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-primary dark:text-primary mb-2">Central Bank Policy Analysis</h1>
-            <p class="text-lg italic">A Comparative Study of Monetary Policies (2019-2024)</p>
-        </header>
-        
-        <!-- Navigation -->
-        <nav class="mb-8 no-print">
-            <ul class="flex flex-wrap justify-center gap-4 md:gap-8 text-sm md:text-base">
-                <li><a href="#" class="text-primary hover:underline">Section 1: Introduction</a></li>
-                <li><a href="#" class="text-primary hover:underline">Section 2: Methodology</a></li>
-                <li><a href="#section3" class="font-bold text-academicBlue dark:text-academicGold hover:underline">Section 3: Central Bank Policy Recommendations</a></li>
-                <li><a href="#" class="text-primary hover:underline">Section 4: Conclusion</a></li>
-            </ul>
-        </nav>
-        
-        <!-- Main Content -->
-        <main>
-            <!-- Section 3 -->
-            <section id="section3" class="mb-12 academic-section">
-                <h2 class="text-2xl md:text-3xl font-bold mb-6 section-title academic-heading">Section 3: Central Bank Policy Recommendations</h2>
-                
-                <div class="mb-8">
-                    <div class="flex flex-col md:flex-row gap-6 mb-6">
-                        <div class="md:w-2/3">
-                            <h3 class="text-xl md:text-2xl font-semibold mb-4 academic-heading">Bank of England's Actions (2019-2024)</h3>
-                            <p class="mb-4">The BoE's policies during this period navigated unprecedented crises:</p>
-                        </div>
-                        <div class="md:w-1/3">
-                            <img src="https://images.unsplash.com/photo-1600679056949-a685c56fe7a0?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Bank of England Building" class="academic-image w-full" />
-                            <p class="chart-caption">Bank of England Headquarters, London</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold mb-2 academic-heading">COVID-19 Response (2020-2021):</h4>
-                        <div class="flex flex-col md:flex-row gap-6">
-                            <div class="md:w-2/3">
-                                <ul class="academic-list pl-6 mb-4 space-y-2">
-                                    <li>Quantitative Easing (QE): Expanded asset purchases to <span class="stat-highlight">£895bn</span>, including £20bn in corporate bonds <span class="citation">(BoE, 2021)</span>.</li>
-                                    <li>Rate Cuts: Policy rate slashed to <span class="stat-highlight">0.1%</span>, providing liquidity but fueling housing inflation (CPI rose to 7% by 2021).</li>
-                                </ul>
-                            </div>
-                            <div class="md:w-1/3">
-                                <div class="chart-container">
-                                    <canvas id="qeChart"></canvas>
-                                </div>
-                                <p class="chart-caption">Fig 1. BoE Asset Purchase Program Expansion (2020-2021)</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold mb-2 academic-heading">Inflation Surge (2022-2023):</h4>
-                        <div class="flex flex-col md:flex-row gap-6">
-                            <div class="md:w-2/3">
-                                <ul class="academic-list pl-6 mb-4 space-y-2">
-                                    <li>Aggressive Hiking Cycle: Rates raised to <span class="stat-highlight">5.25%</span> by August 2023, lagging the Fed's faster tightening <span class="citation">(IMF, 2023)</span>.</li>
-                                    <li>Gilt Market Intervention: <span class="stat-highlight">£65bn</span> temporary bond purchases in 2022 to avert LDI-driven collapse <span class="citation">(BoE, 2022)</span>.</li>
-                                    <li>Forward Guidance: Mixed messaging on inflation (e.g., initially dismissing "transitory" pressures in 2021) eroded credibility <span class="citation">(OECD, 2023)</span>.</li>
-                                </ul>
-                            </div>
-                            <div class="md:w-1/3">
-                                <div class="chart-container">
-                                    <canvas id="rateChart"></canvas>
-                                </div>
-                                <p class="chart-caption">Fig 2. BoE Policy Rate vs. Inflation Rate (2020-2023)</p>
-                            </div>
-                        </div>
-                        <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" alt="Financial Market Data" class="academic-image w-full my-4" />
-                        <p class="chart-caption">Fig 3. Financial Market Volatility During Gilt Crisis of 2022</p>
-                    </div>
-                </div>
-                
-                <div class="section-divider"></div>
-                
-                <div class="mb-8">
-                    <h3 class="text-xl md:text-2xl font-semibold mb-4 academic-heading">Effectiveness & Limitations</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold mb-2 text-green-600 dark:text-green-400 academic-heading">Successes</h4>
-                            <ul class="academic-list pl-6 space-y-2">
-                                <li>QE Stabilization: Corporate bond spreads narrowed by <span class="stat-highlight">50bps</span> post-QE, averting a 2020 credit crunch <span class="citation">(Reis, 2021)</span>.</li>
-                                <li>LDI Bailout: Gilt yields stabilized within weeks of BoE's 2022 intervention, preventing pension fund insolvencies <span class="citation">(IMF, 2022)</span>.</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
-                            <h4 class="text-lg font-semibold mb-2 text-red-600 dark:text-red-400 academic-heading">Failures</h4>
-                            <ul class="academic-list pl-6 space-y-2">
-                                <li>Delayed Tightening: Holding rates at 0.1% until Dec 2021 let inflation expectations de-anchor (5-year breakevens hit <span class="stat-highlight">4.3%</span> in 2022) <span class="citation">(Blanchard, 2023)</span>.</li>
-                                <li>Moral Hazard: Repeated bailouts (e.g., 2020 corporate QE, 2022 gilts) incentivised risky leverage <span class="citation">(Shin, 2022)</span>.</li>
-                                <li>Communication Gaps: Mixed signals on inflation ("transitory" vs. "embedded") confused markets <span class="citation">(FT, 2023)</span>.</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="chart-container mb-6">
-                        <canvas id="breakevensChart"></canvas>
-                        <p class="chart-caption">Fig 4. 5-Year Inflation Breakevens (2020-2023) showing de-anchoring of expectations</p>
-                    </div>
-                </div>
-                
-                <div class="section-divider"></div>
-                
-                <div class="mb-8">
-                    <h3 class="text-xl md:text-2xl font-semibold mb-4 academic-heading">Evidence-Based Recommendations</h3>
-                    
-                    <div class="mb-6">
-                        <div class="flex flex-col md:flex-row gap-6">
-                            <div class="md:w-2/3">
-                                <h4 class="text-lg font-semibold mb-2 academic-heading">Dual Mandate Adoption:</h4>
-                                <div class="key-figure mb-4">
-                                    The BoE's singular inflation target (2% CPI) neglected financial stability considerations during periods of extensive monetary accommodation.
-                                </div>
-                                <ul class="academic-list pl-6 mb-2 space-y-2">
-                                    <li><strong>Problem:</strong> The BoE's singular inflation target (2% CPI) ignored financial stability during QE (e.g., housing bubbles).</li>
-                                    <li><strong>Solution:</strong> Adopt a Fed-style dual mandate (inflation + employment) with explicit financial stability oversight <span class="citation">(Blanchard & Pisani-Ferry, 2022)</span>.</li>
-                                    <li><strong>Evidence:</strong> The Fed's 2022 framework, incorporating labour market slack, enabled smoother QT <span class="citation">(BIS, 2023)</span>.</li>
-                                </ul>
-                            </div>
-                            <div class="md:w-1/3">
-                                <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" alt="Federal Reserve Building" class="academic-image w-full" />
-                                <p class="chart-caption">Federal Reserve Building, Washington DC</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold mb-2 academic-heading">Macroprudential Regulation:</h4>
-                        <ul class="academic-list pl-6 mb-2 space-y-2">
-                            <li><strong>Problem:</strong> LDI strategies lacked leverage caps, permitting 1:10 collateral ratios <span class="citation">(Danielsson, 2022)</span>.</li>
-                            <li><strong>Solution:</strong> Impose sector-specific countercyclical buffers (e.g., 30% haircuts on pension fund repos).</li>
-                            <li><strong>Evidence:</strong> ECB's 2023 LTV limits on EU real estate loans reduced systemic risk <span class="citation">(ECB, 2023)</span>.</li>
-                        </ul>
-                        <div class="chart-container my-4">
-                            <canvas id="ldiChart"></canvas>
-                            <p class="chart-caption">Fig 5. LDI Leverage Ratios vs. Proposed Regulatory Caps</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <h4 class="text-lg font-semibold mb-2 academic-heading">Enhanced Forward Guidance:</h4>
-                        <ul class="academic-list pl-6 mb-2 space-y-2">
-                            <li><strong>Problem:</strong> BoE's vague 2021 guidance ("transitory inflation") misled markets.</li>
-                            <li><strong>Solution:</strong> Publish scenario-based rate projections (e.g., Fed's dot plots).</li>
-                            <li><strong>Evidence:</strong> Fed's 2021 "liftoff" projections reduced Treasury volatility by <span class="stat-highlight">20%</span> <span class="citation">(Gürkaynak et al., 2021)</span>.</li>
-                        </ul>
-                        <img src="https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" alt="Financial Chart" class="academic-image w-full my-4" />
-                        <p class="chart-caption">Fig 6. Impact of Forward Guidance on Market Volatility</p>
-                    </div>
-                </div>
-                
-                <div class="section-divider"></div>
-                
-                <div class="mb-8">
-                    <h3 class="text-xl md:text-2xl font-semibold mb-4 academic-heading">Comparative Analysis with Fed & ECB</h3>
-                    
-                    <div class="table-container mb-4">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Policy Area</th>
-                                    <th>BoE</th>
-                                    <th>Fed</th>
-                                    <th>ECB</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Inflation Response</td>
-                                    <td>Delayed hikes (2021-2023)</td>
-                                    <td>Preemptive hikes (March 2022)</td>
-                                    <td>Gradual hikes (July 2022)</td>
-                                </tr>
-                                <tr>
-                                    <td>QE Unwind</td>
-                                    <td>Passive QT (£80bn/yr from 2023)</td>
-                                    <td>Active QT ($95bn/mo from 2022)</td>
-                                    <td>No QT until 2024 (reinvestments)</td>
-                                </tr>
-                                <tr>
-                                    <td>Communication</td>
-                                    <td>Mixed signals on inflation</td>
-                                    <td>Clear dot-plot guidance</td>
-                                    <td>Cautious, consensus-driven</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <h4 class="text-lg font-semibold mb-2 academic-heading">Key Takeaways:</h4>
-                    <ul class="academic-list pl-6 mb-4 space-y-2">
-                        <li>The Fed's data-dependent transparency (e.g., Powell's Jackson Hole speeches) outperformed BoE's ambiguity.</li>
-                        <li>The ECB's fragmented mandate (19 economies) limited agility vs. BoE's centralized structure <span class="citation">(BIS, 2023)</span>.</li>
-                    </ul>
-                    
-                    <div class="flex flex-col md:flex-row gap-6">
-                        <div class="md:w-1/2">
-                            <div class="chart-container">
-                                <canvas id="hikeComparisonChart"></canvas>
-                                <p class="chart-caption">Fig 7. Rate Hike Timing Comparison (2021-2023)</p>
-                            </div>
-                        </div>
-                        <div class="md:w-1/2">
-                            <div class="chart-container">
-                                <canvas id="inflationComparisonChart"></canvas>
-                                <p class="chart-caption">Fig 8. Inflation Peak Comparison Across Central Banks</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="section-divider"></div>
-                
-                <div>
-                    <h3 class="text-xl md:text-2xl font-semibold mb-4 academic-heading">Conclusion</h3>
-                    <p class="mb-4">The BoE's crisis management averted collapses but entrenched moral hazard and inflation. Adopting a dual mandate, stricter macroprudential rules, and Fed-style communication would enhance resilience. Learning from the ECB's sectoral buffers and the Fed's proactive frameworks is critical.</p>
-                    <p class="text-right italic source-note">Word Count: 598</p>
-                </div>
-            </section>
-        </main>
-        
 
-    </div>
+<body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
+<!-- Material Design App Bar -->
+<header class="bg-white dark:bg-neutral-800 shadow-material-2 sticky top-0 z-50">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
 
-    <script>
-        // Initialize charts once DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set Chart.js defaults for all charts
-            Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#475569';
-            Chart.defaults.borderColor = document.documentElement.classList.contains('dark') ? '#475569' : '#e2e8f0';
-            
-            // QE Chart
-            const qeCtx = document.getElementById('qeChart').getContext('2d');
-            const qeChart = new Chart(qeCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Pre-COVID', 'March 2020', 'Nov 2020', 'Dec 2021'],
-                    datasets: [{
-                        label: 'Asset Purchase Program (£bn)',
-                        data: [445, 645, 895, 895],
-                        backgroundColor: 'rgba(93, 92, 222, 0.7)',
-                        borderColor: 'rgba(93, 92, 222, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Billions (£)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Interest Rate vs Inflation Chart
-            const rateCtx = document.getElementById('rateChart').getContext('2d');
-            const rateChart = new Chart(rateCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Q1 2020', 'Q3 2020', 'Q1 2021', 'Q3 2021', 'Q1 2022', 'Q3 2022', 'Q1 2023', 'Q3 2023'],
-                    datasets: [{
-                        label: 'BoE Policy Rate (%)',
-                        data: [0.75, 0.1, 0.1, 0.1, 0.5, 2.25, 4.0, 5.25],
-                        borderColor: 'rgba(93, 92, 222, 1)',
-                        backgroundColor: 'rgba(93, 92, 222, 0.1)',
-                        tension: 0.4,
-                        fill: false
-                    }, {
-                        label: 'UK CPI Inflation (%)',
-                        data: [1.5, 0.5, 0.7, 3.1, 7.0, 10.1, 10.4, 6.7],
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Percentage (%)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Inflation Breakevens Chart
-            const breakevensCtx = document.getElementById('breakevensChart').getContext('2d');
-            const breakevensChart = new Chart(breakevensCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan 2020', 'Jul 2020', 'Jan 2021', 'Jul 2021', 'Jan 2022', 'Jul 2022', 'Jan 2023', 'Jul 2023'],
-                    datasets: [{
-                        label: '5-Year Inflation Breakevens (%)',
-                        data: [1.8, 1.2, 1.7, 2.5, 3.8, 4.3, 3.9, 3.2],
-                        borderColor: 'rgba(10, 77, 104, 1)',
-                        backgroundColor: 'rgba(10, 77, 104, 0.2)',
-                        tension: 0.4,
-                        fill: true
-                    }, {
-                        label: 'BoE Target (%)',
-                        data: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
-                        borderColor: 'rgba(220, 53, 69, 0.7)',
-                        borderDash: [5, 5],
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Percentage (%)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // LDI Leverage Chart
-            const ldiCtx = document.getElementById('ldiChart').getContext('2d');
-            const ldiChart = new Chart(ldiCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['UK Pension Funds', 'Insurance Firms', 'Hedge Funds', 'Proposed Cap'],
-                    datasets: [{
-                        label: 'LDI Leverage Ratio (x:1)',
-                        data: [10, 7, 15, 4],
-                        backgroundColor: [
-                            'rgba(220, 53, 69, 0.7)',
-                            'rgba(255, 193, 7, 0.7)',
-                            'rgba(220, 53, 69, 0.7)',
-                            'rgba(10, 77, 104, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(10, 77, 104, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Leverage Ratio (x:1)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Rate Hike Timing Comparison
-            const hikeCtx = document.getElementById('hikeComparisonChart').getContext('2d');
-            const hikeChart = new Chart(hikeCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Dec 2021', 'Mar 2022', 'Jun 2022', 'Sep 2022', 'Dec 2022', 'Mar 2023', 'Jun 2023', 'Sep 2023'],
-                    datasets: [{
-                        label: 'BoE Rate (%)',
-                        data: [0.25, 0.75, 1.25, 2.25, 3.5, 4.25, 5.0, 5.25],
-                        borderColor: 'rgba(93, 92, 222, 1)',
-                        backgroundColor: 'rgba(93, 92, 222, 0.1)',
-                        tension: 0.4
-                    }, {
-                        label: 'Fed Rate (%)',
-                        data: [0.25, 0.5, 1.75, 3.25, 4.5, 5.0, 5.25, 5.5],
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        tension: 0.4
-                    }, {
-                        label: 'ECB Rate (%)',
-                        data: [0.0, 0.0, 0.0, 1.25, 2.5, 3.5, 4.0, 4.5],
-                        borderColor: 'rgba(10, 77, 104, 1)',
-                        backgroundColor: 'rgba(10, 77, 104, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Policy Rate (%)'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Inflation Comparison Chart
-            const inflationCtx = document.getElementById('inflationComparisonChart').getContext('2d');
-            const inflationChart = new Chart(inflationCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['UK', 'US', 'Eurozone'],
-                    datasets: [{
-                        label: 'Peak Inflation 2022 (%)',
-                        data: [11.1, 9.1, 10.6],
-                        backgroundColor: [
-                            'rgba(93, 92, 222, 0.7)',
-                            'rgba(220, 53, 69, 0.7)',
-                            'rgba(10, 77, 104, 0.7)'
-                        ],
-                        borderColor: [
-                            'rgba(93, 92, 222, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(10, 77, 104, 1)'
-                        ],
-                        borderWidth: 1
-                    }, {
-                        label: 'Months Above 5% Inflation',
-                        data: [21, 17, 19],
-                        backgroundColor: [
-                            'rgba(93, 92, 222, 0.3)',
-                            'rgba(220, 53, 69, 0.3)',
-                            'rgba(10, 77, 104, 0.3)'
-                        ],
-                        borderColor: [
-                            'rgba(93, 92, 222, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(10, 77, 104, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Value'
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Update chart colors when theme changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-                const textColor = event.matches ? '#e2e8f0' : '#475569';
-                const borderColor = event.matches ? '#475569' : '#e2e8f0';
-                
-                Chart.defaults.color = textColor;
-                Chart.defaults.borderColor = borderColor;
-                
-                // Update all charts
-                [qeChart, rateChart, breakevensChart, ldiChart, hikeChart, inflationChart].forEach(chart => {
-                    chart.update();
-                });
-            });
-        });
-    </script>
+<!-- Logo & Brand -->
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-material-1">
+<span class="text-white font-medium text-lg">J</span>
+</div>
+<div>
+<h1 class="headline-6 text-neutral-800 dark:text-white">JAMB Prep Pro</h1>
+<p class="caption text-neutral-600 dark:text-neutral-400">ProVista Excellence</p>
+</div>
+</div>
+</div>
+
+<!-- Navigation -->
+<nav class="hidden md:flex items-center space-x-1">
+<a href="index.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Dashboard</a>
+<a href="practice.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Practice</a>
+<a href="mockExams.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Mock Exams</a>
+<a href="results.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Results</a>
+<a href="achievements.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Achievements</a>
+<a href="learning.html" class="nav-btn px-4 py-2 text-primary font-medium button-text rounded-lg bg-primary/10">Learning</a>
+</nav>
+
+<!-- User Actions -->
+<div class="flex items-center space-x-3">
+<button class="material-button w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600">
+<span class="material-icons text-lg">notifications</span>
+</button>
+<div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-material-1">
+<span class="text-white font-medium text-sm">AD</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Learning Module Page -->
+<div class="fade-in">
+
+
+<!-- Learning Header -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Mathematics Learning Hub</h2>
+<p class="subtitle-1 text-neutral-600 dark:text-neutral-400">Number and Numberation</p>
+</div>
+<div class="flex items-center space-x-4">
+<div class="text-right">
+
+    <!-- Currently hardcoded-->
+<p class="overline text-neutral-600 dark:text-neutral-400">Overall Progress</p>
+<div class="flex items-center space-x-2">
+<div class="w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="learning-progress h-2 rounded-full" style="width: 43%"></div>
+</div>
+<span class="caption font-medium text-neutral-800 dark:text-white">43%</span>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Topic Selection Tabs -->
+<div class="flex items-center space-x-4 mb-6">
+<button onclick="showEconomicsTopic('production')" id="production-tab" class="px-6 py-3 bg-accent text-white rounded-xl shadow-material-1">
+<span class="button-text">Theory of Production</span>
+</button>
+
+<button onclick="showEconomicsTopic('consumer')" id="consumer-tab" class="px-6 py-3 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+<span class="button-text">Consumer Behavior</span>
+</button>
+</div>
+
+
+<!-- Production Topic Content -->
+<div id="production-content" class="economics-topic-content">
+
+    
+<!-- Learning Objectives -->
+<div class="concept-card rounded-2xl p-6 mb-6">
+<h3 class="subtitle-1 mb-4 text-neutral-800 dark:text-white flex items-center">
+
+<span class="material-icons text-accent mr-2">lightbulb</span>
+Learning Objectives - Theory of Production
+
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">perform four basic operations</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">convert one base to another</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">perform operations in modulo arithmetic</span>
+</div>
+
+</div>
+</div>
+</div>
+
+<!-- Production Topic Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+<!-- TP, AP, MP Relationships -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('production-relationships')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">trending_up</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-warning/10 text-warning px-2 py-1 rounded-full">In Progress</span>
+<div class="w-6 h-6 bg-warning rounded-full flex items-center justify-center">
+<span class="text-white text-sm font-bold">60%</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">TP, AP, MP Relationships</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Total, Average, and Marginal Product with Law of Variable Proportion</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">60%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-warning h-2 rounded-full" style="width: 60%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>25 min read</span>
+<span>•</span>
+<span>8 interactive charts</span>
+</div>
+</div>
+</div>
+
+<!-- Additional Production Topics -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('economies-scale')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-premium-600 rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">scale</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-neutral-200 text-neutral-600 px-2 py-1 rounded-full">Not Started</span>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Economies of Scale</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Internal and external economies, diseconomies of scale</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">0%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-neutral-400 h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>30 min read</span>
+<span>•</span>
+<span>10 examples</span>
+</div>
+</div>
+</div>
+
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('production-functions')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-error rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">functions</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-neutral-200 text-neutral-600 px-2 py-1 rounded-full">Not Started</span>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Production Functions</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Mathematical relationships and returns to scale</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">0%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-neutral-400 h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>35 min read</span>
+<span>•</span>
+<span>12 interactive graphs</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Consumer Behavior Topic Content -->
+<div id="consumer-content" class="economics-topic-content hidden">
+<!-- Learning Objectives -->
+<div class="utility-card rounded-2xl p-6 mb-6">
+<h3 class="subtitle-1 mb-4 text-neutral-800 dark:text-white flex items-center">
+<span class="material-icons text-warning mr-2">lightbulb</span>
+Learning Objectives - Theory of Consumer Behavior
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Understand different types of utility (Cardinal, Ordinal)</span>
+</div>
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Calculate Total, Average, and Marginal Utility</span>
+</div>
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Analyze indifference curves and consumer preferences</span>
+</div>
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Determine consumer equilibrium using budget constraints</span>
+</div>
+</div>
+</div>
+
+<!-- Consumer Behavior Topic Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+<!-- Utility Concepts -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('utility-concepts')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-warning rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">star</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-success/10 text-success px-2 py-1 rounded-full">Available</span>
+<div class="w-6 h-6 bg-success rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Utility Concepts</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Cardinal, Ordinal, Total, Average, and Marginal Utility</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Interactive Elements</span>
+<span class="font-medium text-neutral-800 dark:text-white">12 activities</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>20 min lesson</span>
+<span>•</span>
+<span>Utility table generator</span>
+</div>
+</div>
+</div>
+
+<!-- Indifference Curves -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('indifference-curves')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">timeline</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-success/10 text-success px-2 py-1 rounded-full">Available</span>
+<div class="w-6 h-6 bg-success rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Indifference Curves</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Consumer preferences and indifference curve analysis</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Interactive Elements</span>
+<span class="font-medium text-neutral-800 dark:text-white">8 activities</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>25 min lesson</span>
+<span>•</span>
+<span>Animated 2D charts</span>
+</div>
+</div>
+</div>
+
+<!-- Budget Lines -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('budget-lines')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">account_balance_wallet</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-success/10 text-success px-2 py-1 rounded-full">Available</span>
+<div class="w-6 h-6 bg-success rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Budget Lines & Equilibrium</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Budget constraints and consumer equilibrium analysis</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Interactive Elements</span>
+<span class="font-medium text-neutral-800 dark:text-white">10 activities</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>30 min lesson</span>
+<span>•</span>
+<span>Slider simulations</span>
+</div>
+</div>
+</div>
+
+<!-- Chika's Market Day Story -->
+<div class="material-card bg-gradient-to-br from-warning/10 to-orange-100 dark:from-warning/20 dark:to-orange-900/20 border border-warning/30 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('market-day-story')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">person</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-orange-100 text-orange-700 px-2 py-1 rounded-full">Story Mode</span>
+<div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Market Day with Chika</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Follow Chika's shopping decisions using real economic principles</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Story Elements</span>
+<span class="font-medium text-neutral-800 dark:text-white">Interactive tale</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>15 min story</span>
+<span>•</span>
+<span>₦100 budget challenge</span>
+</div>
+</div>
+</div>
+
+<!-- Practice Activities -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('consumer-practice')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-data-500 rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">extension</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-data-100 text-data-700 px-2 py-1 rounded-full">Practice</span>
+<div class="w-6 h-6 bg-data-500 rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Interactive Activities</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Drag & drop quizzes, curve building, and more</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Activity Types</span>
+<span class="font-medium text-neutral-800 dark:text-white">6 different</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>Variable time</span>
+<span>•</span>
+<span>Hands-on learning</span>
+</div>
+</div>
+</div>
+
+<!-- JAMB Practice Questions -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('consumer-jamb-practice')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-error rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">quiz</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-error/10 text-error px-2 py-1 rounded-full">JAMB Prep</span>
+<div class="w-6 h-6 bg-error rounded-full flex items-center justify-center">
+<span class="material-icons text-white text-sm">play_arrow</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">JAMB Practice Quiz</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Past questions and practice tests on consumer behavior</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Questions</span>
+<span class="font-medium text-neutral-800 dark:text-white">50+ available</span>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>Timed practice</span>
+<span>•</span>
+<span>Exam simulation</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Quick Actions for Learning -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="material-card bg-gradient-to-br from-accent to-accent-600 rounded-2xl p-6 text-white">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-icons text-2xl">quiz</span>
+<h3 class="subtitle-1">Practice Quiz</h3>
+</div>
+<p class="body-2 mb-6 text-accent-100">Test your understanding with topic-specific questions</p>
+<button onclick="startLearningQuiz()" class="material-button w-full px-4 py-3 bg-white text-accent rounded-xl shadow-material-1 hover:shadow-material-2">
+<span class="button-text">Start Quiz</span>
+</button>
+</div>
+
+<div class="material-card bg-gradient-to-br from-primary to-primary-600 rounded-2xl p-6 text-white">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-icons text-2xl">science</span>
+<h3 class="subtitle-1">Interactive Lab</h3>
+</div>
+<p class="body-2 mb-6 text-primary-100">Experiment with economic concepts using simulations</p>
+<button onclick="openInteractiveLab()" class="material-button w-full px-4 py-3 bg-white text-primary rounded-xl shadow-material-1 hover:shadow-material-2">
+<span class="button-text">Open Lab</span>
+</button>
+</div>
+
+<div class="material-card bg-gradient-to-br from-warning to-orange-500 rounded-2xl p-6 text-white">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-icons text-2xl">assessment</span>
+<h3 class="subtitle-1">Progress Report</h3>
+</div>
+<p class="body-2 mb-6 text-orange-100">View detailed analytics of your learning progress</p>
+<button onclick="showProgressReport()" class="material-button w-full px-4 py-3 bg-white text-orange-600 rounded-xl shadow-material-1 hover:shadow-material-2">
+<span class="button-text">View Report</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+
+<script>
+// Dark mode detection
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+if (event.matches) {
+document.documentElement.classList.add('dark');
+} else {
+document.documentElement.classList.remove('dark');
+}
+});
+
+// Economics Topic Switching
+function showEconomicsTopic(topicName) {
+// Hide all economics topic content
+document.querySelectorAll('.economics-topic-content').forEach(content => {
+content.classList.add('hidden');
+});
+
+// Show selected topic content
+const targetContent = document.getElementById(topicName + '-content');
+if (targetContent) {
+targetContent.classList.remove('hidden');
+}
+
+// Update tab styling
+document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+tab.classList.remove('bg-accent', 'text-white');
+tab.classList.add('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300', 'hover:bg-neutral-50', 'dark:hover:bg-neutral-700');
+});
+
+const activeTab = document.getElementById(topicName + '-tab');
+if (activeTab) {
+activeTab.classList.remove('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300', 'hover:bg-neutral-50', 'dark:hover:bg-neutral-700');
+activeTab.classList.add('bg-accent', 'text-white');
+}
+}
+
+// Learning Module Functions
+function openLearningTopic(topicId) {
+showMaterialToast(`Opening ${topicId.replace('-', ' ')} learning module...`, 'info');
+// Implementation for opening specific learning topics
+}
+
+function startLearningQuiz() {
+showMaterialToast('Starting topic-specific quiz...', 'info');
+// Implementation for learning quiz
+}
+
+function openInteractiveLab() {
+showMaterialToast('Opening interactive simulation lab...', 'info');
+// Implementation for interactive lab
+}
+
+function showProgressReport() {
+showMaterialToast('Generating your detailed progress report...', 'info');
+// Implementation for progress report
+}
+
+// Material Design Toast System
+function showMaterialToast(message, type = 'info') {
+const toastContainer = document.getElementById('toast-container') || createToastContainer();
+
+const toast = document.createElement('div');
+const iconMap = {
+success: 'check_circle',
+error: 'error',
+warning: 'warning',
+info: 'info'
+};
+
+const colorMap = {
+success: 'bg-success text-white',
+error: 'bg-error text-white',
+warning: 'bg-warning text-white',
+info: 'bg-accent text-white'
+};
+
+toast.className = `material-card flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-material-3 ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
+
+toast.innerHTML = `
+<span class="material-icons">${iconMap[type]}</span>
+<span class="subtitle-2 flex-1">${message}</span>
+<button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
+`;
+
+toastContainer.appendChild(toast);
+
+// Animate in
+setTimeout(() => {
+toast.classList.remove('translate-y-2', 'opacity-0');
+}, 100);
+
+// Auto remove after 5 seconds
+setTimeout(() => {
+if (toast.parentElement) {
+toast.classList.add('translate-y-2', 'opacity-0');
+setTimeout(() => toast.remove(), 300);
+}
+}, 5000);
+}
+
+function createToastContainer() {
+const container = document.createElement('div');
+container.id = 'toast-container';
+container.className = 'fixed bottom-6 left-6 z-50 max-w-sm';
+document.body.appendChild(container);
+return container;
+}
+
+// Initialize the learning page
+document.addEventListener('DOMContentLoaded', function() {
+setTimeout(() => {
+showMaterialToast('Welcome to the Economics Learning Hub! 📚', 'success');
+}, 1000);
+});
+</script>
 </body>
 </html>
