@@ -1,1 +1,1731 @@
-dd
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Physics Motion Visualizer</title>
+    <!-- TailwindCSS for responsive styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJS for mathematical calculations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <script>
+        // Tailwind configuration with enhanced theme
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#1976D2',
+                        accent: '#00BCD4',
+                        success: '#4CAF50',
+                        warning: '#FF9800',
+                        error: '#F44336',
+                        surface: '#FFFFFF',
+                        background: '#F5F5F5',
+                    },
+                    boxShadow: {
+                        'card': '0 2px 8px rgba(0, 0, 0, 0.1)',
+                        'fab': '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    }
+                }
+            }
+        }
+        
+        // Dark mode detection and handling
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</head>
+<body class="bg-background dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
+    <!-- Enhanced App Layout -->
+    <div class="relative w-full h-screen flex flex-col">
+        
+        <!-- Top App Bar with Presets -->
+        <div class="relative z-20 bg-surface dark:bg-gray-800 shadow-card">
+            <div class="px-4 py-3 flex items-center justify-between">
+                <!-- App Title -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                        <div class="w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-primary dark:text-white">Football Physics Pro</h1>
+                        <div class="text-xs text-gray-500 dark:text-gray-400" id="status-text">Ready to start</div>
+                    </div>
+                </div>
+                
+                <!-- Timer & ETA Display -->
+                <div class="text-right">
+                    <div class="text-xl font-bold text-primary dark:text-white" id="timer-display">0.00s</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400" id="eta-display">ETA: --</div>
+                </div>
+            </div>
+            
+            <!-- Physics Presets Bar -->
+            <div class="px-4 pb-3">
+                <div class="flex space-x-2 overflow-x-auto">
+                    <button class="preset-btn px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs whitespace-nowrap" data-preset="constant">
+                        ⚽ Constant Speed
+                    </button>
+                    <button class="preset-btn px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs whitespace-nowrap" data-preset="acceleration">
+                        🚀 Sprint
+                    </button>
+                    <button class="preset-btn px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-xs whitespace-nowrap" data-preset="deceleration">
+                        🛑 Deceleration
+                    </button>
+                    <button class="preset-btn px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full text-xs whitespace-nowrap" data-preset="penalty">
+                        🥅 Penalty Kick
+                    </button>
+                    <button class="preset-btn px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 rounded-full text-xs whitespace-nowrap" data-preset="throw">
+                        🤾 Throw-in
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Area -->
+        <div class="flex-1 relative">
+            <canvas id="motionMap" class="w-full h-full bg-green-100 dark:bg-green-900 cursor-crosshair touch-manipulation"></canvas>
+            
+            <!-- Enhanced Floating Controls -->
+            <div class="absolute top-4 right-4 space-y-2">
+                <!-- Coordinate Display -->
+                <div class="bg-surface dark:bg-gray-700 px-3 py-2 rounded-lg shadow-card">
+                    <div class="text-xs font-mono text-gray-600 dark:text-gray-300" id="coordinates">X: 0m, Y: 0m</div>
+                </div>
+                
+                <!-- Visual Aids Toggle -->
+                <div class="bg-surface dark:bg-gray-700 px-3 py-2 rounded-lg shadow-card">
+                    <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Visual Aids</div>
+                    <div class="space-y-1">
+                        <label class="flex items-center space-x-2 text-xs">
+                            <input type="checkbox" id="show-trail" class="w-3 h-3" checked>
+                            <span class="text-gray-600 dark:text-gray-300">Motion Trail</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs">
+                            <input type="checkbox" id="show-velocity" class="w-3 h-3" checked>
+                            <span class="text-gray-600 dark:text-gray-300">Velocity Vector</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-xs">
+                            <input type="checkbox" id="show-grid" class="w-3 h-3" checked>
+                            <span class="text-gray-600 dark:text-gray-300">Field Lines</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instruction Card -->
+            <div class="absolute top-4 left-4 bg-surface dark:bg-gray-700 px-4 py-2 rounded-lg shadow-card max-w-xs">
+                <div class="text-sm text-gray-700 dark:text-gray-300" id="instruction-text">
+                    Tap to set start point or choose a preset
+                </div>
+            </div>
+
+            <!-- Stadium Field Selector -->
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-surface dark:bg-gray-700 rounded-lg shadow-card p-2">
+                <select id="field-scale" class="text-sm border-none bg-transparent text-gray-700 dark:text-gray-300 font-medium focus:outline-none text-base">
+                    <option value="camp-nou" selected>⚽ Camp Nou (105m × 68m, Grass)</option>
+                    <option value="wembley">🏟️ Wembley (105m × 68m, Grass)</option>
+                    <option value="old-trafford">🔴 Old Trafford (106m × 68m, Grass)</option>
+                    <option value="maracana">🇧🇷 Maracanã (104m × 69m, Grass)</option>
+                    <option value="allianz">⚪ Allianz Arena (105m × 68m, Artificial)</option>
+                    <option value="penalty-area">📦 Penalty Area (40.3m × 16.5m)</option>
+                    <option value="goal-area">🥅 Goal Area (18.3m × 5.5m)</option>
+                    <option value="center-circle">⭕ Center Circle (18.3m × 18.3m)</option>
+                </select>
+            </div>
+
+            <!-- Time Scrubber (appears during/after simulation) -->
+            <div id="time-scrubber" class="absolute bottom-4 left-4 right-4 bg-surface dark:bg-gray-700 p-3 rounded-lg shadow-card hidden">
+                <div class="flex items-center space-x-3">
+                    <button id="time-backward" class="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">⏪</button>
+                    <div class="flex-1">
+                        <input type="range" id="time-slider" class="w-full" min="0" max="100" value="0">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>0s</span>
+                            <span id="max-time">10s</span>
+                        </div>
+                    </div>
+                    <button id="time-forward" class="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center">⏩</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Buttons -->
+        <div class="absolute right-4 bottom-32 flex flex-col space-y-3 z-30">
+            <button id="export-data" class="w-14 h-14 bg-blue-500 text-white rounded-full shadow-fab flex items-center justify-center hover:bg-blue-600 transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </button>
+            <button id="clear-path" class="w-14 h-14 bg-error text-white rounded-full shadow-fab flex items-center justify-center hover:bg-red-600 transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+            <button id="reset-motion" class="w-14 h-14 bg-warning text-white rounded-full shadow-fab flex items-center justify-center hover:bg-orange-600 transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Enhanced Bottom Sheet with Scroll -->
+        <div class="relative z-20 bg-surface dark:bg-gray-800 rounded-t-3xl shadow-card max-h-96 overflow-hidden">
+            <!-- Bottom Sheet Handle -->
+            <div class="flex justify-center pt-3 pb-2">
+                <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            </div>
+            
+            <!-- Scrollable content -->
+            <div class="px-6 pb-6 max-h-80 overflow-y-auto">
+                <!-- Action Buttons Row -->
+                <div class="flex space-x-3 mb-6">
+                    <button id="start-simulation" class="flex-1 bg-primary dark:bg-white dark:text-black text-white py-4 rounded-xl font-semibold text-base shadow-card hover:bg-gray-800 dark:hover:bg-gray-100 transition-all" disabled>
+                        Set Path First
+                    </button>
+                    <button id="play-pause" class="flex-1 bg-success text-white py-4 rounded-xl font-semibold text-base shadow-card hover:bg-green-600 transition-all hidden">
+                        ▶ Play
+                    </button>
+                </div>
+
+                <!-- Enhanced Stats Cards -->
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-secondary dark:text-blue-400" id="current-speed">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Speed (m/s)</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-accent dark:text-cyan-400" id="distance-traveled">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Distance (m)</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-warning dark:text-orange-400" id="current-acceleration">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Acceleration (m/s²)</div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-success dark:text-green-400" id="progress-percent">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Progress</div>
+                    </div>
+                </div>
+
+                <!-- Waypoint Management -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-gray-700 dark:text-gray-300 font-medium">🎯 Waypoints</span>
+                        <button id="add-waypoint" class="px-3 py-1 bg-primary text-white rounded-lg text-sm hover:bg-primary/80 transition-colors">+ Add Point</button>
+                    </div>
+                    <div id="waypoint-list" class="space-y-2 max-h-32 overflow-y-auto">
+                        <!-- Waypoints will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Live Graphs Section -->
+                <div class="mb-4">
+                    <button id="graphs-toggle" class="flex items-center justify-between w-full text-left text-gray-700 dark:text-gray-300 font-medium mb-3">
+                        <span>📊 Live Graphs</span>
+                        <svg id="graphs-chevron" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <div id="graphs-panel" class="space-y-3">
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Velocity vs Time</div>
+                            <canvas id="velocity-graph" width="280" height="80" class="w-full h-20 bg-white dark:bg-gray-600 rounded"></canvas>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl">
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Distance vs Displacement</div>
+                            <div class="flex justify-between text-xs">
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-blue-500" id="displacement-value">0</div>
+                                    <div class="text-gray-500">Displacement (m)</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-orange-500" id="path-length-value">0</div>
+                                    <div class="text-gray-500">Path Length (m)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mb-4">
+                    <div id="progress-bar" class="bg-primary dark:bg-white h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Enhanced Settings -->
+                <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                    <button id="settings-toggle" class="flex items-center justify-between w-full text-left text-gray-700 dark:text-gray-300 font-medium mb-3">
+                        <span>⚙️ Physics Settings</span>
+                        <svg id="settings-chevron" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    
+                    <div id="settings-panel" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Initial Speed (m/s)</label>
+                                <input type="number" id="initial-speed" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-white" value="10" min="0" max="50" step="0.1">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Acceleration (m/s²)</label>
+                                <input type="number" id="acceleration" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-white" value="0" min="-10" max="10" step="0.1">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Scale</label>
+                                <select id="time-scale" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-white">
+                                    <option value="0.25">0.25× Slow</option>
+                                    <option value="0.5">0.5× Half</option>
+                                    <option value="1" selected>1× Real-time</option>
+                                    <option value="2">2× Double</option>
+                                    <option value="4">4× Fast</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Friction (β)</label>
+                                <input type="number" id="friction" class="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-base focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-white" value="0" min="0" max="2" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <!-- Stadium Info Card -->
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stadium Information</div>
+                            <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                <div class="flex justify-between">
+                                    <span>Field:</span>
+                                    <span id="stadium-name">Camp Nou</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Dimensions:</span>
+                                    <span id="stadium-dimensions">105m × 68m</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Surface:</span>
+                                    <span id="stadium-surface">Grass</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Altitude:</span>
+                                    <span id="stadium-altitude">12m</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Path Info Card -->
+                        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Path Information</div>
+                            <div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                <div class="flex justify-between">
+                                    <span>Waypoints:</span>
+                                    <span id="waypoint-count">0</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Total Distance:</span>
+                                    <span id="path-distance">0 m</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>ETA:</span>
+                                    <span id="eta-value">-- s</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enhanced Legend -->
+        <div class="absolute bottom-4 left-4 bg-surface dark:bg-gray-700 p-3 rounded-lg shadow-card z-10">
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-success rounded-full"></div>
+                    <span class="text-gray-600 dark:text-gray-300">Start</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-error rounded-full"></div>
+                    <span class="text-gray-600 dark:text-gray-300">End</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-primary rounded-full"></div>
+                    <span class="text-gray-600 dark:text-gray-300">Player</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-1 bg-secondary rounded"></div>
+                    <span class="text-gray-600 dark:text-gray-300">Path</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-1 bg-accent rounded opacity-60"></div>
+                    <span class="text-gray-600 dark:text-gray-300">Trail</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-1 bg-orange-500 rounded"></div>
+                    <span class="text-gray-600 dark:text-gray-300">Vector</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        /**
+         * Football Physics Motion Visualizer - Enhanced with Multiple Waypoints
+         * Features: Motion trails, live graphs, football-specific presets, time scrubber, data export, multiple waypoints
+         */
+        
+        // ============================================================================
+        // DOM ELEMENT REFERENCES
+        // ============================================================================
+        
+        const statusText = document.getElementById('status-text');
+        const instructionText = document.getElementById('instruction-text');
+        const pathDistanceDisplay = document.getElementById('path-distance');
+        const etaDisplay = document.getElementById('eta-display');
+        const etaValue = document.getElementById('eta-value');
+        
+        const clearPathBtn = document.getElementById('clear-path');
+        const exportDataBtn = document.getElementById('export-data');
+        const fieldScaleSelect = document.getElementById('field-scale');
+        const initialSpeedInput = document.getElementById('initial-speed');
+        const accelerationInput = document.getElementById('acceleration');
+        const frictionInput = document.getElementById('friction');
+        const timeScaleSelect = document.getElementById('time-scale');
+        const startSimulationBtn = document.getElementById('start-simulation');
+        const addWaypointBtn = document.getElementById('add-waypoint');
+        const waypointList = document.getElementById('waypoint-list');
+        const waypointCount = document.getElementById('waypoint-count');
+        
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsChevron = document.getElementById('settings-chevron');
+        
+        const graphsToggle = document.getElementById('graphs-toggle');
+        const graphsPanel = document.getElementById('graphs-panel');
+        const graphsChevron = document.getElementById('graphs-chevron');
+        
+        const timerDisplay = document.getElementById('timer-display');
+        const currentSpeedDisplay = document.getElementById('current-speed');
+        const distanceTraveledDisplay = document.getElementById('distance-traveled');
+        const currentAccelerationDisplay = document.getElementById('current-acceleration');
+        const progressPercent = document.getElementById('progress-percent');
+        const playPauseBtn = document.getElementById('play-pause');
+        const resetMotionBtn = document.getElementById('reset-motion');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const motionMap = document.getElementById('motionMap');
+        const coordinatesDisplay = document.getElementById('coordinates');
+        const ctx = motionMap.getContext('2d');
+        
+        // Stadium info displays
+        const stadiumName = document.getElementById('stadium-name');
+        const stadiumDimensions = document.getElementById('stadium-dimensions');
+        const stadiumSurface = document.getElementById('stadium-surface');
+        const stadiumAltitude = document.getElementById('stadium-altitude');
+        
+        // Enhanced controls
+        const timeScrubber = document.getElementById('time-scrubber');
+        const timeSlider = document.getElementById('time-slider');
+        const timeBackward = document.getElementById('time-backward');
+        const timeForward = document.getElementById('time-forward');
+        const maxTimeDisplay = document.getElementById('max-time');
+        
+        const showTrail = document.getElementById('show-trail');
+        const showVelocity = document.getElementById('show-velocity');
+        const showGrid = document.getElementById('show-grid');
+        
+        // Graph canvases
+        const velocityGraph = document.getElementById('velocity-graph');
+        const velocityCtx = velocityGraph.getContext('2d');
+        
+        const displacementValue = document.getElementById('displacement-value');
+        const pathLengthValue = document.getElementById('path-length-value');
+        
+        // ============================================================================
+        // ENHANCED FOOTBALL STADIUM DIMENSIONS
+        // ============================================================================
+        
+        const stadiumDimensions = {
+            'camp-nou': { width: 105, height: 68, name: 'Camp Nou', surface: 'grass', altitude: 12 },
+            'wembley': { width: 105, height: 68, name: 'Wembley', surface: 'grass', altitude: 35 },
+            'old-trafford': { width: 106, height: 68, name: 'Old Trafford', surface: 'grass', altitude: 59 },
+            'maracana': { width: 104, height: 69, name: 'Maracanã', surface: 'grass', altitude: 13 },
+            'allianz': { width: 105, height: 68, name: 'Allianz Arena', surface: 'artificial', altitude: 520 },
+            'penalty-area': { width: 40.3, height: 16.5, name: 'Penalty Area', surface: 'grass', altitude: 0 },
+            'goal-area': { width: 18.3, height: 5.5, name: 'Goal Area', surface: 'grass', altitude: 0 },
+            'center-circle': { width: 18.3, height: 18.3, name: 'Center Circle', surface: 'grass', altitude: 0 }
+        };
+        
+        // ============================================================================
+        // ENHANCED STATE MANAGEMENT WITH WAYPOINTS
+        // ============================================================================
+        
+        let waypoints = []; // Array of {x, y, id} objects
+        let pathSegments = []; // Calculated path segments between waypoints
+        let pathLength = 0;
+        let objectPosition = { x: 0, y: 0 };
+        let currentWaypointIndex = 0; // Which segment the object is currently on
+        
+        let isSimulationRunning = false;
+        let isPaused = false;
+        let startTime = 0;
+        let pausedTime = 0;
+        let animationFrame = null;
+        
+        let initialSpeed = 10;
+        let acceleration = 0;
+        let friction = 0;
+        let timeScale = 1;
+        let currentField = stadiumDimensions['camp-nou'];
+        
+        let mapWidth, mapHeight;
+        let settingsExpanded = false;
+        let graphsExpanded = false;
+        
+        // Enhanced features
+        let motionTrail = [];
+        let velocityData = [];
+        let simulationData = [];
+        let maxRecordedTime = 0;
+        let isReplaying = false;
+        let nextWaypointId = 1;
+        
+        // Touch handling variables
+        let touchStartTime = 0;
+        let hasMoved = false;
+        
+        // Football-specific physics presets
+        const physicsPresets = {
+            constant: { speed: 8, acceleration: 0, friction: 0, description: "Jogging pace" },
+            acceleration: { speed: 5, acceleration: 4, friction: 0, description: "Sprint acceleration" },
+            deceleration: { speed: 15, acceleration: -3, friction: 0, description: "Slowing down" },
+            penalty: { speed: 25, acceleration: 0, friction: 0.2, description: "Penalty kick" },
+            throw: { speed: 12, acceleration: -1, friction: 0.1, description: "Throw-in motion" }
+        };
+        
+        // ============================================================================
+        // INITIALIZATION AND EVENT LISTENERS
+        // ============================================================================
+        
+        function init() {
+            handleWindowResize();
+            updatePhysicsParams();
+            updateFieldScale();
+            
+            // Initially hide collapsible sections
+            settingsPanel.style.display = 'none';
+            graphsPanel.style.display = 'none';
+            
+            setupEventListeners();
+            drawMap();
+        }
+        
+        function setupEventListeners() {
+            // Existing listeners
+            clearPathBtn.addEventListener('click', clearPath);
+            exportDataBtn.addEventListener('click', exportData);
+            startSimulationBtn.addEventListener('click', startSimulation);
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            resetMotionBtn.addEventListener('click', resetMotion);
+            settingsToggle.addEventListener('click', () => toggleSection('settings'));
+            graphsToggle.addEventListener('click', () => toggleSection('graphs'));
+            addWaypointBtn.addEventListener('click', enableWaypointMode);
+            
+            // Map interactions
+            motionMap.addEventListener('click', handleMapClick);
+            motionMap.addEventListener('mousemove', updateCoordinates);
+            motionMap.addEventListener('touchstart', handleTouchStart);
+            motionMap.addEventListener('touchmove', handleTouchMove);
+            motionMap.addEventListener('touchend', handleTouchEnd);
+            
+            // Controls
+            fieldScaleSelect.addEventListener('change', updateFieldScale);
+            initialSpeedInput.addEventListener('input', updatePhysicsParams);
+            accelerationInput.addEventListener('input', updatePhysicsParams);
+            frictionInput.addEventListener('input', updatePhysicsParams);
+            timeScaleSelect.addEventListener('change', updatePhysicsParams);
+            
+            // Time scrubber
+            timeSlider.addEventListener('input', handleTimeSlider);
+            timeBackward.addEventListener('click', () => scrubTime(-1));
+            timeForward.addEventListener('click', () => scrubTime(1));
+            
+            // Visual aids
+            showTrail.addEventListener('change', drawMap);
+            showVelocity.addEventListener('change', drawMap);
+            showGrid.addEventListener('change', drawMap);
+            
+            // Physics presets
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+            });
+            
+            window.addEventListener('resize', handleWindowResize);
+        }
+        
+        // ============================================================================
+        // WAYPOINT MANAGEMENT FUNCTIONS
+        // ============================================================================
+        
+        let isWaypointMode = false;
+        
+        function enableWaypointMode() {
+            isWaypointMode = true;
+            instructionText.textContent = 'Click anywhere on the field to add waypoints';
+            statusText.textContent = 'Adding waypoints';
+            addWaypointBtn.textContent = 'Stop Adding';
+            addWaypointBtn.onclick = disableWaypointMode;
+        }
+        
+        function disableWaypointMode() {
+            isWaypointMode = false;
+            instructionText.textContent = waypoints.length > 1 ? 'Path ready! Start simulation' : 'Add more waypoints or choose a preset';
+            statusText.textContent = waypoints.length > 1 ? 'Ready to simulate' : 'Setting waypoints';
+            addWaypointBtn.textContent = '+ Add Point';
+            addWaypointBtn.onclick = enableWaypointMode;
+        }
+        
+        function addWaypoint(x, y) {
+            const waypoint = {
+                x: Math.round(x * 10) / 10,
+                y: Math.round(y * 10) / 10,
+                id: nextWaypointId++
+            };
+            
+            waypoints.push(waypoint);
+            updateWaypointList();
+            calculatePathSegments();
+            updateUI();
+            drawMap();
+        }
+        
+        function removeWaypoint(id) {
+            waypoints = waypoints.filter(wp => wp.id !== id);
+            updateWaypointList();
+            calculatePathSegments();
+            updateUI();
+            drawMap();
+        }
+        
+        function updateWaypointList() {
+            waypointList.innerHTML = '';
+            waypointCount.textContent = waypoints.length;
+            
+            waypoints.forEach((waypoint, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-gray-100 dark:bg-gray-600 p-2 rounded-lg';
+                
+                const type = index === 0 ? 'Start' : index === waypoints.length - 1 ? 'End' : `Point ${index}`;
+                const color = index === 0 ? 'text-green-600' : index === waypoints.length - 1 ? 'text-red-600' : 'text-blue-600';
+                
+                div.innerHTML = `
+                    <div class="text-sm">
+                        <span class="font-medium ${color}">${type}:</span>
+                        <span class="text-gray-600 dark:text-gray-300">(${waypoint.x}m, ${waypoint.y}m)</span>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700 text-sm" onclick="removeWaypoint(${waypoint.id})">Remove</button>
+                `;
+                
+                waypointList.appendChild(div);
+            });
+        }
+        
+        function calculatePathSegments() {
+            pathSegments = [];
+            pathLength = 0;
+            
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const start = waypoints[i];
+                const end = waypoints[i + 1];
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                pathSegments.push({
+                    start,
+                    end,
+                    distance,
+                    startDistance: pathLength // Cumulative distance to this segment start
+                });
+                
+                pathLength += distance;
+            }
+            
+            pathDistanceDisplay.textContent = `${pathLength.toFixed(1)} m`;
+            calculateETA();
+        }
+        
+        // ============================================================================
+        // ENHANCED UI FUNCTIONS
+        // ============================================================================
+        
+        function toggleSection(section) {
+            if (section === 'settings') {
+                settingsExpanded = !settingsExpanded;
+                settingsPanel.style.display = settingsExpanded ? 'block' : 'none';
+                settingsChevron.style.transform = settingsExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+            } else if (section === 'graphs') {
+                graphsExpanded = !graphsExpanded;
+                graphsPanel.style.display = graphsExpanded ? 'block' : 'none';
+                graphsChevron.style.transform = graphsExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+        
+        function applyPreset(presetName) {
+            const preset = physicsPresets[presetName];
+            if (!preset) return;
+            
+            // Clear existing path
+            clearPath();
+            
+            // Set preset values
+            initialSpeedInput.value = preset.speed;
+            accelerationInput.value = preset.acceleration;
+            frictionInput.value = preset.friction;
+            updatePhysicsParams();
+            
+            // Set football-specific paths based on preset
+            if (presetName === 'penalty') {
+                // From penalty spot to goal
+                waypoints = [
+                    { x: 0, y: -11, id: nextWaypointId++ }, // 11m from goal line
+                    { x: 0, y: -currentField.height/2 + 2, id: nextWaypointId++ } // Just in front of goal
+                ];
+            } else if (presetName === 'throw') {
+                // Throw-in from sideline
+                waypoints = [
+                    { x: currentField.width/2 - 1, y: 10, id: nextWaypointId++ },
+                    { x: 20, y: 0, id: nextWaypointId++ }
+                ];
+            } else {
+                // General field movement
+                waypoints = [
+                    { x: -currentField.width/4, y: 0, id: nextWaypointId++ },
+                    { x: currentField.width/4, y: 0, id: nextWaypointId++ }
+                ];
+            }
+            
+            updateWaypointList();
+            calculatePathSegments();
+            updateUI();
+            drawMap();
+            
+            instructionText.textContent = `${preset.description} preset applied!`;
+            statusText.textContent = 'Preset ready';
+        }
+        
+        function calculateETA() {
+            if (pathLength > 0 && initialSpeed > 0) {
+                const avgSpeed = acceleration !== 0 ? 
+                    (initialSpeed + Math.sqrt(initialSpeed * initialSpeed + 2 * acceleration * pathLength)) / 2 :
+                    initialSpeed;
+                
+                const eta = pathLength / avgSpeed;
+                etaDisplay.textContent = `ETA: ${eta.toFixed(1)}s`;
+                etaValue.textContent = `${eta.toFixed(1)} s`;
+            } else {
+                etaDisplay.textContent = 'ETA: --';
+                etaValue.textContent = '-- s';
+            }
+        }
+        
+        function updateFieldScale() {
+            const selectedField = fieldScaleSelect.value;
+            currentField = stadiumDimensions[selectedField];
+            
+            // Update stadium info display
+            stadiumName.textContent = currentField.name;
+            stadiumDimensions.textContent = `${currentField.width}m × ${currentField.height}m`;
+            stadiumSurface.textContent = currentField.surface;
+            stadiumAltitude.textContent = `${currentField.altitude}m`;
+            
+            if (waypoints.length > 0) {
+                clearPath();
+            }
+            
+            drawMap();
+        }
+        
+        // ============================================================================
+        // ENHANCED SIMULATION FUNCTIONS
+        // ============================================================================
+        
+        function startSimulation() {
+            if (waypoints.length < 2) return;
+            
+            isSimulationRunning = true;
+            isPaused = false;
+            isReplaying = false;
+            startTime = performance.now();
+            pausedTime = 0;
+            objectPosition = { ...waypoints[0] };
+            currentWaypointIndex = 0;
+            
+            // Reset data arrays
+            motionTrail = [{ ...waypoints[0] }];
+            velocityData = [];
+            simulationData = [];
+            maxRecordedTime = 0;
+            
+            startSimulationBtn.style.display = 'none';
+            playPauseBtn.style.display = 'block';
+            playPauseBtn.textContent = '⏸ Pause';
+            statusText.textContent = 'Simulation running';
+            instructionText.textContent = 'Player is moving!';
+            
+            timeScrubber.classList.remove('hidden');
+            
+            animate();
+        }
+        
+        function animate() {
+            if (!isSimulationRunning || isPaused || isReplaying) return;
+            
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - startTime) / 1000 * timeScale;
+            
+            // Enhanced physics with friction
+            const frictionForce = friction * Math.sign(initialSpeed + acceleration * elapsedTime);
+            const effectiveAcceleration = acceleration - frictionForce;
+            
+            const currentSpeed = Math.max(0, initialSpeed + effectiveAcceleration * elapsedTime);
+            const distanceTraveled = initialSpeed * elapsedTime + 0.5 * effectiveAcceleration * elapsedTime * elapsedTime;
+            
+            // Calculate position along waypoint path
+            updatePositionAlongPath(distanceTraveled);
+            
+            // Record data
+            const dataPoint = {
+                time: elapsedTime,
+                speed: currentSpeed,
+                distance: distanceTraveled,
+                acceleration: effectiveAcceleration,
+                position: { ...objectPosition }
+            };
+            simulationData.push(dataPoint);
+            velocityData.push({ time: elapsedTime, velocity: currentSpeed });
+            
+            // Update displays
+            timerDisplay.textContent = `${elapsedTime.toFixed(2)}s`;
+            currentSpeedDisplay.textContent = currentSpeed.toFixed(1);
+            distanceTraveledDisplay.textContent = distanceTraveled.toFixed(1);
+            currentAccelerationDisplay.textContent = effectiveAcceleration.toFixed(1);
+            
+            // Calculate displacement from start
+            const displacement = Math.sqrt(
+                Math.pow(objectPosition.x - waypoints[0].x, 2) + 
+                Math.pow(objectPosition.y - waypoints[0].y, 2)
+            );
+            displacementValue.textContent = displacement.toFixed(1);
+            pathLengthValue.textContent = distanceTraveled.toFixed(1);
+            
+            if (pathLength > 0) {
+                const progress = Math.min(distanceTraveled / pathLength, 1);
+                
+                // Add to trail
+                if (motionTrail.length === 0 || 
+                    Math.abs(objectPosition.x - motionTrail[motionTrail.length - 1].x) > 0.1 ||
+                    Math.abs(objectPosition.y - motionTrail[motionTrail.length - 1].y) > 0.1) {
+                    motionTrail.push({ ...objectPosition });
+                }
+                
+                progressBar.style.width = `${progress * 100}%`;
+                progressPercent.textContent = `${(progress * 100).toFixed(0)}%`;
+                
+                // Update time scrubber
+                maxRecordedTime = elapsedTime;
+                timeSlider.max = maxRecordedTime * 100;
+                timeSlider.value = maxRecordedTime * 100;
+                maxTimeDisplay.textContent = `${maxRecordedTime.toFixed(1)}s`;
+                
+                if (progress >= 1 || currentSpeed <= 0.01) {
+                    completeSimulation();
+                    return;
+                }
+            }
+            
+            updateGraphs();
+            drawMap();
+            animationFrame = requestAnimationFrame(animate);
+        }
+        
+        function updatePositionAlongPath(distanceTraveled) {
+            if (pathSegments.length === 0) return;
+            
+            // Find which segment the object should be on
+            let currentSegment = null;
+            for (let i = 0; i < pathSegments.length; i++) {
+                const segment = pathSegments[i];
+                if (distanceTraveled >= segment.startDistance && 
+                    distanceTraveled <= segment.startDistance + segment.distance) {
+                    currentSegment = segment;
+                    currentWaypointIndex = i;
+                    break;
+                }
+            }
+            
+            // If we're past the last segment, stay at the end
+            if (!currentSegment && pathSegments.length > 0) {
+                currentSegment = pathSegments[pathSegments.length - 1];
+                currentWaypointIndex = pathSegments.length - 1;
+            }
+            
+            if (currentSegment) {
+                // Calculate progress along this segment
+                const segmentProgress = Math.min(
+                    (distanceTraveled - currentSegment.startDistance) / currentSegment.distance,
+                    1
+                );
+                
+                // Interpolate position
+                const dx = currentSegment.end.x - currentSegment.start.x;
+                const dy = currentSegment.end.y - currentSegment.start.y;
+                
+                objectPosition.x = currentSegment.start.x + dx * segmentProgress;
+                objectPosition.y = currentSegment.start.y + dy * segmentProgress;
+            }
+        }
+        
+        function completeSimulation() {
+            isSimulationRunning = false;
+            startSimulationBtn.style.display = 'block';
+            playPauseBtn.style.display = 'none';
+            statusText.textContent = 'Simulation complete!';
+            instructionText.textContent = 'Use time scrubber to review';
+            drawMap();
+        }
+        
+        // ============================================================================
+        // COORDINATE TRANSFORMATION FUNCTIONS (updated for field dimensions)
+        // ============================================================================
+        
+        function screenToGrid(screenX, screenY) {
+            const rect = motionMap.getBoundingClientRect();
+            const relativeX = (screenX - rect.left) / rect.width;
+            const relativeY = (screenY - rect.top) / rect.height;
+            
+            const x = (relativeX - 0.5) * currentField.width;
+            const y = (0.5 - relativeY) * currentField.height;
+            
+            return { 
+                x: Math.round(x * 10) / 10, // Round to 1 decimal place
+                y: Math.round(y * 10) / 10 
+            };
+        }
+        
+        function gridToScreen(gridX, gridY) {
+            const relativeX = (gridX / currentField.width) + 0.5;
+            const relativeY = 0.5 - (gridY / currentField.height);
+            
+            const screenX = relativeX * mapWidth;
+            const screenY = relativeY * mapHeight;
+            
+            return { x: screenX, y: screenY };
+        }
+        
+        // ============================================================================
+        // ENHANCED DRAWING FUNCTIONS (updated for football field with proper goals)
+        // ============================================================================
+        
+        function drawMap() {
+            ctx.clearRect(0, 0, mapWidth, mapHeight);
+            
+            drawFootballField();
+            
+            if (waypoints.length > 1) {
+                drawPathLines();
+            }
+            
+            if (showTrail.checked && motionTrail.length > 1) {
+                drawMotionTrail();
+            }
+            
+            drawWaypoints();
+            drawMovingObject();
+        }
+        
+        function drawFootballField() {
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            // Field background with different colors based on surface type
+            if (currentField.surface === 'artificial') {
+                ctx.fillStyle = isDark ? '#10B981' : '#34D399'; // Slightly different green for artificial
+            } else {
+                ctx.fillStyle = isDark ? '#065F46' : '#22C55E'; // Natural grass green
+            }
+            ctx.fillRect(0, 0, mapWidth, mapHeight);
+            
+            if (showGrid.checked) {
+                drawFieldLines();
+            }
+        }
+        
+        function drawFieldLines() {
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 2;
+            
+            // Field boundary
+            const corners = [
+                gridToScreen(-currentField.width/2, currentField.height/2),
+                gridToScreen(currentField.width/2, currentField.height/2),
+                gridToScreen(currentField.width/2, -currentField.height/2),
+                gridToScreen(-currentField.width/2, -currentField.height/2)
+            ];
+            
+            ctx.beginPath();
+            ctx.moveTo(corners[0].x, corners[0].y);
+            for (let i = 1; i < corners.length; i++) {
+                ctx.lineTo(corners[i].x, corners[i].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Center line
+            const centerTop = gridToScreen(0, currentField.height/2);
+            const centerBottom = gridToScreen(0, -currentField.height/2);
+            ctx.beginPath();
+            ctx.moveTo(centerTop.x, centerTop.y);
+            ctx.lineTo(centerBottom.x, centerBottom.y);
+            ctx.stroke();
+            
+            // Center circle (if field is large enough)
+            if (currentField.width >= 50) {
+                const centerPoint = gridToScreen(0, 0);
+                const circleRadius = (9.15 / currentField.width) * mapWidth;
+                ctx.beginPath();
+                ctx.arc(centerPoint.x, centerPoint.y, circleRadius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Center spot
+                ctx.beginPath();
+                ctx.arc(centerPoint.x, centerPoint.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Goal areas and penalty areas (for full-size fields)
+            if (currentField.width >= 100) {
+                drawGoalAreas();
+                drawPenaltyAreas();
+                drawGoals(); // Fixed goal positioning
+            }
+            
+            // Coordinate system
+            drawCoordinateSystem();
+        }
+        
+        function drawGoalAreas() {
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 1;
+            
+            // Goal area dimensions: 18.3m × 5.5m
+            const goalAreaWidth = 18.3;
+            const goalAreaDepth = 5.5;
+            
+            // Top goal area
+            const topGoalArea = [
+                gridToScreen(-goalAreaWidth/2, currentField.height/2),
+                gridToScreen(goalAreaWidth/2, currentField.height/2),
+                gridToScreen(goalAreaWidth/2, currentField.height/2 - goalAreaDepth),
+                gridToScreen(-goalAreaWidth/2, currentField.height/2 - goalAreaDepth)
+            ];
+            
+            ctx.beginPath();
+            ctx.moveTo(topGoalArea[0].x, topGoalArea[0].y);
+            for (let i = 1; i < topGoalArea.length; i++) {
+                ctx.lineTo(topGoalArea[i].x, topGoalArea[i].y);
+            }
+            ctx.stroke();
+            
+            // Bottom goal area
+            const bottomGoalArea = [
+                gridToScreen(-goalAreaWidth/2, -currentField.height/2),
+                gridToScreen(goalAreaWidth/2, -currentField.height/2),
+                gridToScreen(goalAreaWidth/2, -currentField.height/2 + goalAreaDepth),
+                gridToScreen(-goalAreaWidth/2, -currentField.height/2 + goalAreaDepth)
+            ];
+            
+            ctx.beginPath();
+            ctx.moveTo(bottomGoalArea[0].x, bottomGoalArea[0].y);
+            for (let i = 1; i < bottomGoalArea.length; i++) {
+                ctx.lineTo(bottomGoalArea[i].x, bottomGoalArea[i].y);
+            }
+            ctx.stroke();
+        }
+        
+        function drawPenaltyAreas() {
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 1;
+            
+            // Penalty area dimensions: 40.3m × 16.5m
+            const penaltyAreaWidth = 40.3;
+            const penaltyAreaDepth = 16.5;
+            
+            // Top penalty area
+            const topPenaltyArea = [
+                gridToScreen(-penaltyAreaWidth/2, currentField.height/2),
+                gridToScreen(penaltyAreaWidth/2, currentField.height/2),
+                gridToScreen(penaltyAreaWidth/2, currentField.height/2 - penaltyAreaDepth),
+                gridToScreen(-penaltyAreaWidth/2, currentField.height/2 - penaltyAreaDepth)
+            ];
+            
+            ctx.beginPath();
+            ctx.moveTo(topPenaltyArea[2].x, topPenaltyArea[2].y);
+            ctx.lineTo(topPenaltyArea[3].x, topPenaltyArea[3].y);
+            ctx.lineTo(topPenaltyArea[0].x, topPenaltyArea[0].y);
+            ctx.lineTo(topPenaltyArea[1].x, topPenaltyArea[1].y);
+            ctx.lineTo(topPenaltyArea[2].x, topPenaltyArea[2].y);
+            ctx.stroke();
+            
+            // Bottom penalty area
+            const bottomPenaltyArea = [
+                gridToScreen(-penaltyAreaWidth/2, -currentField.height/2),
+                gridToScreen(penaltyAreaWidth/2, -currentField.height/2),
+                gridToScreen(penaltyAreaWidth/2, -currentField.height/2 + penaltyAreaDepth),
+                gridToScreen(-penaltyAreaWidth/2, -currentField.height/2 + penaltyAreaDepth)
+            ];
+            
+            ctx.beginPath();
+            ctx.moveTo(bottomPenaltyArea[2].x, bottomPenaltyArea[2].y);
+            ctx.lineTo(bottomPenaltyArea[3].x, bottomPenaltyArea[3].y);
+            ctx.lineTo(bottomPenaltyArea[0].x, bottomPenaltyArea[0].y);
+            ctx.lineTo(bottomPenaltyArea[1].x, bottomPenaltyArea[1].y);
+            ctx.lineTo(bottomPenaltyArea[2].x, bottomPenaltyArea[2].y);
+            ctx.stroke();
+            
+            // Penalty spots
+            const penaltySpotTop = gridToScreen(0, currentField.height/2 - 11);
+            const penaltySpotBottom = gridToScreen(0, -currentField.height/2 + 11);
+            
+            ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(penaltySpotTop.x, penaltySpotTop.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(penaltySpotBottom.x, penaltySpotBottom.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // FIXED: Proper goal positioning
+        function drawGoals() {
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 1.0)';
+            ctx.lineWidth = 3;
+            
+            // Goal dimensions: 7.32m wide × 2.44m high
+            const goalWidth = 7.32;
+            const goalHeight = 2.44; // This represents depth extending beyond field
+            
+            // Top goal (at y = currentField.height/2)
+            const topGoalLeft = gridToScreen(-goalWidth/2, currentField.height/2);
+            const topGoalRight = gridToScreen(goalWidth/2, currentField.height/2);
+            const topGoalBackLeft = gridToScreen(-goalWidth/2, currentField.height/2 + goalHeight);
+            const topGoalBackRight = gridToScreen(goalWidth/2, currentField.height/2 + goalHeight);
+            
+            // Draw top goal
+            ctx.beginPath();
+            ctx.moveTo(topGoalLeft.x, topGoalLeft.y);
+            ctx.lineTo(topGoalBackLeft.x, topGoalBackLeft.y);
+            ctx.lineTo(topGoalBackRight.x, topGoalBackRight.y);
+            ctx.lineTo(topGoalRight.x, topGoalRight.y);
+            ctx.stroke();
+            
+            // Goal posts (top goal)
+            ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 1.0)';
+            ctx.beginPath();
+            ctx.arc(topGoalLeft.x, topGoalLeft.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(topGoalRight.x, topGoalRight.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Bottom goal (at y = -currentField.height/2)
+            const bottomGoalLeft = gridToScreen(-goalWidth/2, -currentField.height/2);
+            const bottomGoalRight = gridToScreen(goalWidth/2, -currentField.height/2);
+            const bottomGoalBackLeft = gridToScreen(-goalWidth/2, -currentField.height/2 - goalHeight);
+            const bottomGoalBackRight = gridToScreen(goalWidth/2, -currentField.height/2 - goalHeight);
+            
+            // Draw bottom goal
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 1.0)';
+            ctx.beginPath();
+            ctx.moveTo(bottomGoalLeft.x, bottomGoalLeft.y);
+            ctx.lineTo(bottomGoalBackLeft.x, bottomGoalBackLeft.y);
+            ctx.lineTo(bottomGoalBackRight.x, bottomGoalBackRight.y);
+            ctx.lineTo(bottomGoalRight.x, bottomGoalRight.y);
+            ctx.stroke();
+            
+            // Goal posts (bottom goal)
+            ctx.beginPath();
+            ctx.arc(bottomGoalLeft.x, bottomGoalLeft.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(bottomGoalRight.x, bottomGoalRight.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawCoordinateSystem() {
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)';
+            ctx.font = '10px system-ui, -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Draw major coordinate labels
+            const labelStep = currentField.width > 50 ? 20 : 10;
+            
+            for (let x = -Math.floor(currentField.width/2/labelStep)*labelStep; x <= Math.floor(currentField.width/2/labelStep)*labelStep; x += labelStep) {
+                if (x === 0) continue;
+                const screenPos = gridToScreen(x, 0);
+                if (screenPos.x > 20 && screenPos.x < mapWidth - 20) {
+                    ctx.fillText(`${x}m`, screenPos.x, mapHeight - 15);
+                }
+            }
+            
+            for (let y = -Math.floor(currentField.height/2/labelStep)*labelStep; y <= Math.floor(currentField.height/2/labelStep)*labelStep; y += labelStep) {
+                if (y === 0) continue;
+                const screenPos = gridToScreen(0, y);
+                if (screenPos.y > 20 && screenPos.y < mapHeight - 20) {
+                    ctx.fillText(`${y}m`, 15, screenPos.y);
+                }
+            }
+        }
+        
+        function drawPathLines() {
+            if (pathSegments.length === 0) return;
+            
+            ctx.setLineDash([8, 4]);
+            ctx.strokeStyle = '#1976D2';
+            ctx.lineWidth = 3;
+            
+            pathSegments.forEach(segment => {
+                const startScreen = gridToScreen(segment.start.x, segment.start.y);
+                const endScreen = gridToScreen(segment.end.x, segment.end.y);
+                
+                ctx.beginPath();
+                ctx.moveTo(startScreen.x, startScreen.y);
+                ctx.lineTo(endScreen.x, endScreen.y);
+                ctx.stroke();
+                
+                // Arrow for direction
+                const angle = Math.atan2(endScreen.y - startScreen.y, endScreen.x - startScreen.x);
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#1976D2';
+                ctx.beginPath();
+                ctx.moveTo(endScreen.x, endScreen.y);
+                ctx.lineTo(endScreen.x - 12 * Math.cos(angle - Math.PI/6), endScreen.y - 12 * Math.sin(angle - Math.PI/6));
+                ctx.lineTo(endScreen.x - 12 * Math.cos(angle + Math.PI/6), endScreen.y - 12 * Math.sin(angle + Math.PI/6));
+                ctx.closePath();
+                ctx.fill();
+                ctx.setLineDash([8, 4]);
+            });
+            
+            ctx.setLineDash([]);
+        }
+        
+        function drawWaypoints() {
+            waypoints.forEach((waypoint, index) => {
+                const screenPos = gridToScreen(waypoint.x, waypoint.y);
+                
+                // Different colors for start, intermediate, and end points
+                let color, label;
+                if (index === 0) {
+                    color = '#4CAF50'; // Green for start
+                    label = 'S';
+                } else if (index === waypoints.length - 1) {
+                    color = '#F44336'; // Red for end
+                    label = 'E';
+                } else {
+                    color = '#FF9800'; // Orange for intermediate waypoints
+                    label = index.toString();
+                }
+                
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, screenPos.x, screenPos.y);
+            });
+        }
+        
+        function drawMovingObject() {
+            if (isSimulationRunning || isReplaying || (waypoints.length > 0 && !isSimulationRunning)) {
+                const pos = (isSimulationRunning || isReplaying) ? objectPosition : waypoints[0];
+                const screenPos = gridToScreen(pos.x, pos.y);
+                const isDark = document.documentElement.classList.contains('dark');
+                
+                // Enhanced object with glow effect
+                const gradient = ctx.createRadialGradient(screenPos.x, screenPos.y, 5, screenPos.x, screenPos.y, 25);
+                gradient.addColorStop(0, isDark ? 'rgba(93, 92, 222, 0.3)' : 'rgba(93, 92, 222, 0.2)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, 25, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#5D5CDE';
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = isDark ? '#FFFFFF' : '#FFFFFF';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                if (showVelocity.checked && (isSimulationRunning || isReplaying) && pathSegments.length > 0) {
+                    drawVelocityVector(screenPos.x, screenPos.y);
+                }
+            }
+        }
+        
+        function drawVelocityVector(x, y) {
+            const currentData = simulationData[simulationData.length - 1];
+            if (!currentData || currentData.speed <= 0 || currentWaypointIndex >= pathSegments.length) return;
+            
+            const currentSegment = pathSegments[currentWaypointIndex];
+            const dx = currentSegment.end.x - currentSegment.start.x;
+            const dy = currentSegment.end.y - currentSegment.start.y;
+            const segmentLength = Math.sqrt(dx * dx + dy * dy);
+            
+            if (segmentLength > 0) {
+                const vectorScale = Math.min(currentData.speed * 2, currentField.width / 10);
+                const vx = (dx / segmentLength) * vectorScale;
+                const vy = (dy / segmentLength) * vectorScale;
+                
+                const vectorEnd = gridToScreen(objectPosition.x + vx, objectPosition.y + vy);
+                
+                ctx.strokeStyle = '#FF9800';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(vectorEnd.x, vectorEnd.y);
+                ctx.stroke();
+                
+                // Arrow head
+                const angle = Math.atan2(vectorEnd.y - y, vectorEnd.x - x);
+                ctx.fillStyle = '#FF9800';
+                ctx.beginPath();
+                ctx.moveTo(vectorEnd.x, vectorEnd.y);
+                ctx.lineTo(vectorEnd.x - 10 * Math.cos(angle - Math.PI/6), vectorEnd.y - 10 * Math.sin(angle - Math.PI/6));
+                ctx.lineTo(vectorEnd.x - 10 * Math.cos(angle + Math.PI/6), vectorEnd.y - 10 * Math.sin(angle + Math.PI/6));
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        function drawMotionTrail() {
+            if (motionTrail.length < 2) return;
+            
+            ctx.strokeStyle = '#00BCD4';
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.6;
+            
+            ctx.beginPath();
+            for (let i = 0; i < motionTrail.length; i++) {
+                const screenPos = gridToScreen(motionTrail[i].x, motionTrail[i].y);
+                if (i === 0) {
+                    ctx.moveTo(screenPos.x, screenPos.y);
+                } else {
+                    ctx.lineTo(screenPos.x, screenPos.y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw trail dots
+            ctx.fillStyle = '#00BCD4';
+            for (let i = 0; i < motionTrail.length; i += Math.max(1, Math.floor(motionTrail.length / 20))) {
+                const screenPos = gridToScreen(motionTrail[i].x, motionTrail[i].y);
+                ctx.beginPath();
+                ctx.arc(screenPos.x, screenPos.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 1;
+        }
+        
+        // ============================================================================
+        // UPDATED COORDINATE DISPLAY AND INTERACTION FUNCTIONS
+        // ============================================================================
+        
+        function updateCoordinates(e) {
+            const gridCoords = screenToGrid(e.clientX, e.clientY);
+            coordinatesDisplay.textContent = `X: ${gridCoords.x}m, Y: ${gridCoords.y}m`;
+        }
+        
+        function handleWindowResize() {
+            mapWidth = motionMap.offsetWidth;
+            mapHeight = motionMap.offsetHeight;
+            motionMap.width = mapWidth;
+            motionMap.height = mapHeight;
+            drawMap();
+        }
+        
+        function handleTouchStart(e) {
+            e.preventDefault();
+            touchStartTime = Date.now();
+            hasMoved = false;
+            
+            if (e.touches.length > 0) {
+                updateCoordinates(e.touches[0]);
+            }
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            hasMoved = true;
+            
+            if (e.touches.length > 0) {
+                updateCoordinates(e.touches[0]);
+            }
+        }
+        
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            if (!hasMoved && touchDuration < 500) {
+                const touch = e.changedTouches[0];
+                if (touch) {
+                    handleMapInteraction(touch);
+                }
+            }
+        }
+        
+        function handleMapClick(e) {
+            handleMapInteraction(e);
+        }
+        
+        function handleMapInteraction(e) {
+            if (isSimulationRunning) return;
+            
+            const gridCoords = screenToGrid(e.clientX, e.clientY);
+            const x = gridCoords.x;
+            const y = gridCoords.y;
+            
+            if (isWaypointMode) {
+                addWaypoint(x, y);
+                if (waypoints.length >= 2) {
+                    instructionText.textContent = `${waypoints.length} waypoints set. Add more or start simulation`;
+                } else {
+                    instructionText.textContent = 'Click to add more waypoints';
+                }
+            } else {
+                // Legacy mode: just add waypoints normally
+                addWaypoint(x, y);
+                if (waypoints.length === 1) {
+                    instructionText.textContent = 'Click to add more waypoints or start simulation';
+                } else if (waypoints.length >= 2) {
+                    instructionText.textContent = 'Path ready! Start simulation or add more waypoints';
+                    statusText.textContent = 'Ready to simulate';
+                }
+            }
+        }
+        
+        function updatePhysicsParams() {
+            initialSpeed = parseFloat(initialSpeedInput.value) || 0;
+            acceleration = parseFloat(accelerationInput.value) || 0;
+            friction = parseFloat(frictionInput.value) || 0;
+            timeScale = parseFloat(timeScaleSelect.value) || 1;
+            currentAccelerationDisplay.textContent = acceleration.toFixed(1);
+            calculateETA();
+        }
+        
+        function updateUI() {
+            const hasPath = waypoints.length >= 2;
+            startSimulationBtn.disabled = !hasPath;
+            startSimulationBtn.textContent = hasPath ? 'Start Simulation' : 'Add Waypoints First';
+            
+            if (hasPath) {
+                startSimulationBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                startSimulationBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+        
+        function clearPath() {
+            waypoints = [];
+            pathSegments = [];
+            pathLength = 0;
+            motionTrail = [];
+            velocityData = [];
+            simulationData = [];
+            currentWaypointIndex = 0;
+            nextWaypointId = 1;
+            
+            updateWaypointList();
+            pathDistanceDisplay.textContent = '0 m';
+            etaDisplay.textContent = 'ETA: --';
+            etaValue.textContent = '-- s';
+            displacementValue.textContent = '0';
+            pathLengthValue.textContent = '0';
+            
+            instructionText.textContent = 'Tap to set start point or choose a preset';
+            statusText.textContent = 'Ready to start';
+            
+            timeScrubber.classList.add('hidden');
+            updateUI();
+            drawMap();
+        }
+        
+        // Keep all the other existing functions (togglePlayPause, resetMotion, time scrubbing, graphs, etc.) unchanged
+        // ... [All other functions remain the same as in the original code]
+        
+        function togglePlayPause() {
+            if (!isSimulationRunning) return;
+            
+            if (isPaused) {
+                isPaused = false;
+                startTime = performance.now() - pausedTime;
+                playPauseBtn.textContent = '⏸ Pause';
+                statusText.textContent = 'Simulation running';
+                animate();
+            } else {
+                isPaused = true;
+                pausedTime = performance.now() - startTime;
+                playPauseBtn.textContent = '▶ Resume';
+                statusText.textContent = 'Simulation paused';
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                }
+            }
+        }
+        
+        function resetMotion() {
+            isSimulationRunning = false;
+            isPaused = false;
+            isReplaying = false;
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            
+            startSimulationBtn.style.display = 'block';
+            playPauseBtn.style.display = 'none';
+            playPauseBtn.textContent = '▶ Play';
+            
+            timerDisplay.textContent = '0.00s';
+            currentSpeedDisplay.textContent = '0';
+            distanceTraveledDisplay.textContent = '0';
+            progressPercent.textContent = '0%';
+            progressBar.style.width = '0%';
+            displacementValue.textContent = '0';
+            pathLengthValue.textContent = '0';
+            
+            // Clear graphs
+            velocityCtx.clearRect(0, 0, velocityGraph.width, velocityGraph.height);
+            
+            if (waypoints.length >= 2) {
+                statusText.textContent = 'Ready to simulate';
+                instructionText.textContent = 'Path ready! Start simulation';
+            } else {
+                statusText.textContent = 'Ready to start';
+                instructionText.textContent = 'Add waypoints or choose a preset';
+            }
+            
+            if (waypoints.length > 0) {
+                objectPosition = { ...waypoints[0] };
+                currentWaypointIndex = 0;
+            }
+            
+            motionTrail = [];
+            velocityData = [];
+            simulationData = [];
+            
+            drawMap();
+        }
+        
+        // Keep all other functions unchanged: handleTimeSlider, scrubTime, replayToTime,
+        // updateGraphs, drawVelocityGraph, exportData, showNotification, etc.
+        
+        function handleTimeSlider() {
+            if (simulationData.length === 0) return;
+            
+            const sliderValue = parseFloat(timeSlider.value);
+            const targetTime = sliderValue / 100;
+            
+            replayToTime(targetTime);
+        }
+        
+        function scrubTime(direction) {
+            const currentValue = parseFloat(timeSlider.value);
+            const step = maxRecordedTime * 5; // 5% steps
+            const newValue = Math.max(0, Math.min(maxRecordedTime * 100, currentValue + direction * step));
+            
+            timeSlider.value = newValue;
+            handleTimeSlider();
+        }
+        
+        function replayToTime(targetTime) {
+            if (simulationData.length === 0) return;
+            
+            isReplaying = true;
+            
+            // Find the closest data point
+            let closestIndex = 0;
+            for (let i = 0; i < simulationData.length; i++) {
+                if (Math.abs(simulationData[i].time - targetTime) < Math.abs(simulationData[closestIndex].time - targetTime)) {
+                    closestIndex = i;
+                }
+            }
+            
+            const dataPoint = simulationData[closestIndex];
+            
+            // Update displays
+            timerDisplay.textContent = `${dataPoint.time.toFixed(2)}s`;
+            currentSpeedDisplay.textContent = dataPoint.speed.toFixed(1);
+            distanceTraveledDisplay.textContent = dataPoint.distance.toFixed(1);
+            currentAccelerationDisplay.textContent = dataPoint.acceleration.toFixed(1);
+            
+            // Update object position
+            objectPosition = { ...dataPoint.position };
+            
+            // Update progress
+            const progress = Math.min(dataPoint.distance / pathLength, 1);
+            progressBar.style.width = `${progress * 100}%`;
+            progressPercent.textContent = `${(progress * 100).toFixed(0)}%`;
+            
+            // Update trail up to this point
+            motionTrail = [];
+            for (let i = 0; i <= closestIndex && i < simulationData.length; i += Math.max(1, Math.floor(simulationData.length / 50))) {
+                motionTrail.push({ ...simulationData[i].position });
+            }
+            
+            updateGraphs(closestIndex);
+            drawMap();
+        }
+        
+        function updateGraphs(maxIndex = -1) {
+            drawVelocityGraph(maxIndex);
+        }
+        
+        function drawVelocityGraph(maxIndex = -1) {
+            const canvas = velocityGraph;
+            const ctx = velocityCtx;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            if (velocityData.length < 2) return;
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const dataToShow = maxIndex >= 0 ? velocityData.slice(0, maxIndex + 1) : velocityData;
+            
+            // Find max values for scaling
+            const maxTime = Math.max(...dataToShow.map(d => d.time));
+            const maxVelocity = Math.max(...dataToShow.map(d => d.velocity));
+            const minVelocity = Math.min(...dataToShow.map(d => d.velocity));
+            
+            if (maxTime === 0 || maxVelocity === minVelocity) return;
+            
+            // Draw grid
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 4; i++) {
+                const y = (i / 4) * height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= 4; i++) {
+                const x = (i / 4) * width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // Draw velocity curve
+            ctx.strokeStyle = '#1976D2';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < dataToShow.length; i++) {
+                const x = (dataToShow[i].time / maxTime) * width;
+                const y = height - ((dataToShow[i].velocity - minVelocity) / (maxVelocity - minVelocity)) * height;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Draw labels
+            ctx.fillStyle = isDark ? '#D1D5DB' : '#6B7280';
+            ctx.font = '10px system-ui';
+            ctx.textAlign = 'right';
+            ctx.fillText(`${maxVelocity.toFixed(1)}`, width - 2, 12);
+            ctx.fillText(`${minVelocity.toFixed(1)}`, width - 2, height - 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(`${maxTime.toFixed(1)}s`, width - 10, height - 2);
+        }
+        
+        function exportData() {
+            if (simulationData.length === 0) {
+                showNotification('No simulation data to export');
+                return;
+            }
+            
+            let csv = 'Time (s),Position X (m),Position Y (m),Speed (m/s),Acceleration (m/s²),Distance Traveled (m)\n';
+            
+            simulationData.forEach(data => {
+                csv += `${data.time.toFixed(3)},${data.position.x.toFixed(3)},${data.position.y.toFixed(3)},${data.speed.toFixed(3)},${data.acceleration.toFixed(3)},${data.distance.toFixed(3)}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `football_physics_data_${currentField.name.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('Data exported successfully!');
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-success text-white px-4 py-2 rounded-lg shadow-fab z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Make removeWaypoint globally accessible
+        window.removeWaypoint = removeWaypoint;
+        
+        // ============================================================================
+        // APPLICATION INITIALIZATION
+        // ============================================================================
+        
+        init();
+    </script>
+</body>
+</html>
