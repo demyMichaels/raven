@@ -197,6 +197,29 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Question image styles */
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 16px 0;
+        }
+        .image-placeholder {
+            background: linear-gradient(135deg, #f0f3f8, #d6e1ee);
+            border: 2px dashed #0F2C59;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            color: #0F2C59;
+            font-style: italic;
+        }
+        .dark .image-placeholder {
+            background: linear-gradient(135deg, #374151, #4B5563);
+            border-color: #d6e1ee;
+            color: #d6e1ee;
+        }
+        
         /* Analytics styles */
         .chart-container {
             position: relative;
@@ -209,23 +232,37 @@
         }
         .heatmap-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
         }
         .heatmap-cell {
             aspect-ratio: 1;
-            border-radius: 8px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
         .heatmap-cell:hover {
             transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .heatmap-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            opacity: 0.9;
+            z-index: -1;
         }
         .status-excellent { background: linear-gradient(135deg, #10B981, #059669); }
         .status-good { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
@@ -281,7 +318,6 @@
                 <!-- Desktop Navigation -->
                 <nav class="hidden md:flex items-center space-x-1">
                     <button id="practiceBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Practice</button>
-                    <button id="tutorBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">AI Tutor</button>
                     <button id="progressBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Progress</button>
                     <button id="analyticsBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Analytics</button>
                 </nav>
@@ -320,11 +356,6 @@
                     <button id="mobilePracticeBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
                         <span class="material-icons">quiz</span>
                         <span class="button-text">Practice</span>
-                    </button>
-                    
-                    <button id="mobileTutorBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
-                        <span class="material-icons">psychology</span>
-                        <span class="button-text">AI Tutor</span>
                     </button>
                     
                     <button id="mobileProgressBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
@@ -422,6 +453,15 @@
                 <div class="mb-4">
                     <span class="caption text-neutral-600 dark:text-neutral-400" id="questionMeta"></span>
                 </div>
+                
+                <!-- Question Image Container -->
+                <div id="questionImageContainer" class="hidden mb-6">
+                    <div id="questionImagePlaceholder" class="image-placeholder">
+                        <span class="material-icons text-4xl mb-2">image</span>
+                        <p id="questionImageDescription">Question diagram will be displayed here</p>
+                    </div>
+                </div>
+                
                 <h3 class="subtitle-1 font-medium mb-6 text-neutral-800 dark:text-white" id="questionText"></h3>
                 <div id="questionOptions" class="space-y-4"></div>
                 
@@ -431,6 +471,15 @@
                         <span class="material-icons text-premium-600 dark:text-premium-400">lightbulb</span>
                         <h4 class="subtitle-1 font-medium text-premium-800 dark:text-premium-200">Explanation</h4>
                     </div>
+                    
+                    <!-- Explanation Image Container -->
+                    <div id="explanationImageContainer" class="hidden mb-4">
+                        <div id="explanationImagePlaceholder" class="image-placeholder">
+                            <span class="material-icons text-3xl mb-2">assessment</span>
+                            <p id="explanationImageDescription">Explanation diagram will be displayed here</p>
+                        </div>
+                    </div>
+                    
                     <p class="body-1 text-premium-700 dark:text-premium-300" id="explanationText"></p>
                 </div>
             </div>
@@ -465,53 +514,141 @@
             </div>
         </div>
 
-        <!-- AI Tutor Interface -->
-        <div id="tutorInterface" class="hidden">
-            <div class="text-center mb-8 sm:mb-12 fade-in">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-material-3">
-                    <span class="material-icons text-white text-2xl sm:text-3xl">psychology</span>
-                </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">AI Tutor</h2>
-                <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                    Ask me anything about your studies! I'm here to help explain concepts and answer questions.
-                </p>
-            </div>
-            
-            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 sm:p-8 shadow-material-2">
-                <div id="tutorChat" class="min-h-64 max-h-96 overflow-y-auto mb-4 p-4 bg-neutral-50 dark:bg-neutral-700 rounded-lg border border-neutral-200 dark:border-neutral-600"></div>
-                <div class="flex space-x-3">
-                    <input type="text" id="tutorInput" class="flex-1 p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-base focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Ask your question here...">
-                    <button id="sendTutorBtn" class="material-button bg-primary hover:bg-primary-600 text-white px-6 py-3 rounded-lg button-text shadow-material-1">Send</button>
-                </div>
-            </div>
-        </div>
-
         <!-- Progress Interface -->
         <div id="progressInterface" class="hidden">
-            <div class="text-center mb-8 sm:mb-12 fade-in">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-data to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-material-3">
-                    <span class="material-icons text-white text-2xl sm:text-3xl">analytics</span>
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-primary to-primary-700 rounded-xl sm:rounded-2xl p-4 sm:p-8 text-white mb-6 sm:mb-8 shadow-material-3 relative overflow-hidden">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div class="max-w-2xl">
+                            <h2 class="headline-4 mb-2 sm:mb-4">Your Learning Progress</h2>
+                            <p class="subtitle-1 text-primary-100 mb-4 sm:mb-6">Track your journey and celebrate your achievements as you prepare for success.</p>
+                        </div>
+                        <div class="hidden lg:block">
+                            <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                <span class="material-icons text-5xl text-white">trending_up</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">Your Progress</h2>
-                <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                    Track your learning journey and see how you're improving across different subjects.
-                </p>
+                <!-- Decorative elements -->
+                <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <span class="material-icons text-data">trending_up</span>
-                        <h3 class="headline-6 text-neutral-800 dark:text-white">Overall Performance</h3>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-data-50 dark:bg-data-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                            <span class="material-icons text-data-500 dark:text-white text-sm sm:text-base">quiz</span>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Total Questions</p>
+                            <p class="headline-5 text-neutral-800 dark:text-white" id="totalQuestionsCount">0</p>
+                        </div>
                     </div>
-                    <div id="overallStats"></div>
+                    <div class="flex items-center space-x-2">
+                        <span class="caption text-success bg-success/10 px-2 py-1 rounded-full text-xs" id="weeklyQuestionsCount">+0 this week</span>
+                    </div>
                 </div>
-                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <span class="material-icons text-accent">subject</span>
-                        <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Breakdown</h3>
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-success/10 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                            <span class="material-icons text-success text-sm sm:text-base">check_circle</span>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Correct Answers</p>
+                            <p class="headline-5 text-neutral-800 dark:text-white" id="correctAnswersCount">0</p>
+                        </div>
                     </div>
-                    <div id="subjectStats"></div>
+                    <div class="flex items-center space-x-2">
+                        <span class="caption text-success bg-success/10 px-2 py-1 rounded-full text-xs" id="accuracyPercentage">0% accuracy</span>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-warning/10 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                            <span class="material-icons text-warning text-sm sm:text-base">local_fire_department</span>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Study Streak</p>
+                            <p class="headline-5 text-neutral-800 dark:text-white" id="studyStreakCount">0 days</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="caption text-warning bg-warning/10 px-2 py-1 rounded-full text-xs">Keep it up!</span>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                        <div class="w-8 h-8 sm:w-12 sm:h-12 bg-accent/10 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                            <span class="material-icons text-accent text-sm sm:text-base">assignment</span>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Completed Quizzes</p>
+                            <p class="headline-5 text-neutral-800 dark:text-white" id="completedQuizzesCount">0</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="caption text-neutral-600 dark:text-neutral-400 text-xs" id="bestScoreDisplay">Best: 0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Progress & Insights -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+                <!-- Subject Progress -->
+                <div class="lg:col-span-2">
+                    <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+                        <h3 class="headline-6 mb-4 sm:mb-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+                        <div class="space-y-3 sm:space-y-4" id="subjectProgressList">
+                            <!-- Subject progress items will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights & Achievements -->
+                <div class="space-y-4 sm:space-y-6">
+                    <!-- Performance Insights -->
+                    <div class="material-card bg-premium-50 dark:bg-premium-900/20 border border-premium-200 dark:border-premium-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+                        <div class="flex items-center space-x-3 mb-3 sm:mb-4">
+                            <span class="material-icons text-premium-600 dark:text-premium-400">insights</span>
+                            <h4 class="subtitle-1 text-premium-800 dark:text-premium-200">Study Insights</h4>
+                        </div>
+                        <div id="studyInsights">
+                            <p class="body-2 text-premium-700 dark:text-premium-300 mb-3 sm:mb-4">Complete more quizzes to get personalized insights!</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+                        <h4 class="subtitle-1 mb-3 sm:mb-4 text-neutral-800 dark:text-white">Recent Activity</h4>
+                        <div class="space-y-3" id="recentActivity">
+                            <p class="body-2 text-neutral-600 dark:text-neutral-400">No recent activity to show.</p>
+                        </div>
+                    </div>
+
+                    <!-- Achievements -->
+                    <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+                        <h4 class="subtitle-1 mb-3 sm:mb-4 text-neutral-800 dark:text-white">Achievements</h4>
+                        <div class="space-y-3" id="achievementsList">
+                            <p class="body-2 text-neutral-600 dark:text-neutral-400">Complete quizzes to unlock achievements!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Over Time Chart -->
+            <div class="mt-6 sm:mt-8">
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+                    <h3 class="headline-6 mb-4 sm:mb-6 text-neutral-800 dark:text-white">Progress Over Time</h3>
+                    <div class="chart-container">
+                        <canvas id="progressTimeChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -524,7 +661,7 @@
                 </div>
                 <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">Performance Analytics</h2>
                 <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                    Deep insights into your learning patterns and performance metrics.
+                    Deep insights into your learning patterns and performance metrics organized by topic.
                 </p>
             </div>
 
@@ -588,7 +725,7 @@
 
             <!-- Performance Heatmap -->
             <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-material-2">
-                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Performance Heatmap</h2>
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Topic Performance Overview</h2>
                 <div class="mb-4">
                     <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
                         <div class="flex items-center space-x-1 sm:space-x-2">
@@ -633,9 +770,9 @@
                 </div>
             </div>
 
-            <!-- Recommendations -->
+            <!-- Topic-based Recommendations -->
             <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
-                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Smart Recommendations</h2>
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Smart Learning Recommendations</h2>
                 <div id="analyticsRecommendations" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     <!-- Recommendations will be populated here -->
                 </div>
@@ -684,20 +821,48 @@
             timeSpent: {}
         };
 
-        // Available subjects (you can modify this list based on your data files)
+        // Sample data that includes images - matches the provided metadata structure
+        const sampleBiologyData = {
+            "topics": {
+                "food_webs": {
+                    "name": "Food Webs and Energy Flow",
+                    "category": "Ecology",
+                    "questions": [
+                        {
+                            "id": "74",
+                            "question": "Based on the food web diagram below, which of the following is an example of a **tertiary consumer**?",
+                            "hasQuestionImage": true,
+                            "questionImageDescription": "A diagram of a food web showing interconnected feeding relationships between different organisms.",
+                            "options": [
+                                "A. A snake that eats a frog that eats a grasshopper.",
+                                "B. A beetle that eats a leaf.",
+                                "C. A rabbit that eats grass.",
+                                "D. A hawk that eats a rabbit.",
+                                "E. A fox that eats a deer."
+                            ],
+                            "answer": "a",
+                            "explanation": "A **tertiary consumer** is an organism that feeds on a secondary consumer. In this food chain, the grasshopper is a **primary consumer** (eating the producer), the frog is a **secondary consumer** (eating the grasshopper), and the snake is a **tertiary consumer** because it eats the frog. The energy pyramid shows why there are fewer tertiary consumers than producers.",
+                            "hasExplanationImage": true,
+                            "explanationImageDescription": "A diagram of a food pyramid illustrating the flow of energy across different trophic levels."
+                        }
+                    ]
+                }
+            }
+        };
+
+        // Available subjects
         const availableSubjects = [
-            { id: 'mathematics', name: 'Mathematics', icon: '🔢', file: 'data/mathematics.json' },
-            { id: 'physics', name: 'Physics', icon: '⚡', file: 'data/physics.json' },
-            { id: 'chemistry', name: 'Chemistry', icon: '🧪', file: 'data/chemistry.json' },
-            { id: 'biology', name: 'Biology', icon: '🧬', file: 'data/biology.json' },
-            { id: 'english', name: 'English', icon: '📝', file: 'data/english.json' },
+            { id: 'mathematics', name: 'Mathematics', icon: '🔢', data: null },
+            { id: 'physics', name: 'Physics', icon: '⚡', data: null },
+            { id: 'chemistry', name: 'Chemistry', icon: '🧪', data: null },
+            { id: 'biology', name: 'Biology', icon: '🧬', data: sampleBiologyData },
+            { id: 'english', name: 'English', icon: '📝', data: null },
         ];
 
         // DOM Elements
         const subjectSelection = document.getElementById('subjectSelection');
         const topicSelection = document.getElementById('topicSelection');
         const quizInterface = document.getElementById('quizInterface');
-        const tutorInterface = document.getElementById('tutorInterface');
         const progressInterface = document.getElementById('progressInterface');
         const analyticsInterface = document.getElementById('analyticsInterface');
         const loadingModal = document.getElementById('loadingModal');
@@ -724,14 +889,14 @@
             mobileMenuOverlay.classList.add('open');
             mobileMenu.classList.add('open');
             mobileMenuIcon.textContent = 'close';
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
         }
 
         function closeMobileMenuFunc() {
             mobileMenuOverlay.classList.remove('open');
             mobileMenu.classList.remove('open');
             mobileMenuIcon.textContent = 'menu';
-            document.body.style.overflow = ''; // Restore scrolling
+            document.body.style.overflow = '';
         }
 
         // Topic icon mapping function
@@ -739,71 +904,25 @@
             const name = topicName.toLowerCase();
             const cat = category.toLowerCase();
             
-            // Mathematics topics
-            if (cat.includes('algebra') || name.includes('algebra')) return 'functions';
-            if (cat.includes('geometry') || name.includes('geometry')) return 'crop_free';
-            if (cat.includes('trigonometry') || name.includes('trigonometry')) return 'change_history';
-            if (cat.includes('calculus') || name.includes('calculus')) return 'show_chart';
-            if (cat.includes('statistics') || name.includes('statistic')) return 'bar_chart';
-            if (cat.includes('probability') || name.includes('probability')) return 'casino';
-            if (name.includes('number') || name.includes('arithmetic')) return 'pin';
-            
-            // Physics topics  
-            if (name.includes('motion') || name.includes('mechanics')) return 'sports_motorsports';
-            if (name.includes('force') || name.includes('newton')) return 'fitness_center';
-            if (name.includes('energy')) return 'bolt';
-            if (name.includes('wave') || name.includes('sound')) return 'graphic_eq';
-            if (name.includes('electric') || name.includes('magnetic')) return 'electric_bolt';
-            if (name.includes('light') || name.includes('optic')) return 'highlight';
-            if (name.includes('thermal') || name.includes('heat')) return 'whatshot';
-            if (name.includes('quantum') || name.includes('atomic')) return 'scatter_plot';
-            
-            // Chemistry topics
-            if (name.includes('atom') || name.includes('periodic')) return 'blur_on';
-            if (name.includes('bond') || name.includes('molecular')) return 'link';
-            if (name.includes('reaction') || name.includes('equation')) return 'shuffle';
-            if (name.includes('acid') || name.includes('base') || name.includes('ph')) return 'science';
-            if (name.includes('organic')) return 'eco';
-            if (name.includes('solution') || name.includes('concentration')) return 'opacity';
-            if (name.includes('gas') || name.includes('pressure')) return 'air';
-            
             // Biology topics
+            if (name.includes('food') || name.includes('energy') || name.includes('web')) return 'link';
             if (name.includes('cell') || name.includes('cellular')) return 'grain';
             if (name.includes('dna') || name.includes('genetic')) return 'memory';
-            if (name.includes('evolution') || name.includes('natural selection')) return 'trending_up';
-            if (name.includes('ecosystem') || name.includes('environment')) return 'nature';
-            if (name.includes('photosynthesis') || name.includes('plant')) return 'local_florist';
-            if (name.includes('respiration') || name.includes('breathing')) return 'air';
-            if (name.includes('reproduction') || name.includes('development')) return 'child_friendly';
-            if (name.includes('anatomy') || name.includes('physiology')) return 'accessibility';
+            if (name.includes('evolution')) return 'trending_up';
+            if (name.includes('ecosystem') || name.includes('ecology')) return 'nature';
             
-            // English topics
-            if (name.includes('grammar') || name.includes('syntax')) return 'spellcheck';
-            if (name.includes('literature') || name.includes('poem') || name.includes('poetry')) return 'auto_stories';
-            if (name.includes('writing') || name.includes('essay')) return 'edit';
-            if (name.includes('reading') || name.includes('comprehension')) return 'chrome_reader_mode';
-            if (name.includes('vocabulary') || name.includes('word')) return 'translate';
-            if (name.includes('shakespeare') || name.includes('drama')) return 'theater_comedy';
-            if (name.includes('novel') || name.includes('fiction')) return 'menu_book';
+            // Default ecology icon
+            if (cat.includes('ecology')) return 'eco';
             
-            // Default icons by subject
-            if (cat.includes('math')) return 'calculate';
-            if (cat.includes('physics')) return 'science';
-            if (cat.includes('chemistry')) return 'science';
-            if (cat.includes('biology')) return 'biotech';
-            if (cat.includes('english')) return 'translate';
-            
-            // Ultimate fallback
             return 'quiz';
         }
 
-        // Analytics Storage Functions - Using localStorage as primary method
+        // Analytics Storage Functions
         function saveAnalyticsData() {
             try {
                 const dataToSave = JSON.stringify(analyticsData);
                 let savedSuccessfully = false;
                 
-                // Method 1: Try localStorage first (preferred)
                 try {
                     if (typeof(Storage) !== "undefined" && localStorage) {
                         localStorage.setItem('ravenAnalytics', dataToSave);
@@ -814,7 +933,6 @@
                     console.warn('⚠️ localStorage not available:', localStorageError.message);
                 }
                 
-                // Method 2: Try sessionStorage as fallback
                 if (!savedSuccessfully) {
                     try {
                         if (typeof(Storage) !== "undefined" && sessionStorage) {
@@ -827,26 +945,11 @@
                     }
                 }
                 
-                // Method 3: Cookie fallback
-                if (!savedSuccessfully) {
-                    try {
-                        document.cookie = `ravenAnalytics=${encodeURIComponent(dataToSave)}; path=/; max-age=31536000; SameSite=Lax`;
-                        console.log('🍪 Data saved to cookies (fallback)');
-                        savedSuccessfully = true;
-                    } catch (cookieError) {
-                        console.warn('⚠️ Cookie storage failed:', cookieError.message);
-                    }
-                }
-                
-                // Method 4: Window object as last resort
                 window.ravenAnalyticsBackup = analyticsData;
                 
                 if (savedSuccessfully) {
                     console.log('📊 Current quiz count:', analyticsData.quizResults.length);
                     console.log('📈 Topics tracked:', Object.keys(analyticsData.topicProgress).length);
-                    
-                    // Test localStorage availability explicitly
-                    testLocalStorageAvailability();
                 }
                 
                 return savedSuccessfully;
@@ -861,7 +964,6 @@
                 console.log('🔄 Loading analytics data...');
                 let loadedData = null;
                 
-                // Method 1: Try localStorage first
                 try {
                     if (typeof(Storage) !== "undefined" && localStorage) {
                         const data = localStorage.getItem('ravenAnalytics');
@@ -874,7 +976,6 @@
                     console.warn('⚠️ Failed to load from localStorage:', localStorageError.message);
                 }
                 
-                // Method 2: Try sessionStorage if localStorage failed
                 if (!loadedData) {
                     try {
                         if (typeof(Storage) !== "undefined" && sessionStorage) {
@@ -889,15 +990,6 @@
                     }
                 }
                 
-                // Method 3: Try cookies if storage APIs failed
-                if (!loadedData) {
-                    loadedData = tryLoadFromCookie('ravenAnalytics');
-                    if (loadedData) {
-                        console.log('🍪 Data loaded from cookies');
-                    }
-                }
-                
-                // Method 4: Try window backup
                 if (!loadedData && window.ravenAnalyticsBackup) {
                     loadedData = window.ravenAnalyticsBackup;
                     console.log('💾 Data loaded from window backup');
@@ -924,62 +1016,6 @@
             }
         }
 
-        function tryLoadFromCookie(cookieName) {
-            try {
-                const cookies = document.cookie.split(';').map(cookie => cookie.trim());
-                const targetCookie = cookies.find(cookie => cookie.startsWith(cookieName + '='));
-                
-                if (targetCookie) {
-                    const encodedData = targetCookie.split('=')[1];
-                    const decodedData = decodeURIComponent(encodedData);
-                    return JSON.parse(decodedData);
-                }
-                return null;
-            } catch (error) {
-                console.warn(`Failed to load from ${cookieName}:`, error);
-                return null;
-            }
-        }
-
-        function testLocalStorageAvailability() {
-            try {
-                if (typeof(Storage) !== "undefined") {
-                    // Test if localStorage is actually working
-                    const testKey = 'ravenTest_' + Date.now();
-                    localStorage.setItem(testKey, 'test');
-                    const retrieved = localStorage.getItem(testKey);
-                    localStorage.removeItem(testKey);
-                    
-                    if (retrieved === 'test') {
-                        console.log('✅ localStorage is working properly');
-                        return true;
-                    } else {
-                        console.warn('⚠️ localStorage test failed - data not retrieved correctly');
-                        return false;
-                    }
-                } else {
-                    console.warn('⚠️ Web Storage not supported');
-                    return false;
-                }
-            } catch (error) {
-                console.warn('⚠️ localStorage test error:', error.message);
-                return false;
-            }
-        }
-
-        // Function to manually clear stored data (for debugging)
-        function clearStoredData() {
-            try {
-                if (localStorage) localStorage.removeItem('ravenAnalytics');
-                if (sessionStorage) sessionStorage.removeItem('ravenAnalytics');
-                document.cookie = 'ravenAnalytics=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                window.ravenAnalyticsBackup = undefined;
-                console.log('🗑️ All stored data cleared');
-            } catch (error) {
-                console.error('Failed to clear data:', error);
-            }
-        }
-
         function validateAnalyticsData(data) {
             return data && 
                    typeof data === 'object' && 
@@ -988,22 +1024,17 @@
                    typeof data.subjectProgress === 'object';
         }
 
-        // Function to refresh all views that show progress data
         function refreshAllProgressViews() {
-            // Update analytics if currently viewing
             if (currentView === 'analytics') {
                 renderAnalytics();
             }
             
-            // Update progress if currently viewing
             if (currentView === 'progress') {
                 renderProgress();
             }
             
-            // Always refresh the subject selection to show updated progress
             renderSubjects();
             
-            // If currently viewing topics, refresh those too
             if (currentView === 'topics' && currentSubject && subjects[currentSubject.id]) {
                 renderTopics(subjects[currentSubject.id].topics);
             }
@@ -1025,7 +1056,6 @@
 
             analyticsData.quizResults.push(result);
 
-            // Update topic progress - Fixed averaging calculation
             const topicKey = `${currentSubject.id}_${currentTopic.name}`;
             if (!analyticsData.topicProgress[topicKey]) {
                 analyticsData.topicProgress[topicKey] = {
@@ -1041,12 +1071,11 @@
             const topicProgress = analyticsData.topicProgress[topicKey];
             topicProgress.attempts++;
             topicProgress.totalScore += score.percentage;
-            topicProgress.averageScore = Math.round(topicProgress.totalScore / topicProgress.attempts * 100) / 100; // Fixed rounding
+            topicProgress.averageScore = Math.round(topicProgress.totalScore / topicProgress.attempts * 100) / 100;
             topicProgress.bestScore = Math.max(topicProgress.bestScore, score.percentage);
             topicProgress.totalTime += score.timeSpent;
             topicProgress.averageTime = topicProgress.totalTime / topicProgress.attempts;
 
-            // Update subject progress - Fixed averaging calculation
             if (!analyticsData.subjectProgress[currentSubject.id]) {
                 analyticsData.subjectProgress[currentSubject.id] = {
                     bestScore: 0,
@@ -1059,10 +1088,9 @@
             const subjectProgress = analyticsData.subjectProgress[currentSubject.id];
             subjectProgress.attempts++;
             subjectProgress.totalScore += score.percentage;
-            subjectProgress.averageScore = Math.round(subjectProgress.totalScore / subjectProgress.attempts * 100) / 100; // Fixed rounding
+            subjectProgress.averageScore = Math.round(subjectProgress.totalScore / subjectProgress.attempts * 100) / 100;
             subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
 
-            // Save data with improved method
             const saveSuccess = saveAnalyticsData();
             if (saveSuccess) {
                 console.log('✅ Quiz result saved and persisted');
@@ -1070,10 +1098,8 @@
                 console.warn('⚠️ Quiz result saved but persistence may have failed');
             }
             
-            // Always refresh all views that might show progress data
             refreshAllProgressViews();
 
-            // Debug logging
             console.log(`🎯 Quiz completed: ${score.percentage}%`);
             console.log(`📚 Topic progress for ${topicKey}:`, topicProgress);
         }
@@ -1088,12 +1114,11 @@
             };
         }
 
-        // Function to get progress bar color based on score
         function getProgressBarColor(score) {
-            if (score >= 80) return 'linear-gradient(90deg, #10B981, #059669)'; // Green - Excellent
-            if (score >= 60) return 'linear-gradient(90deg, #3B82F6, #1D4ED8)'; // Blue - Good  
-            if (score >= 40) return 'linear-gradient(90deg, #F59E0B, #D97706)'; // Yellow - Average
-            return 'linear-gradient(90deg, #EF4444, #DC2626)'; // Red - Weak
+            if (score >= 80) return 'linear-gradient(90deg, #10B981, #059669)';
+            if (score >= 60) return 'linear-gradient(90deg, #3B82F6, #1D4ED8)';
+            if (score >= 40) return 'linear-gradient(90deg, #F59E0B, #D97706)';
+            return 'linear-gradient(90deg, #EF4444, #DC2626)';
         }
 
         // Initialize the app
@@ -1116,8 +1141,7 @@
                 'physics': 'tungsten', 
                 'chemistry': 'science',
                 'biology': 'bubble_chart',
-                'english': 'translate',
-                'english-2': 'menu_book'
+                'english': 'translate'
             };
 
             const subjectColors = {
@@ -1125,8 +1149,7 @@
                 'physics': 'from-warning to-warning/80',
                 'chemistry': 'from-primary to-primary-600',
                 'biology': 'from-success to-success/80',
-                'english': 'from-accent to-accent-600',
-                'english-2': 'from-premium to-premium-600'
+                'english': 'from-accent to-accent-600'
             };
 
             availableSubjects.forEach((subject, index) => {
@@ -1136,7 +1159,6 @@
                 const icon = subjectIcons[subject.id] || 'school';
                 const color = subjectColors[subject.id] || 'from-primary to-primary-600';
                 
-                // Get subject progress for display
                 const subjectProgress = analyticsData.subjectProgress[subject.id];
                 const progressText = subjectProgress ? `Avg: ${Math.round(subjectProgress.averageScore)}% | ${subjectProgress.attempts} attempts` : 'Not started';
                 
@@ -1161,17 +1183,18 @@
         async function selectSubject(subject) {
             showLoading();
             try {
-                const response = await fetch(subject.file);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${subject.name} data`);
+                if (subject.data) {
+                    // Use embedded data
+                    subjects[subject.id] = subject.data;
+                    currentSubject = subject;
+                    renderTopics(subject.data.topics);
+                    showTopicSelection();
+                } else {
+                    // Try to load from file (will fail gracefully)
+                    throw new Error(`${subject.name} content coming soon! For now, try Biology which has sample content.`);
                 }
-                const data = await response.json();
-                subjects[subject.id] = data;
-                currentSubject = subject;
-                renderTopics(data.topics);
-                showTopicSelection();
             } catch (error) {
-                showError(`Error loading ${subject.name}: ${error.message}`);
+                showError(error.message);
             } finally {
                 hideLoading();
             }
@@ -1185,7 +1208,6 @@
             selectedSubjectTitle.textContent = currentSubject.name;
             topicGrid.innerHTML = '';
 
-            // Group topics by category
             const categories = {};
             Object.entries(topics).forEach(([topicId, topic]) => {
                 if (!categories[topic.category]) {
@@ -1194,7 +1216,6 @@
                 categories[topic.category].push({ id: topicId, ...topic });
             });
 
-            // Render each category
             Object.entries(categories).forEach(([category, categoryTopics]) => {
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'col-span-full mb-6';
@@ -1208,7 +1229,6 @@
                     
                     topicCard.className = `material-card stagger-animation material-button w-full flex items-center space-x-4 p-4 sm:p-6 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 touch-target bg-white dark:bg-neutral-800 ${questionCount > 0 ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
                     
-                    // Get appropriate icon for topic
                     const topicIcon = getTopicIcon(topic.name, topic.category);
                     
                     topicCard.innerHTML = `
@@ -1257,14 +1277,13 @@
             userAnswers = [];
             quizStartTime = Date.now();
 
-            // Shuffle questions
             currentQuestions = shuffleArray(currentQuestions);
 
             renderQuestion();
             showQuizInterface();
         }
 
-        // Render current question with fixed option formatting
+        // Render current question with image support
         function renderQuestion() {
             const question = currentQuestions[currentQuestionIndex];
             if (!question) return;
@@ -1274,11 +1293,21 @@
             document.getElementById('questionMeta').textContent = `${currentTopic.name} - ${currentTopic.category}`;
             document.getElementById('questionText').textContent = question.question;
 
-            // Update progress bar
+            // Handle question image
+            const questionImageContainer = document.getElementById('questionImageContainer');
+            const questionImagePlaceholder = document.getElementById('questionImagePlaceholder');
+            const questionImageDescription = document.getElementById('questionImageDescription');
+
+            if (question.hasQuestionImage && question.questionImageDescription) {
+                questionImageContainer.classList.remove('hidden');
+                questionImageDescription.textContent = question.questionImageDescription;
+            } else {
+                questionImageContainer.classList.add('hidden');
+            }
+
             const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
             document.getElementById('progressFill').style.width = `${progress}%`;
 
-            // Render options with proper formatting
             const optionsContainer = document.getElementById('questionOptions');
             optionsContainer.innerHTML = '';
 
@@ -1301,10 +1330,8 @@
                 optionsContainer.appendChild(optionBtn);
             });
 
-            // Update button states
             updateNavigationButtons();
             
-            // Hide explanation
             document.getElementById('explanationBox').classList.add('hidden');
         }
 
@@ -1312,7 +1339,6 @@
         function selectOption(optionIndex) {
             userAnswers[currentQuestionIndex] = optionIndex;
             
-            // Update option styles
             const options = document.querySelectorAll('.option-btn');
             options.forEach((option, index) => {
                 option.classList.remove('selected');
@@ -1359,7 +1385,7 @@
             }
         }
 
-        // Show explanation for current question
+        // Show explanation for current question with image support
         function showExplanation() {
             const question = currentQuestions[currentQuestionIndex];
             const explanationBox = document.getElementById('explanationBox');
@@ -1367,11 +1393,22 @@
 
             if (question.explanation) {
                 explanationText.textContent = question.explanation;
+                
+                // Handle explanation image
+                const explanationImageContainer = document.getElementById('explanationImageContainer');
+                const explanationImageDescription = document.getElementById('explanationImageDescription');
+
+                if (question.hasExplanationImage && question.explanationImageDescription) {
+                    explanationImageContainer.classList.remove('hidden');
+                    explanationImageDescription.textContent = question.explanationImageDescription;
+                } else {
+                    explanationImageContainer.classList.add('hidden');
+                }
+                
                 explanationBox.classList.remove('hidden');
 
-                // Show correct/incorrect for all options
                 const options = document.querySelectorAll('.option-btn');
-                const correctIndex = question.answer.charCodeAt(0) - 97; // Convert 'a', 'b', 'c' to 0, 1, 2
+                const correctIndex = question.answer.charCodeAt(0) - 97;
                 const userIndex = userAnswers[currentQuestionIndex];
 
                 options.forEach((option, index) => {
@@ -1409,16 +1446,14 @@
             };
         }
 
-        // Show quiz results - Fixed to properly hide navigation
+        // Show quiz results
         function showQuizResults(score) {
             document.getElementById('finalScore').textContent = `${Math.round(score.percentage)}%`;
             document.getElementById('scoreDetails').textContent = `${score.correct} out of ${score.total} correct`;
             
-            // Hide the main quiz elements
             document.getElementById('quizResults').classList.remove('hidden');
             document.querySelector('#quizInterface .material-card').classList.add('hidden');
             
-            // Hide navigation buttons container
             const navigationContainer = document.getElementById('quizNavigation');
             if (navigationContainer) {
                 navigationContainer.classList.add('hidden');
@@ -1443,27 +1478,22 @@
                 return;
             }
 
-            // Calculate overall statistics
             const totalQuizzes = analyticsData.quizResults.length;
             const averageScore = analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes;
-            const averageTime = analyticsData.quizResults.reduce((sum, result) => sum + result.timeSpent, 0) / totalQuizzes / 60000; // Convert to minutes
+            const averageTime = analyticsData.quizResults.reduce((sum, result) => sum + result.timeSpent, 0) / totalQuizzes / 60000;
 
-            // Count mastered topics (>= 80% best score)
             const topicProgressEntries = Object.values(analyticsData.topicProgress);
             const masteredTopics = topicProgressEntries.filter(progress => progress.bestScore >= 80).length;
             const totalTopics = topicProgressEntries.length;
 
-            // Count weak areas (< 60% average score)
             const weakTopics = topicProgressEntries.filter(progress => progress.averageScore < 60 && progress.attempts > 0).length;
 
-            // Update UI
             document.getElementById('analyticsOverallScore').textContent = `${Math.round(averageScore)}%`;
             document.getElementById('analyticsProgressText').textContent = `${Math.round(averageScore)}%`;
             document.getElementById('analyticsMasteredCount').textContent = `${masteredTopics}/${totalTopics}`;
             document.getElementById('analyticsWeakCount').textContent = weakTopics;
             document.getElementById('analyticsAvgTime').textContent = `${averageTime.toFixed(1)}min`;
 
-            // Update progress circle
             const progressCircle = document.getElementById('analyticsProgressCircle');
             const circumference = 2 * Math.PI * 40;
             const offset = circumference - (averageScore / 100) * circumference;
@@ -1475,30 +1505,104 @@
             container.innerHTML = '';
 
             if (Object.keys(analyticsData.topicProgress).length === 0) {
-                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No quiz data available. Complete some quizzes to see your heatmap!</p>';
+                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No quiz data available. Complete some quizzes to see your topic performance!</p>';
                 return;
             }
 
             const heatmapGrid = document.createElement('div');
             heatmapGrid.className = 'heatmap-grid';
 
+            // Group topics by subject for better organization
+            const topicsBySubject = {};
             Object.entries(analyticsData.topicProgress).forEach(([topicKey, progress]) => {
                 const [subjectId, topicName] = topicKey.split('_');
                 const subject = availableSubjects.find(s => s.id === subjectId);
                 
-                const cell = document.createElement('div');
-                cell.className = `heatmap-cell ${getStatusClass(progress.bestScore, progress.attempts)} material-1`;
+                if (!topicsBySubject[subjectId]) {
+                    topicsBySubject[subjectId] = [];
+                }
                 
-                cell.innerHTML = `
-                    <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${topicName}</div>
-                    <div class="text-lg font-bold text-white">${progress.attempts > 0 ? Math.round(progress.bestScore) + '%' : 'Not Started'}</div>
-                    <div class="text-xs text-white opacity-75">${progress.attempts} attempts</div>
-                `;
+                topicsBySubject[subjectId].push({
+                    topicKey,
+                    topicName,
+                    subjectName: subject ? subject.name : subjectId,
+                    progress
+                });
+            });
+
+            // Create section headers and topic cells organized by subject
+            Object.entries(topicsBySubject).forEach(([subjectId, topics]) => {
+                const subject = availableSubjects.find(s => s.id === subjectId);
                 
-                heatmapGrid.appendChild(cell);
+                // Add subject header
+                const subjectHeader = document.createElement('div');
+                subjectHeader.className = 'col-span-full mb-2 mt-4 first:mt-0';
+                subjectHeader.innerHTML = `<h4 class="text-lg font-semibold text-primary dark:text-primary-400">${subject ? subject.name : subjectId}</h4>`;
+                heatmapGrid.appendChild(subjectHeader);
+                
+                // Add topic cells for this subject
+                topics.forEach(({ topicKey, topicName, progress }) => {
+                    const cell = document.createElement('div');
+                    cell.className = `heatmap-cell ${getStatusClass(progress.bestScore, progress.attempts)} shadow-material-1`;
+                    
+                    cell.innerHTML = `
+                        <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${topicName}</div>
+                        <div class="text-lg font-bold text-white">${progress.attempts > 0 ? Math.round(progress.bestScore) + '%' : 'Not Started'}</div>
+                        <div class="text-xs text-white opacity-75">${progress.attempts} ${progress.attempts === 1 ? 'attempt' : 'attempts'}</div>
+                        ${progress.attempts > 0 ? `<div class="text-xs text-white opacity-75 mt-1">Avg: ${Math.round(progress.averageScore)}%</div>` : ''}
+                    `;
+                    
+                    cell.addEventListener('click', () => {
+                        showTopicDetails(topicKey, progress);
+                    });
+                    
+                    heatmapGrid.appendChild(cell);
+                });
             });
 
             container.appendChild(heatmapGrid);
+        }
+
+        function showTopicDetails(topicKey, progress) {
+            const [subjectId, topicName] = topicKey.split('_');
+            const subject = availableSubjects.find(s => s.id === subjectId);
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="material-card bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-material-4 max-w-md w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="headline-6 font-semibold text-neutral-800 dark:text-white">${topicName}</h3>
+                        <button class="material-button w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600" onclick="this.closest('.fixed').remove()">
+                            <span class="material-icons text-lg">close</span>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Subject:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${subject ? subject.name : subjectId}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Best Score:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${Math.round(progress.bestScore)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Average Score:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${Math.round(progress.averageScore)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Total Attempts:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${progress.attempts}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Avg Time:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${(progress.averageTime / 60000).toFixed(1)} min</span>
+                        </div>
+                    </div>
+                    <button class="material-button w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600" onclick="this.closest('.fixed').remove()">Close</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         function renderAnalyticsCharts() {
@@ -1574,13 +1678,13 @@
                     datasets: [{
                         data: subjectData,
                         backgroundColor: [
-                            '#EF4444', // Red
+                            '#10B981', // Green
                             '#3B82F6', // Blue
                             '#F59E0B', // Yellow
-                            '#10B981', // Green
-                            '#2D3748'
+                            '#EF4444', // Red
+                            '#8B5CF6'  // Purple
                         ],
-                        borderWidth: 2,
+                        borderWidth: 3,
                         borderColor: '#ffffff'
                     }]
                 },
@@ -1611,7 +1715,7 @@
             const container = document.getElementById('analyticsRecommendations');
             
             if (Object.keys(analyticsData.topicProgress).length === 0) {
-                container.innerHTML = '<p class="col-span-full text-neutral-600 dark:text-neutral-400">Complete some quizzes to get personalized recommendations!</p>';
+                container.innerHTML = '<p class="col-span-full text-neutral-600 dark:text-neutral-400">Complete some quizzes to get personalized topic-based recommendations!</p>';
                 return;
             }
 
@@ -1619,66 +1723,70 @@
             const weakAreas = Object.entries(analyticsData.topicProgress)
                 .filter(([_, progress]) => progress.averageScore < 60 && progress.attempts > 0)
                 .sort((a, b) => a[1].averageScore - b[1].averageScore)
-                .slice(0, 3);
+                .slice(0, 5);
 
-            // Get areas for review (last attempted > 7 days ago) - simulate with random selection for demo
+            // Get areas for review (good performance but could be better)
             const reviewAreas = Object.entries(analyticsData.topicProgress)
-                .filter(([_, progress]) => progress.attempts > 0 && progress.averageScore >= 60)
-                .slice(0, 3);
+                .filter(([_, progress]) => progress.averageScore >= 60 && progress.averageScore < 80 && progress.attempts > 0)
+                .sort((a, b) => b[1].averageScore - a[1].averageScore)
+                .slice(0, 5);
 
             // Get strong areas (>= 80% best score)
             const strongAreas = Object.entries(analyticsData.topicProgress)
                 .filter(([_, progress]) => progress.bestScore >= 80)
                 .sort((a, b) => b[1].bestScore - a[1].bestScore)
-                .slice(0, 3);
+                .slice(0, 5);
 
             container.innerHTML = `
                 <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                     <div class="flex items-center space-x-3 mb-3">
                         <span class="material-icons text-red-600 dark:text-red-400">warning</span>
-                        <h3 class="font-semibold text-red-800 dark:text-red-300 text-sm sm:text-base">Priority Focus</h3>
+                        <h3 class="font-semibold text-red-800 dark:text-red-300 text-sm sm:text-base">Priority Focus Areas</h3>
                     </div>
                     <ul class="space-y-2">
                         ${weakAreas.length > 0 ? weakAreas.map(([key, progress]) => {
-                            const topicName = key.split('_')[1];
-                            return `<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• ${topicName} (${Math.round(progress.averageScore)}%)</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">No weak areas identified</li>'}
+                            const [subjectId, topicName] = key.split('_');
+                            const subject = availableSubjects.find(s => s.id === subjectId);
+                            return `<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.averageScore)}%</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">No weak areas identified! Great job!</li>'}
                     </ul>
-                    <button class="material-button w-full mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
-                        Start Practice
-                    </button>
+                    <div class="text-xs text-red-600 dark:text-red-400 mt-3 font-medium">
+                        Focus on these topics to improve your overall performance.
+                    </div>
                 </div>
 
                 <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <div class="flex items-center space-x-3 mb-3">
-                        <span class="material-icons text-yellow-600 dark:text-yellow-400">schedule</span>
-                        <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 text-sm sm:text-base">Due for Review</h3>
+                        <span class="material-icons text-yellow-600 dark:text-yellow-400">trending_up</span>
+                        <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 text-sm sm:text-base">Improvement Opportunities</h3>
                     </div>
                     <ul class="space-y-2">
                         ${reviewAreas.length > 0 ? reviewAreas.map(([key, progress]) => {
-                            const topicName = key.split('_')[1];
-                            return `<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• ${topicName} (${Math.round(progress.averageScore)}%)</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">No topics due for review</li>'}
+                            const [subjectId, topicName] = key.split('_');
+                            const subject = availableSubjects.find(s => s.id === subjectId);
+                            return `<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.averageScore)}%</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">No topics in this range currently.</li>'}
                     </ul>
-                    <button class="material-button w-full mt-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm">
-                        Review Now
-                    </button>
+                    <div class="text-xs text-yellow-600 dark:text-yellow-400 mt-3 font-medium">
+                        These topics have good scores but could reach excellence with more practice.
+                    </div>
                 </div>
 
                 <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                     <div class="flex items-center space-x-3 mb-3">
                         <span class="material-icons text-green-600 dark:text-green-400">emoji_events</span>
-                        <h3 class="font-semibold text-green-800 dark:text-green-300 text-sm sm:text-base">Strong Areas</h3>
+                        <h3 class="font-semibold text-green-800 dark:text-green-300 text-sm sm:text-base">Mastered Topics</h3>
                     </div>
                     <ul class="space-y-2">
                         ${strongAreas.length > 0 ? strongAreas.map(([key, progress]) => {
-                            const topicName = key.split('_')[1];
-                            return `<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• ${topicName} (${Math.round(progress.bestScore)}%)</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">No strong areas yet</li>'}
+                            const [subjectId, topicName] = key.split('_');
+                            const subject = availableSubjects.find(s => s.id === subjectId);
+                            return `<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.bestScore)}%</li>`;
+                        }).join('') : '<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">No mastered topics yet. Keep practicing!</li>'}
                     </ul>
-                    <button class="material-button w-full mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm">
-                        Advanced Practice
-                    </button>
+                    <div class="text-xs text-green-600 dark:text-green-400 mt-3 font-medium">
+                        Excellent work! Consider helping others or exploring advanced topics.
+                    </div>
                 </div>
             `;
         }
@@ -1696,14 +1804,14 @@
             hideAllViews();
             subjectSelection.classList.remove('hidden');
             currentView = 'subjects';
-            closeMobileMenuFunc(); // Close mobile menu when navigating
+            closeMobileMenuFunc();
         }
 
         function showTopicSelection() {
             hideAllViews();
             topicSelection.classList.remove('hidden');
             currentView = 'topics';
-            closeMobileMenuFunc(); // Close mobile menu when navigating
+            closeMobileMenuFunc();
         }
 
         function showQuizInterface() {
@@ -1712,21 +1820,13 @@
             document.getElementById('quizResults').classList.add('hidden');
             document.querySelector('#quizInterface .material-card').classList.remove('hidden');
             
-            // Show navigation buttons when starting quiz
             const navigationContainer = document.getElementById('quizNavigation');
             if (navigationContainer) {
                 navigationContainer.classList.remove('hidden');
             }
             
             currentView = 'quiz';
-            closeMobileMenuFunc(); // Close mobile menu when navigating
-        }
-
-        function showTutorInterface() {
-            hideAllViews();
-            tutorInterface.classList.remove('hidden');
-            currentView = 'tutor';
-            closeMobileMenuFunc(); // Close mobile menu when navigating
+            closeMobileMenuFunc();
         }
 
         function showProgressInterface() {
@@ -1734,7 +1834,7 @@
             progressInterface.classList.remove('hidden');
             currentView = 'progress';
             renderProgress();
-            closeMobileMenuFunc(); // Close mobile menu when navigating
+            closeMobileMenuFunc();
         }
 
         function showAnalyticsInterface() {
@@ -1742,14 +1842,13 @@
             analyticsInterface.classList.remove('hidden');
             currentView = 'analytics';
             renderAnalytics();
-            closeMobileMenuFunc(); // Close mobile menu when navigating
+            closeMobileMenuFunc();
         }
 
         function hideAllViews() {
             subjectSelection.classList.add('hidden');
             topicSelection.classList.add('hidden');
             quizInterface.classList.add('hidden');
-            tutorInterface.classList.add('hidden');
             progressInterface.classList.add('hidden');
             analyticsInterface.classList.add('hidden');
         }
@@ -1763,14 +1862,13 @@
         }
 
         function showError(message) {
-            // Create a simple error modal
             const errorModal = document.createElement('div');
             errorModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
             errorModal.innerHTML = `
                 <div class="material-card bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-material-4 max-w-sm w-full">
                     <div class="flex items-center space-x-3 mb-4">
                         <span class="material-icons text-red-600">error</span>
-                        <h3 class="headline-6 font-semibold text-red-600">Error</h3>
+                        <h3 class="headline-6 font-semibold text-red-600">Notice</h3>
                     </div>
                     <p class="body-1 mb-4 text-neutral-800 dark:text-white">${message}</p>
                     <button class="material-button w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600" onclick="this.closest('.fixed').remove()">OK</button>
@@ -1794,63 +1892,435 @@
         }
 
         function renderProgress() {
-            if (analyticsData.quizResults.length === 0) {
-                document.getElementById('overallStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
-                document.getElementById('subjectStats').innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+            // Calculate comprehensive stats
+            const stats = calculateProgressStats();
+            
+            // Update stats cards
+            updateStatsCards(stats);
+            
+            // Update subject progress list
+            updateSubjectProgressList(stats);
+            
+            // Update insights and activity
+            updateStudyInsights(stats);
+            updateRecentActivity();
+            updateAchievements(stats);
+            
+            // Update progress over time chart
+            updateProgressTimeChart();
+        }
+
+        function calculateProgressStats() {
+            const totalQuizzes = analyticsData.quizResults.length;
+            
+            if (totalQuizzes === 0) {
+                return {
+                    totalQuestions: 0,
+                    correctAnswers: 0,
+                    accuracy: 0,
+                    studyStreak: 0,
+                    completedQuizzes: 0,
+                    bestScore: 0,
+                    weeklyQuestions: 0,
+                    subjects: {}
+                };
+            }
+
+            // Calculate overall stats
+            const totalQuestions = analyticsData.quizResults.reduce((sum, result) => sum + result.total, 0);
+            const correctAnswers = analyticsData.quizResults.reduce((sum, result) => sum + result.correct, 0);
+            const accuracy = Math.round((correctAnswers / totalQuestions) * 100);
+            const bestScore = Math.max(...analyticsData.quizResults.map(r => r.score));
+            
+            // Calculate study streak (simplified - consecutive days)
+            const studyStreak = calculateStudyStreak();
+            
+            // Calculate weekly questions (last 7 days)
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weeklyQuestions = analyticsData.quizResults
+                .filter(result => new Date(result.date) > weekAgo)
+                .reduce((sum, result) => sum + result.total, 0);
+
+            // Calculate subject-specific progress
+            const subjects = {};
+            analyticsData.quizResults.forEach(result => {
+                if (!subjects[result.subject]) {
+                    subjects[result.subject] = {
+                        name: result.subjectName,
+                        totalQuestions: 0,
+                        correctAnswers: 0,
+                        attempts: 0,
+                        bestScore: 0,
+                        averageScore: 0,
+                        totalScore: 0
+                    };
+                }
+                
+                const subj = subjects[result.subject];
+                subj.totalQuestions += result.total;
+                subj.correctAnswers += result.correct;
+                subj.attempts++;
+                subj.bestScore = Math.max(subj.bestScore, result.score);
+                subj.totalScore += result.score;
+                subj.averageScore = subj.totalScore / subj.attempts;
+            });
+
+            return {
+                totalQuestions,
+                correctAnswers,
+                accuracy,
+                studyStreak,
+                completedQuizzes: totalQuizzes,
+                bestScore,
+                weeklyQuestions,
+                subjects
+            };
+        }
+
+        function calculateStudyStreak() {
+            if (analyticsData.quizResults.length === 0) return 0;
+            
+            // Get unique study dates
+            const studyDates = [...new Set(
+                analyticsData.quizResults.map(result => 
+                    new Date(result.date).toDateString()
+                )
+            )].sort((a, b) => new Date(b) - new Date(a));
+            
+            if (studyDates.length === 0) return 0;
+            
+            let streak = 1;
+            const today = new Date().toDateString();
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // Check if studied today or yesterday
+            if (studyDates[0] !== today && studyDates[0] !== yesterday.toDateString()) {
+                return 0;
+            }
+            
+            // Count consecutive days
+            for (let i = 1; i < studyDates.length; i++) {
+                const current = new Date(studyDates[i]);
+                const previous = new Date(studyDates[i - 1]);
+                const diffDays = (previous - current) / (1000 * 60 * 60 * 24);
+                
+                if (diffDays === 1) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+
+        function updateStatsCards(stats) {
+            document.getElementById('totalQuestionsCount').textContent = stats.totalQuestions;
+            document.getElementById('correctAnswersCount').textContent = stats.correctAnswers;
+            document.getElementById('accuracyPercentage').textContent = `${stats.accuracy}% accuracy`;
+            document.getElementById('studyStreakCount').textContent = `${stats.studyStreak} ${stats.studyStreak === 1 ? 'day' : 'days'}`;
+            document.getElementById('completedQuizzesCount').textContent = stats.completedQuizzes;
+            document.getElementById('bestScoreDisplay').textContent = `Best: ${Math.round(stats.bestScore)}%`;
+            document.getElementById('weeklyQuestionsCount').textContent = `+${stats.weeklyQuestions} this week`;
+        }
+
+        function updateSubjectProgressList(stats) {
+            const container = document.getElementById('subjectProgressList');
+            
+            if (Object.keys(stats.subjects).length === 0) {
+                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No subject data available. Complete some quizzes to see your progress!</p>';
                 return;
             }
 
-            // Basic progress stats
-            const totalQuizzes = analyticsData.quizResults.length;
-            const averageScore = Math.round(analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes);
-            
-            document.getElementById('overallStats').innerHTML = `
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span>Total Quizzes:</span>
-                        <span class="font-medium">${totalQuizzes}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Average Score:</span>
-                        <span class="font-medium">${averageScore}%</span>
-                    </div>
-                </div>
-            `;
+            const subjectIcons = {
+                'mathematics': 'calculate',
+                'physics': 'tungsten', 
+                'chemistry': 'science',
+                'biology': 'bubble_chart',
+                'english': 'translate'
+            };
 
-            // Subject breakdown
-            const subjectBreakdown = {};
-            analyticsData.quizResults.forEach(result => {
-                if (!subjectBreakdown[result.subjectName]) {
-                    subjectBreakdown[result.subjectName] = { total: 0, count: 0 };
-                }
-                subjectBreakdown[result.subjectName].total += result.score;
-                subjectBreakdown[result.subjectName].count++;
-            });
+            const subjectColors = {
+                'mathematics': 'data-500',
+                'physics': 'warning',
+                'chemistry': 'primary',
+                'biology': 'success',
+                'english': 'accent'
+            };
 
-            const subjectStatsHTML = Object.entries(subjectBreakdown).map(([subject, data]) => {
-                const avg = Math.round(data.total / data.count);
+            container.innerHTML = Object.entries(stats.subjects).map(([subjectId, subject]) => {
+                const icon = subjectIcons[subjectId] || 'school';
+                const color = subjectColors[subjectId] || 'primary';
+                const progressPercentage = Math.round(subject.averageScore);
+                const status = getSubjectStatus(progressPercentage);
+                
                 return `
-                    <div class="flex justify-between py-1">
-                        <span>${subject}:</span>
-                        <span class="font-medium">${avg}%</span>
+                    <div class="material-card bg-neutral-50 dark:bg-neutral-700 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow-material-1">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                            <div class="flex items-center space-x-3 sm:space-x-4">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-${color} rounded-lg sm:rounded-xl flex items-center justify-center shadow-material-1">
+                                    <span class="material-icons text-white text-sm sm:text-base">${icon}</span>
+                                </div>
+                                <div>
+                                    <h4 class="subtitle-1 text-neutral-800 dark:text-white">${subject.name}</h4>
+                                    <p class="body-2 text-neutral-600 dark:text-neutral-400">${subject.totalQuestions} questions completed</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3 sm:space-x-4">
+                                <div class="w-full sm:w-32">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="caption text-neutral-600 dark:text-neutral-400">Progress</span>
+                                        <span class="caption font-medium text-neutral-800 dark:text-white">${progressPercentage}%</span>
+                                    </div>
+                                    <div class="w-full bg-neutral-200 dark:bg-neutral-600 rounded-full h-2">
+                                        <div class="bg-${color} h-2 rounded-full transition-all duration-300" style="width: ${progressPercentage}%"></div>
+                                    </div>
+                                </div>
+                                <span class="caption ${status.class} px-3 py-1 rounded-full font-medium whitespace-nowrap">${status.text}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
+        }
 
-            document.getElementById('subjectStats').innerHTML = `<div class="space-y-2">${subjectStatsHTML}</div>`;
+        function getSubjectStatus(score) {
+            if (score >= 80) return { text: 'Strong', class: 'bg-success/10 text-success' };
+            if (score >= 60) return { text: 'Good', class: 'bg-warning/10 text-warning' };
+            if (score >= 40) return { text: 'Practice', class: 'bg-premium/20 text-premium-700' };
+            return { text: 'Needs Work', class: 'bg-error/10 text-error' };
+        }
+
+        function updateStudyInsights(stats) {
+            const container = document.getElementById('studyInsights');
+            
+            if (stats.completedQuizzes === 0) {
+                container.innerHTML = '<p class="body-2 text-premium-700 dark:text-premium-300 mb-3 sm:mb-4">Complete more quizzes to get personalized insights!</p>';
+                return;
+            }
+
+            let insights = [];
+            
+            // Generate insights based on performance
+            if (stats.accuracy >= 80) {
+                insights.push("🎯 Excellent accuracy! You're mastering the material.");
+            } else if (stats.accuracy >= 60) {
+                insights.push("📈 Good progress! Focus on weak areas to improve further.");
+            } else {
+                insights.push("💪 Keep practicing! Review explanations to strengthen understanding.");
+            }
+
+            if (stats.studyStreak >= 7) {
+                insights.push(`🔥 Amazing ${stats.studyStreak}-day streak! Consistency is key to success.`);
+            } else if (stats.studyStreak >= 3) {
+                insights.push(`⭐ Great ${stats.studyStreak}-day streak! Keep the momentum going.`);
+            }
+
+            // Find weakest subject
+            const subjects = Object.values(stats.subjects);
+            if (subjects.length > 0) {
+                const weakestSubject = subjects.reduce((prev, current) => 
+                    (prev.averageScore < current.averageScore) ? prev : current
+                );
+                if (weakestSubject.averageScore < 70) {
+                    insights.push(`📚 ${weakestSubject.name} needs attention. Consider focused practice.`);
+                }
+            }
+
+            container.innerHTML = insights.map(insight => 
+                `<p class="body-2 text-premium-700 dark:text-premium-300 mb-2">${insight}</p>`
+            ).join('');
+        }
+
+        function updateRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            
+            if (analyticsData.quizResults.length === 0) {
+                container.innerHTML = '<p class="body-2 text-neutral-600 dark:text-neutral-400">No recent activity to show.</p>';
+                return;
+            }
+
+            const recentQuizzes = analyticsData.quizResults
+                .slice(-5)
+                .reverse()
+                .map(result => {
+                    const date = new Date(result.date);
+                    const timeAgo = getTimeAgo(date);
+                    const scoreClass = result.score >= 80 ? 'text-success' : result.score >= 60 ? 'text-warning' : 'text-error';
+                    
+                    return `
+                        <div class="flex items-center justify-between py-2">
+                            <div class="flex-1">
+                                <p class="body-2 text-neutral-800 dark:text-white">${result.topic}</p>
+                                <p class="caption text-neutral-600 dark:text-neutral-400">${result.subjectName} • ${timeAgo}</p>
+                            </div>
+                            <span class="caption font-medium ${scoreClass}">${Math.round(result.score)}%</span>
+                        </div>
+                    `;
+                }).join('');
+
+            container.innerHTML = recentQuizzes;
+        }
+
+        function updateAchievements(stats) {
+            const container = document.getElementById('achievementsList');
+            const achievements = [];
+
+            // Generate achievements based on performance
+            if (stats.completedQuizzes >= 10) {
+                achievements.push({
+                    icon: 'quiz',
+                    color: 'data-500',
+                    text: 'Quiz Master - 10+ quizzes completed'
+                });
+            }
+
+            if (stats.studyStreak >= 7) {
+                achievements.push({
+                    icon: 'local_fire_department',
+                    color: 'warning',
+                    text: `${stats.studyStreak}-Day Study Streak`
+                });
+            }
+
+            if (stats.accuracy >= 90) {
+                achievements.push({
+                    icon: 'verified',
+                    color: 'success',
+                    text: 'Precision Expert - 90%+ Accuracy'
+                });
+            }
+
+            // Subject-specific achievements
+            Object.values(stats.subjects).forEach(subject => {
+                if (subject.averageScore >= 85) {
+                    achievements.push({
+                        icon: 'emoji_events',
+                        color: 'warning',
+                        text: `${subject.name} Champion`
+                    });
+                }
+            });
+
+            if (achievements.length === 0) {
+                container.innerHTML = '<p class="body-2 text-neutral-600 dark:text-neutral-400">Complete quizzes to unlock achievements!</p>';
+                return;
+            }
+
+            container.innerHTML = achievements.map(achievement => `
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-${achievement.color}/10 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-${achievement.color} text-sm">${achievement.icon}</span>
+                    </div>
+                    <span class="body-2 text-neutral-600 dark:text-neutral-400">${achievement.text}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateProgressTimeChart() {
+            const canvas = document.getElementById('progressTimeChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            if (analyticsData.quizResults.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#9AA0A6';
+                ctx.font = '16px Roboto';
+                ctx.textAlign = 'center';
+                ctx.fillText('Complete quizzes to see progress over time', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // Prepare data for chart
+            const last30Days = [...Array(30)].map((_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (29 - i));
+                return date;
+            });
+
+            const dailyScores = last30Days.map(date => {
+                const dayResults = analyticsData.quizResults.filter(result => {
+                    const resultDate = new Date(result.date);
+                    return resultDate.toDateString() === date.toDateString();
+                });
+                
+                if (dayResults.length === 0) return null;
+                
+                const avgScore = dayResults.reduce((sum, result) => sum + result.score, 0) / dayResults.length;
+                return avgScore;
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30Days.map(date => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [{
+                        label: 'Average Daily Score',
+                        data: dailyScores,
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#009F9D',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
         }
 
         // Setup event listeners
         function setupEventListeners() {
-            // Desktop navigation buttons
+            // Desktop navigation buttons (removed tutor)
             document.getElementById('practiceBtn').addEventListener('click', showSubjectSelection);
-            document.getElementById('tutorBtn').addEventListener('click', showTutorInterface);
             document.getElementById('progressBtn').addEventListener('click', showProgressInterface);
             document.getElementById('analyticsBtn').addEventListener('click', showAnalyticsInterface);
 
-            // Mobile navigation buttons
+            // Mobile navigation buttons (removed tutor)
             document.getElementById('mobilePracticeBtn').addEventListener('click', showSubjectSelection);
-            document.getElementById('mobileTutorBtn').addEventListener('click', showTutorInterface);
             document.getElementById('mobileProgressBtn').addEventListener('click', showProgressInterface);
             document.getElementById('mobileAnalyticsBtn').addEventListener('click', showAnalyticsInterface);
 
@@ -1858,7 +2328,6 @@
             mobileMenuBtn.addEventListener('click', toggleMobileMenu);
             closeMobileMenu.addEventListener('click', closeMobileMenuFunc);
             
-            // Close mobile menu when clicking on overlay
             mobileMenuOverlay.addEventListener('click', (e) => {
                 if (e.target === mobileMenuOverlay) {
                     closeMobileMenuFunc();
@@ -1876,17 +2345,9 @@
             document.getElementById('explainBtn').addEventListener('click', showExplanation);
             document.getElementById('retakeBtn').addEventListener('click', () => startQuiz(currentTopic));
 
-            // Tutor interface
-            document.getElementById('sendTutorBtn').addEventListener('click', sendTutorMessage);
-            document.getElementById('tutorInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendTutorMessage();
-                }
-            });
-
             // Close mobile menu on window resize if it becomes desktop size
             window.addEventListener('resize', () => {
-                if (window.innerWidth >= 768) { // md breakpoint
+                if (window.innerWidth >= 768) {
                     closeMobileMenuFunc();
                 }
             });
@@ -1897,62 +2358,6 @@
                     closeMobileMenuFunc();
                 }
             });
-        }
-
-        // Tutor functionality
-        async function sendTutorMessage() {
-            const input = document.getElementById('tutorInput');
-            const message = input.value.trim();
-            if (!message) return;
-
-            const chat = document.getElementById('tutorChat');
-            
-            // Add user message
-            addChatMessage(chat, message, 'user');
-            input.value = '';
-
-            // Add loading message
-            const loadingDiv = addChatMessage(chat, 'Thinking...', 'bot');
-
-            try {
-                // Use Poe API to get response from Claude
-                if (window.Poe && window.Poe.sendUserMessage) {
-                    window.Poe.registerHandler('tutor-handler', (result) => {
-                        const response = result.responses[0];
-                        if (response.status === 'complete') {
-                            loadingDiv.innerHTML = `<div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg max-w-xs">${response.content}</div>`;
-                        } else if (response.status === 'incomplete') {
-                            loadingDiv.innerHTML = `<div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg max-w-xs">${response.content}</div>`;
-                        } else if (response.status === 'error') {
-                            loadingDiv.innerHTML = `<div class="bg-red-100 dark:bg-red-900 p-3 rounded-lg max-w-xs">Error: ${response.statusText}</div>`;
-                        }
-                    });
-
-                    await window.Poe.sendUserMessage(`@Claude-Sonnet-4 You are a helpful tutor. Please answer this question: ${message}`, {
-                        handler: 'tutor-handler',
-                        stream: true,
-                        openChat: false
-                    });
-                } else {
-                    // Fallback response
-                    loadingDiv.innerHTML = `<div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg max-w-xs">I'm a helpful tutor! However, I need the Poe API to provide detailed answers. You can ask me about any topic and I'll do my best to help you understand the concepts.</div>`;
-                }
-            } catch (error) {
-                loadingDiv.innerHTML = `<div class="bg-red-100 dark:bg-red-900 p-3 rounded-lg max-w-xs">Sorry, I couldn't process your question right now. Please try again.</div>`;
-            }
-        }
-
-        function addChatMessage(container, message, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `mb-3 flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-            
-            const bgColor = sender === 'user' ? 'bg-primary text-white' : 'bg-blue-100 dark:bg-blue-900';
-            messageDiv.innerHTML = `<div class="${bgColor} p-3 rounded-lg max-w-xs">${message}</div>`;
-            
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-            
-            return messageDiv;
         }
 
         // Initialize the app
