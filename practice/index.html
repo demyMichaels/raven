@@ -456,6 +456,7 @@
                 
                 <!-- Question Image Container -->
                 <div id="questionImageContainer" class="hidden mb-6">
+                    <img id="questionImage" class="question-image w-full" style="display: none;" />
                     <div id="questionImagePlaceholder" class="image-placeholder">
                         <span class="material-icons text-4xl mb-2">image</span>
                         <p id="questionImageDescription">Question diagram will be displayed here</p>
@@ -474,6 +475,7 @@
                     
                     <!-- Explanation Image Container -->
                     <div id="explanationImageContainer" class="hidden mb-4">
+                        <img id="explanationImage" class="question-image w-full" style="display: none;" />
                         <div id="explanationImagePlaceholder" class="image-placeholder">
                             <span class="material-icons text-3xl mb-2">assessment</span>
                             <p id="explanationImageDescription">Explanation diagram will be displayed here</p>
@@ -790,11 +792,6 @@
         </div>
     </div>
 
-
-
-
-
-
     <script>
         // Dark mode support
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -855,16 +852,15 @@
             }
         };
 
-        // Available subjects
+        // Available subjects (you can modify this list based on your data files)
         const availableSubjects = [
-            { id: 'mathematics', name: 'Mathematics', icon: '🔢', data: null },
-            { id: 'physics', name: 'Physics', icon: '⚡', data: null },
-            { id: 'chemistry', name: 'Chemistry', icon: '🧪', data: null },
-            { id: 'biology', name: 'Biology', icon: '🧬', data: sampleBiologyData },
-            { id: 'english', name: 'English', icon: '📝', data: null },
+            { id: 'mathematics', name: 'Mathematics', icon: '🔢', file: 'data/mathematics.json' },
+            { id: 'physics', name: 'Physics', icon: '⚡', file: 'data/physics.json' },
+            { id: 'chemistry', name: 'Chemistry', icon: '🧪', file: 'data/chemistry.json' },
+            { id: 'biology', name: 'Biology', icon: '🧬', file: 'data/biology.json', data: sampleBiologyData },
+            { id: 'english', name: 'English', icon: '📝', file: 'data/english.json' },
         ];
 
-        
         // DOM Elements
         const subjectSelection = document.getElementById('subjectSelection');
         const topicSelection = document.getElementById('topicSelection');
@@ -921,6 +917,50 @@
             if (cat.includes('ecology')) return 'eco';
             
             return 'quiz';
+        }
+
+        // Image loading functions
+        function getImagePath(subjectId, topicId, imageType, questionId) {
+            // Construct image path based on your folder structure
+            // images/{subjectId}/{topicId}/{imageType}_{questionId}.jpg
+            const extensions = ['jpg', 'jpeg', 'png', 'webp'];
+            return extensions.map(ext => 
+                `images/${subjectId}/${topicId}/${imageType}_${questionId}.${ext}`
+            );
+        }
+
+        function loadImage(imagePaths, imgElement, placeholderElement, onSuccess = null) {
+            if (!Array.isArray(imagePaths)) {
+                imagePaths = [imagePaths];
+            }
+
+            let currentIndex = 0;
+            
+            function tryLoadImage() {
+                if (currentIndex >= imagePaths.length) {
+                    // No image found, keep placeholder visible
+                    return;
+                }
+
+                const img = new Image();
+                const currentPath = imagePaths[currentIndex];
+                
+                img.onload = function() {
+                    imgElement.src = currentPath;
+                    imgElement.style.display = 'block';
+                    placeholderElement.style.display = 'none';
+                    if (onSuccess) onSuccess();
+                };
+                
+                img.onerror = function() {
+                    currentIndex++;
+                    tryLoadImage();
+                };
+                
+                img.src = currentPath;
+            }
+            
+            tryLoadImage();
         }
 
         // Analytics Storage Functions
@@ -1196,8 +1236,20 @@
                     renderTopics(subject.data.topics);
                     showTopicSelection();
                 } else {
-                    // Try to load from file (will fail gracefully)
-                    throw new Error(`${subject.name} content coming soon! For now, try Biology which has sample content.`);
+                    // Try to load from the specified file path
+                    try {
+                        const response = await fetch(subject.file);
+                        if (!response.ok) {
+                            throw new Error(`Failed to load ${subject.name} data`);
+                        }
+                        const data = await response.json();
+                        subjects[subject.id] = data;
+                        currentSubject = subject;
+                        renderTopics(data.topics);
+                        showTopicSelection();
+                    } catch (fetchError) {
+                        throw new Error(`${subject.name} content coming soon! Make sure ${subject.file} exists.`);
+                    }
                 }
             } catch (error) {
                 showError(error.message);
@@ -1301,12 +1353,21 @@
 
             // Handle question image
             const questionImageContainer = document.getElementById('questionImageContainer');
+            const questionImage = document.getElementById('questionImage');
             const questionImagePlaceholder = document.getElementById('questionImagePlaceholder');
             const questionImageDescription = document.getElementById('questionImageDescription');
 
             if (question.hasQuestionImage && question.questionImageDescription) {
                 questionImageContainer.classList.remove('hidden');
                 questionImageDescription.textContent = question.questionImageDescription;
+                
+                // Reset image display state
+                questionImage.style.display = 'none';
+                questionImagePlaceholder.style.display = 'block';
+                
+                // Try to load actual image
+                const imagePaths = getImagePath(currentSubject.id, currentTopic.id, 'question', question.id);
+                loadImage(imagePaths, questionImage, questionImagePlaceholder);
             } else {
                 questionImageContainer.classList.add('hidden');
             }
@@ -1402,11 +1463,21 @@
                 
                 // Handle explanation image
                 const explanationImageContainer = document.getElementById('explanationImageContainer');
+                const explanationImage = document.getElementById('explanationImage');
+                const explanationImagePlaceholder = document.getElementById('explanationImagePlaceholder');
                 const explanationImageDescription = document.getElementById('explanationImageDescription');
 
                 if (question.hasExplanationImage && question.explanationImageDescription) {
                     explanationImageContainer.classList.remove('hidden');
                     explanationImageDescription.textContent = question.explanationImageDescription;
+                    
+                    // Reset image display state
+                    explanationImage.style.display = 'none';
+                    explanationImagePlaceholder.style.display = 'block';
+                    
+                    // Try to load actual image
+                    const imagePaths = getImagePath(currentSubject.id, currentTopic.id, 'explanation', question.id);
+                    loadImage(imagePaths, explanationImage, explanationImagePlaceholder);
                 } else {
                     explanationImageContainer.classList.add('hidden');
                 }
@@ -1661,7 +1732,7 @@
             });
 
             // Subject Performance Chart
-            const subjectCtx = document.getElementById('analuticsSubjectChart').getContext('2d');
+            const subjectCtx = document.getElementById('analyticsSubjectChart').getContext('2d');
             const subjectScores = {};
             
             analyticsData.quizResults.forEach(result => {
