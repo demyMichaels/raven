@@ -3373,16 +3373,8 @@
                 `;
             }
 
-            // Prepare text to read
-            let textToRead = `Question ${currentQuestionIndex + 1}. ${question.question}`;
-            
-            // Add options
-            question.options.forEach((option, index) => {
-                const letter = String.fromCharCode(65 + index);
-                textToRead += ` Option ${letter}: ${option.replace(/^[A-E]\.\s*/, '')}`;
-            });
-
-            ttsService.speak(textToRead)
+            // Read question and options with proper delays
+            readQuestionWithDelays(question)
                 .then(() => {
                     console.log('📢 Question read successfully');
                 })
@@ -3398,6 +3390,47 @@
                         `;
                     }
                 });
+        }
+
+        async function readQuestionWithDelays(question) {
+            try {
+                // Read the question first
+                const questionText = `Question ${currentQuestionIndex + 1}. ${question.question}`;
+                await ttsService.speak(questionText);
+                
+                // Wait a moment before reading options
+                await delay(800);
+                
+                // Announce that options are coming
+                await ttsService.speak("The options are:");
+                await delay(500);
+                
+                // Read each option with delays
+                for (let i = 0; i < question.options.length; i++) {
+                    const letter = String.fromCharCode(65 + i);
+                    const option = question.options[i].replace(/^[A-E]\.\s*/, '');
+                    
+                    // Read option
+                    await ttsService.speak(`Option ${letter}. ${option}`);
+                    
+                    // Add delay between options (except after the last one)
+                    if (i < question.options.length - 1) {
+                        await delay(1200); // 1.2 second pause between options
+                    }
+                }
+                
+                // Final pause and instruction
+                await delay(800);
+                await ttsService.speak("You can now select your answer or use voice input.");
+                
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Utility function for delays
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         // Setup STT Controls
