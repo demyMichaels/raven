@@ -2076,6 +2076,10 @@
             const question = currentQuestions[currentQuestionIndex];
             if (!question) return;
 
+            // Stop any ongoing TTS and reset button state
+            ttsService.stop();
+            resetReadQuestionButton();
+
             document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
             document.getElementById('totalQuestions').textContent = currentQuestions.length;
             document.getElementById('questionMeta').textContent = `${currentTopic.name} - ${currentTopic.category}`;
@@ -3399,11 +3403,11 @@
                 await ttsService.speak(questionText);
                 
                 // Wait a moment before reading options
-                await delay(800);
+                await delay(600);
                 
                 // Announce that options are coming
                 await ttsService.speak("The options are:");
-                await delay(100);
+                await delay(500);
                 
                 // Read each option with delays
                 for (let i = 0; i < question.options.length; i++) {
@@ -3421,7 +3425,7 @@
                 
                 // Final pause and instruction
                 await delay(800);
-                await ttsService.speak("Select your answer.");
+                await ttsService.speak("select your answer.");
                 
             } catch (error) {
                 throw error;
@@ -3431,6 +3435,18 @@
         // Utility function for delays
         function delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Reset the Read Question button to its default state
+        function resetReadQuestionButton() {
+            const readBtn = document.getElementById('readQuestionBtn');
+            if (readBtn) {
+                readBtn.disabled = false;
+                readBtn.innerHTML = `
+                    <span class="material-icons text-sm">volume_up</span>
+                    <span>Read Question</span>
+                `;
+            }
         }
 
         // Setup STT Controls
@@ -3495,8 +3511,6 @@
             return success;
         }
 
-
-
         // Example usage functions:
         function setupElevenLabs(apiKey) {
             return switchToProvider('elevenlabs', apiKey);
@@ -3509,7 +3523,6 @@
         function setupGoogleTTS(apiKey) {
             return switchToProvider('google', apiKey);
         }
-
 
         // STT utility functions
         function setupOpenAISTT(apiKey) {
