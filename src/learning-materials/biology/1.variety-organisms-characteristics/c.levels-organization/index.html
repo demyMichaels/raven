@@ -128,13 +128,13 @@
             </button>
         </div>
 
-        <!-- Haptic Feedback Legend -->
+        <!-- Audio Feedback Legend -->
         <div class="mt-8 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Haptic Feedback Guide:</h3>
+            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Audio Feedback Guide:</h3>
             <div class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                <div>✅ Correct Answer: Short, gentle vibration</div>
-                <div>❌ Wrong Answer: Double vibration pattern</div>
-                <div>🎯 Quiz Complete: Celebration vibration sequence</div>
+                <div>✅ Correct Answer: Pleasant ascending chime (C-E-G)</div>
+                <div>❌ Wrong Answer: Gentle descending tone</div>
+                <div>🎯 Quiz Complete: Victory fanfare melody</div>
             </div>
         </div>
     </div>
@@ -250,35 +250,80 @@
         const hapticStatus = document.getElementById('hapticStatus');
         const restartButton = document.getElementById('restartButton');
 
-        // Haptic feedback functions
-        function checkHapticSupport() {
-            if ('vibrate' in navigator) {
-                hapticStatus.textContent = '📳 Haptic feedback enabled';
+        // Audio feedback functions
+        let audioContext;
+        let audioEnabled = true;
+
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                hapticStatus.textContent = '🔊 Audio feedback enabled';
                 hapticStatus.classList.add('text-green-500');
                 return true;
-            } else {
-                hapticStatus.textContent = '📱 Haptic feedback not supported on this device';
+            } catch (e) {
+                hapticStatus.textContent = '🔇 Audio feedback not supported';
                 hapticStatus.classList.add('text-orange-500');
+                audioEnabled = false;
                 return false;
             }
         }
 
-        function hapticCorrect() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate(200); // Short, gentle vibration
+        function playTone(frequency, duration, type = 'sine', volume = 0.1) {
+            if (!audioEnabled || !audioContext) return;
+
+            try {
+                // Resume audio context if suspended (required for iOS)
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = type;
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Audio playback failed:', e);
             }
         }
 
-        function hapticIncorrect() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate([100, 50, 100]); // Double vibration pattern
-            }
+        function audioCorrect() {
+            // Pleasant ascending chime
+            playTone(523.25, 0.15, 'sine', 0.08); // C5
+            setTimeout(() => playTone(659.25, 0.15, 'sine', 0.08), 80); // E5
+            setTimeout(() => playTone(783.99, 0.2, 'sine', 0.08), 160); // G5
         }
 
-        function hapticComplete() {
-            if ('vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200, 100, 400]); // Celebration sequence
-            }
+        function audioIncorrect() {
+            // Gentle descending tone
+            playTone(392, 0.3, 'sine', 0.06); // G4
+            setTimeout(() => playTone(329.63, 0.3, 'sine', 0.06), 150); // E4
+        }
+
+        function audioComplete() {
+            // Victory fanfare
+            const notes = [
+                { freq: 523.25, time: 0 },    // C5
+                { freq: 659.25, time: 100 },  // E5
+                { freq: 783.99, time: 200 },  // G5
+                { freq: 1046.5, time: 300 },  // C6
+                { freq: 783.99, time: 450 },  // G5
+                { freq: 1046.5, time: 600 }   // C6
+            ];
+            
+            notes.forEach(note => {
+                setTimeout(() => playTone(note.freq, 0.25, 'sine', 0.1), note.time);
+            });
         }
 
         // Update progress and stats
@@ -348,7 +393,7 @@
             if (isCorrect) {
                 buttonElement.classList.add('bg-green-500', 'text-white', 'border-green-500', 'animate-bounce-in');
                 correctAnswers++;
-                hapticCorrect();
+                audioCorrect();
                 
                 feedbackMessage.className = 'p-4 rounded-lg mb-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700';
                 feedbackMessage.innerHTML = `
@@ -367,7 +412,7 @@
                 allButtons[question.correct].classList.add('bg-green-500', 'text-white', 'border-green-500', 'animate-bounce-in');
                 
                 incorrectAnswers++;
-                hapticIncorrect();
+                audioIncorrect();
                 
                 feedbackMessage.className = 'p-4 rounded-lg mb-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700';
                 feedbackMessage.innerHTML = `
@@ -394,7 +439,7 @@
 
         // Show final results
         function showResults() {
-            hapticComplete();
+            audioComplete();
             
             const totalQuestions = quizData.length;
             const percentage = Math.round((correctAnswers / totalQuestions) * 100);
@@ -444,7 +489,7 @@
         restartButton.addEventListener('click', restartQuiz);
 
         // Initialize quiz
-        checkHapticSupport();
+        initAudio();
         loadQuestion();
     </script>
 </body>
