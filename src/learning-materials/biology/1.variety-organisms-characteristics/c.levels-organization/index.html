@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Quiz Master</title>
+    <title>Haptic Learning Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -11,1298 +11,441 @@
                 extend: {
                     colors: {
                         primary: '#5D5CDE',
+                        'primary-dark': '#4B4BC8',
+                    },
+                    animation: {
+                        'bounce-in': 'bounceIn 0.6s ease-out',
+                        'shake': 'shake 0.6s ease-in-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)', opacity: '1' }
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-10px)' },
+                            '20%, 40%, 60%, 80%': { transform: 'translateX(10px)' }
+                        }
                     }
                 }
             }
         }
     </script>
-    <style>
-        .loading-spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #5D5CDE;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .pulse-glow {
-            animation: pulse-glow 2s infinite;
-        }
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 5px #5D5CDE; }
-            50% { box-shadow: 0 0 20px #5D5CDE, 0 0 30px #5D5CDE; }
-        }
-        .correct-answer {
-            background: linear-gradient(135deg, #10B981, #059669);
-            animation: celebrate 0.6s ease-in-out;
-        }
-        .wrong-answer {
-            background: linear-gradient(135deg, #EF4444, #DC2626);
-            animation: shake 0.6s ease-in-out;
-        }
-        @keyframes celebrate {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        .speaking {
-            background: linear-gradient(45deg, #5D5CDE, #8B5CF6);
-            color: white;
-        }
-        .listening {
-            background: linear-gradient(45deg, #EF4444, #F87171);
-            color: white;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .microphone-wave {
-            animation: microphone-wave 1s ease-in-out infinite;
-        }
-        @keyframes microphone-wave {
-            0%, 100% { transform: scaleY(1); }
-            50% { transform: scaleY(1.5); }
-        }
-    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-colors duration-200">
+<body class="bg-white dark:bg-gray-900 min-h-screen transition-colors duration-300">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">🎧 Audio Quiz Master</h1>
-            <p class="text-gray-600 dark:text-gray-400">Interactive quiz with voice narration, speech recognition, and haptic feedback</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
+                🎯 Haptic Learning Quiz
+            </h1>
+            <p class="text-gray-600 dark:text-gray-300 text-sm md:text-base">
+                Feel the learning with tactile feedback
+            </p>
+            <div id="hapticStatus" class="mt-2 text-xs text-gray-500 dark:text-gray-400"></div>
         </div>
 
-        <!-- Browser Compatibility Check -->
-        <div id="compatibilityWarning" class="bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded mb-6 hidden">
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                <p><strong>Note:</strong> Your browser may not support all features. Please use Chrome, Firefox, Safari, or Edge for the best experience.</p>
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Progress</span>
+                <span id="progressText" class="text-sm font-medium text-primary">0/10</span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div id="progressBar" class="bg-gradient-to-r from-primary to-primary-dark h-3 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
             </div>
         </div>
 
-        <!-- Voice & Accessibility Settings Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
-            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                <svg class="w-6 h-6 mr-2 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                </svg>
-                Voice & Accessibility Settings
-            </h2>
-            
-            <!-- Voice Settings Row -->
-            <div class="grid md:grid-cols-3 gap-4 mb-4">
-                <div>
-                    <label for="voiceSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Narrator Voice
-                    </label>
-                    <select id="voiceSelect" class="w-full px-3 py-2 text-base border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="">Loading voices...</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="rateSlider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Speech Rate: <span id="rateValue">1.0</span>x
-                    </label>
-                    <input type="range" id="rateSlider" min="0.5" max="2" step="0.1" value="1" 
-                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-                </div>
-                <div>
-                    <label for="pitchSlider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Pitch: <span id="pitchValue">1.0</span>
-                    </label>
-                    <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1" 
-                           class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
-                </div>
+        <!-- Score Display -->
+        <div class="flex justify-center space-x-6 mb-8">
+            <div class="text-center">
+                <div id="correctCount" class="text-2xl font-bold text-green-500">0</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Correct</div>
             </div>
-
-            <!-- Accessibility Toggles Row -->
-            <div class="grid md:grid-cols-3 gap-4 mb-4">
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <label for="autoReadToggle" class="font-medium text-gray-900 dark:text-white text-sm">Auto-read</label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Automatic narration</p>
-                    </div>
-                    <button id="autoReadToggle" class="relative w-12 h-6 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary">
-                        <div id="autoReadToggleSlider" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"></div>
-                    </button>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <label for="hapticToggle" class="font-medium text-gray-900 dark:text-white text-sm">Haptic Feedback</label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Vibration feedback</p>
-                    </div>
-                    <button id="hapticToggle" class="relative w-12 h-6 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary">
-                        <div id="hapticToggleSlider" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"></div>
-                    </button>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <label for="voiceAnswerToggle" class="font-medium text-gray-900 dark:text-white text-sm">Voice Answers</label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Speak your answers</p>
-                    </div>
-                    <button id="voiceAnswerToggle" class="relative w-12 h-6 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary">
-                        <div id="voiceAnswerToggleSlider" class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200"></div>
-                    </button>
-                </div>
+            <div class="text-center">
+                <div id="incorrectCount" class="text-2xl font-bold text-red-500">0</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Incorrect</div>
             </div>
-
-            <!-- Control Buttons -->
-            <div class="flex gap-3">
-                <button id="testVoiceBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
-                    </svg>
-                    Test Voice
-                </button>
-                <button id="stopSpeechBtn" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 hidden">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd"/>
-                    </svg>
-                    Stop Speech
-                </button>
-                <button id="testHapticBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M4 2a2 2 0 00-2 2v11a2 2 0 102 2h2a2 2 0 100-4H4V4h11a2 2 0 002 2v2a2 2 0 104 0V6a2 2 0 00-2-2H4z"/>
-                    </svg>
-                    Test Haptic
-                </button>
+            <div class="text-center">
+                <div id="accuracyRate" class="text-2xl font-bold text-blue-500">0%</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">Accuracy</div>
             </div>
         </div>
 
         <!-- Quiz Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <!-- Quiz Header -->
-            <div class="bg-gradient-to-r from-primary to-purple-600 p-6 text-white">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold">Cell Biology Quiz</h2>
-                        <p class="opacity-90">Test your knowledge of cells with audio narration</p>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm opacity-90">Question</div>
-                        <div class="text-2xl font-bold"><span id="currentQuestion">1</span>/<span id="totalQuestions">10</span></div>
-                    </div>
+        <div id="quizCard" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 mb-8 border border-gray-100 dark:border-gray-700">
+            <!-- Question -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span id="questionNumber" class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                        Question 1
+                    </span>
+                    <span id="categoryBadge" class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
+                        Science
+                    </span>
                 </div>
-                <div class="mt-4 bg-white bg-opacity-20 rounded-full h-2">
-                    <div id="progressBar" class="bg-white h-2 rounded-full transition-all duration-300" style="width: 10%"></div>
-                </div>
+                <h2 id="questionText" class="text-xl md:text-2xl font-semibold text-gray-800 dark:text-white leading-relaxed">
+                    Loading question...
+                </h2>
             </div>
 
-            <!-- Quiz Content -->
-            <div class="p-6">
-                <!-- Question Section -->
-                <div id="questionSection" class="mb-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Question <span id="questionNumber">1</span></h3>
-                        <div class="flex gap-2">
-                            <button id="readQuestionBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
-                                </svg>
-                                <span id="readQuestionBtnText">Read Question</span>
-                                <div id="readQuestionSpinner" class="loading-spinner hidden"></div>
-                            </button>
-                            <button id="voiceAnswerBtn" class="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/>
-                                </svg>
-                                <span id="voiceAnswerBtnText">Voice Answer</span>
-                                <div id="voiceAnswerSpinner" class="loading-spinner hidden"></div>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="questionText" class="text-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border-l-4 border-primary">
-                        Loading question...
-                    </div>
-                    <div id="listeningIndicator" class="hidden mt-2 flex items-center gap-2 text-red-600 dark:text-red-400">
-                        <svg class="w-5 h-5 microphone-wave" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>Listening... Say A, B, C, D or the full answer</span>
-                    </div>
-                </div>
+            <!-- Answer Options -->
+            <div id="answerOptions" class="space-y-3 mb-6">
+                <!-- Options will be inserted here -->
+            </div>
 
-                <!-- Options Section -->
-                <div id="optionsSection" class="mb-6">
-                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Choose your answer:</h4>
-                    <div id="optionsContainer" class="space-y-3">
-                        <!-- Options will be populated by JavaScript -->
-                    </div>
+            <!-- Feedback Section -->
+            <div id="feedbackSection" class="hidden">
+                <div id="feedbackMessage" class="p-4 rounded-lg mb-4">
+                    <!-- Feedback content -->
                 </div>
-
-                <!-- Control Buttons -->
-                <div id="controlButtons" class="flex flex-wrap gap-3 justify-center">
-                    <button id="nextBtn" class="bg-primary hover:bg-primary/90 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-md transition-all duration-200 hidden">
-                        Next Question →
-                    </button>
-                    <button id="restartBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 hidden">
-                        Restart Quiz
-                    </button>
-                    <button id="finishBtn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-md transition-colors duration-200 hidden">
-                        Finish Quiz
-                    </button>
-                </div>
-
-                <!-- Results Section -->
-                <div id="resultsSection" class="hidden text-center">
-                    <div class="bg-gradient-to-r from-green-400 to-green-600 text-white p-6 rounded-lg">
-                        <h3 class="text-2xl font-bold mb-2">🎉 Quiz Complete!</h3>
-                        <p class="text-xl">Your Score: <span id="finalScore" class="font-bold">0</span>/10</p>
-                        <p id="scoreMessage" class="mt-2 opacity-90"></p>
-                        <button id="readResultsBtn" class="mt-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">
-                            Read Results Aloud
-                        </button>
-                    </div>
-                </div>
+                <button id="nextButton" class="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                    Next Question
+                </button>
             </div>
         </div>
 
-        <!-- Status Messages -->
-        <div id="statusMessage" class="mt-4 p-3 rounded-md hidden">
-            <p id="statusText"></p>
+        <!-- Final Results -->
+        <div id="resultsCard" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 text-center border border-gray-100 dark:border-gray-700">
+            <div class="mb-6">
+                <div id="finalEmoji" class="text-6xl mb-4">🎉</div>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">
+                    Quiz Complete!
+                </h2>
+                <div id="finalScore" class="text-xl text-gray-600 dark:text-gray-300 mb-4">
+                    You scored 0/10 (0%)
+                </div>
+                <div id="performanceMessage" class="text-gray-500 dark:text-gray-400 mb-6">
+                    Great effort! Keep learning and improving.
+                </div>
+            </div>
+            <button id="restartButton" class="bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200">
+                Start New Quiz
+            </button>
         </div>
 
-        <!-- Instructions -->
-        <div class="mt-8 bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Features & Instructions</h3>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">🎵 Voice Features:</h4>
-                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>• Choose from your browser's available voices</li>
-                        <li>• Adjust speech rate (0.5x to 2x speed)</li>
-                        <li>• Control pitch for different voice tones</li>
-                        <li>• Test voices before starting the quiz</li>
-                        <li>• Auto-read feature for hands-free quizzing</li>
-                        <li>• Voice answers: Say "A", "B", "C", "D" or the full answer</li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-medium text-gray-900 dark:text-white mb-2">🎯 Accessibility Features:</h4>
-                    <ul class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>• Haptic feedback for correct/incorrect answers</li>
-                        <li>• Speech-to-text for hands-free interaction</li>
-                        <li>• Auto-advance after voice answers</li>
-                        <li>• Visual progress tracking</li>
-                        <li>• Immediate feedback with animations</li>
-                        <li>• Device-specific vibration patterns</li>
-                    </ul>
-                </div>
+        <!-- Haptic Feedback Legend -->
+        <div class="mt-8 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Haptic Feedback Guide:</h3>
+            <div class="text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                <div>✅ Correct Answer: Short, gentle vibration</div>
+                <div>❌ Wrong Answer: Double vibration pattern</div>
+                <div>🎯 Quiz Complete: Celebration vibration sequence</div>
             </div>
         </div>
     </div>
 
     <script>
-        // Quiz questions database - Cell Biology
-        const quizQuestions = [
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Quiz data
+        const quizData = [
             {
-                id: "1",
-                question: "Which of the following is a characteristic of the animal cell?",
-                options: [
-                    "Presence of chloroplasts",
-                    "Absence of large vacuoles",
-                    "Presence of large vacuoles",
-                    "Presence of chromosomes"
-                ],
+                question: "What is the powerhouse of the cell?",
+                options: ["Nucleus", "Mitochondria", "Ribosome", "Cytoplasm"],
                 correct: 1,
-                explanation: "Animal cells have few, scattered small vacuoles. Presence of chromosomes is common to ALL cells."
+                explanation: "Mitochondria are called the powerhouse of the cell because they produce ATP, the energy currency used by cells for various functions.",
+                category: "Biology"
             },
             {
-                id: "2",
-                question: "All living organisms",
-                options: [
-                    "photosynthesize",
-                    "move",
-                    "feed",
-                    "transpire"
-                ],
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Jupiter", "Mars", "Saturn"],
                 correct: 2,
-                explanation: "All living organisms require food for energy and to build body structures."
+                explanation: "Mars is called the Red Planet due to iron oxide (rust) on its surface, giving it a reddish appearance.",
+                category: "Astronomy"
             },
             {
-                id: "3",
-                question: "The vacuole of a plant cell is",
-                options: [
-                    "a large empty space",
-                    "filled with air",
-                    "an ordinary vacuum",
-                    "surrounded by a membrane"
-                ],
-                correct: 3,
-                explanation: "The membrane-bound vacuole contains the cell sap; the membrane is called TONOPLAST."
-            },
-            {
-                id: "4",
-                question: "The part of the cell solely responsible for respiration is the",
-                options: [
-                    "nucleus",
-                    "nucleolus",
-                    "mitochondria",
-                    "endoplasmic reticulum"
-                ],
+                question: "What is the chemical symbol for gold?",
+                options: ["Go", "Gd", "Au", "Ag"],
                 correct: 2,
-                explanation: "Mitochondria as sites of energy release in aerobic respiration hence are called the 'powerhouse' of the cell."
+                explanation: "Gold's chemical symbol is Au, derived from the Latin word 'aurum' meaning gold.",
+                category: "Chemistry"
             },
             {
-                id: "5",
-                question: "Which of these combinations is common to plant and animal cells?",
-                options: [
-                    "Centriole, middle lamella, Golgi bodies, mitochondrion",
-                    "Cytoplasm, sap vacuole, starch grains, leucoplasts",
-                    "Plasma membranes, chromosomes, mitochondria, lysosomes",
-                    "Nucleus, nucleolus, cellulose cell wall, endoplasmic reticulum"
-                ],
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
                 correct: 2,
-                explanation: "Plasma membranes, chromosomes, mitochondria, and lysosomes are common to both plant and animal cells. Plant cells have cellulose cell walls and chloroplasts, while animal cells have centrioles."
+                explanation: "Leonardo da Vinci painted the Mona Lisa between 1503-1519. It's housed in the Louvre Museum in Paris.",
+                category: "Art"
             },
             {
-                id: "6",
-                question: "Where is energy produced in a cell?",
-                options: [
-                    "Nucleus",
-                    "Nucleolus",
-                    "Lysosomes",
-                    "Mitochondria"
-                ],
-                correct: 3,
-                explanation: "Mitochondria are known as the 'powerhouses of the cell' because they produce energy in the form of ATP through cellular respiration."
-            },
-            {
-                id: "7",
-                question: "Which of the following cell constituents is NOT common to both plants and animals?",
-                options: [
-                    "Mitochondria",
-                    "Chloroplasts",
-                    "Golgi apparatus",
-                    "Vacuoles"
-                ],
+                question: "What is the largest mammal in the world?",
+                options: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
                 correct: 1,
-                explanation: "Chloroplasts are found only in plant cells (and some algae) where they are responsible for photosynthesis. They are not present in animal cells."
+                explanation: "The Blue Whale is the largest mammal and animal on Earth, reaching lengths up to 100 feet and weights up to 200 tons.",
+                category: "Biology"
             },
             {
-                id: "8",
-                question: "A group of similar cells performing the same function is",
-                options: [
-                    "an organ",
-                    "a system",
-                    "a tissue",
-                    "an enzyme"
-                ],
+                question: "In which year did World War II end?",
+                options: ["1944", "1945", "1946", "1947"],
+                correct: 1,
+                explanation: "World War II ended in 1945 with the surrender of Japan on September 2, following the atomic bombings and Soviet invasion.",
+                category: "History"
+            },
+            {
+                question: "What is the square root of 144?",
+                options: ["11", "12", "13", "14"],
+                correct: 1,
+                explanation: "The square root of 144 is 12, because 12 × 12 = 144.",
+                category: "Mathematics"
+            },
+            {
+                question: "Which element has the atomic number 1?",
+                options: ["Helium", "Hydrogen", "Lithium", "Carbon"],
+                correct: 1,
+                explanation: "Hydrogen has atomic number 1, meaning it has one proton in its nucleus. It's the lightest and most abundant element in the universe.",
+                category: "Chemistry"
+            },
+            {
+                question: "What is the capital of Australia?",
+                options: ["Sydney", "Melbourne", "Canberra", "Perth"],
                 correct: 2,
-                explanation: "A tissue is a collection of similar cells that work together to perform a specific function."
+                explanation: "Canberra is the capital of Australia. Though Sydney and Melbourne are larger cities, Canberra was purpose-built as the capital.",
+                category: "Geography"
             },
             {
-                id: "9",
-                question: "The function of endoplasmic reticulum is",
-                options: [
-                    "protein synthesis",
-                    "intracellular transport of materials",
-                    "digestion and destruction of foreign bodies",
-                    "production of energy from glucose"
-                ],
-                correct: 0,
-                explanation: "The rough ER (with ribosomes) is involved in protein synthesis, while the smooth ER helps with the transport of materials within the cell."
-            },
-            {
-                id: "10",
-                question: "The oxidative part of the respiration process takes place in the",
-                options: [
-                    "mitochondria",
-                    "ribosomes",
-                    "endoplasmic reticulum",
-                    "Golgi bodies"
-                ],
-                correct: 0,
-                explanation: "The oxidative processes, such as the Krebs cycle and the electron transport chain, occur in the mitochondria. Glycolysis (non-oxidative) occurs in the cytoplasm."
+                question: "Who wrote 'Romeo and Juliet'?",
+                options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                correct: 1,
+                explanation: "William Shakespeare wrote 'Romeo and Juliet' around 1594-1596. It's one of his most famous tragedies about young star-crossed lovers.",
+                category: "Literature"
             }
         ];
 
-        // Haptic Feedback Class
-        class HapticFeedback {
-            constructor() {
-                this.isEnabled = false;
-                this.deviceType = this.detectDevice();
-                this.setupHapticSupport();
-            }
+        // Quiz state
+        let currentQuestion = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        let answered = false;
 
-            detectDevice() {
-                const userAgent = navigator.userAgent.toLowerCase();
-                if (/iphone|ipad|ipod/.test(userAgent)) {
-                    return 'ios';
-                } else if (/android/.test(userAgent)) {
-                    return 'android';
-                } else if (/mobile/.test(userAgent)) {
-                    return 'mobile';
-                } else {
-                    return 'desktop';
-                }
-            }
+        // DOM elements
+        const questionNumber = document.getElementById('questionNumber');
+        const categoryBadge = document.getElementById('categoryBadge');
+        const questionText = document.getElementById('questionText');
+        const answerOptions = document.getElementById('answerOptions');
+        const feedbackSection = document.getElementById('feedbackSection');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const nextButton = document.getElementById('nextButton');
+        const quizCard = document.getElementById('quizCard');
+        const resultsCard = document.getElementById('resultsCard');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const correctCount = document.getElementById('correctCount');
+        const incorrectCount = document.getElementById('incorrectCount');
+        const accuracyRate = document.getElementById('accuracyRate');
+        const hapticStatus = document.getElementById('hapticStatus');
+        const restartButton = document.getElementById('restartButton');
 
-            setupHapticSupport() {
-                // Check for different haptic APIs
-                this.hasVibrate = 'vibrate' in navigator;
-                this.hasGamepad = 'getGamepads' in navigator;
-                
-                // iOS specific haptic feedback (through touch events)
-                this.hasTouch = 'ontouchstart' in window;
-                
-                console.log(`Device: ${this.deviceType}, Vibrate API: ${this.hasVibrate}`);
-            }
-
-            enable() {
-                this.isEnabled = true;
-            }
-
-            disable() {
-                this.isEnabled = false;
-            }
-
-            vibrate(pattern) {
-                if (!this.isEnabled || !this.hasVibrate) return;
-
-                try {
-                    // Different patterns for different devices
-                    switch (this.deviceType) {
-                        case 'ios':
-                            // iOS doesn't support custom patterns, use simple vibration
-                            if (Array.isArray(pattern)) {
-                                navigator.vibrate(pattern[0] || 200);
-                            } else {
-                                navigator.vibrate(pattern);
-                            }
-                            break;
-                        case 'android':
-                            // Android supports complex patterns
-                            navigator.vibrate(pattern);
-                            break;
-                        default:
-                            // Generic vibration
-                            if (Array.isArray(pattern)) {
-                                navigator.vibrate(pattern);
-                            } else {
-                                navigator.vibrate(pattern);
-                            }
-                    }
-                } catch (error) {
-                    console.warn('Haptic feedback failed:', error);
-                }
-            }
-
-            success() {
-                // Success pattern: short-long-short
-                this.vibrate([100, 50, 200, 50, 100]);
-            }
-
-            error() {
-                // Error pattern: three quick vibrations
-                this.vibrate([200, 100, 200, 100, 200]);
-            }
-
-            select() {
-                // Selection pattern: single short vibration
-                this.vibrate(50);
-            }
-
-            notification() {
-                // Notification pattern: gentle pulse
-                this.vibrate([150, 100, 150]);
-            }
-
-            test() {
-                // Test pattern: ascending intensity
-                this.vibrate([100, 100, 200, 100, 300]);
+        // Haptic feedback functions
+        function checkHapticSupport() {
+            if ('vibrate' in navigator) {
+                hapticStatus.textContent = '📳 Haptic feedback enabled';
+                hapticStatus.classList.add('text-green-500');
+                return true;
+            } else {
+                hapticStatus.textContent = '📱 Haptic feedback not supported on this device';
+                hapticStatus.classList.add('text-orange-500');
+                return false;
             }
         }
 
-        // Speech Recognition Class
-        class SpeechRecognition {
-            constructor() {
-                this.isSupported = this.checkSupport();
-                this.recognition = null;
-                this.isListening = false;
-                this.onResult = null;
-                this.onError = null;
-                
-                if (this.isSupported) {
-                    this.setupRecognition();
-                }
-            }
-
-            checkSupport() {
-                return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-            }
-
-            setupRecognition() {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                this.recognition = new SpeechRecognition();
-                
-                this.recognition.continuous = false;
-                this.recognition.interimResults = false;
-                this.recognition.lang = 'en-US';
-                
-                this.recognition.onstart = () => {
-                    this.isListening = true;
-                    console.log('Speech recognition started');
-                };
-                
-                this.recognition.onresult = (event) => {
-                    const result = event.results[0][0].transcript.toLowerCase().trim();
-                    console.log('Speech result:', result);
-                    if (this.onResult) {
-                        this.onResult(result);
-                    }
-                };
-                
-                this.recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
-                    this.isListening = false;
-                    if (this.onError) {
-                        this.onError(event.error);
-                    }
-                };
-                
-                this.recognition.onend = () => {
-                    this.isListening = false;
-                    console.log('Speech recognition ended');
-                };
-            }
-
-            start() {
-                if (!this.isSupported || this.isListening) return false;
-                
-                try {
-                    this.recognition.start();
-                    return true;
-                } catch (error) {
-                    console.error('Failed to start speech recognition:', error);
-                    return false;
-                }
-            }
-
-            stop() {
-                if (!this.isSupported || !this.isListening) return;
-                
-                this.recognition.stop();
-                this.isListening = false;
+        function hapticCorrect() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(200); // Short, gentle vibration
             }
         }
 
-        // Speech API using Web Speech API
-        class WebSpeechAPI {
-            constructor() {
-                this.synth = window.speechSynthesis;
-                this.voices = [];
-                this.currentUtterance = null;
-                this.loadVoices();
-                
-                // Handle voices loading (some browsers load them asynchronously)
-                if (this.synth.onvoiceschanged !== undefined) {
-                    this.synth.onvoiceschanged = () => this.loadVoices();
-                }
-            }
-
-            loadVoices() {
-                this.voices = this.synth.getVoices();
-                this.populateVoiceSelect();
-            }
-
-            populateVoiceSelect() {
-                const voiceSelect = document.getElementById('voiceSelect');
-                if (!voiceSelect || this.voices.length === 0) return;
-
-                voiceSelect.innerHTML = '';
-                
-                // Group voices by language for better organization
-                const groupedVoices = {};
-                this.voices.forEach((voice, index) => {
-                    const lang = voice.lang.split('-')[0];
-                    if (!groupedVoices[lang]) groupedVoices[lang] = [];
-                    groupedVoices[lang].push({ voice, index });
-                });
-
-                // Add English voices first, then others
-                const englishVoices = groupedVoices['en'] || [];
-                englishVoices.forEach(({ voice, index }) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${voice.name} (${voice.lang})`;
-                    if (voice.default) option.selected = true;
-                    voiceSelect.appendChild(option);
-                });
-
-                // Add other languages
-                Object.keys(groupedVoices).forEach(lang => {
-                    if (lang === 'en') return;
-                    const langVoices = groupedVoices[lang];
-                    if (langVoices.length > 0) {
-                        const optgroup = document.createElement('optgroup');
-                        optgroup.label = `${lang.toUpperCase()} Voices`;
-                        langVoices.forEach(({ voice, index }) => {
-                            const option = document.createElement('option');
-                            option.value = index;
-                            option.textContent = `${voice.name} (${voice.lang})`;
-                            optgroup.appendChild(option);
-                        });
-                        voiceSelect.appendChild(optgroup);
-                    }
-                });
-
-                // If no voices loaded, show a message
-                if (this.voices.length === 0) {
-                    const option = document.createElement('option');
-                    option.textContent = 'No voices available';
-                    voiceSelect.appendChild(option);
-                }
-            }
-
-            speak(text, options = {}) {
-                return new Promise((resolve, reject) => {
-                    if (!this.synth) {
-                        reject(new Error('Speech synthesis not supported'));
-                        return;
-                    }
-
-                    // Stop any current speech
-                    this.stop();
-
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    
-                    // Set voice
-                    const voiceIndex = options.voiceIndex || document.getElementById('voiceSelect').value;
-                    if (voiceIndex && this.voices[voiceIndex]) {
-                        utterance.voice = this.voices[voiceIndex];
-                    }
-
-                    // Set rate and pitch
-                    utterance.rate = options.rate || parseFloat(document.getElementById('rateSlider').value);
-                    utterance.pitch = options.pitch || parseFloat(document.getElementById('pitchSlider').value);
-                    utterance.volume = 1;
-
-                    // Event handlers
-                    utterance.onend = () => {
-                        this.currentUtterance = null;
-                        resolve();
-                    };
-                    
-                    utterance.onerror = (event) => {
-                        this.currentUtterance = null;
-                        reject(new Error(`Speech synthesis error: ${event.error}`));
-                    };
-
-                    this.currentUtterance = utterance;
-                    this.synth.speak(utterance);
-                });
-            }
-
-            stop() {
-                if (this.synth && this.synth.speaking) {
-                    this.synth.cancel();
-                }
-                this.currentUtterance = null;
-            }
-
-            isSpeaking() {
-                return this.synth && this.synth.speaking;
+        function hapticIncorrect() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([100, 50, 100]); // Double vibration pattern
             }
         }
 
-        // Quiz Application Class
-        class AudioQuiz {
-            constructor() {
-                this.speechAPI = new WebSpeechAPI();
-                this.haptic = new HapticFeedback();
-                this.speechRecognition = new SpeechRecognition();
-                this.currentQuestionIndex = 0;
-                this.score = 0;
-                this.answered = false;
-                this.autoRead = false;
-                this.hapticEnabled = true;
-                this.voiceAnswerEnabled = false;
-                this.autoAdvanceTimeout = null;
-                
-                this.initializeElements();
-                this.setupEventListeners();
-                this.setupSpeechRecognition();
-                this.checkBrowserSupport();
-                this.loadQuestion();
-                this.setupDarkMode();
-                this.setupToggles();
+        function hapticComplete() {
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 400]); // Celebration sequence
+            }
+        }
+
+        // Update progress and stats
+        function updateProgress() {
+            const progress = (currentQuestion / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${currentQuestion}/${quizData.length}`;
+            
+            correctCount.textContent = correctAnswers;
+            incorrectCount.textContent = incorrectAnswers;
+            
+            const total = correctAnswers + incorrectAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+            accuracyRate.textContent = `${accuracy}%`;
+        }
+
+        // Load current question
+        function loadQuestion() {
+            if (currentQuestion >= quizData.length) {
+                showResults();
+                return;
             }
 
-            initializeElements() {
-                this.voiceSelect = document.getElementById('voiceSelect');
-                this.rateSlider = document.getElementById('rateSlider');
-                this.pitchSlider = document.getElementById('pitchSlider');
-                this.rateValue = document.getElementById('rateValue');
-                this.pitchValue = document.getElementById('pitchValue');
-                this.testVoiceBtn = document.getElementById('testVoiceBtn');
-                this.testHapticBtn = document.getElementById('testHapticBtn');
-                this.stopSpeechBtn = document.getElementById('stopSpeechBtn');
-                this.questionText = document.getElementById('questionText');
-                this.optionsContainer = document.getElementById('optionsContainer');
-                this.readQuestionBtn = document.getElementById('readQuestionBtn');
-                this.readQuestionBtnText = document.getElementById('readQuestionBtnText');
-                this.readQuestionSpinner = document.getElementById('readQuestionSpinner');
-                this.voiceAnswerBtn = document.getElementById('voiceAnswerBtn');
-                this.voiceAnswerBtnText = document.getElementById('voiceAnswerBtnText');
-                this.voiceAnswerSpinner = document.getElementById('voiceAnswerSpinner');
-                this.listeningIndicator = document.getElementById('listeningIndicator');
-                this.autoReadToggle = document.getElementById('autoReadToggle');
-                this.autoReadToggleSlider = document.getElementById('autoReadToggleSlider');
-                this.hapticToggle = document.getElementById('hapticToggle');
-                this.hapticToggleSlider = document.getElementById('hapticToggleSlider');
-                this.voiceAnswerToggle = document.getElementById('voiceAnswerToggle');
-                this.voiceAnswerToggleSlider = document.getElementById('voiceAnswerToggleSlider');
-                this.nextBtn = document.getElementById('nextBtn');
-                this.restartBtn = document.getElementById('restartBtn');
-                this.finishBtn = document.getElementById('finishBtn');
-                this.currentQuestion = document.getElementById('currentQuestion');
-                this.totalQuestions = document.getElementById('totalQuestions');
-                this.questionNumber = document.getElementById('questionNumber');
-                this.progressBar = document.getElementById('progressBar');
-                this.resultsSection = document.getElementById('resultsSection');
-                this.finalScore = document.getElementById('finalScore');
-                this.scoreMessage = document.getElementById('scoreMessage');
-                this.readResultsBtn = document.getElementById('readResultsBtn');
-                this.statusMessage = document.getElementById('statusMessage');
-                this.statusText = document.getElementById('statusText');
+            const question = quizData[currentQuestion];
+            answered = false;
 
-                this.totalQuestions.textContent = quizQuestions.length;
-            }
+            questionNumber.textContent = `Question ${currentQuestion + 1}`;
+            categoryBadge.textContent = question.category;
+            questionText.textContent = question.question;
+            
+            // Clear previous options
+            answerOptions.innerHTML = '';
+            feedbackSection.classList.add('hidden');
 
-            setupEventListeners() {
-                this.testVoiceBtn.addEventListener('click', () => this.testVoice());
-                this.testHapticBtn.addEventListener('click', () => this.testHaptic());
-                this.stopSpeechBtn.addEventListener('click', () => this.stopSpeech());
-                this.readQuestionBtn.addEventListener('click', () => this.readCurrentQuestion());
-                this.voiceAnswerBtn.addEventListener('click', () => this.startVoiceAnswer());
-                this.nextBtn.addEventListener('click', () => this.nextQuestion());
-                this.restartBtn.addEventListener('click', () => this.restartQuiz());
-                this.finishBtn.addEventListener('click', () => this.finishQuiz());
-                this.readResultsBtn.addEventListener('click', () => this.readResults());
+            // Create answer options
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-4 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-primary hover:bg-primary hover:bg-opacity-5 transition-all duration-200 text-base text-gray-700 dark:text-gray-300 font-medium';
+                button.innerHTML = `
+                    <span class="flex items-center">
+                        <span class="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-500 flex items-center justify-center mr-3 text-sm font-semibold">
+                            ${String.fromCharCode(65 + index)}
+                        </span>
+                        ${option}
+                    </span>
+                `;
+                button.addEventListener('click', () => selectAnswer(index, button));
+                answerOptions.appendChild(button);
+            });
+
+            updateProgress();
+        }
+
+        // Handle answer selection
+        function selectAnswer(selectedIndex, buttonElement) {
+            if (answered) return;
+            
+            answered = true;
+            const question = quizData[currentQuestion];
+            const isCorrect = selectedIndex === question.correct;
+
+            // Disable all buttons
+            const allButtons = answerOptions.querySelectorAll('button');
+            allButtons.forEach(btn => btn.disabled = true);
+
+            // Style the selected answer
+            if (isCorrect) {
+                buttonElement.classList.add('bg-green-500', 'text-white', 'border-green-500', 'animate-bounce-in');
+                correctAnswers++;
+                hapticCorrect();
                 
-                // Toggle event listeners
-                this.autoReadToggle.addEventListener('click', () => this.toggleAutoRead());
-                this.hapticToggle.addEventListener('click', () => this.toggleHaptic());
-                this.voiceAnswerToggle.addEventListener('click', () => this.toggleVoiceAnswer());
-                
-                // Slider event listeners
-                this.rateSlider.addEventListener('input', () => {
-                    this.rateValue.textContent = this.rateSlider.value;
-                });
-                
-                this.pitchSlider.addEventListener('input', () => {
-                    this.pitchValue.textContent = this.pitchSlider.value;
-                });
-
-                // Stop speech when voices change
-                this.voiceSelect.addEventListener('change', () => this.stopSpeech());
-            }
-
-            setupSpeechRecognition() {
-                if (!this.speechRecognition.isSupported) return;
-
-                this.speechRecognition.onResult = (result) => {
-                    this.handleVoiceResult(result);
-                };
-
-                this.speechRecognition.onError = (error) => {
-                    this.setListeningState(false);
-                    this.showStatus(`Voice recognition error: ${error}`, 'error');
-                };
-            }
-
-            setupToggles() {
-                // Set initial toggle states
-                this.updateToggleState(this.autoReadToggle, this.autoReadToggleSlider, this.autoRead);
-                this.updateToggleState(this.hapticToggle, this.hapticToggleSlider, this.hapticEnabled);
-                this.updateToggleState(this.voiceAnswerToggle, this.voiceAnswerToggleSlider, this.voiceAnswerEnabled);
-                
-                // Enable haptic by default if supported
-                if (this.haptic.hasVibrate) {
-                    this.haptic.enable();
-                }
-            }
-
-            updateToggleState(toggle, slider, enabled) {
-                if (enabled) {
-                    toggle.classList.add('bg-primary');
-                    toggle.classList.remove('bg-gray-300', 'dark:bg-gray-600');
-                    slider.style.transform = 'translateX(1.5rem)';
-                } else {
-                    toggle.classList.remove('bg-primary');
-                    toggle.classList.add('bg-gray-300', 'dark:bg-gray-600');
-                    slider.style.transform = 'translateX(0)';
-                }
-            }
-
-            toggleAutoRead() {
-                this.autoRead = !this.autoRead;
-                this.updateToggleState(this.autoReadToggle, this.autoReadToggleSlider, this.autoRead);
-                this.showStatus(this.autoRead ? 'Auto-read enabled' : 'Auto-read disabled', 'info');
-                this.haptic.select();
-            }
-
-            toggleHaptic() {
-                this.hapticEnabled = !this.hapticEnabled;
-                this.updateToggleState(this.hapticToggle, this.hapticToggleSlider, this.hapticEnabled);
-                
-                if (this.hapticEnabled) {
-                    this.haptic.enable();
-                    this.haptic.select();
-                    this.showStatus('Haptic feedback enabled', 'info');
-                } else {
-                    this.haptic.disable();
-                    this.showStatus('Haptic feedback disabled', 'info');
-                }
-            }
-
-            toggleVoiceAnswer() {
-                this.voiceAnswerEnabled = !this.voiceAnswerEnabled;
-                this.updateToggleState(this.voiceAnswerToggle, this.voiceAnswerToggleSlider, this.voiceAnswerEnabled);
-                
-                if (!this.speechRecognition.isSupported && this.voiceAnswerEnabled) {
-                    this.voiceAnswerEnabled = false;
-                    this.updateToggleState(this.voiceAnswerToggle, this.voiceAnswerToggleSlider, false);
-                    this.showStatus('Voice recognition not supported in your browser', 'error');
-                    return;
-                }
-                
-                this.showStatus(this.voiceAnswerEnabled ? 'Voice answers enabled' : 'Voice answers disabled', 'info');
-                this.haptic.select();
-            }
-
-            setupDarkMode() {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.documentElement.classList.add('dark');
-                }
-                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-                    if (event.matches) {
-                        document.documentElement.classList.add('dark');
-                    } else {
-                        document.documentElement.classList.remove('dark');
-                    }
-                });
-            }
-
-            checkBrowserSupport() {
-                const warnings = [];
-                
-                if (!('speechSynthesis' in window)) {
-                    warnings.push('Speech synthesis not supported');
-                }
-                
-                if (!this.speechRecognition.isSupported) {
-                    warnings.push('Speech recognition not supported');
-                }
-                
-                if (!this.haptic.hasVibrate) {
-                    warnings.push('Haptic feedback not supported');
-                }
-                
-                if (warnings.length > 0) {
-                    document.getElementById('compatibilityWarning').classList.remove('hidden');
-                    this.showStatus(`Limited support: ${warnings.join(', ')}. Please use Chrome, Firefox, Safari, or Edge on mobile for the best experience.`, 'error');
-                }
-            }
-
-            async testVoice() {
-                const testText = "Hello! This is a test of the selected voice. You can adjust the rate and pitch using the sliders above.";
-                await this.speakText(testText);
-            }
-
-            testHaptic() {
-                this.haptic.test();
-                this.showStatus('Haptic feedback test completed', 'info');
-            }
-
-            async speakText(text) {
-                try {
-                    this.setSpeakingState(true);
-                    await this.speechAPI.speak(text);
-                } catch (error) {
-                    console.error('Speech error:', error);
-                    this.showStatus(`Speech error: ${error.message}`, 'error');
-                } finally {
-                    this.setSpeakingState(false);
-                }
-            }
-
-            stopSpeech() {
-                this.speechAPI.stop();
-                this.speechRecognition.stop();
-                this.setSpeakingState(false);
-                this.setListeningState(false);
-            }
-
-            setSpeakingState(speaking) {
-                this.stopSpeechBtn.classList.toggle('hidden', !speaking);
-                this.readQuestionBtn.classList.toggle('speaking', speaking);
-                
-                if (speaking) {
-                    this.readQuestionBtnText.textContent = 'Speaking...';
-                    this.readQuestionSpinner.classList.remove('hidden');
-                } else {
-                    this.readQuestionBtnText.textContent = 'Read Question';
-                    this.readQuestionSpinner.classList.add('hidden');
-                }
-            }
-
-            setListeningState(listening) {
-                this.voiceAnswerBtn.classList.toggle('listening', listening);
-                this.listeningIndicator.classList.toggle('hidden', !listening);
-                
-                if (listening) {
-                    this.voiceAnswerBtnText.textContent = 'Listening...';
-                    this.voiceAnswerSpinner.classList.remove('hidden');
-                } else {
-                    this.voiceAnswerBtnText.textContent = 'Voice Answer';
-                    this.voiceAnswerSpinner.classList.add('hidden');
-                }
-            }
-
-            loadQuestion() {
-                const question = quizQuestions[this.currentQuestionIndex];
-                this.questionText.textContent = question.question;
-                this.questionNumber.textContent = this.currentQuestionIndex + 1;
-                this.currentQuestion.textContent = this.currentQuestionIndex + 1;
-                
-                // Update progress bar
-                const progress = ((this.currentQuestionIndex + 1) / quizQuestions.length) * 100;
-                this.progressBar.style.width = `${progress}%`;
-                
-                // Clear previous options
-                this.optionsContainer.innerHTML = '';
-                
-                // Create option buttons
-                question.options.forEach((option, index) => {
-                    const button = document.createElement('button');
-                    button.className = 'w-full text-left p-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white';
-                    button.innerHTML = `
-                        <div class="flex items-center">
-                            <span class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-medium mr-3">
-                                ${String.fromCharCode(65 + index)}
-                            </span>
-                            <span class="text-base">${option}</span>
+                feedbackMessage.className = 'p-4 rounded-lg mb-4 bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700';
+                feedbackMessage.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="text-green-500 text-xl">✅</div>
+                        <div>
+                            <div class="font-semibold text-green-800 dark:text-green-200 mb-1">Correct!</div>
+                            <div class="text-green-700 dark:text-green-300 text-sm">${question.explanation}</div>
                         </div>
-                    `;
-                    
-                    button.addEventListener('click', () => this.selectAnswer(index, button));
-                    this.optionsContainer.appendChild(button);
-                });
+                    </div>
+                `;
+            } else {
+                buttonElement.classList.add('bg-red-500', 'text-white', 'border-red-500', 'animate-shake');
                 
-                this.answered = false;
-                this.nextBtn.classList.add('hidden');
-                this.finishBtn.classList.add('hidden');
-
-                // Auto-read if enabled
-                if (this.autoRead && this.currentQuestionIndex > 0) {
-                    setTimeout(() => this.readCurrentQuestion(), 1000);
-                }
-
-                // Auto voice answer if enabled
-                if (this.voiceAnswerEnabled && this.currentQuestionIndex > 0) {
-                    setTimeout(() => this.startVoiceAnswer(), 2000);
-                }
+                // Show correct answer
+                allButtons[question.correct].classList.add('bg-green-500', 'text-white', 'border-green-500', 'animate-bounce-in');
+                
+                incorrectAnswers++;
+                hapticIncorrect();
+                
+                feedbackMessage.className = 'p-4 rounded-lg mb-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700';
+                feedbackMessage.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="text-red-500 text-xl">❌</div>
+                        <div>
+                            <div class="font-semibold text-red-800 dark:text-red-200 mb-1">Incorrect</div>
+                            <div class="text-red-700 dark:text-red-300 text-sm mb-2">
+                                The correct answer is: <strong>${question.options[question.correct]}</strong>
+                            </div>
+                            <div class="text-red-700 dark:text-red-300 text-sm">${question.explanation}</div>
+                        </div>
+                    </div>
+                `;
             }
 
-            async readCurrentQuestion() {
-                const question = quizQuestions[this.currentQuestionIndex];
-                const optionsText = question.options.map((option, index) => 
-                    `Option ${String.fromCharCode(65 + index)}: ${option}`
-                ).join('. ');
-                
-                const fullText = `Question ${this.currentQuestionIndex + 1}: ${question.question}. The options are: ${optionsText}`;
-                
-                await this.speakText(fullText);
-            }
-
-            startVoiceAnswer() {
-                if (!this.speechRecognition.isSupported || this.answered) {
-                    this.showStatus('Voice recognition not available', 'error');
-                    return;
-                }
-
-                this.setListeningState(true);
-                this.haptic.notification();
-                
-                const started = this.speechRecognition.start();
-                if (!started) {
-                    this.setListeningState(false);
-                    this.showStatus('Failed to start voice recognition', 'error');
-                }
-            }
-
-            handleVoiceResult(result) {
-                this.setListeningState(false);
-                console.log('Voice result received:', result);
-                
-                const question = quizQuestions[this.currentQuestionIndex];
-                let selectedIndex = -1;
-                
-                // Try to match letter (A, B, C, D)
-                const letterMatch = result.match(/^[abcd]$/i);
-                if (letterMatch) {
-                    selectedIndex = letterMatch[0].toUpperCase().charCodeAt(0) - 65;
-                } else {
-                    // Try to match full option text
-                    question.options.forEach((option, index) => {
-                        const optionWords = option.toLowerCase().split(/\s+/);
-                        const resultWords = result.split(/\s+/);
-                        
-                        // Check if result contains significant words from the option
-                        const matchingWords = optionWords.filter(word => 
-                            word.length > 2 && resultWords.some(rWord => 
-                                rWord.includes(word) || word.includes(rWord)
-                            )
-                        );
-                        
-                        if (matchingWords.length >= Math.min(2, optionWords.length / 2)) {
-                            selectedIndex = index;
-                        }
-                    });
-                }
-                
-                if (selectedIndex >= 0 && selectedIndex < question.options.length) {
-                    const buttonElement = this.optionsContainer.children[selectedIndex];
-                    this.selectAnswer(selectedIndex, buttonElement, true);
-                    this.showStatus(`Voice answer detected: ${String.fromCharCode(65 + selectedIndex)}`, 'info');
-                } else {
-                    this.showStatus(`Could not understand "${result}". Please say A, B, C, D or try again.`, 'error');
-                    this.haptic.error();
-                }
-            }
-
-            selectAnswer(selectedIndex, buttonElement, isVoiceAnswer = false) {
-                if (this.answered) return;
-                
-                this.stopSpeech(); // Stop any current speech
-                this.answered = true;
-                const question = quizQuestions[this.currentQuestionIndex];
-                const isCorrect = selectedIndex === question.correct;
-                
-                if (isCorrect) {
-                    this.score++;
-                    buttonElement.classList.add('correct-answer');
-                    this.showStatus('Correct! Well done! 🎉', 'success');
-                    this.haptic.success();
-                    
-                    if (this.autoRead || isVoiceAnswer) {
-                        setTimeout(() => this.speakText('Correct! Well done!'), 500);
-                    }
-                } else {
-                    buttonElement.classList.add('wrong-answer');
-                    // Show correct answer
-                    const correctButton = this.optionsContainer.children[question.correct];
-                    correctButton.classList.add('correct-answer');
-                    this.showStatus(`Incorrect. The correct answer was: ${question.options[question.correct]}`, 'error');
-                    this.haptic.error();
-                    
-                    if (this.autoRead || isVoiceAnswer) {
-                        setTimeout(() => this.speakText(`Incorrect. The correct answer was: ${question.options[question.correct]}`), 500);
-                    }
-                }
-                
-                // Show explanation
-                this.showExplanation(question.explanation);
-                
-                // Disable all option buttons
-                Array.from(this.optionsContainer.children).forEach(btn => {
-                    btn.disabled = true;
-                    btn.classList.add('cursor-not-allowed', 'opacity-75');
-                });
-                
-                // Show appropriate next button
-                if (this.currentQuestionIndex < quizQuestions.length - 1) {
-                    this.nextBtn.classList.remove('hidden');
-                } else {
-                    this.finishBtn.classList.remove('hidden');
-                }
-
-                // Auto-advance if voice answer or auto-read is enabled
-                if (isVoiceAnswer || this.autoRead) {
-                    this.autoAdvanceTimeout = setTimeout(() => {
-                        if (this.currentQuestionIndex < quizQuestions.length - 1) {
-                            this.nextQuestion();
-                        } else {
-                            this.finishQuiz();
-                        }
-                    }, 4000); // Give time to read explanation
-                }
-            }
-
-            nextQuestion() {
-                if (this.autoAdvanceTimeout) {
-                    clearTimeout(this.autoAdvanceTimeout);
-                    this.autoAdvanceTimeout = null;
-                }
-                
-                this.currentQuestionIndex++;
-                this.loadQuestion();
-                this.hideStatus();
-            }
-
-            finishQuiz() {
-                if (this.autoAdvanceTimeout) {
-                    clearTimeout(this.autoAdvanceTimeout);
-                    this.autoAdvanceTimeout = null;
-                }
-                
-                this.showResults();
-            }
-
-            showResults() {
-                document.getElementById('questionSection').classList.add('hidden');
-                document.getElementById('optionsSection').classList.add('hidden');
-                document.getElementById('controlButtons').classList.add('hidden');
-                
-                this.finalScore.textContent = this.score;
-                
-                let message = '';
-                const percentage = (this.score / quizQuestions.length) * 100;
-                
-                if (percentage >= 90) {
-                    message = 'Outstanding! You\'re a quiz master! 🏆';
-                    this.haptic.success();
-                } else if (percentage >= 70) {
-                    message = 'Great job! You know your stuff! 👏';
-                    this.haptic.success();
-                } else if (percentage >= 50) {
-                    message = 'Not bad! Keep learning! 📚';
-                    this.haptic.notification();
-                } else {
-                    message = 'Keep practicing! You\'ll improve! 💪';
-                    this.haptic.error();
-                }
-                
-                this.scoreMessage.textContent = message;
-                this.resultsSection.classList.remove('hidden');
-                this.restartBtn.classList.remove('hidden');
-
-                // Auto-read results if enabled
-                if (this.autoRead) {
-                    setTimeout(() => this.readResults(), 1000);
-                }
-            }
-
-            async readResults() {
-                const percentage = (this.score / quizQuestions.length) * 100;
-                const resultsText = `Quiz complete! You scored ${this.score} out of ${quizQuestions.length}, which is ${Math.round(percentage)} percent. ${this.scoreMessage.textContent}`;
-                await this.speakText(resultsText);
-            }
-
-            restartQuiz() {
-                if (this.autoAdvanceTimeout) {
-                    clearTimeout(this.autoAdvanceTimeout);
-                    this.autoAdvanceTimeout = null;
-                }
-                
-                this.currentQuestionIndex = 0;
-                this.score = 0;
-                this.answered = false;
-                
-                document.getElementById('questionSection').classList.remove('hidden');
-                document.getElementById('optionsSection').classList.remove('hidden');
-                document.getElementById('controlButtons').classList.remove('hidden');
-                this.resultsSection.classList.add('hidden');
-                this.restartBtn.classList.add('hidden');
-                
-                this.loadQuestion();
-                this.hideStatus();
-                this.stopSpeech();
-            }
-
-            showStatus(message, type) {
-                this.statusText.textContent = message;
-                this.statusMessage.className = `mt-4 p-3 rounded-md ${
-                    type === 'success' ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-300 dark:border-green-700' :
-                    type === 'error' ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700' :
-                    'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
-                }`;
-                this.statusMessage.classList.remove('hidden');
-                
-                if (type === 'success' || type === 'info') {
-                    setTimeout(() => this.hideStatus(), 3000);
-                }
-            }
-
-            hideStatus() {
-                this.statusMessage.classList.add('hidden');
-            }
-
-            showExplanation(explanation) {
-                // Create explanation element if it doesn't exist
-                let explanationDiv = document.getElementById('explanationDiv');
-                if (!explanationDiv) {
-                    explanationDiv = document.createElement('div');
-                    explanationDiv.id = 'explanationDiv';
-                    explanationDiv.className = 'mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg';
-                    
-                    const explanationHeader = document.createElement('div');
-                    explanationHeader.className = 'flex items-center justify-between mb-2';
-                    explanationHeader.innerHTML = `
-                        <h5 class="font-medium text-blue-800 dark:text-blue-200 flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                            </svg>
-                            Explanation
-                        </h5>
-                        <button id="readExplanationBtn" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
-                            </svg>
-                            Read
-                        </button>
-                    `;
-                    
-                    const explanationText = document.createElement('p');
-                    explanationText.id = 'explanationText';
-                    explanationText.className = 'text-blue-700 dark:text-blue-300 text-sm';
-                    
-                    explanationDiv.appendChild(explanationHeader);
-                    explanationDiv.appendChild(explanationText);
-                    
-                    // Insert after options section
-                    const optionsSection = document.getElementById('optionsSection');
-                    optionsSection.parentNode.insertBefore(explanationDiv, optionsSection.nextSibling);
-                    
-                    // Add event listener for read explanation button
-                    document.getElementById('readExplanationBtn').addEventListener('click', () => {
-                        this.speakText(explanation);
-                    });
-                }
-                
-                // Update explanation text
-                document.getElementById('explanationText').textContent = explanation;
-                explanationDiv.classList.remove('hidden');
-                
-                // Auto-read explanation if enabled
-                if (this.autoRead) {
-                    setTimeout(() => this.speakText(`Explanation: ${explanation}`), 2000);
-                }
-            }
+            // Show feedback section
+            feedbackSection.classList.remove('hidden');
+            feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            currentQuestion++;
+            updateProgress();
         }
 
-        // Initialize the quiz when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            // Small delay to ensure voices are loaded
-            setTimeout(() => {
-                window.quiz = new AudioQuiz();
-            }, 100);
-        });
+        // Show final results
+        function showResults() {
+            hapticComplete();
+            
+            const totalQuestions = quizData.length;
+            const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+            
+            quizCard.classList.add('hidden');
+            resultsCard.classList.remove('hidden');
+            
+            // Set emoji based on performance
+            const finalEmoji = document.getElementById('finalEmoji');
+            const finalScore = document.getElementById('finalScore');
+            const performanceMessage = document.getElementById('performanceMessage');
+            
+            if (percentage >= 90) {
+                finalEmoji.textContent = '🏆';
+                performanceMessage.textContent = 'Outstanding! You\'re a quiz master!';
+            } else if (percentage >= 70) {
+                finalEmoji.textContent = '🎉';
+                performanceMessage.textContent = 'Great job! You have solid knowledge!';
+            } else if (percentage >= 50) {
+                finalEmoji.textContent = '👍';
+                performanceMessage.textContent = 'Good effort! Keep learning and you\'ll improve!';
+            } else {
+                finalEmoji.textContent = '💪';
+                performanceMessage.textContent = 'Don\'t give up! Learning is a journey. Try again!';
+            }
+            
+            finalScore.textContent = `You scored ${correctAnswers}/${totalQuestions} (${percentage}%)`;
+            
+            resultsCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Restart quiz
+        function restartQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            answered = false;
+            
+            quizCard.classList.remove('hidden');
+            resultsCard.classList.add('hidden');
+            
+            loadQuestion();
+        }
+
+        // Event listeners
+        nextButton.addEventListener('click', loadQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initialize quiz
+        checkHapticSupport();
+        loadQuestion();
     </script>
 </body>
 </html>
