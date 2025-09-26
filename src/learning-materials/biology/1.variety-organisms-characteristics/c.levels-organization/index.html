@@ -252,19 +252,50 @@
 
         // Audio feedback functions
         let audioContext;
-        let audioEnabled = true;
+        let audioEnabled = false;
+        let audioInitialized = false;
 
         function initAudio() {
             try {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                hapticStatus.textContent = '🔊 Audio feedback enabled';
-                hapticStatus.classList.add('text-green-500');
+                hapticStatus.innerHTML = '🔊 Audio feedback ready - <button id="enableAudio" class="text-primary underline hover:text-primary-dark">tap to enable</button>';
+                hapticStatus.classList.add('text-blue-500');
+                
+                // Add click handler to enable audio
+                document.getElementById('enableAudio').addEventListener('click', enableAudio);
                 return true;
             } catch (e) {
-                hapticStatus.textContent = '🔇 Audio feedback not supported';
+                hapticStatus.textContent = '🔇 Audio feedback not supported on this device';
                 hapticStatus.classList.add('text-orange-500');
-                audioEnabled = false;
                 return false;
+            }
+        }
+
+        async function enableAudio() {
+            try {
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Test audio with a brief, quiet tone
+                const testOscillator = audioContext.createOscillator();
+                const testGain = audioContext.createGain();
+                testOscillator.connect(testGain);
+                testGain.connect(audioContext.destination);
+                testGain.gain.setValueAtTime(0.01, audioContext.currentTime);
+                testOscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                testOscillator.start();
+                testOscillator.stop(audioContext.currentTime + 0.01);
+                
+                audioEnabled = true;
+                audioInitialized = true;
+                hapticStatus.textContent = '🔊 Audio feedback enabled';
+                hapticStatus.classList.remove('text-blue-500');
+                hapticStatus.classList.add('text-green-500');
+            } catch (e) {
+                hapticStatus.textContent = '🔇 Failed to enable audio feedback';
+                hapticStatus.classList.remove('text-blue-500');
+                hapticStatus.classList.add('text-red-500');
             }
         }
 
