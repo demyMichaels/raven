@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raven - Adaptive Learning Platform</title>
+    <title>Raven - Adaptive Learning Platform with Spaced Repetition</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     
@@ -311,6 +311,32 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Spaced Repetition styles */
+        .sr-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .forgetting-curve {
+            stroke-width: 3;
+            fill: none;
+        }
+        
+        .retention-high { stroke: #22c55e; }
+        .retention-medium { stroke: #f59e0b; }
+        .retention-low { stroke: #ef4444; }
     </style>
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
@@ -334,6 +360,13 @@
                 <!-- Desktop Navigation -->
                 <nav class="hidden md:flex items-center space-x-1">
                     <button id="practiceBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Practice</button>
+                    <div class="relative">
+                        <button id="reviewBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                            <span class="material-icons text-sm mr-1">refresh</span>
+                            <span>Review</span>
+                            <span id="reviewBadge" class="sr-badge hidden">0</span>
+                        </button>
+                    </div>
                     <button id="progressBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Progress</button>
                     <button id="analyticsBtn" class="material-button px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">Analytics</button>
                 </nav>
@@ -374,6 +407,14 @@
                         <span class="button-text">Practice</span>
                     </button>
                     
+                    <div class="relative">
+                        <button id="mobileReviewBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
+                            <span class="material-icons">refresh</span>
+                            <span class="button-text">Review</span>
+                            <span id="mobileReviewBadge" class="sr-badge hidden">0</span>
+                        </button>
+                    </div>
+                    
                     <button id="mobileProgressBtn" class="mobile-nav-btn material-button w-full flex items-center space-x-3 p-4 text-neutral-600 dark:text-neutral-400 hover:text-primary hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors touch-target">
                         <span class="material-icons">trending_up</span>
                         <span class="button-text">Progress</span>
@@ -385,9 +426,23 @@
                     </button>
                 </div>
                 
-                <!-- Audio Settings in Mobile Menu -->
+                <!-- Audio & SR Settings in Mobile Menu -->
                 <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
                     <div class="px-4 mb-3">
+                        <h3 class="text-sm font-medium text-neutral-800 dark:text-white mb-4">Learning Settings</h3>
+                        
+                        <!-- Spaced Repetition Algorithm -->
+                        <div class="space-y-3 mb-4">
+                            <div class="space-y-2">
+                                <label class="block text-sm text-neutral-600 dark:text-neutral-400">Spaced Repetition Algorithm</label>
+                                <select id="srAlgorithmSelect" class="w-full p-2 text-sm bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded text-neutral-800 dark:text-white text-base">
+                                    <option value="SM2">SM-2 (Classic)</option>
+                                    <option value="FSRS">FSRS (Modern AI)</option>
+                                    <option value="Leitner">Leitner System</option>
+                                </select>
+                            </div>
+                        </div>
+                        
                         <h3 class="text-sm font-medium text-neutral-800 dark:text-white mb-2">Audio Settings</h3>
                         <div class="space-y-3">
                             <!-- TTS Controls -->
@@ -455,6 +510,22 @@
                     <span class="material-icons text-sm">auto_awesome</span>
                     <span class="caption font-medium">Let's make learning fun!</span>
                     <span class="material-icons text-sm">auto_awesome</span>
+                </div>
+            </div>
+            
+            <!-- Due Reviews Banner -->
+            <div id="dueReviewsBanner" class="hidden mb-6 p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="material-icons text-warning">schedule</span>
+                        <div>
+                            <h3 class="font-semibold text-warning-800 dark:text-warning-200">Reviews Due!</h3>
+                            <p class="text-sm text-warning-700 dark:text-warning-300" id="dueReviewsText">You have concepts ready for review.</p>
+                        </div>
+                    </div>
+                    <button id="startReviewsBtn" class="material-button bg-warning text-white px-4 py-2 rounded-lg hover:bg-warning/80 transition-colors">
+                        Start Reviews
+                    </button>
                 </div>
             </div>
             
@@ -544,6 +615,15 @@
                     
                     <p class="body-1 text-premium-700 dark:text-premium-300" id="explanationText"></p>
                 </div>
+                
+                <!-- Spaced Repetition Info -->
+                <div id="srInfoBox" class="hidden mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="material-icons text-blue-600 dark:text-blue-400 text-sm">psychology</span>
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Memory Tracking</span>
+                    </div>
+                    <div class="text-xs text-blue-700 dark:text-blue-300" id="srInfoText"></div>
+                </div>
             </div>
 
             <div id="quizNavigation" class="flex justify-between items-center mt-8">
@@ -589,6 +669,13 @@
                         <div class="text-5xl font-bold text-primary mb-2" id="finalScore">0%</div>
                         <div class="subtitle-1 text-neutral-600 dark:text-neutral-400" id="scoreDetails">0 out of 0 correct</div>
                     </div>
+                    
+                    <!-- Spaced Repetition Summary -->
+                    <div id="srSummary" class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 dark:text-blue-200 mb-2">🧠 Memory Tracking Updated</h4>
+                        <div class="text-sm text-blue-700 dark:text-blue-300" id="srSummaryText"></div>
+                    </div>
+                    
                     <div class="flex flex-col sm:flex-row justify-center gap-4">
                         <button id="retakeBtn" class="material-button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-lg button-text shadow-material-2">Retake Quiz</button>
                         <button id="backToTopicsFromResults" class="material-button bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 px-8 py-3 rounded-lg button-text shadow-material-1">Choose Another Topic</button>
@@ -672,12 +759,12 @@
                             <span class="material-icons text-accent text-sm sm:text-base">assignment</span>
                         </div>
                         <div class="text-left sm:text-right">
-                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Completed Quizzes</p>
-                            <p class="headline-5 text-neutral-800 dark:text-white" id="completedQuizzesCount">0</p>
+                            <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Memory Cards</p>
+                            <p class="headline-5 text-neutral-800 dark:text-white" id="memoryCardsCount">0</p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span class="caption text-neutral-600 dark:text-neutral-400 text-xs" id="bestScoreDisplay">Best: 0%</span>
+                        <span class="caption text-neutral-600 dark:text-neutral-400 text-xs" id="avgRetentionDisplay">Avg: 0%</span>
                     </div>
                 </div>
             </div>
@@ -784,11 +871,11 @@
                 <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Weak Areas</p>
-                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-error" id="analyticsWeakCount">--</p>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Memory Cards</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-error" id="analyticsMemoryCards">--</p>
                         </div>
-                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-                            <span class="material-icons text-red-600 dark:text-red-400 text-lg sm:text-xl">warning</span>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+                            <span class="material-icons text-purple-600 dark:text-purple-400 text-lg sm:text-xl">psychology</span>
                         </div>
                     </div>
                 </div>
@@ -796,13 +883,21 @@
                 <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Avg Time</p>
-                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary" id="analyticsAvgTime">--min</p>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Avg Retention</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary" id="analyticsAvgRetention">--%</p>
                         </div>
                         <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                            <span class="material-icons text-orange-600 dark:text-orange-400 text-lg sm:text-xl">schedule</span>
+                            <span class="material-icons text-orange-600 dark:text-orange-400 text-lg sm:text-xl">memory</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Forgetting Curve Visualization -->
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-material-2">
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Forgetting Curve Analysis</h2>
+                <div class="chart-container">
+                    <canvas id="forgettingCurveChart"></canvas>
                 </div>
             </div>
 
@@ -853,9 +948,9 @@
                 </div>
             </div>
 
-            <!-- Topic-based Recommendations -->
+            <!-- Smart Learning Recommendations -->
             <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
-                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">Smart Learning Recommendations</h2>
+                <h2 class="headline-6 font-semibold mb-4 sm:mb-6 text-lg sm:text-xl text-neutral-800 dark:text-white">🧠 Smart Learning Recommendations</h2>
                 <div id="analyticsRecommendations" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     <!-- Recommendations will be populated here -->
                 </div>
@@ -895,13 +990,17 @@
         let currentQuestionIndex = 0;
         let userAnswers = [];
         let quizStartTime = null;
+        let isReviewMode = false;
 
-        // Analytics data
+        // Analytics data with enhanced spaced repetition support
         let analyticsData = {
             quizResults: [],
             topicProgress: {},
             subjectProgress: {},
-            timeSpent: {}
+            timeSpent: {},
+            memoryCards: {},  // Track individual question/concept memory
+            reviewSchedule: {}, // Spaced repetition scheduling
+            retentionHistory: [] // Track retention over time
         };
 
         // Available subjects (you can modify this list based on your data files)
@@ -912,6 +1011,312 @@
             { id: 'biology', name: 'Biology', icon: '🧬', file: 'data/biology.json' },
             { id: 'english', name: 'English', icon: '📝', file: 'data/english.json' },
         ];
+
+        // Spaced Repetition System Implementation
+        class SpacedRepetitionEngine {
+            constructor() {
+                this.algorithm = 'SM2'; // Default to SM-2 algorithm
+                this.algorithms = {
+                    SM2: new SM2Algorithm(),
+                    FSRS: new FSRSAlgorithm(),
+                    Leitner: new LeitnerAlgorithm()
+                };
+            }
+
+            setAlgorithm(algorithmName) {
+                if (this.algorithms[algorithmName]) {
+                    this.algorithm = algorithmName;
+                    console.log(`📚 Spaced repetition algorithm set to: ${algorithmName}`);
+                    return true;
+                }
+                return false;
+            }
+
+            processQuizResult(subjectId, topicName, questionId, isCorrect, difficulty = 3) {
+                const cardKey = `${subjectId}_${topicName}_${questionId}`;
+                const algorithm = this.algorithms[this.algorithm];
+                
+                // Initialize memory cards if not exists
+                if (!analyticsData.memoryCards) analyticsData.memoryCards = {};
+                if (!analyticsData.reviewSchedule) analyticsData.reviewSchedule = {};
+                
+                // Get or create memory card
+                let memoryCard = analyticsData.memoryCards[cardKey] || {
+                    cardKey,
+                    subject: subjectId,
+                    topic: topicName,
+                    questionId,
+                    easinessFactor: 2.5,
+                    interval: 1,
+                    repetitions: 0,
+                    lastReviewed: Date.now(),
+                    nextReview: Date.now() + (24 * 60 * 60 * 1000), // 1 day
+                    difficulty: difficulty,
+                    stability: 1,
+                    retrievability: 1,
+                    reviewHistory: [],
+                    box: 1 // For Leitner system
+                };
+
+                // Update memory card with algorithm
+                const updatedCard = algorithm.updateCard(memoryCard, isCorrect, difficulty);
+                
+                // Save updated card
+                analyticsData.memoryCards[cardKey] = updatedCard;
+                
+                // Update review schedule
+                this.updateReviewSchedule(updatedCard);
+                
+                return updatedCard;
+            }
+
+            updateReviewSchedule(memoryCard) {
+                const reviewDate = new Date(memoryCard.nextReview).toDateString();
+                
+                if (!analyticsData.reviewSchedule[reviewDate]) {
+                    analyticsData.reviewSchedule[reviewDate] = [];
+                }
+                
+                // Remove existing entry if any
+                analyticsData.reviewSchedule[reviewDate] = analyticsData.reviewSchedule[reviewDate]
+                    .filter(card => card.cardKey !== memoryCard.cardKey);
+                
+                // Add updated entry
+                analyticsData.reviewSchedule[reviewDate].push({
+                    cardKey: memoryCard.cardKey,
+                    subject: memoryCard.subject,
+                    topic: memoryCard.topic,
+                    difficulty: memoryCard.difficulty,
+                    interval: memoryCard.interval,
+                    priority: this.calculatePriority(memoryCard)
+                });
+            }
+
+            calculatePriority(memoryCard) {
+                // Higher priority for cards that are due soon or have low retrievability
+                const daysSinceReview = (Date.now() - memoryCard.lastReviewed) / (24 * 60 * 60 * 1000);
+                const urgency = Math.max(0, daysSinceReview - memoryCard.interval) / memoryCard.interval;
+                const difficultyFactor = (6 - memoryCard.difficulty) / 5; // Harder questions get priority
+                return urgency + difficultyFactor + (1 - memoryCard.retrievability);
+            }
+
+            getDueCards(date = new Date()) {
+                if (!analyticsData.memoryCards) return [];
+                
+                const dueCards = [];
+                Object.values(analyticsData.memoryCards).forEach(card => {
+                    if (new Date(card.nextReview) <= date) {
+                        dueCards.push(card);
+                    }
+                });
+                
+                return dueCards.sort((a, b) => this.calculatePriority(b) - this.calculatePriority(a));
+            }
+
+            predictRetention(memoryCard, timeFromNow = 0) {
+                const algorithm = this.algorithms[this.algorithm];
+                return algorithm.predictRetention(memoryCard, timeFromNow);
+            }
+
+            getOptimalReviewTime(memoryCard, targetRetention = 0.9) {
+                const algorithm = this.algorithms[this.algorithm];
+                return algorithm.getOptimalReviewTime(memoryCard, targetRetention);
+            }
+        }
+
+        // SM-2 Algorithm Implementation
+        class SM2Algorithm {
+            updateCard(card, isCorrect, quality = 3) {
+                const q = isCorrect ? Math.max(3, quality) : Math.min(2, quality);
+                
+                card.reviewHistory.push({
+                    date: Date.now(),
+                    quality: q,
+                    interval: card.interval,
+                    wasCorrect: isCorrect
+                });
+
+                if (q >= 3) {
+                    if (card.repetitions === 0) {
+                        card.interval = 1;
+                    } else if (card.repetitions === 1) {
+                        card.interval = 6;
+                    } else {
+                        card.interval = Math.round(card.interval * card.easinessFactor);
+                    }
+                    card.repetitions++;
+                } else {
+                    card.repetitions = 0;
+                    card.interval = 1;
+                }
+
+                // Update easiness factor
+                const oldEF = card.easinessFactor;
+                card.easinessFactor = oldEF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+                card.easinessFactor = Math.max(1.3, card.easinessFactor);
+
+                // Set next review
+                card.lastReviewed = Date.now();
+                card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+
+                return card;
+            }
+
+            predictRetention(card, timeFromNow = 0) {
+                const timeElapsed = (Date.now() + timeFromNow - card.lastReviewed) / (24 * 60 * 60 * 1000);
+                const stability = card.interval / card.easinessFactor;
+                return Math.exp(-timeElapsed / stability);
+            }
+
+            getOptimalReviewTime(card, targetRetention = 0.9) {
+                const stability = card.interval / card.easinessFactor;
+                return Math.max(1, -Math.log(targetRetention) * stability);
+            }
+        }
+
+        // FSRS Algorithm Implementation  
+        class FSRSAlgorithm {
+            constructor() {
+                this.parameters = [0.5701, 1.4436, 4.1386, 10.9355, 5.1443, 1.2006, 0.8627, 0.0362, 1.629, 0.1342, 1.0166, 2.1174, 0.0839, 0.3204, 1.4676, 0.219, 2.8237];
+            }
+
+            updateCard(card, isCorrect, grade = 3) {
+                const g = isCorrect ? grade : 1;
+                
+                card.reviewHistory.push({
+                    date: Date.now(),
+                    grade: g,
+                    stability: card.stability,
+                    difficulty: card.difficulty,
+                    wasCorrect: isCorrect
+                });
+
+                // Update difficulty
+                const deltaD = this.parameters[6] * (g - 3);
+                card.difficulty = Math.max(1, Math.min(10, card.difficulty + deltaD));
+
+                // Update stability based on grade and current parameters
+                if (card.repetitions === 0) {
+                    card.stability = this.parameters[g - 1];
+                } else {
+                    const factor = Math.exp(this.parameters[8]) * 
+                                 (11 - card.difficulty) * 
+                                 Math.pow(card.stability, -this.parameters[9]) * 
+                                 (Math.exp((1 - card.retrievability) * this.parameters[10]) - 1);
+                    card.stability = card.stability * (1 + factor);
+                }
+
+                card.repetitions++;
+                card.lastReviewed = Date.now();
+                
+                // Calculate optimal interval
+                const interval = Math.max(1, card.stability * Math.log(0.9) / Math.log(0.9));
+                card.interval = Math.round(interval);
+                card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+
+                return card;
+            }
+
+            predictRetention(card, timeFromNow = 0) {
+                const timeElapsed = (Date.now() + timeFromNow - card.lastReviewed) / (24 * 60 * 60 * 1000);
+                return Math.exp(-timeElapsed / card.stability);
+            }
+
+            getOptimalReviewTime(card, targetRetention = 0.9) {
+                return Math.max(1, card.stability * Math.log(targetRetention) / Math.log(0.9));
+            }
+        }
+
+        // Leitner System Implementation
+        class LeitnerAlgorithm {
+            constructor() {
+                this.intervals = [1, 2, 4, 8, 16, 32]; // Days for each box
+                this.maxBox = this.intervals.length;
+            }
+
+            updateCard(card, isCorrect) {
+                card.reviewHistory.push({
+                    date: Date.now(),
+                    box: card.box || 1,
+                    wasCorrect: isCorrect
+                });
+
+                if (!card.box) card.box = 1;
+
+                if (isCorrect) {
+                    card.box = Math.min(card.box + 1, this.maxBox);
+                } else {
+                    card.box = 1;
+                }
+
+                card.interval = this.intervals[card.box - 1];
+                card.lastReviewed = Date.now();
+                card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
+                card.repetitions = (card.repetitions || 0) + 1;
+
+                return card;
+            }
+
+            predictRetention(card, timeFromNow = 0) {
+                const timeElapsed = (Date.now() + timeFromNow - card.lastReviewed) / (24 * 60 * 60 * 1000);
+                const decayRate = 1 / this.intervals[Math.min((card.box || 1) - 1, this.maxBox - 1)];
+                return Math.exp(-decayRate * timeElapsed);
+            }
+
+            getOptimalReviewTime(card, targetRetention = 0.9) {
+                const decayRate = 1 / this.intervals[Math.min((card.box || 1) - 1, this.maxBox - 1)];
+                return Math.max(1, -Math.log(targetRetention) / decayRate);
+            }
+        }
+
+        // Memory Retention Tracker
+        class MemoryRetentionTracker {
+            static trackRetention(subjectId, topicName, retentionRate) {
+                if (!analyticsData.retentionHistory) analyticsData.retentionHistory = [];
+                
+                analyticsData.retentionHistory.push({
+                    date: Date.now(),
+                    subject: subjectId,
+                    topic: topicName,
+                    retention: retentionRate,
+                    predictedRetention: retentionRate
+                });
+
+                // Keep only last 100 entries to avoid memory bloat
+                if (analyticsData.retentionHistory.length > 100) {
+                    analyticsData.retentionHistory = analyticsData.retentionHistory.slice(-100);
+                }
+            }
+
+            static getForgettingCurveData(subjectId, topicName, days = 30) {
+                if (!analyticsData.memoryCards) return [];
+                
+                const relevantCards = Object.values(analyticsData.memoryCards)
+                    .filter(card => card.subject === subjectId && card.topic === topicName);
+
+                if (relevantCards.length === 0) return [];
+
+                const data = [];
+                for (let day = 0; day <= days; day++) {
+                    const timeFromNow = day * 24 * 60 * 60 * 1000;
+                    const retentionRates = relevantCards.map(card => 
+                        spacedRepetitionEngine.predictRetention(card, timeFromNow)
+                    );
+                    const avgRetention = retentionRates.reduce((sum, rate) => sum + rate, 0) / retentionRates.length;
+                    
+                    data.push({
+                        day,
+                        retention: avgRetention * 100,
+                        cardCount: relevantCards.length
+                    });
+                }
+
+                return data;
+            }
+        }
+
+        // Initialize spaced repetition engine
+        const spacedRepetitionEngine = new SpacedRepetitionEngine();
 
         // DOM Elements
         const subjectSelection = document.getElementById('subjectSelection');
@@ -1048,6 +1453,7 @@
                 if (savedSuccessfully) {
                     console.log('📊 Current quiz count:', analyticsData.quizResults.length);
                     console.log('📈 Topics tracked:', Object.keys(analyticsData.topicProgress).length);
+                    console.log('🧠 Memory cards:', Object.keys(analyticsData.memoryCards || {}).length);
                 }
                 
                 return savedSuccessfully;
@@ -1095,8 +1501,14 @@
                 
                 if (loadedData && validateAnalyticsData(loadedData)) {
                     analyticsData = loadedData;
+                    // Ensure new properties exist
+                    if (!analyticsData.memoryCards) analyticsData.memoryCards = {};
+                    if (!analyticsData.reviewSchedule) analyticsData.reviewSchedule = {};
+                    if (!analyticsData.retentionHistory) analyticsData.retentionHistory = [];
+                    
                     console.log('📊 Loaded quiz count:', analyticsData.quizResults.length);
                     console.log('📈 Loaded topics:', Object.keys(analyticsData.topicProgress).length);
+                    console.log('🧠 Loaded memory cards:', Object.keys(analyticsData.memoryCards).length);
                     return true;
                 }
                 
@@ -1108,7 +1520,10 @@
                     quizResults: [],
                     topicProgress: {},
                     subjectProgress: {},
-                    timeSpent: {}
+                    timeSpent: {},
+                    memoryCards: {},
+                    reviewSchedule: {},
+                    retentionHistory: []
                 };
                 return false;
             }
@@ -1123,6 +1538,8 @@
         }
 
         function refreshAllProgressViews() {
+            updateDueReviewsBanner();
+            
             if (currentView === 'analytics') {
                 renderAnalytics();
             }
@@ -1135,6 +1552,36 @@
             
             if (currentView === 'topics' && currentSubject && subjects[currentSubject.id]) {
                 renderTopics(subjects[currentSubject.id].topics);
+            }
+        }
+
+        function updateDueReviewsBanner() {
+            const dueCards = spacedRepetitionEngine.getDueCards();
+            const dueCount = dueCards.length;
+            const banner = document.getElementById('dueReviewsBanner');
+            const text = document.getElementById('dueReviewsText');
+            
+            // Update review badges
+            const badges = ['reviewBadge', 'mobileReviewBadge'];
+            badges.forEach(badgeId => {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    if (dueCount > 0) {
+                        badge.textContent = dueCount;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+            
+            if (currentView === 'subjects') {
+                if (dueCount > 0) {
+                    banner.classList.remove('hidden');
+                    text.textContent = `You have ${dueCount} concept${dueCount === 1 ? '' : 's'} ready for review to strengthen your memory.`;
+                } else {
+                    banner.classList.add('hidden');
+                }
             }
         }
 
@@ -1153,6 +1600,36 @@
             };
 
             analyticsData.quizResults.push(result);
+
+            // Process individual question results for spaced repetition
+            let memoryUpdates = [];
+            currentQuestions.forEach((question, index) => {
+                const isCorrect = userAnswers[index] === (question.answer.charCodeAt(0) - 97);
+                const questionId = question.id || `q_${index}`;
+                const difficulty = estimateQuestionDifficulty(question, userAnswers[index], isCorrect);
+                
+                const updatedCard = spacedRepetitionEngine.processQuizResult(
+                    currentSubject.id,
+                    currentTopic.name,
+                    questionId,
+                    isCorrect,
+                    difficulty
+                );
+                
+                memoryUpdates.push({
+                    questionId,
+                    isCorrect,
+                    nextReview: new Date(updatedCard.nextReview),
+                    interval: updatedCard.interval
+                });
+            });
+
+            // Track overall retention for this topic
+            MemoryRetentionTracker.trackRetention(
+                currentSubject.id,
+                currentTopic.name,
+                score.percentage / 100
+            );
 
             const topicKey = `${currentSubject.id}_${currentTopic.name}`;
             if (!analyticsData.topicProgress[topicKey]) {
@@ -1200,6 +1677,113 @@
 
             console.log(`🎯 Quiz completed: ${score.percentage}%`);
             console.log(`📚 Topic progress for ${topicKey}:`, topicProgress);
+            console.log(`🧠 Memory updates:`, memoryUpdates);
+            
+            // Show spaced repetition summary
+            showSpacedRepetitionSummary(memoryUpdates, score);
+        }
+
+        function estimateQuestionDifficulty(question, userAnswer, isCorrect) {
+            // Estimate difficulty based on question characteristics
+            let difficulty = 3; // Default middle difficulty
+            
+            // Increase difficulty for incorrect answers
+            if (!isCorrect) difficulty += 1;
+            
+            // Adjust based on question complexity
+            if (question.question.length > 200) difficulty += 0.5;
+            if (question.options.length > 4) difficulty += 0.5;
+            if (question.explanation && question.explanation.length > 300) difficulty += 0.5;
+            
+            return Math.min(5, Math.max(1, difficulty));
+        }
+
+        function showSpacedRepetitionSummary(memoryUpdates, score) {
+            const summary = document.getElementById('srSummary');
+            const summaryText = document.getElementById('srSummaryText');
+            
+            if (summary && summaryText) {
+                const correctCount = memoryUpdates.filter(u => u.isCorrect).length;
+                const incorrectCount = memoryUpdates.length - correctCount;
+                const avgInterval = memoryUpdates.reduce((sum, u) => sum + u.interval, 0) / memoryUpdates.length;
+                
+                summaryText.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div>✅ ${correctCount} concepts strengthened</div>
+                        <div>🔄 ${incorrectCount} concepts need more practice</div>
+                        <div>📅 Avg review interval: ${Math.round(avgInterval)} days</div>
+                        <div>🧠 Total memory cards: ${Object.keys(analyticsData.memoryCards).length}</div>
+                    </div>
+                `;
+                summary.classList.remove('hidden');
+            }
+        }
+
+        function startReviewSession() {
+            const dueCards = spacedRepetitionEngine.getDueCards();
+            if (dueCards.length === 0) {
+                showError('No reviews due right now! Your memory is strong. 🧠✨');
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                // Group cards by subject and topic
+                const cardsByTopic = {};
+                dueCards.forEach(card => {
+                    const key = `${card.subject}_${card.topic}`;
+                    if (!cardsByTopic[key]) {
+                        cardsByTopic[key] = [];
+                    }
+                    cardsByTopic[key].push(card);
+                });
+                
+                // Find questions for the due cards (this is a simplified approach)
+                // In a real implementation, you'd store the actual question content with the card
+                const reviewQuestions = [];
+                
+                // For demo purposes, we'll create a simple review mode
+                // You would need to modify this based on your actual question storage
+                
+                Object.entries(cardsByTopic).forEach(([topicKey, cards]) => {
+                    const [subjectId, topicName] = topicKey.split('_');
+                    
+                    // Find the subject and topic
+                    const subject = availableSubjects.find(s => s.id === subjectId);
+                    if (subject && subjects[subjectId]) {
+                        const topic = Object.values(subjects[subjectId].topics).find(t => t.name === topicName);
+                        if (topic && topic.questions) {
+                            // Add a few questions from this topic for review
+                            const topicQuestions = topic.questions.slice(0, Math.min(3, cards.length));
+                            reviewQuestions.push(...topicQuestions);
+                        }
+                    }
+                });
+                
+                if (reviewQuestions.length === 0) {
+                    throw new Error('Could not load review questions. Please practice more topics first.');
+                }
+                
+                // Set up review mode
+                isReviewMode = true;
+                currentQuestions = shuffleArray(reviewQuestions.slice(0, 15)); // Limit to 15 questions
+                currentQuestionIndex = 0;
+                userAnswers = [];
+                quizStartTime = Date.now();
+                
+                // Set a generic subject/topic for review mode
+                currentSubject = { id: 'review', name: 'Review Session' };
+                currentTopic = { name: 'Mixed Topics Review' };
+                
+                renderQuestion();
+                showQuizInterface();
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                hideLoading();
+            }
         }
 
         function getTopicProgress(subjectId, topicName) {
@@ -1910,6 +2494,8 @@
             loadProgress();
             setupTTSControls();
             setupSTTControls();
+            setupSpacedRepetitionControls();
+            updateDueReviewsBanner();
             console.log('✅ App initialized successfully');
         }
 
@@ -1942,7 +2528,16 @@
                 const color = subjectColors[subject.id] || 'from-primary to-primary-600';
                 
                 const subjectProgress = analyticsData.subjectProgress[subject.id];
-                const progressText = subjectProgress ? `Avg: ${Math.round(subjectProgress.averageScore)}% | ${subjectProgress.attempts} attempts` : 'Not started';
+                const memoryCardCount = Object.values(analyticsData.memoryCards || {})
+                    .filter(card => card.subject === subject.id).length;
+                
+                let progressText = 'Not started';
+                if (subjectProgress) {
+                    progressText = `Avg: ${Math.round(subjectProgress.averageScore)}% | ${subjectProgress.attempts} attempts`;
+                }
+                if (memoryCardCount > 0) {
+                    progressText += ` | ${memoryCardCount} memory cards`;
+                }
                 
                 subjectCard.innerHTML = `
                     <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center shadow-material-1">
@@ -2021,6 +2616,12 @@
                     const questionCount = topic.questions ? topic.questions.length : 0;
                     const progressData = getTopicProgress(currentSubject.id, topic.name);
                     
+                    // Get memory card info for this topic
+                    const memoryCards = Object.values(analyticsData.memoryCards || {})
+                        .filter(card => card.subject === currentSubject.id && card.topic === topic.name);
+                    const avgRetention = memoryCards.length > 0 ? 
+                        memoryCards.reduce((sum, card) => sum + spacedRepetitionEngine.predictRetention(card), 0) / memoryCards.length * 100 : 0;
+                    
                     topicCard.className = `material-card stagger-animation material-button w-full flex items-center space-x-4 p-4 sm:p-6 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700 touch-target bg-white dark:bg-neutral-800 ${questionCount > 0 ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`;
                     
                     const topicIcon = getTopicIcon(topic.name, topic.category);
@@ -2034,7 +2635,12 @@
                             <div class="caption text-neutral-500 dark:text-neutral-400">${questionCount} questions available</div>
                             ${progressData.attempts > 0 ? 
                                 `<div class="mt-2">
-                                    <div class="caption text-neutral-400">Best: ${Math.round(progressData.bestScore)}% | Avg: ${Math.round(progressData.averageScore)}% | ${progressData.attempts} attempts</div>
+                                    <div class="caption text-neutral-400 text-xs">
+                                        Best: ${Math.round(progressData.bestScore)}% | 
+                                        Avg: ${Math.round(progressData.averageScore)}% | 
+                                        ${progressData.attempts} attempts
+                                        ${memoryCards.length > 0 ? ` | ${memoryCards.length} cards | ${Math.round(avgRetention)}% retention` : ''}
+                                    </div>
                                     <div class="progress-bar mt-1 h-1">
                                         <div class="h-full rounded transition-all duration-300" style="width: ${progressData.averageScore}%; background: ${getProgressBarColor(progressData.averageScore)}"></div>
                                     </div>
@@ -2065,6 +2671,7 @@
                 return;
             }
 
+            isReviewMode = false;
             currentTopic = topic;
             currentQuestions = [...topic.questions];
             currentQuestionIndex = 0;
@@ -2077,7 +2684,7 @@
             showQuizInterface();
         }
 
-        // Render current question with image support
+        // Render current question with image support and spaced repetition info
         function renderQuestion() {
             const question = currentQuestions[currentQuestionIndex];
             if (!question) return;
@@ -2110,6 +2717,30 @@
                 loadImage(imagePaths, questionImage, questionImagePlaceholder);
             } else {
                 questionImageContainer.classList.add('hidden');
+            }
+
+            // Show spaced repetition info if this question has memory card data
+            const questionId = question.id || `q_${currentQuestionIndex}`;
+            const cardKey = `${currentSubject.id}_${currentTopic.name}_${questionId}`;
+            const memoryCard = analyticsData.memoryCards && analyticsData.memoryCards[cardKey];
+            
+            const srInfoBox = document.getElementById('srInfoBox');
+            const srInfoText = document.getElementById('srInfoText');
+            
+            if (memoryCard && !isReviewMode) {
+                const retention = spacedRepetitionEngine.predictRetention(memoryCard);
+                const nextReview = new Date(memoryCard.nextReview);
+                const daysUntilReview = Math.ceil((nextReview - new Date()) / (24 * 60 * 60 * 1000));
+                
+                srInfoText.innerHTML = `
+                    Current retention: ${Math.round(retention * 100)}% | 
+                    Reviews: ${memoryCard.repetitions} | 
+                    Next review: ${daysUntilReview > 0 ? `in ${daysUntilReview} days` : 'due now'} | 
+                    Algorithm: ${spacedRepetitionEngine.algorithm}
+                `;
+                srInfoBox.classList.remove('hidden');
+            } else {
+                srInfoBox.classList.add('hidden');
             }
 
             const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
@@ -2402,6 +3033,7 @@
         // Analytics Functions
         function renderAnalytics() {
             renderAnalyticsOverview();
+            renderForgettingCurveChart();
             renderAnalyticsHeatmap();
             renderAnalyticsCharts();
             renderAnalyticsRecommendations();
@@ -2412,31 +3044,154 @@
                 document.getElementById('analyticsOverallScore').textContent = '--';
                 document.getElementById('analyticsProgressText').textContent = '--';
                 document.getElementById('analyticsMasteredCount').textContent = '--/--';
-                document.getElementById('analyticsWeakCount').textContent = '--';
-                document.getElementById('analyticsAvgTime').textContent = '--min';
+                document.getElementById('analyticsMemoryCards').textContent = '--';
+                document.getElementById('analyticsAvgRetention').textContent = '--';
                 return;
             }
 
             const totalQuizzes = analyticsData.quizResults.length;
             const averageScore = analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes;
-            const averageTime = analyticsData.quizResults.reduce((sum, result) => sum + result.timeSpent, 0) / totalQuizzes / 60000;
-
+            
             const topicProgressEntries = Object.values(analyticsData.topicProgress);
             const masteredTopics = topicProgressEntries.filter(progress => progress.bestScore >= 80).length;
             const totalTopics = topicProgressEntries.length;
 
-            const weakTopics = topicProgressEntries.filter(progress => progress.averageScore < 60 && progress.attempts > 0).length;
+            const memoryCards = Object.values(analyticsData.memoryCards || {});
+            const totalMemoryCards = memoryCards.length;
+            const avgRetention = memoryCards.length > 0 ? 
+                memoryCards.reduce((sum, card) => sum + spacedRepetitionEngine.predictRetention(card), 0) / memoryCards.length * 100 : 0;
 
             document.getElementById('analyticsOverallScore').textContent = `${Math.round(averageScore)}%`;
             document.getElementById('analyticsProgressText').textContent = `${Math.round(averageScore)}%`;
             document.getElementById('analyticsMasteredCount').textContent = `${masteredTopics}/${totalTopics}`;
-            document.getElementById('analyticsWeakCount').textContent = weakTopics;
-            document.getElementById('analyticsAvgTime').textContent = `${averageTime.toFixed(1)}min`;
+            document.getElementById('analyticsMemoryCards').textContent = totalMemoryCards;
+            document.getElementById('analyticsAvgRetention').textContent = `${Math.round(avgRetention)}%`;
 
             const progressCircle = document.getElementById('analyticsProgressCircle');
             const circumference = 2 * Math.PI * 40;
             const offset = circumference - (averageScore / 100) * circumference;
             progressCircle.style.strokeDashoffset = offset;
+        }
+
+        function renderForgettingCurveChart() {
+            const canvas = document.getElementById('forgettingCurveChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            if (Object.keys(analyticsData.memoryCards || {}).length === 0) {
+                // Show Ebbinghaus curve as default
+                const days = Array.from({length: 31}, (_, i) => i);
+                const ebbinghausData = days.map(day => {
+                    // Ebbinghaus formula: R(t) = e^(-t/S) where S is stability
+                    return 100 * Math.exp(-day / 7); // 7-day half-life
+                });
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: days.map(d => `Day ${d}`),
+                        datasets: [{
+                            label: 'Ebbinghaus Forgetting Curve (Theoretical)',
+                            data: ebbinghausData,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    callback: value => value + '%'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Memory Retention Without Review (Ebbinghaus, 1885)'
+                            },
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            // Show actual forgetting curves for different topics
+            const topicCurves = {};
+            Object.values(analyticsData.memoryCards).forEach(card => {
+                const key = `${card.subject}_${card.topic}`;
+                if (!topicCurves[key]) {
+                    topicCurves[key] = [];
+                }
+                topicCurves[key].push(card);
+            });
+
+            const datasets = [];
+            const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6'];
+            
+            Object.entries(topicCurves).slice(0, 5).forEach(([key, cards], index) => {
+                const [subjectId, topicName] = key.split('_');
+                const days = Array.from({length: 31}, (_, i) => i);
+                const retentionData = days.map(day => {
+                    const timeFromNow = day * 24 * 60 * 60 * 1000;
+                    const retentionRates = cards.map(card => 
+                        spacedRepetitionEngine.predictRetention(card, timeFromNow)
+                    );
+                    return retentionRates.reduce((sum, rate) => sum + rate, 0) / retentionRates.length * 100;
+                });
+
+                datasets.push({
+                    label: `${topicName} (${cards.length} cards)`,
+                    data: retentionData,
+                    borderColor: colors[index],
+                    backgroundColor: colors[index] + '20',
+                    fill: false,
+                    tension: 0.4,
+                    borderWidth: 2
+                });
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 31}, (_, i) => `Day ${i}`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: value => value + '%'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Predicted Memory Retention by Topic'
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
         }
 
         function renderAnalyticsHeatmap() {
@@ -2506,6 +3261,12 @@
             const [subjectId, topicName] = topicKey.split('_');
             const subject = availableSubjects.find(s => s.id === subjectId);
             
+            // Get memory cards for this topic
+            const memoryCards = Object.values(analyticsData.memoryCards || {})
+                .filter(card => card.subject === subjectId && card.topic === topicName);
+            const avgRetention = memoryCards.length > 0 ? 
+                memoryCards.reduce((sum, card) => sum + spacedRepetitionEngine.predictRetention(card), 0) / memoryCards.length * 100 : 0;
+            
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
             modal.innerHTML = `
@@ -2537,6 +3298,21 @@
                             <span class="text-neutral-600 dark:text-neutral-400">Avg Time:</span>
                             <span class="font-medium text-neutral-800 dark:text-white">${(progress.averageTime / 60000).toFixed(1)} min</span>
                         </div>
+                        ${memoryCards.length > 0 ? `
+                        <hr class="border-neutral-200 dark:border-neutral-600">
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Memory Cards:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${memoryCards.length}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Avg Retention:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${Math.round(avgRetention)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral-600 dark:text-neutral-400">Algorithm:</span>
+                            <span class="font-medium text-neutral-800 dark:text-white">${spacedRepetitionEngine.algorithm}</span>
+                        </div>
+                        ` : ''}
                     </div>
                     <button class="material-button w-full mt-6 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600" onclick="this.closest('.fixed').remove()">Close</button>
                 </div>
@@ -2658,76 +3434,108 @@
                 return;
             }
 
-            // Get weak areas (< 60% average score)
-            const weakAreas = Object.entries(analyticsData.topicProgress)
-                .filter(([_, progress]) => progress.averageScore < 60 && progress.attempts > 0)
-                .sort((a, b) => a[1].averageScore - b[1].averageScore)
-                .slice(0, 5);
+            // Generate smart recommendations using spaced repetition data
+            const recommendations = generateSmartRecommendations();
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-neutral-600 dark:text-neutral-400">Great job! No urgent recommendations at the moment. Keep practicing!</p>';
+                return;
+            }
 
-            // Get areas for review (good performance but could be better)
-            const reviewAreas = Object.entries(analyticsData.topicProgress)
-                .filter(([_, progress]) => progress.averageScore >= 60 && progress.averageScore < 80 && progress.attempts > 0)
-                .sort((a, b) => b[1].averageScore - a[1].averageScore)
-                .slice(0, 5);
-
-            // Get strong areas (>= 80% best score)
-            const strongAreas = Object.entries(analyticsData.topicProgress)
-                .filter(([_, progress]) => progress.bestScore >= 80)
-                .sort((a, b) => b[1].bestScore - a[1].bestScore)
-                .slice(0, 5);
-
-            container.innerHTML = `
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            container.innerHTML = recommendations.slice(0, 3).map(rec => `
+                <div class="material-card bg-${rec.bgColor} border border-${rec.borderColor} rounded-lg p-4">
                     <div class="flex items-center space-x-3 mb-3">
-                        <span class="material-icons text-red-600 dark:text-red-400">warning</span>
-                        <h3 class="font-semibold text-red-800 dark:text-red-300 text-sm sm:text-base">Priority Focus Areas</h3>
+                        <span class="material-icons text-${rec.iconColor}">${rec.icon}</span>
+                        <h3 class="font-semibold text-${rec.textColor} text-sm sm:text-base">${rec.title}</h3>
                     </div>
-                    <ul class="space-y-2">
-                        ${weakAreas.length > 0 ? weakAreas.map(([key, progress]) => {
-                            const [subjectId, topicName] = key.split('_');
-                            const subject = availableSubjects.find(s => s.id === subjectId);
-                            return `<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.averageScore)}%</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-red-700 dark:text-red-300">No weak areas identified! Great job!</li>'}
-                    </ul>
-                    <div class="text-xs text-red-600 dark:text-red-400 mt-3 font-medium">
-                        Focus on these topics to improve your overall performance.
-                    </div>
+                    <p class="text-xs sm:text-sm text-${rec.textColor} mb-3">${rec.description}</p>
+                    ${rec.action ? `<button class="material-button bg-${rec.actionColor} text-white px-3 py-2 rounded text-xs" onclick="${rec.action}">Take Action</button>` : ''}
                 </div>
+            `).join('');
+        }
 
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <div class="flex items-center space-x-3 mb-3">
-                        <span class="material-icons text-yellow-600 dark:text-yellow-400">trending_up</span>
-                        <h3 class="font-semibold text-yellow-800 dark:text-yellow-300 text-sm sm:text-base">Improvement Opportunities</h3>
-                    </div>
-                    <ul class="space-y-2">
-                        ${reviewAreas.length > 0 ? reviewAreas.map(([key, progress]) => {
-                            const [subjectId, topicName] = key.split('_');
-                            const subject = availableSubjects.find(s => s.id === subjectId);
-                            return `<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.averageScore)}%</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">No topics in this range currently.</li>'}
-                    </ul>
-                    <div class="text-xs text-yellow-600 dark:text-yellow-400 mt-3 font-medium">
-                        These topics have good scores but could reach excellence with more practice.
-                    </div>
-                </div>
+        function generateSmartRecommendations() {
+            const dueCards = spacedRepetitionEngine.getDueCards();
+            const upcomingCards = spacedRepetitionEngine.getDueCards(
+                new Date(Date.now() + 24 * 60 * 60 * 1000) // Tomorrow
+            );
+            
+            const recommendations = [];
+            
+            // Urgent reviews
+            if (dueCards.length > 0) {
+                recommendations.push({
+                    type: 'urgent',
+                    title: 'Urgent Reviews',
+                    description: `${dueCards.length} concept${dueCards.length === 1 ? '' : 's'} need immediate review to prevent forgetting.`,
+                    action: 'startReviewSession()',
+                    priority: 1,
+                    icon: 'schedule',
+                    bgColor: 'red-50 dark:bg-red-900/20',
+                    borderColor: 'red-200 dark:border-red-800',
+                    textColor: 'red-800 dark:text-red-300',
+                    iconColor: 'red-600 dark:text-red-400',
+                    actionColor: 'red-500'
+                });
+            }
+            
+            // Upcoming reviews
+            if (upcomingCards.length > dueCards.length) {
+                const upcoming = upcomingCards.length - dueCards.length;
+                recommendations.push({
+                    type: 'upcoming',
+                    title: 'Upcoming Reviews',
+                    description: `${upcoming} concept${upcoming === 1 ? '' : 's'} will need review tomorrow.`,
+                    priority: 2,
+                    icon: 'schedule_send',
+                    bgColor: 'yellow-50 dark:bg-yellow-900/20',
+                    borderColor: 'yellow-200 dark:border-yellow-800',
+                    textColor: 'yellow-800 dark:text-yellow-300',
+                    iconColor: 'yellow-600 dark:text-yellow-400'
+                });
+            }
+            
+            // Weak retention topics
+            const weakTopics = findWeakRetentionTopics();
+            if (weakTopics.length > 0) {
+                recommendations.push({
+                    type: 'weak',
+                    title: 'Strengthen Weak Areas',
+                    description: `Focus on ${weakTopics[0].topic} - predicted retention: ${Math.round(weakTopics[0].retention * 100)}%`,
+                    priority: 3,
+                    icon: 'psychology',
+                    bgColor: 'blue-50 dark:bg-blue-900/20',
+                    borderColor: 'blue-200 dark:border-blue-800',
+                    textColor: 'blue-800 dark:text-blue-300',
+                    iconColor: 'blue-600 dark:text-blue-400'
+                });
+            }
+            
+            return recommendations.sort((a, b) => a.priority - b.priority);
+        }
 
-                <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <div class="flex items-center space-x-3 mb-3">
-                        <span class="material-icons text-green-600 dark:text-green-400">emoji_events</span>
-                        <h3 class="font-semibold text-green-800 dark:text-green-300 text-sm sm:text-base">Mastered Topics</h3>
-                    </div>
-                    <ul class="space-y-2">
-                        ${strongAreas.length > 0 ? strongAreas.map(([key, progress]) => {
-                            const [subjectId, topicName] = key.split('_');
-                            const subject = availableSubjects.find(s => s.id === subjectId);
-                            return `<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">• ${topicName} (${subject ? subject.name : subjectId}) - ${Math.round(progress.bestScore)}%</li>`;
-                        }).join('') : '<li class="text-xs sm:text-sm text-green-700 dark:text-green-300">No mastered topics yet. Keep practicing!</li>'}
-                    </ul>
-                    <div class="text-xs text-green-600 dark:text-green-400 mt-3 font-medium">
-                        Excellent work! Consider helping others or exploring advanced topics.
-                    </div>
-                </div>
-            `;
+        function findWeakRetentionTopics() {
+            const topics = {};
+            
+            Object.values(analyticsData.memoryCards || {}).forEach(card => {
+                const key = `${card.subject}_${card.topic}`;
+                if (!topics[key]) {
+                    topics[key] = { cards: [], retention: 0 };
+                }
+                topics[key].cards.push(card);
+            });
+            
+            return Object.entries(topics)
+                .map(([key, data]) => {
+                    const avgRetention = data.cards.reduce((sum, card) => 
+                        sum + spacedRepetitionEngine.predictRetention(card), 0
+                    ) / data.cards.length;
+                    
+                    const [subject, topic] = key.split('_');
+                    return { subject, topic, retention: avgRetention };
+                })
+                .filter(topic => topic.retention < 0.8)
+                .sort((a, b) => a.retention - b.retention);
         }
 
         function getStatusClass(score, attempts) {
@@ -2743,6 +3551,7 @@
             hideAllViews();
             subjectSelection.classList.remove('hidden');
             currentView = 'subjects';
+            updateDueReviewsBanner();
             closeMobileMenuFunc();
         }
 
@@ -2831,7 +3640,7 @@
         }
 
         function renderProgress() {
-            // Calculate comprehensive stats
+            // Calculate comprehensive stats including memory cards
             const stats = calculateProgressStats();
             
             // Update stats cards
@@ -2861,6 +3670,8 @@
                     completedQuizzes: 0,
                     bestScore: 0,
                     weeklyQuestions: 0,
+                    memoryCards: 0,
+                    avgRetention: 0,
                     subjects: {}
                 };
             }
@@ -2880,6 +3691,12 @@
             const weeklyQuestions = analyticsData.quizResults
                 .filter(result => new Date(result.date) > weekAgo)
                 .reduce((sum, result) => sum + result.total, 0);
+
+            // Memory card stats
+            const memoryCards = Object.values(analyticsData.memoryCards || {});
+            const totalMemoryCards = memoryCards.length;
+            const avgRetention = memoryCards.length > 0 ? 
+                memoryCards.reduce((sum, card) => sum + spacedRepetitionEngine.predictRetention(card), 0) / memoryCards.length * 100 : 0;
 
             // Calculate subject-specific progress
             const subjects = {};
@@ -2913,6 +3730,8 @@
                 completedQuizzes: totalQuizzes,
                 bestScore,
                 weeklyQuestions,
+                memoryCards: totalMemoryCards,
+                avgRetention,
                 subjects
             };
         }
@@ -2960,8 +3779,8 @@
             document.getElementById('correctAnswersCount').textContent = stats.correctAnswers;
             document.getElementById('accuracyPercentage').textContent = `${stats.accuracy}% accuracy`;
             document.getElementById('studyStreakCount').textContent = `${stats.studyStreak} ${stats.studyStreak === 1 ? 'day' : 'days'}`;
-            document.getElementById('completedQuizzesCount').textContent = stats.completedQuizzes;
-            document.getElementById('bestScoreDisplay').textContent = `Best: ${Math.round(stats.bestScore)}%`;
+            document.getElementById('memoryCardsCount').textContent = stats.memoryCards;
+            document.getElementById('avgRetentionDisplay').textContent = `Avg: ${Math.round(stats.avgRetention)}%`;
             document.getElementById('weeklyQuestionsCount').textContent = `+${stats.weeklyQuestions} this week`;
         }
 
@@ -2995,6 +3814,10 @@
                 const progressPercentage = Math.round(subject.averageScore);
                 const status = getSubjectStatus(progressPercentage);
                 
+                // Get memory card count for this subject
+                const memoryCardCount = Object.values(analyticsData.memoryCards || {})
+                    .filter(card => card.subject === subjectId).length;
+                
                 return `
                     <div class="material-card bg-neutral-50 dark:bg-neutral-700 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow-material-1">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
@@ -3004,7 +3827,7 @@
                                 </div>
                                 <div>
                                     <h4 class="subtitle-1 text-neutral-800 dark:text-white">${subject.name}</h4>
-                                    <p class="body-2 text-neutral-600 dark:text-neutral-400">${subject.totalQuestions} questions completed</p>
+                                    <p class="body-2 text-neutral-600 dark:text-neutral-400">${subject.totalQuestions} questions ${memoryCardCount > 0 ? `| ${memoryCardCount} memory cards` : ''}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-3 sm:space-x-4">
@@ -3042,7 +3865,7 @@
 
             let insights = [];
             
-            // Generate insights based on performance
+            // Generate insights based on performance and memory cards
             if (stats.accuracy >= 80) {
                 insights.push("🎯 Excellent accuracy! You're mastering the material.");
             } else if (stats.accuracy >= 60) {
@@ -3055,6 +3878,11 @@
                 insights.push(`🔥 Amazing ${stats.studyStreak}-day streak! Consistency is key to success.`);
             } else if (stats.studyStreak >= 3) {
                 insights.push(`⭐ Great ${stats.studyStreak}-day streak! Keep the momentum going.`);
+            }
+
+            // Memory card insights
+            if (stats.memoryCards > 50) {
+                insights.push(`🧠 You have ${stats.memoryCards} memory cards with ${Math.round(stats.avgRetention)}% average retention.`);
             }
 
             // Find weakest subject
@@ -3129,6 +3957,23 @@
                     icon: 'verified',
                     color: 'success',
                     text: 'Precision Expert - 90%+ Accuracy'
+                });
+            }
+
+            // Memory card achievements
+            if (stats.memoryCards >= 50) {
+                achievements.push({
+                    icon: 'psychology',
+                    color: 'purple-500',
+                    text: 'Memory Master - 50+ Memory Cards'
+                });
+            }
+
+            if (stats.avgRetention >= 90) {
+                achievements.push({
+                    icon: 'memory',
+                    color: 'blue-500',
+                    text: 'Retention Champion - 90%+ Average Retention'
                 });
             }
 
@@ -3253,13 +4098,15 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Desktop navigation buttons (removed tutor)
+            // Desktop navigation buttons
             document.getElementById('practiceBtn').addEventListener('click', showSubjectSelection);
+            document.getElementById('reviewBtn').addEventListener('click', startReviewSession);
             document.getElementById('progressBtn').addEventListener('click', showProgressInterface);
             document.getElementById('analyticsBtn').addEventListener('click', showAnalyticsInterface);
 
-            // Mobile navigation buttons (removed tutor)
+            // Mobile navigation buttons
             document.getElementById('mobilePracticeBtn').addEventListener('click', showSubjectSelection);
+            document.getElementById('mobileReviewBtn').addEventListener('click', startReviewSession);
             document.getElementById('mobileProgressBtn').addEventListener('click', showProgressInterface);
             document.getElementById('mobileAnalyticsBtn').addEventListener('click', showAnalyticsInterface);
 
@@ -3272,6 +4119,9 @@
                     closeMobileMenuFunc();
                 }
             });
+
+            // Review buttons
+            document.getElementById('startReviewsBtn').addEventListener('click', startReviewSession);
 
             // Back buttons
             document.getElementById('backToSubjects').addEventListener('click', showSubjectSelection);
@@ -3500,6 +4350,23 @@
                     toggle.classList.add('bg-neutral-400');
                     slider.classList.remove('translate-x-6');
                 }
+            }
+        }
+
+        // Setup Spaced Repetition Controls
+        function setupSpacedRepetitionControls() {
+            const algorithmSelect = document.getElementById('srAlgorithmSelect');
+            if (algorithmSelect) {
+                algorithmSelect.addEventListener('change', (e) => {
+                    const success = spacedRepetitionEngine.setAlgorithm(e.target.value);
+                    if (success) {
+                        saveAnalyticsData(); // Persist the setting
+                        console.log(`🧠 Spaced repetition algorithm changed to: ${e.target.value}`);
+                    } else {
+                        e.target.value = spacedRepetitionEngine.algorithm; // Revert if failed
+                    }
+                });
+                algorithmSelect.value = spacedRepetitionEngine.algorithm;
             }
         }
 
