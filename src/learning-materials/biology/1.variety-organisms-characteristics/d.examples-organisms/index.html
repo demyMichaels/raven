@@ -3,49 +3,690 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Examples: Euglena, Paramecium, Hydra, Onion bulb</title>
+    <title>Interactive Life Classification Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/marked.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4A49C7'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f1f8e9;
+        .classification-level {
+            transition: all 0.3s ease;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .classification-level:hover {
+            transform: translateY(-2px);
         }
-        h1 {
-            color: #2e7d32;
-            border-bottom: 2px solid #4caf50;
-            padding-bottom: 10px;
+        .organism-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .breadcrumb {
-            color: #666;
-            margin-bottom: 20px;
+        .organism-card:hover {
+            transform: scale(1.02);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+        .quiz-option:hover {
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+        .correct {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+            border-color: rgb(34, 197, 94) !important;
+        }
+        .incorrect {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-color: rgb(239, 68, 68) !important;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="breadcrumb">
-            <a href="../index.html">Variety of Organisms - Characteristics & Cell Structure</a> → d.examples-organisms
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <script>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                🧬 Life Classification Explorer
+            </h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Discover the fascinating world of biological taxonomy through interactive learning
+            </p>
         </div>
-        
-        <h1>Examples: Euglena, Paramecium, Hydra, Onion bulb</h1>
-        
-        <div class="topic-info">
-            <p><strong>📖 Subtopic:</strong> Examples: Euglena, Paramecium, Hydra, Onion bulb</p>
-            <p><strong>📁 Folder:</strong> d.examples-organisms</p>
-            <p><strong>📚 Main Topic:</strong> Variety of Organisms - Characteristics & Cell Structure</p>
-            <p><strong>🕒 Created:</strong> 2025-08-31 23:03:39</p>
+
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap justify-center mb-8 bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
+            <button onclick="showTab('hierarchy')" id="hierarchy-tab" class="tab-button px-6 py-3 rounded-md font-medium transition-all duration-200 bg-primary text-white">
+                Taxonomy Hierarchy
+            </button>
+            <button onclick="showTab('explorer')" id="explorer-tab" class="tab-button px-6 py-3 rounded-md font-medium transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-primary">
+                Organism Explorer
+            </button>
+            <button onclick="showTab('quiz')" id="quiz-tab" class="tab-button px-6 py-3 rounded-md font-medium transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-primary">
+                Knowledge Quiz
+            </button>
         </div>
-        
-        <p>This section contains materials and resources for: <strong>Examples: Euglena, Paramecium, Hydra, Onion bulb</strong></p>
-        <p>Explore biological concepts, diagrams, and study materials related to this topic.</p>
+
+        <!-- Taxonomy Hierarchy Tab -->
+        <div id="hierarchy-content" class="tab-content">
+            <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div class="classification-level bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 p-6 rounded-xl border border-red-200 dark:border-red-700">
+                    <div class="text-2xl mb-3">🌍</div>
+                    <h3 class="text-xl font-bold mb-2 text-red-800 dark:text-red-300">Domain</h3>
+                    <p class="text-sm text-red-700 dark:text-red-400 mb-3">Highest taxonomic rank</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-red-200 dark:bg-red-800/50 px-2 py-1 rounded">Bacteria</div>
+                        <div class="bg-red-200 dark:bg-red-800/50 px-2 py-1 rounded">Archaea</div>
+                        <div class="bg-red-200 dark:bg-red-800/50 px-2 py-1 rounded">Eukarya</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-xl border border-orange-200 dark:border-orange-700">
+                    <div class="text-2xl mb-3">👑</div>
+                    <h3 class="text-xl font-bold mb-2 text-orange-800 dark:text-orange-300">Kingdom</h3>
+                    <p class="text-sm text-orange-700 dark:text-orange-400 mb-3">Major groups of life</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-orange-200 dark:bg-orange-800/50 px-2 py-1 rounded">Animalia</div>
+                        <div class="bg-orange-200 dark:bg-orange-800/50 px-2 py-1 rounded">Plantae</div>
+                        <div class="bg-orange-200 dark:bg-orange-800/50 px-2 py-1 rounded">Fungi</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 p-6 rounded-xl border border-yellow-200 dark:border-yellow-700">
+                    <div class="text-2xl mb-3">🦴</div>
+                    <h3 class="text-xl font-bold mb-2 text-yellow-800 dark:text-yellow-300">Phylum</h3>
+                    <p class="text-sm text-yellow-700 dark:text-yellow-400 mb-3">Body plan groups</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-yellow-200 dark:bg-yellow-800/50 px-2 py-1 rounded">Chordata</div>
+                        <div class="bg-yellow-200 dark:bg-yellow-800/50 px-2 py-1 rounded">Arthropoda</div>
+                        <div class="bg-yellow-200 dark:bg-yellow-800/50 px-2 py-1 rounded">Mollusca</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl border border-green-200 dark:border-green-700">
+                    <div class="text-2xl mb-3">🎓</div>
+                    <h3 class="text-xl font-bold mb-2 text-green-800 dark:text-green-300">Class</h3>
+                    <p class="text-sm text-green-700 dark:text-green-400 mb-3">Similar characteristics</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-green-200 dark:bg-green-800/50 px-2 py-1 rounded">Mammalia</div>
+                        <div class="bg-green-200 dark:bg-green-800/50 px-2 py-1 rounded">Aves</div>
+                        <div class="bg-green-200 dark:bg-green-800/50 px-2 py-1 rounded">Reptilia</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl border border-blue-200 dark:border-blue-700">
+                    <div class="text-2xl mb-3">📋</div>
+                    <h3 class="text-xl font-bold mb-2 text-blue-800 dark:text-blue-300">Order</h3>
+                    <p class="text-sm text-blue-700 dark:text-blue-400 mb-3">Behavior & lifestyle groups</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-blue-200 dark:bg-blue-800/50 px-2 py-1 rounded">Primates</div>
+                        <div class="bg-blue-200 dark:bg-blue-800/50 px-2 py-1 rounded">Carnivora</div>
+                        <div class="bg-blue-200 dark:bg-blue-800/50 px-2 py-1 rounded">Rodentia</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-6 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                    <div class="text-2xl mb-3">👨‍👩‍👧‍👦</div>
+                    <h3 class="text-xl font-bold mb-2 text-indigo-800 dark:text-indigo-300">Family</h3>
+                    <p class="text-sm text-indigo-700 dark:text-indigo-400 mb-3">Closely related groups</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-indigo-200 dark:bg-indigo-800/50 px-2 py-1 rounded">Hominidae</div>
+                        <div class="bg-indigo-200 dark:bg-indigo-800/50 px-2 py-1 rounded">Felidae</div>
+                        <div class="bg-indigo-200 dark:bg-indigo-800/50 px-2 py-1 rounded">Canidae</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-xl border border-purple-200 dark:border-purple-700">
+                    <div class="text-2xl mb-3">🏷️</div>
+                    <h3 class="text-xl font-bold mb-2 text-purple-800 dark:text-purple-300">Genus</h3>
+                    <p class="text-sm text-purple-700 dark:text-purple-400 mb-3">Very similar species</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-purple-200 dark:bg-purple-800/50 px-2 py-1 rounded">Homo</div>
+                        <div class="bg-purple-200 dark:bg-purple-800/50 px-2 py-1 rounded">Panthera</div>
+                        <div class="bg-purple-200 dark:bg-purple-800/50 px-2 py-1 rounded">Canis</div>
+                    </div>
+                </div>
+
+                <div class="classification-level bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 p-6 rounded-xl border border-pink-200 dark:border-pink-700">
+                    <div class="text-2xl mb-3">🎯</div>
+                    <h3 class="text-xl font-bold mb-2 text-pink-800 dark:text-pink-300">Species</h3>
+                    <p class="text-sm text-pink-700 dark:text-pink-400 mb-3">Individual organisms</p>
+                    <div class="space-y-1 text-sm">
+                        <div class="bg-pink-200 dark:bg-pink-800/50 px-2 py-1 rounded">H. sapiens</div>
+                        <div class="bg-pink-200 dark:bg-pink-800/50 px-2 py-1 rounded">P. leo</div>
+                        <div class="bg-pink-200 dark:bg-pink-800/50 px-2 py-1 rounded">C. lupus</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Device -->
+            <div class="mt-8 bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border">
+                <h3 class="text-xl font-bold mb-4 text-center">📚 Memory Device</h3>
+                <p class="text-center text-lg font-mono">
+                    <span class="text-red-600 dark:text-red-400">D</span>ear 
+                    <span class="text-orange-600 dark:text-orange-400">K</span>ing 
+                    <span class="text-yellow-600 dark:text-yellow-400">P</span>hilip 
+                    <span class="text-green-600 dark:text-green-400">C</span>ame 
+                    <span class="text-blue-600 dark:text-blue-400">O</span>ver 
+                    <span class="text-indigo-600 dark:text-indigo-400">F</span>or 
+                    <span class="text-purple-600 dark:text-purple-400">G</span>ood 
+                    <span class="text-pink-600 dark:text-pink-400">S</span>oup
+                </p>
+                <p class="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species
+                </p>
+            </div>
+        </div>
+
+        <!-- Organism Explorer Tab -->
+        <div id="explorer-content" class="tab-content hidden">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold mb-4">🔍 Explore Organisms</h3>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="filterOrganisms('all')" class="filter-btn bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium">All</button>
+                    <button onclick="filterOrganisms('animals')" class="filter-btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium">Animals</button>
+                    <button onclick="filterOrganisms('plants')" class="filter-btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium">Plants</button>
+                    <button onclick="filterOrganisms('fungi')" class="filter-btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm font-medium">Fungi</button>
+                </div>
+            </div>
+
+            <div id="organism-grid" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Organisms will be populated by JavaScript -->
+            </div>
+
+            <!-- Organism Detail Modal -->
+            <div id="organism-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 id="modal-title" class="text-2xl font-bold"></h3>
+                        <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl">&times;</button>
+                    </div>
+                    <div id="modal-content" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Tab -->
+        <div id="quiz-content" class="tab-content hidden">
+            <div class="max-w-2xl mx-auto">
+                <h3 class="text-2xl font-bold mb-6 text-center">🧠 Test Your Knowledge</h3>
+                
+                <div id="quiz-container">
+                    <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Question <span id="question-number">1</span> of <span id="total-questions">10</span></span>
+                            <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Score: <span id="score">0</span></span>
+                        </div>
+                        
+                        <div id="question-container" class="mb-6">
+                            <h4 id="question-text" class="text-lg font-medium mb-4"></h4>
+                            <div id="options-container" class="space-y-3"></div>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="prev-btn" onclick="previousQuestion()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-primary disabled:opacity-50" disabled>Previous</button>
+                            <button id="next-btn" onclick="nextQuestion()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50" disabled>Next</button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6">
+                        <button onclick="resetQuiz()" class="px-6 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-lg transition-colors">Reset Quiz</button>
+                    </div>
+                </div>
+
+                <div id="quiz-results" class="hidden bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border text-center">
+                    <h4 class="text-2xl font-bold mb-4">🎉 Quiz Complete!</h4>
+                    <p class="text-lg mb-4">Your Score: <span id="final-score" class="font-bold text-primary"></span></p>
+                    <div id="performance-message" class="mb-6"></div>
+                    <button onclick="resetQuiz()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark">Try Again</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Organism data
+        const organisms = [
+            {
+                name: "Human",
+                category: "animals",
+                emoji: "🧑",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Animalia",
+                    phylum: "Chordata",
+                    class: "Mammalia",
+                    order: "Primates",
+                    family: "Hominidae",
+                    genus: "Homo",
+                    species: "sapiens"
+                },
+                facts: [
+                    "Highly intelligent primates with complex language",
+                    "Bipedal locomotion",
+                    "Social species with complex cultures",
+                    "Tool users and creators"
+                ]
+            },
+            {
+                name: "Lion",
+                category: "animals",
+                emoji: "🦁",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Animalia",
+                    phylum: "Chordata",
+                    class: "Mammalia",
+                    order: "Carnivora",
+                    family: "Felidae",
+                    genus: "Panthera",
+                    species: "leo"
+                },
+                facts: [
+                    "Known as the 'King of the Jungle'",
+                    "Lives in social groups called prides",
+                    "Males have distinctive manes",
+                    "Apex predator in African savannas"
+                ]
+            },
+            {
+                name: "Oak Tree",
+                category: "plants",
+                emoji: "🌳",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Plantae",
+                    phylum: "Tracheophyta",
+                    class: "Magnoliopsida",
+                    order: "Fagales",
+                    family: "Fagaceae",
+                    genus: "Quercus",
+                    species: "robur"
+                },
+                facts: [
+                    "Can live for hundreds of years",
+                    "Produces acorns as seeds",
+                    "Important ecosystem species",
+                    "Deciduous with lobed leaves"
+                ]
+            },
+            {
+                name: "Button Mushroom",
+                category: "fungi",
+                emoji: "🍄",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Fungi",
+                    phylum: "Basidiomycota",
+                    class: "Agaricomycetes",
+                    order: "Agaricales",
+                    family: "Agaricaceae",
+                    genus: "Agaricus",
+                    species: "bisporus"
+                },
+                facts: [
+                    "Most commonly cultivated mushroom",
+                    "Decomposes organic matter",
+                    "Has both white and brown varieties",
+                    "Important in nutrient cycling"
+                ]
+            },
+            {
+                name: "Butterfly",
+                category: "animals",
+                emoji: "🦋",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Animalia",
+                    phylum: "Arthropoda",
+                    class: "Insecta",
+                    order: "Lepidoptera",
+                    family: "Nymphalidae",
+                    genus: "Danaus",
+                    species: "plexippus"
+                },
+                facts: [
+                    "Undergoes complete metamorphosis",
+                    "Important pollinators",
+                    "Migrates thousands of miles",
+                    "Has four life stages: egg, larva, pupa, adult"
+                ]
+            },
+            {
+                name: "Rose",
+                category: "plants",
+                emoji: "🌹",
+                classification: {
+                    domain: "Eukarya",
+                    kingdom: "Plantae",
+                    phylum: "Tracheophyta",
+                    class: "Magnoliopsida",
+                    order: "Rosales",
+                    family: "Rosaceae",
+                    genus: "Rosa",
+                    species: "gallica"
+                },
+                facts: [
+                    "Symbol of love and beauty",
+                    "Has thorns for protection",
+                    "Produces fragrant flowers",
+                    "Used in perfumes and cosmetics"
+                ]
+            }
+        ];
+
+        // Quiz questions
+        const quizQuestions = [
+            {
+                question: "What is the highest level of biological classification?",
+                options: ["Kingdom", "Domain", "Phylum", "Class"],
+                correct: 1
+            },
+            {
+                question: "Which kingdom do humans belong to?",
+                options: ["Plantae", "Fungi", "Animalia", "Protista"],
+                correct: 2
+            },
+            {
+                question: "What taxonomic level comes between Class and Family?",
+                options: ["Genus", "Order", "Phylum", "Species"],
+                correct: 1
+            },
+            {
+                question: "Which of these is the most specific classification level?",
+                options: ["Genus", "Family", "Species", "Order"],
+                correct: 2
+            },
+            {
+                question: "What does the mnemonic 'Dear King Philip' help you remember?",
+                options: ["Plant parts", "Animal behaviors", "Taxonomic hierarchy", "Cell structures"],
+                correct: 2
+            },
+            {
+                question: "Lions belong to which family?",
+                options: ["Canidae", "Felidae", "Ursidae", "Hominidae"],
+                correct: 1
+            },
+            {
+                question: "What phylum do insects belong to?",
+                options: ["Chordata", "Mollusca", "Arthropoda", "Cnidaria"],
+                correct: 2
+            },
+            {
+                question: "Which domain includes all organisms with nuclei?",
+                options: ["Bacteria", "Archaea", "Eukarya", "Prokaryota"],
+                correct: 2
+            },
+            {
+                question: "What class do birds belong to?",
+                options: ["Mammalia", "Reptilia", "Aves", "Amphibia"],
+                correct: 2
+            },
+            {
+                question: "The scientific name Homo sapiens represents which levels?",
+                options: ["Family and Genus", "Genus and Species", "Order and Family", "Class and Order"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('bg-primary', 'text-white');
+                button.classList.add('text-gray-600', 'dark:text-gray-400');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+            
+            // Add active class to selected tab
+            const activeTab = document.getElementById(tabName + '-tab');
+            activeTab.classList.add('bg-primary', 'text-white');
+            activeTab.classList.remove('text-gray-600', 'dark:text-gray-400');
+
+            // Initialize tab-specific content
+            if (tabName === 'explorer') {
+                loadOrganisms();
+            } else if (tabName === 'quiz') {
+                initializeQuiz();
+            }
+        }
+
+        // Organism explorer functionality
+        function loadOrganisms() {
+            const grid = document.getElementById('organism-grid');
+            grid.innerHTML = '';
+            
+            organisms.forEach(organism => {
+                const card = createOrganismCard(organism);
+                grid.appendChild(card);
+            });
+        }
+
+        function createOrganismCard(organism) {
+            const card = document.createElement('div');
+            card.className = `organism-card bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md ${organism.category}`;
+            card.onclick = () => showOrganismDetail(organism);
+            
+            card.innerHTML = `
+                <div class="text-4xl mb-3 text-center">${organism.emoji}</div>
+                <h4 class="text-xl font-bold mb-2 text-center">${organism.name}</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">
+                    ${organism.classification.genus} ${organism.classification.species}
+                </p>
+                <div class="text-xs text-gray-500 dark:text-gray-500 space-y-1">
+                    <div><span class="font-medium">Kingdom:</span> ${organism.classification.kingdom}</div>
+                    <div><span class="font-medium">Class:</span> ${organism.classification.class}</div>
+                    <div><span class="font-medium">Order:</span> ${organism.classification.order}</div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function filterOrganisms(category) {
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            
+            event.target.classList.add('bg-primary', 'text-white');
+            event.target.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            
+            // Filter organism cards
+            const cards = document.querySelectorAll('.organism-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.classList.contains(category)) {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function showOrganismDetail(organism) {
+            const modal = document.getElementById('organism-modal');
+            const title = document.getElementById('modal-title');
+            const content = document.getElementById('modal-content');
+            
+            title.innerHTML = `${organism.emoji} ${organism.name}`;
+            
+            content.innerHTML = `
+                <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+                    <h5 class="font-bold mb-3">Complete Classification:</h5>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div><span class="font-medium">Domain:</span> ${organism.classification.domain}</div>
+                        <div><span class="font-medium">Kingdom:</span> ${organism.classification.kingdom}</div>
+                        <div><span class="font-medium">Phylum:</span> ${organism.classification.phylum}</div>
+                        <div><span class="font-medium">Class:</span> ${organism.classification.class}</div>
+                        <div><span class="font-medium">Order:</span> ${organism.classification.order}</div>
+                        <div><span class="font-medium">Family:</span> ${organism.classification.family}</div>
+                        <div><span class="font-medium">Genus:</span> ${organism.classification.genus}</div>
+                        <div><span class="font-medium">Species:</span> ${organism.classification.species}</div>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="font-bold mb-3">Interesting Facts:</h5>
+                    <ul class="space-y-2">
+                        ${organism.facts.map(fact => `<li class="flex items-start"><span class="text-primary mr-2">•</span>${fact}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('organism-modal').classList.add('hidden');
+        }
+
+        // Quiz functionality
+        function initializeQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = quizQuestions[currentQuestion];
+            document.getElementById('question-number').textContent = currentQuestion + 1;
+            document.getElementById('total-questions').textContent = quizQuestions.length;
+            document.getElementById('question-text').textContent = question.question;
+            document.getElementById('score').textContent = score;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'quiz-option p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectAnswer(index);
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Update navigation buttons
+            document.getElementById('prev-btn').disabled = currentQuestion === 0;
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('next-btn').textContent = currentQuestion === quizQuestions.length - 1 ? 'Finish' : 'Next';
+            
+            selectedAnswer = null;
+        }
+
+        function selectAnswer(index) {
+            // Remove previous selections
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.classList.remove('correct', 'incorrect', 'bg-gray-200', 'dark:bg-gray-700');
+            });
+            
+            const options = document.querySelectorAll('.quiz-option');
+            const question = quizQuestions[currentQuestion];
+            
+            // Show correct answer
+            options[question.correct].classList.add('correct');
+            
+            // Show selected answer if incorrect
+            if (index !== question.correct) {
+                options[index].classList.add('incorrect');
+            } else {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+            
+            selectedAnswer = index;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (selectedAnswer === null) return;
+            
+            if (currentQuestion < quizQuestions.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-container').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            
+            const percentage = Math.round((score / quizQuestions.length) * 100);
+            document.getElementById('final-score').textContent = `${score}/${quizQuestions.length} (${percentage}%)`;
+            
+            const messageElement = document.getElementById('performance-message');
+            let message = '';
+            
+            if (percentage >= 90) {
+                message = '🌟 Excellent! You have mastered biological classification!';
+            } else if (percentage >= 70) {
+                message = '👍 Great job! You have a solid understanding of taxonomy.';
+            } else if (percentage >= 50) {
+                message = '👌 Good effort! Review the hierarchy and try again.';
+            } else {
+                message = '📚 Keep studying! Practice with the taxonomy hierarchy tab.';
+            }
+            
+            messageElement.innerHTML = `<p class="text-lg">${message}</p>`;
+        }
+
+        function resetQuiz() {
+            initializeQuiz();
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            showTab('hierarchy');
+        });
+    </script>
 </body>
 </html>
