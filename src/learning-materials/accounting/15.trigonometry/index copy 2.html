@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trigonometry Learning App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.7.0/math.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    .graph-container {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #ccc;
+      margin: 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .graph-line {
+      stroke: #3b82f6;
+      stroke-width: 2;
+      fill: none;
+    }
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+    .sidebar {
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #f9fafb;
+      border-right: 1px solid #e5e7eb;
+      padding: 20px;
+    }
+    .main-content {
+      margin-left: 270px;
+      padding: 20px;
+    }
+    .progress-tracker {
+      margin-top: 20px;
+    }
+    .progress-item {
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    .progress-item.completed {
+      color: #10b981;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2 class="text-xl font-bold mb-4">Outline</h2>
+    <ul>
+      <li class="progress-item" id="progress1">1. Sine, Cosine, and Tangent</li>
+      <li class="progress-item" id="progress2">2. Special Angles</li>
+      <li class="progress-item" id="progress3">3. Angles of Elevation and Depression</li>
+      <li class="progress-item" id="progress4">4. Bearings</li>
+      <li class="progress-item" id="progress5">5. Area of Triangles</li>
+      <li class="progress-item" id="progress6">6. Sine and Cosine Graphs</li>
+    </ul>
+    <div class="progress-tracker">
+      <h3 class="font-semibold mb-2">Progress</h3>
+      <p id="progressStatus">0/6 Completed</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 class="text-3xl font-bold text-center mb-6">Trigonometry Learning App</h1>
+
+    <!-- Navigation -->
+    <nav class="flex gap-4 justify-center mb-8">
+      <button onclick="showSection('learning')" class="bg-blue-500 text-white px-4 py-2 rounded">Learning</button>
+      <button onclick="showSection('quiz')" class="bg-blue-500 text-white px-4 py-2 rounded">Quiz</button>
+    </nav>
+
+    <!-- Learning Section -->
+    <section id="learning" class="section active">
+      <h2 class="text-2xl font-semibold mb-4">Learning</h2>
+
+      <!-- Sine, Cosine, and Tangent -->
+      <div class="mb-8" id="section1">
+        <h3 class="text-xl font-semibold mb-2">1. Sine, Cosine, and Tangent</h3>
+        <p class="mb-4">
+          The sine, cosine, and tangent of an angle can be calculated using the unit circle or a calculator.
+          For example, <code>sin(30°) = 0.5</code>, <code>cos(45°) = 0.707</code>, and <code>tan(60°) = 1.732</code>.
+        </p>
+        <div class="flex gap-4 mb-4">
+          <input type="number" id="angleInput" placeholder="Angle (θ)" class="flex-1 p-2 border rounded">
+          <button onclick="calculateTrigValues()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate</button>
+        </div>
+        <div id="trigResult" class="text-green-600 font-semibold mb-4"></div>
+      </div>
+
+      <!-- Special Angles -->
+      <div class="mb-8" id="section2">
+        <h3 class="text-xl font-semibold mb-2">2. Special Angles</h3>
+        <p class="mb-4">
+          Special angles like <code>30°</code>, <code>45°</code>, <code>60°</code>, etc., have exact trigonometric values.
+          For example, <code>sin(30°) = 0.5</code>, <code>cos(45°) = √2/2</code>, and <code>tan(60°) = √3</code>.
+        </p>
+        <div class="mb-4">
+          <h4 class="font-semibold mb-2">Step-by-Step Example</h4>
+          <p class="mb-2">Find the value of <code>sin(30°) + cos(45°)</code>:</p>
+          <ol class="list-decimal pl-6">
+            <li>Calculate <code>sin(30°) = 0.5</code>.</li>
+            <li>Calculate <code>cos(45°) = 0.707</code>.</li>
+            <li>Add the values: <code>0.5 + 0.707 = 1.207</code>.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Angles of Elevation and Depression -->
+      <div class="mb-8" id="section3">
+        <h3 class="text-xl font-semibold mb-2">3. Angles of Elevation and Depression</h3>
+        <p class="mb-4">
+          Angles of elevation and depression are used to solve problems involving heights and distances.
+          For example, if the angle of elevation to the top of a building is <code>30°</code> and the distance to the building is <code>50m</code>, the height of the building can be calculated using <code>tan(30°) = height / 50</code>.
+        </p>
+        <div class="flex gap-4 mb-4">
+          <input type="number" id="elevationAngle" placeholder="Angle (θ)" class="w-20 p-2 border rounded">
+          <input type="number" id="elevationDistance" placeholder="Distance (m)" class="w-20 p-2 border rounded">
+          <button onclick="calculateHeight()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate Height</button>
+        </div>
+        <div id="elevationResult" class="text-green-600 font-semibold mb-4"></div>
+      </div>
+
+      <!-- Bearings -->
+      <div class="mb-8" id="section4">
+        <h3 class="text-xl font-semibold mb-2">4. Bearings</h3>
+        <p class="mb-4">
+          Bearings are used to describe directions. They are measured clockwise from the north direction.
+          For example, a bearing of <code>045°</code> means <code>45°</code> east of north.
+        </p>
+        <div class="flex gap-4 mb-4">
+          <input type="number" id="bearingAngle" placeholder="Bearing (θ)" class="w-20 p-2 border rounded">
+          <button onclick="calculateBearing()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate Direction</button>
+        </div>
+        <div id="bearingResult" class="text-green-600 font-semibold mb-4"></div>
+      </div>
+
+      <!-- Area of Triangles -->
+      <div class="mb-8" id="section5">
+        <h3 class="text-xl font-semibold mb-2">5. Area of Triangles</h3>
+        <p class="mb-4">
+          The area of a triangle can be calculated using the formula <code>Area = 0.5 * a * b * sin(C)</code>, where <code>a</code> and <code>b</code> are sides, and <code>C</code> is the included angle.
+        </p>
+        <div class="flex gap-4 mb-4">
+          <input type="number" id="sideA" placeholder="Side a" class="w-20 p-2 border rounded">
+          <input type="number" id="sideB" placeholder="Side b" class="w-20 p-2 border rounded">
+          <input type="number" id="angleC" placeholder="Angle C (θ)" class="w-20 p-2 border rounded">
+          <button onclick="calculateTriangleArea()" class="bg-blue-500 text-white px-4 py-2 rounded">Calculate Area</button>
+        </div>
+        <div id="triangleAreaResult" class="text-green-600 font-semibold mb-4"></div>
+      </div>
+
+      <!-- Sine and Cosine Graphs -->
+      <div id="section6">
+        <h3 class="text-xl font-semibold mb-2">6. Sine and Cosine Graphs</h3>
+        <p class="mb-4">
+          The graphs of sine and cosine functions are periodic waves. The sine graph starts at <code>0</code>, while the cosine graph starts at <code>1</code>.
+        </p>
+        <div class="graph-container">
+          <svg id="trigGraph" class="w-full h-full"></svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quiz Section -->
+    <section id="quiz" class="section">
+      <h2 class="text-2xl font-semibold mb-4">Quiz</h2>
+
+      <!-- Quiz Question 1 -->
+      <div class="mb-6">
+        <p class="mb-2">1. What is <code>sin(30°)</code>?</p>
+        <div class="flex gap-4">
+          <button onclick="checkAnswer(1, '0.5')" class="bg-blue-500 text-white px-4 py-2 rounded">0.5</button>
+          <button onclick="checkAnswer(1, '0.707')" class="bg-blue-500 text-white px-4 py-2 rounded">0.707</button>
+          <button onclick="checkAnswer(1, '1')" class="bg-blue-500 text-white px-4 py-2 rounded">1</button>
+        </div>
+        <p id="quizResult1" class="mt-2 font-semibold"></p>
+      </div>
+
+      <!-- Quiz Question 2 -->
+      <div class="mb-6">
+        <p class="mb-2">2. What is the area of a triangle with sides <code>5m</code> and <code>7m</code> and an included angle of <code>60°</code>?</p>
+        <div class="flex gap-4">
+          <button onclick="checkAnswer(2, '15.155')" class="bg-blue-500 text-white px-4 py-2 rounded">15.155</button>
+          <button onclick="checkAnswer(2, '17.5')" class="bg-blue-500 text-white px-4 py-2 rounded">17.5</button>
+          <button onclick="checkAnswer(2, '20')" class="bg-blue-500 text-white px-4 py-2 rounded">20</button>
+        </div>
+        <p id="quizResult2" class="mt-2 font-semibold"></p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Show/hide sections
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    // Track progress
+    const progressItems = document.querySelectorAll('.progress-item');
+    const progressStatus = document.getElementById('progressStatus');
+    let completedSections = 0;
+
+    function updateProgress(sectionId) {
+      const progressItem = document.getElementById(`progress${sectionId}`);
+      if (!progressItem.classList.contains('completed')) {
+        progressItem.classList.add('completed');
+        completedSections++;
+        progressStatus.textContent = `${completedSections}/6 Completed`;
+      }
+    }
+
+    // Function to calculate sine, cosine, and tangent
+    function calculateTrigValues() {
+      const angle = parseFloat(document.getElementById('angleInput').value);
+      const resultElement = document.getElementById('trigResult');
+
+      if (isNaN(angle)) {
+        resultElement.textContent = "Please enter a valid angle.";
+        return;
+      }
+
+      const sinValue = Math.sin((angle * Math.PI) / 180).toFixed(3);
+      const cosValue = Math.cos((angle * Math.PI) / 180).toFixed(3);
+      const tanValue = Math.tan((angle * Math.PI) / 180).toFixed(3);
+
+      resultElement.textContent = `sin(${angle}°) = ${sinValue}, cos(${angle}°) = ${cosValue}, tan(${angle}°) = ${tanValue}`;
+
+      // Update progress
+      updateProgress(1);
+
+      // Animate the result text
+      gsap.from(resultElement, {
+        opacity: 0,
+        y: -20,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+
+    // Function to calculate height using angle of elevation
+    function calculateHeight() {
+      const angle = parseFloat(document.getElementById('elevationAngle').value);
+      const distance = parseFloat(document.getElementById('elevationDistance').value);
+      const resultElement = document.getElementById('elevationResult');
+
+      if (isNaN(angle) || isNaN(distance)) {
+        resultElement.textContent = "Please enter valid values.";
+        return;
+      }
+
+      const height = (distance * Math.tan((angle * Math.PI) / 180)).toFixed(2);
+      resultElement.textContent = `Height: ${height}m`;
+
+      // Update progress
+      updateProgress(3);
+
+      // Animate the result text
+      gsap.from(resultElement, {
+        opacity: 0,
+        y: -20,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+
+    // Function to calculate bearing direction
+    function calculateBearing() {
+      const angle = parseFloat(document.getElementById('bearingAngle').value);
+      const resultElement = document.getElementById('bearingResult');
+
+      if (isNaN(angle)) {
+        resultElement.textContent = "Please enter a valid angle.";
+        return;
+      }
+
+      const direction = angle < 90 ? "North-East"
+        : angle < 180 ? "South-East"
+        : angle < 270 ? "South-West"
+        : "North-West";
+      resultElement.textContent = `Direction: ${direction}`;
+
+      // Update progress
+      updateProgress(4);
+
+      // Animate the result text
+      gsap.from(resultElement, {
+        opacity: 0,
+        y: -20,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+
+    // Function to calculate the area of a triangle
+    function calculateTriangleArea() {
+      const sideA = parseFloat(document.getElementById('sideA').value);
+      const sideB = parseFloat(document.getElementById('sideB').value);
+      const angleC = parseFloat(document.getElementById('angleC').value);
+      const resultElement = document.getElementById('triangleAreaResult');
+
+      if (isNaN(sideA) || isNaN(sideB) || isNaN(angleC)) {
+        resultElement.textContent = "Please enter valid values.";
+        return;
+      }
+
+      const area = (0.5 * sideA * sideB * Math.sin((angleC * Math.PI) / 180)).toFixed(3);
+      resultElement.textContent = `Area: ${area}m²`;
+
+      // Update progress
+      updateProgress(5);
+
+      // Animate the result text
+      gsap.from(resultElement, {
+        opacity: 0,
+        y: -20,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+
+    // Function to draw sine and cosine graphs
+    function drawTrigGraph() {
+      const svg = document.getElementById('trigGraph');
+      svg.innerHTML = ''; // Clear previous graph
+
+      const width = svg.clientWidth;
+      const height = svg.clientHeight;
+      const scale = 20; // Scaling factor for the graph
+
+      // Draw axes
+      const drawLine = (x1, y1, x2, y2, color = '#000') => {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', color);
+        svg.appendChild(line);
+      };
+
+      drawLine(0, height / 2, width, height / 2); // X-axis
+      drawLine(width / 2, 0, width / 2, height); // Y-axis
+
+      // Draw sine and cosine graphs
+      const sinePoints = [];
+      const cosinePoints = [];
+
+      for (let x = -width / 2; x <= width / 2; x += 0.1) {
+        const angle = (x / scale) * (Math.PI / 180); // Convert to radians
+        sinePoints.push({ x: width / 2 + x, y: height / 2 - Math.sin(angle) * scale });
+        cosinePoints.push({ x: width / 2 + x, y: height / 2 - Math.cos(angle) * scale });
+      }
+
+      const sinePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      sinePath.setAttribute('d', "M ${sinePoints.map(p => `${p.x},${p.y}`.join(' L ')}");
+      sinePath.setAttribute('class', 'graph-line');
+      sinePath.setAttribute('stroke', '#3b82f6');
+      svg.appendChild(sinePath);
+
+      const cosinePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      cosinePath.setAttribute('d', "M ${cosinePoints.map(p => `${p.x},${p.y}`.join(' L ')}");
+      cosinePath.setAttribute('class', 'graph-line');
+      cosinePath.setAttribute('stroke', '#ef4444');
+      svg.appendChild(cosinePath);
+
+      // Animate the graph paths
+      gsap.from([sinePath, cosinePath], {
+        strokeDasharray: 1000,
+        strokeDashoffset: 1000,
+        duration: 2,
+        ease: "power2.out",
+      });
+
+      // Update progress
+      updateProgress(6);
+    }
+
+    // Function to check quiz answers
+    function checkAnswer(questionNumber, selectedAnswer) {
+      const correctAnswers = {
+        1: '0.5', // Correct answer for question 1
+        2: '15.155', // Correct answer for question 2
+      };
+
+      const resultElement = document.getElementById(`quizResult${questionNumber}`);
+      if (selectedAnswer === correctAnswers[questionNumber]) {
+        resultElement.textContent = "Correct! 🎉";
+        resultElement.style.color = "green";
+      } else {
+        resultElement.textContent = "Incorrect. Try again! ❌";
+        resultElement.style.color = "red";
+      }
+
+      // Animate the result text
+      gsap.from(resultElement, {
+        opacity: 0,
+        y: -10,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+    }
+
+    // Draw the sine and cosine graphs on page load
+    drawTrigGraph();
+  </script>
+</body>
+</html>
