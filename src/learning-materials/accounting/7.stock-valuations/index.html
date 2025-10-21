@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Valuation - Learn the Basics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4A49C5',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes soundWave {
+            0%, 100% {
+                opacity: 0.4;
+                transform: scaleY(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: scaleY(1.2);
+            }
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .content-item {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+
+        .quiz-option:hover {
+            transform: translateX(4px);
+        }
+
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .tts-btn {
+            transition: all 0.3s ease;
+        }
+
+        .tts-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(93, 92, 222, 0.3);
+        }
+
+        .tts-btn.speaking {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .sound-wave {
+            display: inline-block;
+            width: 3px;
+            height: 16px;
+            margin: 0 1px;
+            background: currentColor;
+            animation: soundWave 1s ease-in-out infinite;
+        }
+
+        .sound-wave:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .sound-wave:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .visual-image {
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .visual-image:hover {
+            transform: scale(1.02);
+        }
+
+        .image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1rem;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+            padding: 1rem;
+            color: white;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#181818] min-h-screen transition-colors duration-200">
+    <!-- Progress Bar -->
+    <div class="fixed top-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 z-50">
+        <div id="progressBar" class="h-full bg-primary progress-bar" style="width: 11.11%"></div>
+    </div>
+
+    <!-- Text-to-Speech Floating Button -->
+    <button id="ttsButton" onclick="toggleSpeech()" class="tts-btn fixed bottom-6 right-6 bg-primary hover:bg-primary-dark text-white w-16 h-16 rounded-full shadow-lg z-40 flex items-center justify-center" title="Listen to this screen" aria-label="Text to speech">
+        <svg id="ttsIconPlay" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+        </svg>
+        <div id="ttsIconSpeaking" class="hidden">
+            <span class="sound-wave"></span>
+            <span class="sound-wave"></span>
+            <span class="sound-wave"></span>
+        </div>
+    </button>
+
+    <!-- Main Container -->
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 mt-4">
+        <!-- Screen Counter -->
+        <div class="text-center mb-6">
+            <span id="screenCounter" class="inline-block px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-full text-sm font-medium text-gray-600 dark:text-gray-400">
+                Screen 1 of 9
+            </span>
+        </div>
+
+        <!-- Screen 1: Welcome -->
+        <div id="screen1" class="screen active flex-col items-center justify-center min-h-[70vh]">
+            <div class="text-center space-y-6 max-w-xl">
+                <div class="text-6xl mb-4">👋</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    Hello there! Let's kick things off with a really important topic.
+                </h1>
+
+                <!-- Visual Image: Retail Store -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop"
+                         alt="Retail store with products on shelves"
+                         class="visual-image w-full h-64 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        📸 A retail store with inventory
+                    </div>
+                </div>
+
+                <div class="bg-primary/10 dark:bg-primary/20 rounded-2xl p-8 my-8">
+                    <div class="text-4xl mb-2">📦</div>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-primary mb-4">
+                        STOCK VALUATION
+                    </h2>
+                </div>
+
+                <div class="text-lg text-gray-700 dark:text-gray-300 space-y-4">
+                    <p>Think about a shop owner. At the end of the year, they have phones, cases, and headphones left on the shelves.</p>
+                    <p class="font-medium">How much are these items <span class="italic">truly</span> worth? Figuring that out is called <span class="font-bold text-primary">Stock Valuation</span>, and it's a big deal.</p>
+                </div>
+
+                <button onclick="nextScreen()" class="mt-8 bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-medium text-base sm:text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                    Tell me why it's important →
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Why It Matters -->
+        <div id="screen2" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    Great question! Here's why stock valuation matters so much:
+                </h1>
+
+                <!-- Visual Image: Business Analytics -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop"
+                         alt="Business charts and analytics"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        📊 Stock valuation affects your bottom line
+                    </div>
+                </div>
+
+                <div class="space-y-4 mt-8">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 content-item">
+                        <div class="flex gap-4">
+                            <div class="text-3xl flex-shrink-0">1️⃣</div>
+                            <div>
+                                <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-2">It Affects Your Product Cost</h3>
+                                <p class="text-gray-700 dark:text-gray-300">The price you pay for materials changes how much it costs you to make your product. You have to be <span class="font-semibold">consistent</span> with your pricing.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-6 content-item" style="animation-delay: 0.1s">
+                        <div class="flex gap-4">
+                            <div class="text-3xl flex-shrink-0">2️⃣</div>
+                            <div>
+                                <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-2">You Need a Reliable System</h3>
+                                <p class="text-gray-700 dark:text-gray-300">A good pricing system helps you know your stock's true value.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl p-6 content-item" style="animation-delay: 0.2s">
+                        <div class="flex gap-4">
+                            <div class="text-3xl flex-shrink-0">3️⃣</div>
+                            <div>
+                                <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-2">It Directly Controls Your Profit</h3>
+                                <div class="space-y-2 text-gray-700 dark:text-gray-300">
+                                    <p>↗️ Higher Closing Stock Value = ↗️ Higher Reported Profit</p>
+                                    <p>↘️ Lower Closing Stock Value = ↘️ Lower Reported Profit</p>
+                                    <p class="font-semibold mt-3">It's that simple!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        So, how do we value stock? →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: The Golden Rule -->
+        <div id="screen3" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">🎯</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center">
+                    Let's get to the most important rule you need to know.
+                </h1>
+
+                <!-- Visual Image: Decision Making -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=400&fit=crop"
+                         alt="Business person making decisions"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        🎯 Making the right valuation choice
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-primary/10 to-purple-100 dark:from-primary/20 dark:to-purple-900/20 rounded-2xl p-8 my-8">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+                        How should you value your stock?
+                    </h2>
+
+                    <div class="space-y-4">
+                        <p class="text-lg text-gray-700 dark:text-gray-300 text-center font-medium">
+                            Always use the <span class="text-2xl font-bold text-primary">LOWER</span> of:
+                        </p>
+
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">✅ <span class="font-bold">Cost</span> (What you paid for it)</p>
+                        </div>
+
+                        <p class="text-center text-gray-600 dark:text-gray-400 font-medium">- or -</p>
+
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">✅ <span class="font-bold">Net Realisable Value - NRV</span> (What you can sell it for, minus costs)</p>
+                        </div>
+
+                        <div class="text-center mt-6 pt-4">
+                            <p class="text-2xl font-bold text-primary">Always. Pick. The. Lower. One.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-lg text-gray-700 dark:text-gray-300 text-center italic">
+                    This stops you from overstating how rich your business is.
+                </p>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        Let's break down "Cost" and "NRV" →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: What is Cost? -->
+        <div id="screen4" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">🔍</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    Let's define "Cost" properly. It's not just the price tag.
+                </h1>
+
+                <!-- Visual Image: Warehouse Worker (User's uploaded image) -->
+                <div class="image-container my-6">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/69e5a667e787427337758ee3823193c07f38550ed138f5182477a8bfe04ce102?w=612&h=408"
+                         alt="Warehouse worker managing inventory"
+                         class="visual-image w-full h-56 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        📦 Managing inventory costs in a warehouse
+                    </div>
+                </div>
+
+                <div class="space-y-6 mt-8">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border-l-4 border-blue-500">
+                        <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-3">If you BOUGHT the stock:</h3>
+                        <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                            <li>• The purchase price</li>
+                            <li>• + Costs to get it to your shop (e.g., delivery fees)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border-l-4 border-purple-500">
+                        <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-3">If you MADE the stock:</h3>
+                        <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                            <li>• Cost of raw materials</li>
+                            <li>• + Direct labour (workers' wages)</li>
+                            <li>• + Other direct expenses</li>
+                            <li>• + A share of factory overheads</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl p-6 mt-6">
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white text-center">
+                            In short: Cost is the total amount you spent to get the stock ready to sell.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        Now, what about "NRV"? →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 5: What is NRV? -->
+        <div id="screen5" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">💡</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    Now, let's look at the other side of the rule: <span class="text-primary">NRV</span>.
+                </h1>
+
+                <!-- Visual Image: Sales and Money -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop"
+                         alt="Cash and financial calculations"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        💰 What you'll actually receive from selling
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 border-2 border-yellow-400 dark:border-yellow-600 my-6">
+                    <p class="text-xl font-bold text-gray-900 dark:text-white text-center">
+                        NRV is NOT the selling price.
+                    </p>
+                </div>
+
+                <p class="text-lg text-gray-700 dark:text-gray-300 text-center">
+                    It's what you'll <span class="italic">actually get</span> after you pay to sell it.
+                </p>
+
+                <div class="bg-gradient-to-br from-primary/10 to-blue-100 dark:from-primary/20 dark:to-blue-900/20 rounded-2xl p-8 my-6">
+                    <p class="text-2xl font-bold text-primary text-center mb-6">
+                        NRV = Selling Price - Costs to Sell
+                    </p>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 mt-4">
+                        <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-3">Costs to Sell include:</h3>
+                        <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                            <li>• Advertising</li>
+                            <li>• Salesperson commissions</li>
+                            <li>• Delivery to the customer</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border-l-4 border-green-500">
+                    <p class="text-gray-900 dark:text-white">
+                        <span class="font-semibold">Example:</span> If you sell a phone for ₦50,000 but it costs ₦5,000 to sell it, the NRV is ₦45,000.
+                    </p>
+                </div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        How do we apply the rule? →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Warning -->
+        <div id="screen6" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">🚨</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-red-600 dark:text-red-400 text-center">
+                    Listen up! This is an exam favorite.
+                </h1>
+
+                <!-- Visual Image: Warning/Attention -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1554224311-beee4ece8db7?w=600&h=400&fit=crop"
+                         alt="Person studying and taking notes"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        ⚠️ Pay close attention to this exam tip!
+                    </div>
+                </div>
+
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-8 border-2 border-red-500 my-6">
+                    <p class="text-lg text-gray-900 dark:text-white mb-6">
+                        When you compare Cost and NRV, you <span class="font-bold text-red-600 dark:text-red-400">must</span> do it:
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+                            <p class="font-semibold text-gray-900 dark:text-white">
+                                • <span class="font-bold">Item-by-Item</span> (Check every single product)
+                            </p>
+                        </div>
+
+                        <p class="text-center text-gray-600 dark:text-gray-400 font-medium">- or -</p>
+
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow">
+                            <p class="font-semibold text-gray-900 dark:text-white">
+                                • <span class="font-bold">Batch-by-Batch</span> (Check groups of similar products)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 border-l-4 border-yellow-500">
+                    <p class="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        ⚠️ Common Mistake:
+                    </p>
+                    <p class="text-gray-700 dark:text-gray-300">
+                        <span class="font-semibold">NEVER</span> just take the total cost and total NRV for all your stock and average them out! This is a very common mistake.
+                    </p>
+                </div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        Let's practice this →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Example -->
+        <div id="screen7" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">🧠</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center">
+                    Let's practice with a simple example.
+                </h1>
+
+                <!-- Visual Image: Tech Products -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&h=400&fit=crop"
+                         alt="Headphones and tech accessories"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        🎧 Tech shop inventory example
+                    </div>
+                </div>
+
+                <p class="text-lg text-gray-700 dark:text-gray-300 text-center">
+                    You run a small tech shop. Here's your stock:
+                </p>
+
+                <div class="space-y-6 mt-8">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-6 border-l-4 border-blue-500">
+                        <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-4">🎧 Headphones:</h3>
+                        <div class="space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                            <p>• Cost: ₦8,000</p>
+                            <p>• NRV: ₦7,500</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 mt-3">
+                            <p class="font-semibold text-gray-900 dark:text-white">Which value is LOWER?</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">₦7,500 ✅</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-6 border-l-4 border-purple-500">
+                        <h3 class="font-bold text-xl text-gray-900 dark:text-white mb-4">📱 Phone Case:</h3>
+                        <div class="space-y-2 text-gray-700 dark:text-gray-300 mb-4">
+                            <p>• Cost: ₦1,500</p>
+                            <p>• NRV: ₦1,800</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-4 mt-3">
+                            <p class="font-semibold text-gray-900 dark:text-white">Which value is LOWER?</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">₦1,500 ✅</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-primary/10 dark:bg-primary/20 rounded-xl p-6 mt-6">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white text-center">
+                        See? We picked the lower number for each item.
+                    </p>
+                </div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="nextScreen()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all">
+                        I'm ready to test myself! →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 8: Quiz -->
+        <div id="screen8" class="screen flex-col min-h-[70vh]">
+            <div class="space-y-6">
+                <div class="text-5xl text-center mb-4">🎯</div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white text-center">
+                    Your Turn! Let's see if you've got it.
+                </h1>
+
+                <!-- Visual Image: Calculator -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=600&h=400&fit=crop"
+                         alt="Calculator and financial documents"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        🧮 Time to calculate!
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-primary/10 to-purple-100 dark:from-primary/20 dark:to-purple-900/20 rounded-2xl p-8 my-8">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">
+                        A calculator has:
+                    </h2>
+                    <div class="space-y-3 text-lg text-gray-700 dark:text-gray-300 mb-6">
+                        <p>• Cost: ₦2,000</p>
+                        <p>• NRV: ₦2,300</p>
+                    </div>
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        What value should it be stated at in the accounts?
+                    </p>
+                </div>
+
+                <div id="quizOptions" class="space-y-4">
+                    <button onclick="checkAnswer('wrong1')" class="quiz-option w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl p-5 text-left transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 dark:border-gray-500 flex-shrink-0"></div>
+                            <span class="text-lg text-gray-900 dark:text-white font-medium">₦2,300</span>
+                        </div>
+                    </button>
+
+                    <button onclick="checkAnswer('correct')" class="quiz-option w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl p-5 text-left transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 dark:border-gray-500 flex-shrink-0"></div>
+                            <span class="text-lg text-gray-900 dark:text-white font-medium">₦2,000</span>
+                        </div>
+                    </button>
+
+                    <button onclick="checkAnswer('wrong2')" class="quiz-option w-full bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-xl p-5 text-left transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-400 dark:border-gray-500 flex-shrink-0"></div>
+                            <span class="text-lg text-gray-900 dark:text-white font-medium">₦4,300</span>
+                        </div>
+                    </button>
+                </div>
+
+                <div id="quizFeedback" class="hidden mt-6"></div>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 9: Celebration -->
+        <div id="screen9" class="screen flex-col items-center justify-center min-h-[70vh]">
+            <div class="text-center space-y-6 max-w-xl">
+                <div class="text-6xl mb-4">🎉</div>
+                <h1 class="text-3xl sm:text-4xl font-bold text-primary">
+                    Excellent!
+                </h1>
+
+                <!-- Visual Image: Success -->
+                <div class="image-container my-6">
+                    <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=400&fit=crop"
+                         alt="Successful business team celebrating"
+                         class="visual-image w-full h-48 object-cover"
+                         loading="lazy">
+                    <div class="image-overlay">
+                        🎉 You've mastered stock valuation!
+                    </div>
+                </div>
+
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border-2 border-green-500 my-6">
+                    <p class="text-lg text-gray-900 dark:text-white">
+                        If you picked <span class="font-bold text-green-600 dark:text-green-400">₦2,000</span>, you are absolutely correct!
+                    </p>
+                    <p class="text-gray-700 dark:text-gray-300 mt-3">
+                        You compared the two numbers and chose the <span class="font-bold">lower one</span>, which is the cost. Perfect work!
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-primary/10 to-purple-100 dark:from-primary/20 dark:to-purple-900/20 rounded-2xl p-8 my-8">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                        📚 Quick Recap:
+                    </h2>
+                    <div class="text-left space-y-3 text-gray-700 dark:text-gray-300">
+                        <p>1. Value stock at the <span class="font-bold text-primary">LOWER of Cost or NRV</span></p>
+                        <p>2. <span class="font-bold">Cost</span> = What you paid + costs to get it ready</p>
+                        <p>3. <span class="font-bold">NRV</span> = Selling Price - Costs to sell</p>
+                        <p>4. <span class="font-bold">Always</span> compare per item or per batch</p>
+                    </div>
+                </div>
+
+                <p class="text-xl font-semibold text-gray-900 dark:text-white">
+                    You've mastered the basics of stock valuation! 🌟
+                </p>
+
+                <div class="flex gap-3 mt-8 pt-4">
+                    <button onclick="prevScreen()" class="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-4 rounded-xl font-medium text-base transition-all">
+                        ← Back
+                    </button>
+                    <button onclick="resetCourse()" class="flex-1 bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-medium text-base shadow-lg transition-all transform hover:scale-105">
+                        Start Over 🔄
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        let currentScreen = 1;
+        const totalScreens = 9;
+
+        // Text-to-Speech variables
+        let isSpeaking = false;
+        let speechSynthesis = window.speechSynthesis;
+        let currentUtterance = null;
+
+        function updateProgress() {
+            const progress = (currentScreen / totalScreens) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('screenCounter').textContent = `Screen ${currentScreen} of ${totalScreens}`;
+        }
+
+        function showScreen(screenNumber) {
+            // Stop any ongoing speech when changing screens
+            stopSpeech();
+
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show the target screen
+            document.getElementById('screen' + screenNumber).classList.add('active');
+
+            // Update current screen
+            currentScreen = screenNumber;
+            updateProgress();
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function nextScreen() {
+            if (currentScreen < totalScreens) {
+                showScreen(currentScreen + 1);
+            }
+        }
+
+        function prevScreen() {
+            if (currentScreen > 1) {
+                showScreen(currentScreen - 1);
+            }
+        }
+
+        function checkAnswer(answer) {
+            const feedback = document.getElementById('quizFeedback');
+            const options = document.getElementById('quizOptions');
+
+            feedback.classList.remove('hidden');
+
+            if (answer === 'correct') {
+                feedback.innerHTML = `
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border-2 border-green-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-3">✅</div>
+                            <h3 class="text-xl font-bold text-green-600 dark:text-green-400 mb-2">
+                                Correct! Well done!
+                            </h3>
+                            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                You picked ₦2,000, which is the lower value between Cost (₦2,000) and NRV (₦2,300).
+                                This is exactly right!
+                            </p>
+                            <button onclick="nextScreen()" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-medium text-base shadow-lg transition-all">
+                                Continue to Celebration →
+                            </button>
+                        </div>
+                    </div>
+                `;
+                options.style.opacity = '0.5';
+                options.style.pointerEvents = 'none';
+            } else {
+                feedback.innerHTML = `
+                    <div class="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border-2 border-red-500">
+                        <div class="text-center">
+                            <div class="text-4xl mb-3">❌</div>
+                            <h3 class="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
+                                Not quite! Try again.
+                            </h3>
+                            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                Remember: We always pick the <span class="font-bold">LOWER</span> value between Cost and NRV.
+                            </p>
+                            <button onclick="resetQuiz()" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-medium text-base shadow-lg transition-all">
+                                Try Again
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function resetQuiz() {
+            const feedback = document.getElementById('quizFeedback');
+            const options = document.getElementById('quizOptions');
+            feedback.classList.add('hidden');
+            options.style.opacity = '1';
+            options.style.pointerEvents = 'auto';
+        }
+
+        function resetCourse() {
+            resetQuiz();
+            showScreen(1);
+        }
+
+        // ===== IMPROVED TEXT-TO-SPEECH FUNCTIONS =====
+
+        function removeEmojis(text) {
+            // Remove all emojis and emoji-like unicode characters
+            return text
+                .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Emoticons
+                .replace(/[\u{2600}-\u{26FF}]/gu, '')   // Miscellaneous Symbols
+                .replace(/[\u{2700}-\u{27BF}]/gu, '')   // Dingbats
+                .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, '') // Flags
+                .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+                .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport & Map
+                .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Supplemental Symbols
+                .replace(/[\u{2300}-\u{23FF}]/gu, '')   // Miscellaneous Technical
+                .replace(/[\u{FE00}-\u{FE0F}]/gu, '')   // Variation Selectors
+                .replace(/[\u{200D}]/gu, '');           // Zero Width Joiner
+        }
+
+        function getScreenText(screenNumber) {
+            const screen = document.getElementById('screen' + screenNumber);
+            if (!screen) return '';
+
+            // Clone the screen to avoid modifying the original
+            const clone = screen.cloneNode(true);
+
+            // Remove buttons and their text
+            clone.querySelectorAll('button').forEach(btn => btn.remove());
+
+            let textSegments = [];
+
+            // Process headings with pauses
+            clone.querySelectorAll('h1, h2, h3').forEach(heading => {
+                let text = heading.textContent.trim();
+                if (text) {
+                    textSegments.push(text + '...');  // Long pause after headings
+                }
+            });
+
+            // Process paragraphs with pauses
+            clone.querySelectorAll('p').forEach(p => {
+                let text = p.textContent.trim();
+                if (text && text.length > 0) {
+                    textSegments.push(text + '.');
+                }
+            });
+
+            // Process list items with pauses
+            clone.querySelectorAll('li').forEach(li => {
+                let text = li.textContent.trim();
+                if (text && text.length > 0) {
+                    textSegments.push(text + ',');  // Shorter pause for list items
+                }
+            });
+
+            // Join all segments
+            let fullText = textSegments.join(' ');
+
+            // Remove emojis
+            fullText = removeEmojis(fullText);
+
+            // Replace currency and special symbols
+            fullText = fullText.replace(/₦/g, 'Naira ');
+            fullText = fullText.replace(/[→←↗↘]/g, '');
+            fullText = fullText.replace(/•/g, '');
+            fullText = fullText.replace(/=/g, ' equals ');
+            fullText = fullText.replace(/\+/g, ' plus ');
+            fullText = fullText.replace(/-/g, ' minus ');
+
+            // Clean up whitespace
+            fullText = fullText.replace(/\s+/g, ' ').trim();
+
+            // Clean up multiple punctuation
+            fullText = fullText.replace(/\.{2,}/g, '..');  // Keep double periods for long pauses
+            fullText = fullText.replace(/,{2,}/g, ',');
+            fullText = fullText.replace(/\s*\.\s*/g, '. ');
+            fullText = fullText.replace(/\s*,\s*/g, ', ');
+
+            // Add natural pauses
+            fullText = fullText.replace(/:/g, ': ');
+            fullText = fullText.replace(/;/g, '; ');
+            fullText = fullText.replace(/\?/g, '? ');
+            fullText = fullText.replace(/!/g, '! ');
+
+            return fullText;
+        }
+
+        function toggleSpeech() {
+            if (isSpeaking) {
+                stopSpeech();
+            } else {
+                startSpeech();
+            }
+        }
+
+        function startSpeech() {
+            // Stop any ongoing speech first
+            stopSpeech();
+
+            const text = getScreenText(currentScreen);
+            if (!text) {
+                console.log('No text to speak');
+                return;
+            }
+
+            currentUtterance = new SpeechSynthesisUtterance(text);
+
+            // Configure the utterance for natural reading
+            currentUtterance.rate = 0.85;  // Slower for better comprehension
+            currentUtterance.pitch = 1;
+            currentUtterance.volume = 1;
+
+            // Try to use a good voice if available
+            const voices = speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice =>
+                voice.lang.startsWith('en') &&
+                (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Samantha'))
+            );
+            if (preferredVoice) {
+                currentUtterance.voice = preferredVoice;
+            }
+
+            // Event handlers
+            currentUtterance.onstart = function() {
+                isSpeaking = true;
+                updateTTSButton();
+            };
+
+            currentUtterance.onend = function() {
+                isSpeaking = false;
+                updateTTSButton();
+            };
+
+            currentUtterance.onerror = function(event) {
+                console.error('Speech synthesis error:', event);
+                isSpeaking = false;
+                updateTTSButton();
+            };
+
+            // Start speaking
+            speechSynthesis.speak(currentUtterance);
+        }
+
+        function stopSpeech() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            isSpeaking = false;
+            currentUtterance = null;
+            updateTTSButton();
+        }
+
+        function updateTTSButton() {
+            const button = document.getElementById('ttsButton');
+            const playIcon = document.getElementById('ttsIconPlay');
+            const speakingIcon = document.getElementById('ttsIconSpeaking');
+
+            if (isSpeaking) {
+                button.classList.add('speaking');
+                playIcon.classList.add('hidden');
+                speakingIcon.classList.remove('hidden');
+                button.title = 'Stop reading';
+            } else {
+                button.classList.remove('speaking');
+                playIcon.classList.remove('hidden');
+                speakingIcon.classList.add('hidden');
+                button.title = 'Listen to this screen';
+            }
+        }
+
+        // Load voices (needed for some browsers)
+        speechSynthesis.onvoiceschanged = function() {
+            speechSynthesis.getVoices();
+        };
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>
+
