@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departmental Accounts Learning App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #5D5CDE;
+            --primary-light: #7A79E6;
+            --primary-dark: #4A49B2;
+            --primary-gradient: linear-gradient(135deg, #5D5CDE 0%, #7069F0 100%);
+            --secondary-color: #FF6B6B;
+            --secondary-light: #FF8E8E;
+            --secondary-dark: #E64A4A;
+            --success-color: #4CAF50;
+            --warning-color: #FF9800;
+            --danger-color: #F44336;
+            --gray-100: #f7f7f7;
+            --gray-200: #e9e9e9;
+            --gray-300: #dedede;
+            --gray-400: #cecece;
+            --gray-500: #aeaeae;
+            --gray-600: #8c8c8c;
+            --gray-700: #6e6e6e;    
+            --gray-800: #4b4b4b;
+            --gray-900: #2c2c2c;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --animation-duration: 0.3s;
+        }
+        
+        .dark {
+            --gray-100: #333333;
+            --gray-200: #383838;
+            --gray-300: #424242;
+            --gray-400: #4f4f4f;
+            --gray-500: #656565;
+            --gray-600: #7e7e7e;
+            --gray-700: #989898;
+            --gray-800: #c4c4c4;
+            --gray-900: #e0e0e0;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Global styles */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dashed var(--primary-color);
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 240px;
+            background: var(--primary-gradient);
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -120px;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translateY(10px);
+            box-shadow: var(--shadow-md);
+        }
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary-color) transparent transparent transparent;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Card styles */
+        .option-card {
+            transition: all var(--animation-duration) ease;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid transparent;
+        }
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+        
+        /* Quiz option styles */
+        .quiz-option {
+            transition: all 0.2s ease;
+            border-radius: 0.75rem;
+        }
+        .quiz-option:hover {
+            transform: scale(1.02);
+        }
+        .quiz-option .option-letter {
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .quiz-option:hover .option-letter {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        /* Module card styles */
+        .module-card {
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-md);
+        }
+        .module-card.completed::before {
+            content: "✅";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        /* Chart container */
+        .chart-container {
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .dark .chart-container {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Table styles */
+        .interactive-table {
+            overflow-x: auto;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .interactive-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .interactive-table th {
+            background-color: var(--gray-200);
+            font-weight: 600;
+            border-bottom: 2px solid var(--gray-300);
+        }
+        .interactive-table td {
+            border-bottom: 1px solid var(--gray-300);
+        }
+        .dark .interactive-table th {
+            background-color: var(--gray-800);
+            border-bottom: 2px solid var(--gray-700);
+        }
+        .dark .interactive-table td {
+            border-bottom: 1px solid var(--gray-700);
+        }
+        .dark .interactive-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Drag and drop styles */
+        .drag-item {
+            cursor: move;
+            transition: all 0.2s ease;
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+            background: var(--primary-gradient);
+        }
+        .drag-item:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        .drop-zone {
+            min-height: 60px;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+        .drop-zone.highlight {
+            background-color: rgba(93, 92, 222, 0.15);
+            box-shadow: inset 0 0 0 2px var(--primary-color);
+        }
+        
+        /* Animations */
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .celebrate {
+            animation: celebrate 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        /* Progress bar */
+        #progress-bar {
+            transition: width 0.5s ease;
+            background: var(--primary-gradient);
+            height: 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        /* Button styles */
+        button {
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button.bg-5D5CDE {
+            background: var(--primary-gradient);
+            border: none;
+        }
+        
+        button.bg-5D5CDE:hover {
+            box-shadow: var(--shadow-md);
+            background-image: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-color) 100%);
+        }
+        
+        button.bg-green-500 {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        button.bg-green-500:hover {
+            background: linear-gradient(135deg, #45a049 0%, #3d8b3d 100%);
+        }
+        
+        /* Dark mode support */
+        .dark {
+            background-color: #181818;
+            color: #f5f5f5;
+        }
+        .dark .bg-white {
+            background-color: #2d2d2d;
+        }
+        .dark .bg-gray-100 {
+            background-color: #333333;
+        }
+        .dark .bg-gray-50 {
+            background-color: #2a2a2a;
+        }
+        .dark .text-gray-800 {
+            color: #e0e0e0;
+        }
+        .dark .text-gray-700 {
+            color: #d0d0d0;
+        }
+        .dark .text-gray-600 {
+            color: #c0c0c0;
+        }
+        .dark .border-gray-200 {
+            border-color: #404040;
+        }
+        .dark select, .dark input {
+            background-color: #333;
+            color: #e0e0e0;
+            border-color: #505050;
+        }
+        .dark option {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                <span class="text-5D5CDE">📊</span> Departmental Accounts <span class="text-5D5CDE">📈</span>
+            </h1>
+            <p class="text-gray-600 mb-4">Interactive learning for high school students</p>
+            <div class="flex justify-center">
+                <div id="progress-container" class="w-full max-w-md bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progress-bar" class="bg-5D5CDE h-4 rounded-full" style="width: 0%; transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="md:w-1/2">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome to Departmental Accounting! 👋</h2>
+                    <p class="text-gray-700 mb-4">Learn how businesses track performance across different departments.</p>
+                    <p class="text-gray-700 mb-4">This interactive course covers:</p>
+                    <ul class="list-disc pl-5 mb-4 text-gray-700">
+                        <li>Why businesses use departmental accounts <span class="text-5D5CDE">🎯</span></li>
+                        <li>How expenses are shared between departments <span class="text-5D5CDE">💰</span></li>
+                        <li>Creating departmental trading and profit & loss statements <span class="text-5D5CDE">📝</span></li>
+                    </ul>
+                    <button id="start-button" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                        Start Learning <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+                <div class="md:w-1/2">
+                    <div class="chart-container p-4 bg-gray-50 rounded-lg">
+                        <canvas id="welcome-chart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 1: Objectives -->
+        <div id="module-1" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Module 1: Objectives of Departmental Accounts <span class="text-5D5CDE">🎯</span></h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-gray-700 mb-4">Businesses divide accounting into departments to:</p>
+                    
+                    <div class="flex items-start mb-4">
+                        <div class="bg-5D5CDE p-2 rounded-full text-white mr-3 flex-shrink-0">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Track Performance</h3>
+                            <p class="text-gray-600">See which departments are performing well or need improvement</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-4">
+                        <div class="bg-5D5CDE p-2 rounded-full text-white mr-3 flex-shrink-0">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Evaluate Managers</h3>
+                            <p class="text-gray-600">Assess department managers' effectiveness</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-4">
+                        <div class="bg-5D5CDE p-2 rounded-full text-white mr-3 flex-shrink-0">
+                            <i class="fas fa-search-dollar"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Identify Profitability</h3>
+                            <p class="text-gray-600">Find which products or services make the most money</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start mb-4">
+                        <div class="bg-5D5CDE p-2 rounded-full text-white mr-3 flex-shrink-0">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">Strategic Planning</h3>
+                            <p class="text-gray-600">Make decisions about expanding or reducing departments</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">Example: Fashion Store 👕</h3>
+                    <p class="text-gray-700 mb-2">A clothing store might have departments for:</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="option-card p-3 bg-white shadow-sm rounded-lg text-center">
+                            <div class="text-xl mb-1">👔</div>
+                            <div class="font-medium">Men's Clothing</div>
+                        </div>
+                        <div class="option-card p-3 bg-white shadow-sm rounded-lg text-center">
+                            <div class="text-xl mb-1">👗</div>
+                            <div class="font-medium">Women's Clothing</div>
+                        </div>
+                        <div class="option-card p-3 bg-white shadow-sm rounded-lg text-center">
+                            <div class="text-xl mb-1">👟</div>
+                            <div class="font-medium">Footwear</div>
+                        </div>
+                        <div class="option-card p-3 bg-white shadow-sm rounded-lg text-center">
+                            <div class="text-xl mb-1">👜</div>
+                            <div class="font-medium">Accessories</div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-700">By tracking each department separately, the store can see which is most profitable and allocate resources accordingly.</p>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="module1-quiz-btn" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Test Your Knowledge <i class="fas fa-question-circle ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 1 Quiz -->
+        <div id="module1-quiz" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Knowledge Check: Objectives <span class="text-5D5CDE">🧠</span></h2>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">Which of the following is NOT a reason for preparing departmental accounts?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>To evaluate department managers' performance</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>To track profitability of different departments</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>To avoid paying taxes on business profits</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>To make strategic decisions about expanding departments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">A business with multiple departments can better:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>Hide profits from tax authorities</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>Identify which products or services are most profitable</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>Avoid creating financial statements</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>Reduce the overall accounting workload</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="module1-quiz-feedback" class="p-4 rounded-lg mb-6 hidden"></div>
+            
+            <div class="text-center">
+                <button id="module1-quiz-submit" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Submit Answers
+                </button>
+                <button id="module1-continue" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ml-3 hidden">
+                    Continue to Next Module <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 2: Apportionment of Expenses -->
+        <div id="module-2" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Module 2: Apportionment of Expenses <span class="text-5D5CDE">💰</span></h2>
+            
+            <p class="text-gray-700 mb-4">Some expenses benefit multiple departments and need to be <span class="tooltip">apportioned<span class="tooltiptext">Divided or allocated among departments based on a reasonable basis</span></span>:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">Direct Expenses <i class="fas fa-bullseye text-5D5CDE ml-1"></i></h3>
+                    <p class="text-gray-700 mb-2">Directly identifiable with a specific department:</p>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Department-specific staff salaries</li>
+                        <li>Department advertising</li>
+                        <li>Department manager's salary</li>
+                        <li>Department-specific supplies</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">Indirect Expenses <i class="fas fa-random text-5D5CDE ml-1"></i></h3>
+                    <p class="text-gray-700 mb-2">Shared expenses that must be allocated:</p>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Rent and rates</li>
+                        <li>Insurance</li>
+                        <li>Electricity and heating</li>
+                        <li>General administration costs</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-bold mb-3">Common Bases for Apportionment <i class="fas fa-balance-scale text-5D5CDE ml-1"></i></h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-expand-alt text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Floor Area</div>
+                        <div class="text-sm text-gray-600">For rent, rates, building insurance, heating</div>
+                    </div>
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-users text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Number of Employees</div>
+                        <div class="text-sm text-gray-600">For staff welfare, canteen expenses</div>
+                    </div>
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-dollar-sign text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Sales Value</div>
+                        <div class="text-sm text-gray-600">For sales commission, delivery expenses</div>
+                    </div>
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-weight-hanging text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Weight/Volume</div>
+                        <div class="text-sm text-gray-600">For shipping, handling costs</div>
+                    </div>
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-lightbulb text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Electricity Usage</div>
+                        <div class="text-sm text-gray-600">For electricity costs</div>
+                    </div>
+                    <div class="option-card p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="text-xl mb-2"><i class="fas fa-boxes text-5D5CDE"></i></div>
+                        <div class="font-medium mb-1">Capital Value</div>
+                        <div class="text-sm text-gray-600">For depreciation, insurance of assets</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-bold mb-3">Interactive Example: Apportioning Expenses <i class="fas fa-calculator text-5D5CDE ml-1"></i></h3>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="mb-4">Fashion store with three departments: Men's, Women's, and Children's clothing.</p>
+                    
+                    <div class="interactive-table">
+                        <table class="w-full mb-4">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="p-2 text-left">Department</th>
+                                    <th class="p-2 text-left">Floor Area (m²)</th>
+                                    <th class="p-2 text-left">No. of Staff</th>
+                                    <th class="p-2 text-left">Value of Stock ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-2 border-b">Men's</td>
+                                    <td class="p-2 border-b">200</td>
+                                    <td class="p-2 border-b">4</td>
+                                    <td class="p-2 border-b">80,000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border-b">Women's</td>
+                                    <td class="p-2 border-b">300</td>
+                                    <td class="p-2 border-b">6</td>
+                                    <td class="p-2 border-b">120,000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border-b">Children's</td>
+                                    <td class="p-2 border-b">100</td>
+                                    <td class="p-2 border-b">2</td>
+                                    <td class="p-2 border-b">40,000</td>
+                                </tr>
+                                <tr class="font-bold bg-gray-100">
+                                    <td class="p-2">Total</td>
+                                    <td class="p-2">600</td>
+                                    <td class="p-2">12</td>
+                                    <td class="p-2">240,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p class="mb-3">Expenses to apportion:</p>
+                    <ul class="list-disc pl-5 mb-4">
+                        <li>Rent and rates: $30,000 (based on floor area)</li>
+                        <li>Staff welfare: $6,000 (based on number of staff)</li>
+                        <li>Insurance: $4,800 (based on value of stock)</li>
+                    </ul>
+                    
+                    <div class="mb-4">
+                        <label class="font-medium mb-1 block">Select an expense to apportion:</label>
+                        <select id="expense-select" class="w-full p-2 border rounded-lg">
+                            <option value="rent">Rent and rates ($30,000)</option>
+                            <option value="welfare">Staff welfare ($6,000)</option>
+                            <option value="insurance">Insurance ($4,800)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div id="apportionment-result" class="p-3 bg-white rounded-lg border">
+                            Select an expense above to see how it's apportioned
+                        </div>
+                    </div>
+                    
+                    <div id="apportionment-chart-container" class="mt-4 hidden">
+                        <canvas id="apportionment-chart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="module2-quiz-btn" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Test Your Knowledge <i class="fas fa-question-circle ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 2 Quiz -->
+        <div id="module2-quiz" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Knowledge Check: Apportionment of Expenses <span class="text-5D5CDE">🧠</span></h2>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">Which of the following is a direct expense for a department?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>Building insurance</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>Department-specific advertising</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>General store electricity</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>Administrative staff salaries</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">Rent expense would most appropriately be apportioned based on:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>Floor area occupied by each department</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>Number of employees in each department</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>Sales value of each department</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>Number of items in inventory</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">A store has three departments. Department A has 40% of the floor area, Department B has 35%, and Department C has 25%. If the total rent is $20,000, how much rent should be apportioned to Department B?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>$5,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>$6,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>$7,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>$8,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="module2-quiz-feedback" class="p-4 rounded-lg mb-6 hidden"></div>
+            
+            <div class="text-center">
+                <button id="module2-quiz-submit" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Submit Answers
+                </button>
+                <button id="module2-continue" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ml-3 hidden">
+                    Continue to Next Module <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 3: Departmental Trading and Profit & Loss Account -->
+        <div id="module-3" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Module 3: Departmental Trading and P&L Account <span class="text-5D5CDE">📝</span></h2>
+            
+            <p class="text-gray-700 mb-4">Departmental accounts show the trading results of each department separately:</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">Trading Account <i class="fas fa-exchange-alt text-5D5CDE ml-1"></i></h3>
+                    <p class="text-gray-700 mb-2">Shows <span class="tooltip">gross profit<span class="tooltiptext">Sales revenue minus cost of goods sold</span></span> for each department:</p>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Sales</li>
+                        <li>Less: Cost of goods sold</li>
+                        <li>= Gross profit</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-bold mb-3">Profit & Loss Account <i class="fas fa-chart-pie text-5D5CDE ml-1"></i></h3>
+                    <p class="text-gray-700 mb-2">Shows <span class="tooltip">net profit<span class="tooltiptext">Gross profit minus operating expenses</span></span> for each department:</p>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Gross profit</li>
+                        <li>Less: Direct expenses</li>
+                        <li>Less: Apportioned expenses</li>
+                        <li>= Net profit</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-bold mb-3">Key Components <i class="fas fa-key text-5D5CDE ml-1"></i></h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Column Format</h4>
+                        <p class="text-gray-700">Each department gets its own column, with a total column:</p>
+                        <img src="https://i.imgur.com/ksxefY0.png" alt="Column format example" class="w-full rounded-lg mt-2">
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold mb-2">Profitability Analysis</h4>
+                        <p class="text-gray-700">Key ratios to assess performance:</p>
+                        <ul class="list-disc pl-5 text-gray-700">
+                            <li><span class="tooltip">Gross profit margin<span class="tooltiptext">(Gross profit ÷ Sales) × 100%</span></span></li>
+                            <li><span class="tooltip">Net profit margin<span class="tooltiptext">(Net profit ÷ Sales) × 100%</span></span></li>
+                            <li><span class="tooltip">Return on capital employed<span class="tooltiptext">(Net profit ÷ Capital employed) × 100%</span></span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="font-bold mb-3">Interactive Exercise: Build a Departmental P&L <i class="fas fa-tasks text-5D5CDE ml-1"></i></h3>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <p class="mb-4">Drag the items to their correct positions in the departmental trading and profit & loss account:</p>
+                    
+                    <div class="mb-4 p-3 bg-white rounded-lg">
+                        <h4 class="font-semibold mb-2">Items to place:</h4>
+                        <div id="drag-items" class="flex flex-wrap gap-2">
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="sales">Sales</div>
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="cogs">Cost of Goods Sold</div>
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="gross-profit">Gross Profit</div>
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="direct-expenses">Direct Expenses</div>
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="apportioned-expenses">Apportioned Expenses</div>
+                            <div class="drag-item px-3 py-1 bg-5D5CDE text-white rounded cursor-move" draggable="true" data-item="net-profit">Net Profit</div>
+                        </div>
+                    </div>
+                    
+                    <div class="interactive-table">
+                        <table class="w-full border-collapse mb-4">
+                            <thead>
+                                <tr class="bg-gray-200">
+                                    <th class="p-2 text-left border">Item</th>
+                                    <th class="p-2 text-left border">Clothing Dept ($)</th>
+                                    <th class="p-2 text-left border">Electronics Dept ($)</th>
+                                    <th class="p-2 text-left border">Total ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pl-table">
+                                <tr>
+                                    <td class="p-2 border drop-zone" data-position="1" data-correct="sales"></td>
+                                    <td class="p-2 border">200,000</td>
+                                    <td class="p-2 border">300,000</td>
+                                    <td class="p-2 border">500,000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border">Less:</td>
+                                    <td class="p-2 border"></td>
+                                    <td class="p-2 border"></td>
+                                    <td class="p-2 border"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border drop-zone" data-position="2" data-correct="cogs"></td>
+                                    <td class="p-2 border">120,000</td>
+                                    <td class="p-2 border">210,000</td>
+                                    <td class="p-2 border">330,000</td>
+                                </tr>
+                                <tr class="bg-gray-100">
+                                    <td class="p-2 border drop-zone" data-position="3" data-correct="gross-profit"></td>
+                                    <td class="p-2 border">80,000</td>
+                                    <td class="p-2 border">90,000</td>
+                                    <td class="p-2 border">170,000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border">Less:</td>
+                                    <td class="p-2 border"></td>
+                                    <td class="p-2 border"></td>
+                                    <td class="p-2 border"></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border drop-zone" data-position="4" data-correct="direct-expenses"></td>
+                                    <td class="p-2 border">30,000</td>
+                                    <td class="p-2 border">25,000</td>
+                                    <td class="p-2 border">55,000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2 border drop-zone" data-position="5" data-correct="apportioned-expenses"></td>
+                                    <td class="p-2 border">20,000</td>
+                                    <td class="p-2 border">30,000</td>
+                                    <td class="p-2 border">50,000</td>
+                                </tr>
+                                <tr class="bg-gray-100 font-bold">
+                                    <td class="p-2 border drop-zone" data-position="6" data-correct="net-profit"></td>
+                                    <td class="p-2 border">30,000</td>
+                                    <td class="p-2 border">35,000</td>
+                                    <td class="p-2 border">65,000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="pl-exercise-feedback" class="hidden mb-4 p-3 rounded-lg"></div>
+                    
+                    <div class="text-center">
+                        <button id="check-pl-btn" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                            Check My Answer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <button id="module3-quiz-btn" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Final Knowledge Check <i class="fas fa-question-circle ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Module 3 Quiz -->
+        <div id="module3-quiz" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Knowledge Check: Departmental P&L <span class="text-5D5CDE">🧠</span></h2>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">Which of the following is calculated as Sales minus Cost of Goods Sold?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>Gross Profit</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>Net Profit</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>Operating Profit</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>Retained Earnings</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">In a departmental trading account, which of the following would NOT be included?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>Sales</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>Opening inventory</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>Purchases</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>Depreciation expense</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quiz-question mb-8">
+                <p class="font-bold text-lg mb-3">Department A has sales of $500,000, cost of goods sold of $300,000, direct expenses of $80,000, and apportioned expenses of $40,000. What is the net profit for Department A?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">A</div>
+                            <div>$200,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">B</div>
+                            <div>$120,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="true" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">C</div>
+                            <div>$80,000</div>
+                        </div>
+                    </div>
+                    <div data-correct="false" class="quiz-option p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:border-5D5CDE">
+                        <div class="flex items-center">
+                            <div class="option-letter bg-gray-200 w-8 h-8 rounded-full flex items-center justify-center mr-3">D</div>
+                            <div>$40,000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="module3-quiz-feedback" class="p-4 rounded-lg mb-6 hidden"></div>
+            
+            <div class="text-center">
+                <button id="module3-quiz-submit" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">
+                    Submit Answers
+                </button>
+                <button id="finish-course" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300 ml-3 hidden">
+                    Complete Course <i class="fas fa-graduation-cap ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div id="completion-screen" class="bg-white p-6 rounded-lg shadow-md mb-8 hidden">
+            <div class="text-center">
+                <div class="mb-6">
+                    <span class="text-6xl">🎓</span>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Congratulations!</h2>
+                <p class="text-gray-700 mb-6">You've completed the Departmental Accounts course.</p>
+                
+                <div class="mb-8">
+                    <div class="inline-block p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-bold mb-3">Your Knowledge Score:</h3>
+                        <div class="flex justify-center items-center">
+                            <div class="relative w-32 h-32">
+                                <canvas id="score-chart" width="128" height="128"></canvas>
+                                <div id="score-display" class="absolute inset-0 flex items-center justify-center text-2xl font-bold"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="text-xl mb-2">📋</div>
+                        <h3 class="font-bold mb-1">Module 1</h3>
+                        <p class="text-sm text-gray-600">Objectives of Departmental Accounts</p>
+                        <div id="module1-score" class="mt-2 font-medium"></div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="text-xl mb-2">💰</div>
+                        <h3 class="font-bold mb-1">Module 2</h3>
+                        <p class="text-sm text-gray-600">Apportionment of Expenses</p>
+                        <div id="module2-score" class="mt-2 font-medium"></div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="text-xl mb-2">📝</div>
+                        <h3 class="font-bold mb-1">Module 3</h3>
+                        <p class="text-sm text-gray-600">Departmental Trading and P&L</p>
+                        <div id="module3-score" class="mt-2 font-medium"></div>
+                    </div>
+                </div>
+                
+                <button id="restart-button" class="bg-5D5CDE hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Restart Course <i class="fas fa-redo ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Initialize variables to track progress and scores
+        let currentModule = 0;
+        const totalModules = 3;
+        const quizScores = {
+            module1: 0,
+            module2: 0,
+            module3: 0
+        };
+        
+        // Elements
+        const progressBar = document.getElementById('progress-bar');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const module1 = document.getElementById('module-1');
+        const module1Quiz = document.getElementById('module1-quiz');
+        const module2 = document.getElementById('module-2');
+        const module2Quiz = document.getElementById('module2-quiz');
+        const module3 = document.getElementById('module-3');
+        const module3Quiz = document.getElementById('module3-quiz');
+        const completionScreen = document.getElementById('completion-screen');
+        
+        // Initialize the welcome chart
+        const welcomeChart = new Chart(document.getElementById('welcome-chart'), {
+            type: 'bar',
+            data: {
+                labels: ['Department A', 'Department B', 'Department C'],
+                datasets: [{
+                    label: 'Sales ($)',
+                    data: [45000, 30000, 25000],
+                    backgroundColor: [
+                        'rgba(93, 92, 222, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(93, 92, 222, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Function to update progress
+        function updateProgress() {
+            const progressPercentage = (currentModule / totalModules) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+        }
+        
+        // Function to show a specific module
+        function showModule(moduleNumber) {
+            // Hide all modules
+            welcomeScreen.classList.add('hidden');
+            module1.classList.add('hidden');
+            module1Quiz.classList.add('hidden');
+            module2.classList.add('hidden');
+            module2Quiz.classList.add('hidden');
+            module3.classList.add('hidden');
+            module3Quiz.classList.add('hidden');
+            completionScreen.classList.add('hidden');
+            
+            // Show selected module
+            switch(moduleNumber) {
+                case 0:
+                    welcomeScreen.classList.remove('hidden');
+                    break;
+                case 1:
+                    module1.classList.remove('hidden');
+                    break;
+                case 2:
+                    module1Quiz.classList.remove('hidden');
+                    break;
+                case 3:
+                    module2.classList.remove('hidden');
+                    break;
+                case 4:
+                    module2Quiz.classList.remove('hidden');
+                    break;
+                case 5:
+                    module3.classList.remove('hidden');
+                    break;
+                case 6:
+                    module3Quiz.classList.remove('hidden');
+                    break;
+                case 7:
+                    completionScreen.classList.remove('hidden');
+                    showCompletionScreen();
+                    break;
+            }
+            
+            currentModule = moduleNumber;
+            updateProgress();
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            showModule(0);
+            
+            // Event listeners for navigation
+            document.getElementById('start-button').addEventListener('click', function() {
+                showModule(1);
+            });
+            
+            document.getElementById('module1-quiz-btn').addEventListener('click', function() {
+                showModule(2);
+            });
+            
+            document.getElementById('module2-quiz-btn').addEventListener('click', function() {
+                showModule(4);
+            });
+            
+            document.getElementById('module3-quiz-btn').addEventListener('click', function() {
+                showModule(6);
+            });
+            
+            document.getElementById('module1-continue').addEventListener('click', function() {
+                showModule(3);
+            });
+            
+            document.getElementById('module2-continue').addEventListener('click', function() {
+                showModule(5);
+            });
+            
+            document.getElementById('finish-course').addEventListener('click', function() {
+                showModule(7);
+            });
+            
+            document.getElementById('restart-button').addEventListener('click', function() {
+                // Reset scores
+                quizScores.module1 = 0;
+                quizScores.module2 = 0;
+                quizScores.module3 = 0;
+                
+                // Clear quiz selections
+                document.querySelectorAll('.quiz-option').forEach(option => {
+                    option.classList.remove('bg-green-100', 'border-green-500', 'bg-red-100', 'border-red-500');
+                });
+                
+                // Hide feedback elements
+                document.getElementById('module1-quiz-feedback').classList.add('hidden');
+                document.getElementById('module2-quiz-feedback').classList.add('hidden');
+                document.getElementById('module3-quiz-feedback').classList.add('hidden');
+                
+                // Hide continue buttons
+                document.getElementById('module1-continue').classList.add('hidden');
+                document.getElementById('module2-continue').classList.add('hidden');
+                document.getElementById('finish-course').classList.add('hidden');
+                
+                // Show submit buttons
+                document.getElementById('module1-quiz-submit').classList.remove('hidden');
+                document.getElementById('module2-quiz-submit').classList.remove('hidden');
+                document.getElementById('module3-quiz-submit').classList.remove('hidden');
+                
+                // Reset the PL exercise
+                document.querySelectorAll('.drop-zone').forEach(zone => {
+                    zone.innerHTML = '';
+                });
+                document.querySelectorAll('.drag-item').forEach(item => {
+                    document.getElementById('drag-items').appendChild(item);
+                });
+                document.getElementById('pl-exercise-feedback').classList.add('hidden');
+                
+                showModule(0);
+            });
+            
+            // Quiz functionality
+            function setupQuiz(moduleNumber) {
+                const quizId = `module${moduleNumber}-quiz`;
+                const feedbackId = `module${moduleNumber}-quiz-feedback`;
+                const submitId = `module${moduleNumber}-quiz-submit`;
+                const continueId = `module${moduleNumber}-continue`;
+                
+                const quizContainer = document.getElementById(quizId);
+                const feedbackElement = document.getElementById(feedbackId);
+                const submitButton = document.getElementById(submitId);
+                const continueButton = document.getElementById(continueId);
+                
+                submitButton.addEventListener('click', function() {
+                    let correctAnswers = 0;
+                    const totalQuestions = quizContainer.querySelectorAll('.quiz-question').length;
+                    
+                    // Check each question
+                    quizContainer.querySelectorAll('.quiz-question').forEach(question => {
+                        let answeredCorrectly = false;
+                        
+                        // Check each option in the question
+                        question.querySelectorAll('.quiz-option').forEach(option => {
+                            const isCorrect = option.getAttribute('data-correct') === 'true';
+                            const isSelected = option.classList.contains('border-5D5CDE');
+                            
+                            if (isSelected) {
+                                if (isCorrect) {
+                                    option.classList.add('bg-green-100', 'border-green-500');
+                                    answeredCorrectly = true;
+                                } else {
+                                    option.classList.add('bg-red-100', 'border-red-500');
+                                }
+                            } else if (isCorrect) {
+                                // Highlight the correct answer
+                                option.classList.add('bg-green-100', 'border-green-500');
+                            }
+                        });
+                        
+                        if (answeredCorrectly) {
+                            correctAnswers++;
+                        }
+                    });
+                    
+                    // Calculate score
+                    const score = Math.round((correctAnswers / totalQuestions) * 100);
+                    quizScores[`module${moduleNumber}`] = score;
+                    
+                    // Show feedback
+                    feedbackElement.innerHTML = `<div class="text-center">
+                        <p class="font-bold text-lg mb-2">Your Score: ${score}%</p>
+                        <p>You answered ${correctAnswers} out of ${totalQuestions} questions correctly.</p>
+                    </div>`;
+                    
+                    if (score >= 70) {
+                        feedbackElement.classList.add('bg-green-100', 'text-green-800');
+                        feedbackElement.innerHTML += `<p class="text-center mt-2">Great job! You can proceed to the next module.</p>`;
+                    } else {
+                        feedbackElement.classList.add('bg-orange-100', 'text-orange-800');
+                        feedbackElement.innerHTML += `<p class="text-center mt-2">You might want to review this module before continuing.</p>`;
+                    }
+                    
+                    feedbackElement.classList.remove('hidden');
+                    submitButton.classList.add('hidden');
+                    continueButton.classList.remove('hidden');
+                });
+                
+                // Make options selectable
+                quizContainer.querySelectorAll('.quiz-option').forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Deselect other options in same question
+                        const questionEl = option.closest('.quiz-question');
+                        questionEl.querySelectorAll('.quiz-option').forEach(opt => {
+                            opt.classList.remove('border-5D5CDE', 'bg-indigo-50');
+                        });
+                        
+                        // Select this option
+                        option.classList.add('border-5D5CDE', 'bg-indigo-50');
+                    });
+                });
+            }
+            
+            // Set up quizzes
+            setupQuiz(1);
+            setupQuiz(2);
+            setupQuiz(3);
+            
+            // Apportionment example
+            const expenseSelect = document.getElementById('expense-select');
+            const apportionmentResult = document.getElementById('apportionment-result');
+            const chartContainer = document.getElementById('apportionment-chart-container');
+            let apportionmentChart = null;
+            
+            expenseSelect.addEventListener('change', function() {
+                const selectedExpense = this.value;
+                chartContainer.classList.remove('hidden');
+                
+                let result = '';
+                let deptAAmount = 0;
+                let deptBAmount = 0;
+                let deptCAmount = 0;
+                
+                if (selectedExpense === 'rent') {
+                    // Calculate based on floor area
+                    const totalRent = 30000;
+                    deptAAmount = (200 / 600) * totalRent;
+                    deptBAmount = (300 / 600) * totalRent;
+                    deptCAmount = (100 / 600) * totalRent;
+                    
+                    result = `<div class="font-bold mb-2">Rent and Rates ($30,000) - Based on Floor Area</div>
+                        <table class="w-full">
+                            <tr><td>Men's Department:</td><td>$${deptAAmount.toFixed(2)} (${((200/600)*100).toFixed(1)}% of floor area)</td></tr>
+                            <tr><td>Women's Department:</td><td>$${deptBAmount.toFixed(2)} (${((300/600)*100).toFixed(1)}% of floor area)</td></tr>
+                            <tr><td>Children's Department:</td><td>$${deptCAmount.toFixed(2)} (${((100/600)*100).toFixed(1)}% of floor area)</td></tr>
+                        </table>`;
+                } else if (selectedExpense === 'welfare') {
+                    // Calculate based on number of staff
+                    const totalWelfare = 6000;
+                    deptAAmount = (4 / 12) * totalWelfare;
+                    deptBAmount = (6 / 12) * totalWelfare;
+                    deptCAmount = (2 / 12) * totalWelfare;
+                    
+                    result = `<div class="font-bold mb-2">Staff Welfare ($6,000) - Based on Number of Staff</div>
+                        <table class="w-full">
+                            <tr><td>Men's Department:</td><td>$${deptAAmount.toFixed(2)} (${((4/12)*100).toFixed(1)}% of staff)</td></tr>
+                            <tr><td>Women's Department:</td><td>$${deptBAmount.toFixed(2)} (${((6/12)*100).toFixed(1)}% of staff)</td></tr>
+                            <tr><td>Children's Department:</td><td>$${deptCAmount.toFixed(2)} (${((2/12)*100).toFixed(1)}% of staff)</td></tr>
+                        </table>`;
+                } else if (selectedExpense === 'insurance') {
+                    // Calculate based on value of stock
+                    const totalInsurance = 4800;
+                    deptAAmount = (80000 / 240000) * totalInsurance;
+                    deptBAmount = (120000 / 240000) * totalInsurance;
+                    deptCAmount = (40000 / 240000) * totalInsurance;
+                    
+                    result = `<div class="font-bold mb-2">Insurance ($4,800) - Based on Value of Stock</div>
+                        <table class="w-full">
+                            <tr><td>Men's Department:</td><td>$${deptAAmount.toFixed(2)} (${((80000/240000)*100).toFixed(1)}% of stock value)</td></tr>
+                            <tr><td>Women's Department:</td><td>$${deptBAmount.toFixed(2)} (${((120000/240000)*100).toFixed(1)}% of stock value)</td></tr>
+                            <tr><td>Children's Department:</td><td>$${deptCAmount.toFixed(2)} (${((40000/240000)*100).toFixed(1)}% of stock value)</td></tr>
+                        </table>`;
+                }
+                
+                apportionmentResult.innerHTML = result;
+                
+                // Update chart
+                if (apportionmentChart) {
+                    apportionmentChart.destroy();
+                }
+                
+                apportionmentChart = new Chart(document.getElementById('apportionment-chart'), {
+                    type: 'pie',
+                    data: {
+                        labels: ['Men\'s', 'Women\'s', 'Children\'s'],
+                        datasets: [{
+                            data: [deptAAmount, deptBAmount, deptCAmount],
+                            backgroundColor: [
+                                'rgba(93, 92, 222, 0.8)',
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(255, 99, 132, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(93, 92, 222, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true
+                    }
+                });
+            });
+            
+            // Drag and drop functionality
+            let draggedItem = null;
+            
+            // Create event listeners for drag items
+            document.querySelectorAll('.drag-item').forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    draggedItem = this;
+                    setTimeout(() => {
+                        this.style.opacity = '0.5';
+                    }, 0);
+                });
+                
+                item.addEventListener('dragend', function() {
+                    this.style.opacity = '1';
+                    draggedItem = null;
+                });
+            });
+            
+            // Create event listeners for drop zones
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('highlight');
+                });
+                
+                zone.addEventListener('dragleave', function() {
+                    this.classList.remove('highlight');
+                });
+                
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('highlight');
+                    
+                    if (draggedItem) {
+                        // If the drop zone already has an item, put it back
+                        if (this.querySelector('.drag-item')) {
+                            const existingItem = this.querySelector('.drag-item');
+                            document.getElementById('drag-items').appendChild(existingItem);
+                        }
+                        
+                        // Move the dragged item to the drop zone
+                        this.appendChild(draggedItem);
+                    }
+                });
+            });
+            
+            // Check P&L exercise
+            document.getElementById('check-pl-btn').addEventListener('click', function() {
+                const feedbackElement = document.getElementById('pl-exercise-feedback');
+                let correctPlacements = 0;
+                const totalPlacements = document.querySelectorAll('.drop-zone').length;
+                
+                // Check each drop zone
+                document.querySelectorAll('.drop-zone').forEach(zone => {
+                    const correctItem = zone.getAttribute('data-correct');
+                    const droppedItem = zone.querySelector('.drag-item');
+                    
+                    if (droppedItem && droppedItem.getAttribute('data-item') === correctItem) {
+                        correctPlacements++;
+                        droppedItem.classList.add('bg-green-500');
+                        droppedItem.classList.remove('bg-5D5CDE');
+                    } else if (droppedItem) {
+                        droppedItem.classList.add('bg-red-500');
+                        droppedItem.classList.remove('bg-5D5CDE');
+                    }
+                });
+                
+                // Calculate score
+                const score = Math.round((correctPlacements / totalPlacements) * 100);
+                
+                // Show feedback
+                feedbackElement.innerHTML = `<div class="text-center">
+                    <p class="font-bold text-lg mb-2">Your Score: ${score}%</p>
+                    <p>You placed ${correctPlacements} out of ${totalPlacements} items correctly.</p>
+                </div>`;
+                
+                if (score === 100) {
+                    feedbackElement.classList.add('bg-green-100', 'text-green-800');
+                    feedbackElement.innerHTML += `<p class="text-center mt-2">Perfect! You've mastered the departmental P&L structure.</p>`;
+                    
+                    // Add celebratory animation
+                    document.querySelectorAll('.drag-item').forEach(item => {
+                        item.classList.add('celebrate');
+                    });
+                    setTimeout(() => {
+                        document.querySelectorAll('.drag-item').forEach(item => {
+                            item.classList.remove('celebrate');
+                        });
+                    }, 500);
+                } else if (score >= 50) {
+                    feedbackElement.classList.add('bg-orange-100', 'text-orange-800');
+                    feedbackElement.innerHTML += `<p class="text-center mt-2">Good attempt! Green items are correct. Try moving the red items to their correct positions.</p>`;
+                } else {
+                    feedbackElement.classList.add('bg-red-100', 'text-red-800');
+                    feedbackElement.innerHTML += `<p class="text-center mt-2">Keep trying! Green items are correct. Try moving the red items to their correct positions.</p>`;
+                }
+                
+                feedbackElement.classList.remove('hidden');
+            });
+            
+            // Completion screen
+            function showCompletionScreen() {
+                // Calculate overall score
+                const totalScore = Math.round((quizScores.module1 + quizScores.module2 + quizScores.module3) / 3);
+                
+                // Update score displays
+                document.getElementById('score-display').textContent = `${totalScore}%`;
+                document.getElementById('module1-score').textContent = `${quizScores.module1}%`;
+                document.getElementById('module2-score').textContent = `${quizScores.module2}%`;
+                document.getElementById('module3-score').textContent = `${quizScores.module3}%`;
+                
+                // Create the score chart
+                new Chart(document.getElementById('score-chart'), {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [totalScore, 100 - totalScore],
+                            backgroundColor: [
+                                'rgba(93, 92, 222, 0.8)',
+                                'rgba(200, 200, 200, 0.3)'
+                            ],
+                            borderColor: [
+                                'rgba(93, 92, 222, 1)',
+                                'rgba(200, 200, 200, 0)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: false
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
