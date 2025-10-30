@@ -1,1 +1,506 @@
-ff
+ff<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Wave Explorer - Interactive Physics Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        background: {
+                            light: '#FFFFFF',
+                            dark: '#181818'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .wave-animation {
+            animation: wave 2s linear infinite;
+        }
+        
+        @keyframes wave {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-glow {
+            from { box-shadow: 0 0 20px rgba(93, 92, 222, 0.3); }
+            to { box-shadow: 0 0 30px rgba(93, 92, 222, 0.6); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 max-w-6xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-primary mb-2">📡 Radio Wave Explorer</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400">Master the relationship between wavelength and frequency!</p>
+        </div>
+
+        <!-- Game Modes -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <button onclick="setMode('learn')" id="learnBtn" class="mode-btn bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-lg font-semibold transition-all">
+                📚 Learn Mode
+            </button>
+            <button onclick="setMode('practice')" id="practiceBtn" class="mode-btn bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg font-semibold transition-all">
+                🎯 Practice Mode
+            </button>
+            <button onclick="setMode('challenge')" id="challengeBtn" class="mode-btn bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg font-semibold transition-all">
+                🏆 Challenge Mode
+            </button>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="content" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <!-- Learn Mode Content -->
+            <div id="learnMode" class="mode-content">
+                <h2 class="text-2xl font-bold mb-4">📖 The Wave Equation</h2>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+                    <div class="text-center text-2xl font-mono mb-4">
+                        c = λ × f
+                    </div>
+                    <div class="grid md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="font-bold">c = Speed of Light</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">3 × 10⁸ m/s</div>
+                        </div>
+                        <div>
+                            <div class="font-bold">λ = Wavelength</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">meters (m)</div>
+                        </div>
+                        <div>
+                            <div class="font-bold">f = Frequency</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">hertz (Hz)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Wave Visualizer -->
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-4">🌊 Wave Visualizer</h3>
+                    <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Frequency: <span id="freqDisplay">200</span> kHz</label>
+                            <input type="range" id="freqSlider" min="50" max="2000" value="200" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        
+                        <!-- Wave Display -->
+                        <div id="waveContainer" class="h-32 bg-black rounded-lg relative overflow-hidden mb-4">
+                            <svg id="waveSvg" class="w-full h-full">
+                                <path id="wavePath" stroke="#5D5CDE" stroke-width="2" fill="none"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="bg-blue-100 dark:bg-blue-900/30 p-3 rounded">
+                                <div class="text-sm">Wavelength</div>
+                                <div class="text-xl font-bold text-blue-600" id="wavelengthDisplay">1500 m</div>
+                            </div>
+                            <div class="bg-green-100 dark:bg-green-900/30 p-3 rounded">
+                                <div class="text-sm">Wave Type</div>
+                                <div class="text-xl font-bold text-green-600" id="waveTypeDisplay">Long Wave</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Example Problem -->
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                    <h4 class="font-bold mb-2">📋 Your Original Problem:</h4>
+                    <p class="mb-2">A radio transmitter has wavelength 1500m at 200kHz. What's the wavelength at 1000kHz?</p>
+                    <div class="font-mono text-sm bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                        c = 1500m × 200,000 Hz = 3 × 10⁸ m/s<br>
+                        λ = c/f = (3 × 10⁸) / 1,000,000 = <span class="font-bold text-green-600">300m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Practice Mode Content -->
+            <div id="practiceMode" class="mode-content hidden">
+                <h2 class="text-2xl font-bold mb-4">🎯 Practice Problems</h2>
+                
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <span>Problem <span id="problemNum">1</span> of 5</span>
+                        <span>Score: <span id="score">0</span>/5</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progressBar" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+                    </div>
+                </div>
+
+                <div id="problemCard" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg mb-6">
+                    <div id="problemText" class="text-lg mb-4"></div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Enter your answer:</label>
+                            <div class="flex">
+                                <input type="number" id="answerInput" class="flex-1 text-base px-3 py-2 border rounded-l-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Your answer">
+                                <span class="px-3 py-2 bg-gray-200 dark:bg-gray-600 border border-l-0 rounded-r-lg" id="unitDisplay">m</span>
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="checkAnswer()" class="w-full bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-all">
+                                Check Answer
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="feedback" class="hidden p-3 rounded-lg mb-4"></div>
+                    <button onclick="nextProblem()" id="nextBtn" class="hidden bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                        Next Problem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Challenge Mode Content -->
+            <div id="challengeMode" class="mode-content hidden">
+                <h2 class="text-2xl font-bold mb-4">🏆 Challenge Mode</h2>
+                <div class="text-center">
+                    <div class="mb-6">
+                        <div class="text-4xl mb-2">⏱️</div>
+                        <div class="text-2xl font-bold">Time: <span id="timer">60</span>s</div>
+                        <div class="text-lg">Challenge Score: <span id="challengeScore">0</span></div>
+                    </div>
+                    
+                    <div id="challengeCard" class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg mb-6">
+                        <div id="challengeText" class="text-lg mb-4">
+                            Solve as many problems as you can in 60 seconds!
+                        </div>
+                        <button onclick="startChallenge()" id="startChallengeBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold text-lg">
+                            Start Challenge!
+                        </button>
+                        
+                        <div id="challengeProblem" class="hidden">
+                            <div id="challengeProblemText" class="mb-4"></div>
+                            <input type="number" id="challengeInput" class="text-base px-3 py-2 border rounded-lg mb-4" placeholder="Quick! Enter answer">
+                            <button onclick="submitChallenge()" class="bg-primary text-white px-4 py-2 rounded-lg ml-2">Submit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>🌟 Master radio waves and electromagnetic spectrum concepts through interactive learning!</p>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode setup
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Game state
+        let currentMode = 'learn';
+        let currentProblem = 1;
+        let score = 0;
+        let problems = [];
+        let challengeTimer = null;
+        let challengeTime = 60;
+        let challengeScore = 0;
+
+        // Speed of light constant
+        const SPEED_OF_LIGHT = 3e8; // m/s
+
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update button styles
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('pulse-glow', 'ring-2', 'ring-white');
+            });
+            
+            const activeBtn = document.getElementById(mode + 'Btn');
+            activeBtn.classList.add('pulse-glow', 'ring-2', 'ring-white');
+            
+            // Show appropriate content
+            document.querySelectorAll('.mode-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.getElementById(mode + 'Mode').classList.remove('hidden');
+            
+            if (mode === 'practice') {
+                initPracticeMode();
+            }
+        }
+
+        // Wave visualization
+        function updateWave() {
+            const freq = document.getElementById('freqSlider').value;
+            const wavelength = SPEED_OF_LIGHT / (freq * 1000); // Convert kHz to Hz
+            
+            document.getElementById('freqDisplay').textContent = freq;
+            document.getElementById('wavelengthDisplay').textContent = Math.round(wavelength) + ' m';
+            
+            // Determine wave type
+            let waveType = '';
+            if (wavelength > 1000) waveType = 'Long Wave';
+            else if (wavelength > 100) waveType = 'Medium Wave';
+            else if (wavelength > 10) waveType = 'Short Wave';
+            else if (wavelength > 1) waveType = 'VHF';
+            else waveType = 'UHF';
+            
+            document.getElementById('waveTypeDisplay').textContent = waveType;
+            
+            // Draw wave
+            drawWave(freq);
+        }
+
+        function drawWave(freq) {
+            const svg = document.getElementById('waveSvg');
+            const path = document.getElementById('wavePath');
+            const width = svg.clientWidth;
+            const height = svg.clientHeight;
+            
+            // Calculate wavelength representation (scaled for visualization)
+            const cycles = Math.max(1, Math.min(10, freq / 100)); // Scale for visibility
+            const amplitude = height * 0.3;
+            const centerY = height / 2;
+            
+            let pathData = `M 0 ${centerY}`;
+            
+            for (let x = 0; x <= width; x += 2) {
+                const angle = (x / width) * cycles * 2 * Math.PI;
+                const y = centerY + amplitude * Math.sin(angle);
+                pathData += ` L ${x} ${y}`;
+            }
+            
+            path.setAttribute('d', pathData);
+        }
+
+        // Practice mode
+        function initPracticeMode() {
+            currentProblem = 1;
+            score = 0;
+            generateProblems();
+            displayProblem();
+        }
+
+        function generateProblems() {
+            problems = [
+                {
+                    text: "A radio station broadcasts at 1500 kHz. If another station has a wavelength of 200m, what is the first station's wavelength?",
+                    given: { freq1: 1500000, wavelength2: 200 },
+                    answer: 200,
+                    unit: "m"
+                },
+                {
+                    text: "An AM radio wave has wavelength 600m. What is its frequency in kHz?",
+                    given: { wavelength: 600 },
+                    answer: 500,
+                    unit: "kHz"
+                },
+                {
+                    text: "If a transmitter at 250 kHz has wavelength 1200m, what wavelength would a 750 kHz transmitter have?",
+                    given: { freq1: 250000, wavelength1: 1200, freq2: 750000 },
+                    answer: 400,
+                    unit: "m"
+                },
+                {
+                    text: "A shortwave radio operates at 15 MHz. What is its wavelength?",
+                    given: { freq: 15000000 },
+                    answer: 20,
+                    unit: "m"
+                },
+                {
+                    text: "Two radio stations have wavelengths of 300m and 150m. If the first broadcasts at 1000 kHz, what's the second's frequency?",
+                    given: { wavelength1: 300, freq1: 1000000, wavelength2: 150 },
+                    answer: 2000,
+                    unit: "kHz"
+                }
+            ];
+        }
+
+        function displayProblem() {
+            if (currentProblem > problems.length) {
+                showResults();
+                return;
+            }
+            
+            const problem = problems[currentProblem - 1];
+            document.getElementById('problemNum').textContent = currentProblem;
+            document.getElementById('problemText').textContent = problem.text;
+            document.getElementById('unitDisplay').textContent = problem.unit;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+            
+            const progress = (currentProblem / problems.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseFloat(document.getElementById('answerInput').value);
+            const problem = problems[currentProblem - 1];
+            const feedback = document.getElementById('feedback');
+            
+            if (isNaN(userAnswer)) {
+                feedback.className = 'p-3 rounded-lg mb-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+                feedback.textContent = 'Please enter a valid number!';
+                feedback.classList.remove('hidden');
+                return;
+            }
+            
+            const tolerance = Math.abs(problem.answer * 0.05); // 5% tolerance
+            const isCorrect = Math.abs(userAnswer - problem.answer) <= tolerance;
+            
+            if (isCorrect) {
+                score++;
+                feedback.className = 'p-3 rounded-lg mb-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+                feedback.textContent = `🎉 Correct! The answer is ${problem.answer} ${problem.unit}`;
+            } else {
+                feedback.className = 'p-3 rounded-lg mb-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+                feedback.textContent = `❌ Not quite. The correct answer is ${problem.answer} ${problem.unit}. Remember: c = λ × f`;
+            }
+            
+            feedback.classList.remove('hidden');
+            document.getElementById('nextBtn').classList.remove('hidden');
+            document.getElementById('score').textContent = score;
+        }
+
+        function nextProblem() {
+            currentProblem++;
+            displayProblem();
+        }
+
+        function showResults() {
+            const percentage = (score / problems.length) * 100;
+            let message = '';
+            
+            if (percentage >= 80) {
+                message = '🌟 Excellent! You\'ve mastered radio waves!';
+            } else if (percentage >= 60) {
+                message = '👍 Good job! Keep practicing!';
+            } else {
+                message = '📚 Keep studying! Review the wave equation.';
+            }
+            
+            document.getElementById('problemCard').innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold mb-4">🏁 Practice Complete!</h3>
+                    <div class="text-4xl mb-4">${Math.round(percentage)}%</div>
+                    <p class="text-lg mb-4">${message}</p>
+                    <p class="mb-6">You got ${score} out of ${problems.length} problems correct!</p>
+                    <button onclick="initPracticeMode()" class="bg-primary hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        // Challenge mode
+        function startChallenge() {
+            challengeTime = 60;
+            challengeScore = 0;
+            document.getElementById('startChallengeBtn').classList.add('hidden');
+            document.getElementById('challengeProblem').classList.remove('hidden');
+            generateChallengeProblem();
+            
+            challengeTimer = setInterval(() => {
+                challengeTime--;
+                document.getElementById('timer').textContent = challengeTime;
+                
+                if (challengeTime <= 0) {
+                    endChallenge();
+                }
+            }, 1000);
+        }
+
+        function generateChallengeProblem() {
+            const freq1 = Math.floor(Math.random() * 1500 + 100); // 100-1600 kHz
+            const wavelength1 = Math.round(SPEED_OF_LIGHT / (freq1 * 1000));
+            const freq2 = Math.floor(Math.random() * 1500 + 100);
+            const wavelength2 = Math.round(SPEED_OF_LIGHT / (freq2 * 1000));
+            
+            document.getElementById('challengeProblemText').textContent = 
+                `Station at ${freq1} kHz has wavelength ${wavelength1}m. What's the wavelength for ${freq2} kHz?`;
+            
+            // Store correct answer
+            window.challengeAnswer = wavelength2;
+            document.getElementById('challengeInput').value = '';
+            document.getElementById('challengeInput').focus();
+        }
+
+        function submitChallenge() {
+            const userAnswer = parseFloat(document.getElementById('challengeInput').value);
+            
+            if (!isNaN(userAnswer)) {
+                const tolerance = Math.abs(window.challengeAnswer * 0.1); // 10% tolerance for speed
+                
+                if (Math.abs(userAnswer - window.challengeAnswer) <= tolerance) {
+                    challengeScore++;
+                    document.getElementById('challengeScore').textContent = challengeScore;
+                }
+            }
+            
+            generateChallengeProblem();
+        }
+
+        function endChallenge() {
+            clearInterval(challengeTimer);
+            
+            let rating = '';
+            if (challengeScore >= 15) rating = '🏆 Master Physicist!';
+            else if (challengeScore >= 10) rating = '🥇 Wave Expert!';
+            else if (challengeScore >= 5) rating = '🥈 Good Progress!';
+            else rating = '🥉 Keep Practicing!';
+            
+            document.getElementById('challengeProblem').innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold mb-4">⏰ Time's Up!</h3>
+                    <div class="text-3xl mb-2">${rating}</div>
+                    <p class="text-lg mb-4">You solved ${challengeScore} problems!</p>
+                    <button onclick="resetChallenge()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function resetChallenge() {
+            document.getElementById('challengeProblem').classList.add('hidden');
+            document.getElementById('startChallengeBtn').classList.remove('hidden');
+            document.getElementById('timer').textContent = '60';
+            document.getElementById('challengeScore').textContent = '0';
+            challengeScore = 0;
+        }
+
+        // Event listeners
+        document.getElementById('freqSlider').addEventListener('input', updateWave);
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkAnswer();
+        });
+        document.getElementById('challengeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') submitChallenge();
+        });
+
+        // Initialize
+        setMode('learn');
+        updateWave();
+    </script>
+</body>
+</html>
