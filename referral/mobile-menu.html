@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Menu Masterclass - Advanced Navigation Patterns</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Dark mode support */
+        .dark {
+            color-scheme: dark;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #5D5CDE;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4948b8;
+        }
+
+        /* Demo Styles - Slide from Right */
+        .demo-menu-slide-right {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-menu-slide-right.open {
+            transform: translateX(0);
+        }
+
+        /* Demo Styles - Slide from Left */
+        .demo-menu-slide-left {
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-menu-slide-left.open {
+            transform: translateX(0);
+        }
+
+        /* Demo Styles - Slide from Top */
+        .demo-menu-slide-top {
+            transform: translateY(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-menu-slide-top.open {
+            transform: translateY(0);
+        }
+
+        /* Demo Styles - Slide from Bottom */
+        .demo-menu-slide-bottom {
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-menu-slide-bottom.open {
+            transform: translateY(0);
+        }
+
+        /* Demo Styles - Scale Fade */
+        .demo-menu-scale {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s;
+        }
+        .demo-menu-scale.open {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        /* Demo Styles - Rotate In */
+        .demo-menu-rotate {
+            transform: perspective(1000px) rotateY(90deg);
+            opacity: 0;
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.4s;
+        }
+        .demo-menu-rotate.open {
+            transform: perspective(1000px) rotateY(0deg);
+            opacity: 1;
+        }
+
+        /* Demo Styles - Push Content */
+        .demo-content-push {
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-content-push.pushed {
+            transform: translateX(-280px);
+        }
+
+        /* Demo Styles - Reveal Behind */
+        .demo-menu-reveal {
+            transform: translateX(0);
+        }
+        .demo-content-reveal {
+            position: relative;
+            z-index: 10;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-content-reveal.revealed {
+            transform: translateX(280px);
+        }
+
+        /* Demo Styles - Slide & Dim */
+        .demo-content-dim {
+            transition: filter 0.3s, transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .demo-content-dim.dimmed {
+            filter: brightness(0.5);
+            transform: translateX(-50px);
+        }
+
+        /* Overlay styles */
+        .menu-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Code block styling */
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .dark .code-block {
+            background: #0d0d0d;
+        }
+
+        /* Animation for demo containers */
+        .demo-container {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .dark .demo-container {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+
+        /* Hamburger animation */
+        .hamburger-line {
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        .hamburger.active .line1 {
+            transform: rotate(45deg) translateY(8px);
+        }
+        .hamburger.active .line2 {
+            opacity: 0;
+        }
+        .hamburger.active .line3 {
+            transform: rotate(-45deg) translateY(-8px);
+        }
+
+        /* Stagger animation for menu items */
+        .menu-item {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .menu-item.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Tab styles */
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            color: #5D5CDE;
+            border-bottom-color: #5D5CDE;
+        }
+
+        /* Elastic bounce effect */
+        @keyframes elasticBounce {
+            0% { transform: translateX(100%); }
+            50% { transform: translateX(-5%); }
+            70% { transform: translateX(2%); }
+            100% { transform: translateX(0); }
+        }
+        .demo-menu-elastic {
+            transform: translateX(100%);
+        }
+        .demo-menu-elastic.open {
+            animation: elasticBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: translateX(0);
+        }
+
+        /* Blur effect */
+        .content-blur {
+            transition: filter 0.3s;
+        }
+        .content-blur.blurred {
+            filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-white transition-colors">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#181818]/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-[#5D5CDE] to-purple-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-[#5D5CDE] to-purple-600 bg-clip-text text-transparent">
+                        Mobile Menu Masterclass
+                    </h1>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path>
+                    </svg>
+                    <svg class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#5D5CDE]/5 to-purple-600/5 dark:from-[#5D5CDE]/10 dark:to-purple-600/10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl sm:text-5xl font-bold mb-6">Master Advanced Mobile Menu Patterns</h2>
+            <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8">
+                Learn 10+ beautiful mobile navigation techniques with interactive demos, code examples, and best practices for creating engaging user experiences.
+            </p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-lg shadow-sm">
+                    <div class="text-2xl font-bold text-[#5D5CDE]">10+</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Menu Styles</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-lg shadow-sm">
+                    <div class="text-2xl font-bold text-[#5D5CDE]">Interactive</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Live Demos</div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 px-6 py-3 rounded-lg shadow-sm">
+                    <div class="text-2xl font-bold text-[#5D5CDE]">Production</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">Ready Code</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- Navigation Tabs -->
+        <div class="flex overflow-x-auto space-x-1 mb-8 border-b border-gray-200 dark:border-gray-700">
+            <button class="tab-button active px-6 py-3 font-medium border-b-2 border-transparent whitespace-nowrap" data-tab="all">
+                All Patterns
+            </button>
+            <button class="tab-button px-6 py-3 font-medium border-b-2 border-transparent whitespace-nowrap" data-tab="slide">
+                Slide Patterns
+            </button>
+            <button class="tab-button px-6 py-3 font-medium border-b-2 border-transparent whitespace-nowrap" data-tab="advanced">
+                Advanced Effects
+            </button>
+            <button class="tab-button px-6 py-3 font-medium border-b-2 border-transparent whitespace-nowrap" data-tab="animations">
+                Animations
+            </button>
+        </div>
+
+        <!-- Pattern Grid -->
+        <div id="patternGrid" class="grid gap-8 md:grid-cols-2">
+
+            <!-- Pattern 1: Slide from Right -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="slide">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Slide from Right</h3>
+                            <p class="text-gray-600 dark:text-gray-400">The classic mobile menu pattern. Slides in from the right with smooth easing.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded-full">
+                            POPULAR
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Demo -->
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="slideRight">
+                            Open Menu
+                        </button>
+                    </div>
+
+                    <!-- Overlay -->
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="slideRight"></div>
+
+                    <!-- Menu -->
+                    <nav class="demo-menu-slide-right absolute top-0 right-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="slideRight">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <!-- Code -->
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.mobile-menu.open {
+    transform: translateX(0);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 2: Slide from Left -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="slide">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Slide from Left</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Alternative direction. Perfect for LTR layouts and left-aligned navigation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="slideLeft">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="slideLeft"></div>
+                    <nav class="demo-menu-slide-left absolute top-0 left-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="slideLeft">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.mobile-menu.open {
+    transform: translateX(0);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 3: Slide from Top -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="slide">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Slide from Top</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Dropdown style menu. Great for header-integrated navigation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="slideTop">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="slideTop"></div>
+                    <nav class="demo-menu-slide-top absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="slideTop">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: translateY(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.mobile-menu.open {
+    transform: translateY(0);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 4: Slide from Bottom -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="slide">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Slide from Bottom</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Sheet-style menu. Popular in modern mobile apps and bottom sheets.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded-full">
+                            MODERN
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="slideBottom">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="slideBottom"></div>
+                    <nav class="demo-menu-slide-bottom absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6 rounded-t-3xl">
+                        <div class="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6"></div>
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="slideBottom">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.mobile-menu.open {
+    transform: translateY(0);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 5: Scale & Fade -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="advanced">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Scale & Fade</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Elegant zoom effect combined with opacity transition.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs font-semibold rounded-full">
+                            ELEGANT
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="scale">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="scale"></div>
+                    <nav class="demo-menu-scale absolute top-0 right-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="scale">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1),
+                opacity 0.3s;
+}
+.mobile-menu.open {
+    transform: scale(1);
+    opacity: 1;
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 6: 3D Rotate -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="advanced">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">3D Rotate In</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Eye-catching 3D perspective rotation effect.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 text-xs font-semibold rounded-full">
+                            3D
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="rotate">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="rotate"></div>
+                    <nav class="demo-menu-rotate absolute top-0 right-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="rotate">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.mobile-menu {
+    transform: perspective(1000px) rotateY(90deg);
+    opacity: 0;
+    transform-origin: right;
+    transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
+                opacity 0.4s;
+}
+.mobile-menu.open {
+    transform: perspective(1000px) rotateY(0deg);
+    opacity: 1;
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 7: Push Content -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="advanced">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Push Content</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Menu pushes the main content aside. Great for showing context.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded-full">
+                            CONTEXTUAL
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative overflow-hidden">
+                    <div class="demo-content-push h-full bg-white dark:bg-gray-900 flex items-center justify-center" data-content="push">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="push">
+                            Open Menu
+                        </button>
+                    </div>
+                    <nav class="absolute top-0 left-0 bottom-0 w-72 bg-gradient-to-br from-[#5D5CDE] to-purple-600 text-white p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-white/10 rounded-lg transition-colors" data-close="push">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.content {
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.content.pushed {
+    transform: translateX(-280px);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 8: Reveal Behind -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="advanced">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Reveal Behind</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Content slides to reveal menu underneath. Unique layering effect.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative overflow-hidden">
+                    <nav class="demo-menu-reveal absolute top-0 left-0 bottom-0 w-72 bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6">
+                        <h4 class="text-xl font-bold mb-8">Hidden Menu</h4>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-white/10 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                    <div class="demo-content-reveal h-full bg-white dark:bg-gray-900 flex items-center justify-center" data-content="reveal">
+                        <div class="text-center">
+                            <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors mb-2" data-demo="reveal">
+                                Reveal Menu
+                            </button>
+                            <button class="demo-close hidden px-6 py-3 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors" data-close="reveal">
+                                Close Menu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.content {
+    position: relative;
+    z-index: 10;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.content.revealed {
+    transform: translateX(280px);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 9: Slide & Dim -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="animations">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Slide & Dim Content</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Menu slides in while content dims and shifts. Enhanced focus.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded-full">
+                            FOCUS
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative overflow-hidden">
+                    <div class="demo-content-dim h-full bg-white dark:bg-gray-900 flex items-center justify-center" data-content="dim">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="dim">
+                            Open Menu
+                        </button>
+                    </div>
+                    <nav class="demo-menu-slide-right absolute top-0 right-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6" data-menu="dim">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="dim">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>.content {
+    transition: filter 0.3s, transform 0.3s;
+}
+.content.dimmed {
+    filter: brightness(0.5);
+    transform: translateX(-50px);
+}</code></pre>
+                </div>
+            </article>
+
+            <!-- Pattern 10: Elastic Bounce -->
+            <article class="pattern-card bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="animations">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Elastic Bounce</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Playful bounce animation with elastic easing. Fun and engaging.</p>
+                        </div>
+                        <span class="px-3 py-1 bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200 text-xs font-semibold rounded-full">
+                            PLAYFUL
+                        </span>
+                    </div>
+                </div>
+
+                <div class="demo-container m-6 h-80 relative">
+                    <div class="h-full bg-white dark:bg-gray-900 flex items-center justify-center">
+                        <button class="demo-trigger px-6 py-3 bg-[#5D5CDE] text-white rounded-lg font-medium hover:bg-[#4948b8] transition-colors" data-demo="elastic">
+                            Open Menu
+                        </button>
+                    </div>
+                    <div class="menu-overlay absolute inset-0 bg-black/50 z-10" data-overlay="elastic"></div>
+                    <nav class="demo-menu-elastic absolute top-0 right-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-2xl z-20 p-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <h4 class="text-xl font-bold">Menu</h4>
+                            <button class="demo-close p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" data-close="elastic">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <ul class="space-y-4">
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Home</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">About</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Services</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Portfolio</a></li>
+                            <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Contact</a></li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <h4 class="font-semibold mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        CSS Code
+                    </h4>
+                    <pre class="code-block"><code>@keyframes elasticBounce {
+    0% { transform: translateX(100%); }
+    50% { transform: translateX(-5%); }
+    70% { transform: translateX(2%); }
+    100% { transform: translateX(0); }
+}
+.mobile-menu.open {
+    animation: elasticBounce 0.6s
+        cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}</code></pre>
+                </div>
+            </article>
+
+        </div>
+
+        <!-- Best Practices Section -->
+        <section class="mt-16 bg-gradient-to-br from-[#5D5CDE]/5 to-purple-600/5 dark:from-[#5D5CDE]/10 dark:to-purple-600/10 rounded-2xl p-8">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <svg class="w-8 h-8 mr-3 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
+                </svg>
+                Best Practices & Tips
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center mr-3 text-sm">✓</span>
+                        Do's
+                    </h3>
+                    <ul class="space-y-3 text-gray-700 dark:text-gray-300">
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Use <strong>cubic-bezier</strong> easing for smooth, natural motion</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Keep animations between <strong>200-400ms</strong> for optimal feel</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Add <strong>backdrop overlay</strong> to focus attention on menu</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Use <strong>transform</strong> for better performance than position changes</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Include <strong>close button</strong> and overlay click to dismiss</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-500 mr-2">•</span>
+                            <span>Add <strong>stagger animations</strong> for menu items (50-100ms delay)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-xl font-bold mb-4 flex items-center">
+                        <span class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center mr-3 text-sm">✗</span>
+                        Don'ts
+                    </h3>
+                    <ul class="space-y-3 text-gray-700 dark:text-gray-300">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Avoid animations <strong>longer than 500ms</strong> - they feel sluggish</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Don't use <strong>linear easing</strong> - it feels mechanical</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Avoid <strong>too many simultaneous effects</strong> - keep it simple</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Don't forget <strong>touch targets</strong> - min 44x44px for mobile</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Never disable <strong>body scroll</strong> without good reason</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-2">•</span>
+                            <span>Avoid <strong>3D effects</strong> on low-end devices - test performance</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+                <h3 class="text-xl font-bold mb-4">Performance Tips</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-[#5D5CDE] rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-1">Use GPU Acceleration</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Add <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">will-change: transform</code> for smoother animations</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-[#5D5CDE] rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-1">Optimize Repaints</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Prefer <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">transform</code> and <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">opacity</code> over other properties</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 bg-[#5D5CDE] rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold mb-1">Test on Real Devices</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Always test animations on actual mobile hardware</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accessibility Section -->
+        <section class="mt-12 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <svg class="w-8 h-8 mr-3 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"></path>
+                </svg>
+                Accessibility Considerations
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6 text-gray-700 dark:text-gray-300">
+                <div>
+                    <h4 class="font-semibold mb-3 text-lg">Keyboard Navigation</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Ensure menu can be opened/closed with <strong>Enter</strong> or <strong>Space</strong></span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Add <strong>Escape</strong> key handler to close menu</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Trap focus within menu when open</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3 text-lg">ARIA Attributes</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Use <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">aria-expanded</code> on menu button</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Add <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">role="navigation"</code> to menu</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Include <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">aria-label</code> for screen readers</span>
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3 text-lg">Reduced Motion</h4>
+                    <pre class="code-block text-xs"><code>@media (prefers-reduced-motion: reduce) {
+    .mobile-menu {
+        transition: none;
+    }
+}</code></pre>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-3 text-lg">Color Contrast</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Ensure <strong>4.5:1</strong> contrast ratio for text</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-[#5D5CDE] mr-2">→</span>
+                            <span>Test both light and dark mode</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- JavaScript Example Section -->
+        <section class="mt-12 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-2xl p-8">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <svg class="w-8 h-8 mr-3 text-[#5D5CDE]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+                Complete JavaScript Implementation
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Here's a production-ready JavaScript implementation with all the best practices:</p>
+            <pre class="code-block"><code>// Mobile Menu Handler
+class MobileMenu {
+    constructor(options) {
+        this.menu = document.querySelector(options.menuSelector);
+        this.trigger = document.querySelector(options.triggerSelector);
+        this.overlay = document.querySelector(options.overlaySelector);
+        this.closeBtn = document.querySelector(options.closeSelector);
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        // Click handlers
+        this.trigger?.addEventListener('click', () => this.toggle());
+        this.closeBtn?.addEventListener('click', () => this.close());
+        this.overlay?.addEventListener('click', () => this.close());
+
+        // Keyboard handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) this.close();
+        });
+
+        // Prevent body scroll when menu is open
+        this.menu?.addEventListener('transitionend', () => {
+            if (this.isOpen) {
+                this.trapFocus();
+            }
+        });
+    }
+
+    toggle() {
+        this.isOpen ? this.close() : this.open();
+    }
+
+    open() {
+        this.menu?.classList.add('open');
+        this.overlay?.classList.add('open');
+        this.trigger?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+        this.isOpen = true;
+
+        // Stagger menu items
+        this.animateMenuItems();
+    }
+
+    close() {
+        this.menu?.classList.remove('open');
+        this.overlay?.classList.remove('open');
+        this.trigger?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+        this.isOpen = false;
+    }
+
+    animateMenuItems() {
+        const items = this.menu?.querySelectorAll('li');
+        items?.forEach((item, index) => {
+            setTimeout(() => {
+                item.style.opacity = '1';
+                item.style.transform = 'translateX(0)';
+            }, index * 50);
+        });
+    }
+
+    trapFocus() {
+        const focusableElements = this.menu?.querySelectorAll(
+            'a, button, input, textarea, select, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements?.[0];
+        const lastElement = focusableElements?.[focusableElements.length - 1];
+
+        firstElement?.focus();
+
+        this.menu?.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                if (e.shiftKey && document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement?.focus();
+                } else if (!e.shiftKey && document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement?.focus();
+                }
+            }
+        });
+    }
+}
+
+// Initialize menu
+const menu = new MobileMenu({
+    menuSelector: '.mobile-menu',
+    triggerSelector: '.menu-trigger',
+    overlaySelector: '.menu-overlay',
+    closeSelector: '.menu-close'
+});</code></pre>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-[#5D5CDE] to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Mobile Menu Masterclass</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">
+                    Learn, practice, and implement beautiful mobile navigation patterns
+                </p>
+                <div class="flex justify-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
+                    <span>10+ Patterns</span>
+                    <span>•</span>
+                    <span>Interactive Demos</span>
+                    <span>•</span>
+                    <span>Production Ready</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // Check for saved theme preference or default to system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.classList.add('dark');
+        }
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+        });
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+        });
+
+        // Tab filtering
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const patternCards = document.querySelectorAll('.pattern-card');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active tab
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Filter cards
+                const category = button.dataset.tab;
+                patternCards.forEach(card => {
+                    if (category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Demo interactions
+        document.addEventListener('click', (e) => {
+            // Open menu
+            if (e.target.classList.contains('demo-trigger')) {
+                const demo = e.target.dataset.demo;
+                const menu = e.target.closest('.demo-container').querySelector(`[class*="demo-menu"]`);
+                const overlay = e.target.closest('.demo-container').querySelector(`[data-overlay="${demo}"]`);
+                const content = e.target.closest('.demo-container').querySelector(`[data-content="${demo}"]`);
+
+                menu?.classList.add('open');
+                overlay?.classList.add('open');
+                content?.classList.add('pushed', 'revealed', 'dimmed');
+
+                // Show close button for reveal demo
+                if (demo === 'reveal') {
+                    const closeBtn = e.target.closest('.demo-container').querySelector(`[data-close="${demo}"]`);
+                    e.target.style.display = 'none';
+                    closeBtn.classList.remove('hidden');
+                }
+            }
+
+            // Close menu
+            if (e.target.classList.contains('demo-close') || e.target.closest('.demo-close')) {
+                const closeBtn = e.target.classList.contains('demo-close') ? e.target : e.target.closest('.demo-close');
+                const demo = closeBtn.dataset.close;
+                const container = closeBtn.closest('.demo-container');
+                const menu = container.querySelector(`[class*="demo-menu"]`);
+                const overlay = container.querySelector(`[data-overlay="${demo}"]`);
+                const content = container.querySelector(`[data-content="${demo}"]`);
+
+                menu?.classList.remove('open');
+                overlay?.classList.remove('open');
+                content?.classList.remove('pushed', 'revealed', 'dimmed');
+
+                // Show open button for reveal demo
+                if (demo === 'reveal') {
+                    const openBtn = container.querySelector(`[data-demo="${demo}"]`);
+                    openBtn.style.display = 'inline-block';
+                    closeBtn.classList.add('hidden');
+                }
+            }
+
+            // Close on overlay click
+            if (e.target.classList.contains('menu-overlay')) {
+                const demo = e.target.dataset.overlay;
+                const container = e.target.closest('.demo-container');
+                const menu = container.querySelector(`[class*="demo-menu"]`);
+                const content = container.querySelector(`[data-content="${demo}"]`);
+
+                menu?.classList.remove('open');
+                e.target.classList.remove('open');
+                content?.classList.remove('pushed', 'revealed', 'dimmed');
+            }
+        });
+
+        // Smooth scroll for hash links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && document.querySelector(href)) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Add scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe pattern cards
+        patternCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s, transform 0.5s';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
