@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdTech Learning Hub - Interactive Educational Applications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --primary: #5D5CDE;
+            --primary-dark: #4847b8;
+            --primary-light: #7f7ee8;
+        }
+
+        .material-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .material-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+        }
+
+        .shadow-material-1 {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .shadow-material-2 {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px rgba(93, 92, 222, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .flashcard {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 1rem;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        .quiz-option {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .quiz-option:hover {
+            background: rgba(93, 92, 222, 0.1);
+            transform: translateX(8px);
+        }
+
+        .quiz-option.correct {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+        }
+
+        .quiz-option.incorrect {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(93, 92, 222, 0.1) 0%, rgba(127, 126, 232, 0.05) 100%);
+        }
+
+        .achievement-badge {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .streak-flame {
+            animation: flicker 2s ease-in-out infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        .tab-button {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .skill-bar {
+            height: 8px;
+            border-radius: 999px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+
+        .dark .skill-bar {
+            background: #374151;
+        }
+
+        .skill-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            transition: width 1s ease;
+            border-radius: 999px;
+        }
+
+        .timer-display {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Enhanced progress bar animations */
+        @keyframes progressAnimation {
+            0% { width: 0; }
+        }
+
+        .skill-bar-fill.animate {
+            animation: progressAnimation 1s ease-out forwards;
+        }
+
+        /* Pulse animation for progress updates */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .progress-pulse {
+            animation: pulse 1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-neutral-900 transition-colors duration-300">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-neutral-800 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-neutral-800 dark:text-white">
+                        🎓 EdTech Learning Hub
+                    </h1>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                        Explore Interactive Educational Applications
+                    </p>
+                </div>
+                <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors">
+                    <span class="text-2xl">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white dark:bg-neutral-800 rounded-xl shadow-material-1 p-2 mb-6 overflow-x-auto">
+            <div class="flex space-x-2 min-w-max">
+                <button class="tab-button active px-4 py-2 rounded-lg text-base font-medium whitespace-nowrap" data-tab="dashboard">
+                    📊 Dashboard
+                </button>
+                <button class="tab-button px-4 py-2 rounded-lg text-base font-medium whitespace-nowrap" data-tab="quiz">
+                    ✅ Quiz
+                </button>
+                <button class="tab-button px-4 py-2 rounded-lg text-base font-medium whitespace-nowrap" data-tab="flashcards">
+                    🎴 Flashcards
+                </button>
+                <button class="tab-button px-4 py-2 rounded-lg text-base font-medium whitespace-nowrap" data-tab="study-timer">
+                    ⏱️ Study Timer
+                </button>
+                <button class="tab-button px-4 py-2 rounded-lg text-base font-medium whitespace-nowrap" data-tab="progress">
+                    📈 Progress
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+
+                <!-- Study Streak -->
+                <div class="stat-card material-card rounded-xl p-6 shadow-material-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-neutral-600 dark:text-neutral-400 text-sm font-medium">Study Streak</span>
+                        <span class="streak-flame text-2xl">🔥</span>
+                    </div>
+                    <div class="text-3xl sm:text-4xl font-bold text-neutral-800 dark:text-white mb-1">15</div>
+                    <div class="text-sm text-neutral-500 dark:text-neutral-400">days in a row</div>
+                </div>
+
+                <!-- Total XP -->
+                <div class="stat-card material-card rounded-xl p-6 shadow-material-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-neutral-600 dark:text-neutral-400 text-sm font-medium">Total XP</span>
+                        <span class="text-2xl">⭐</span>
+                    </div>
+                    <div class="text-3xl sm:text-4xl font-bold text-neutral-800 dark:text-white mb-1">2,450</div>
+                    <div class="text-sm text-green-600 dark:text-green-400">+120 this week</div>
+                </div>
+
+                <!-- Courses Completed -->
+                <div class="stat-card material-card rounded-xl p-6 shadow-material-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-neutral-600 dark:text-neutral-400 text-sm font-medium">Courses</span>
+                        <span class="text-2xl">📚</span>
+                    </div>
+                    <div class="text-3xl sm:text-4xl font-bold text-neutral-800 dark:text-white mb-1">8/12</div>
+                    <div class="text-sm text-neutral-500 dark:text-neutral-400">completed</div>
+                </div>
+
+                <!-- Study Time -->
+                <div class="stat-card material-card rounded-xl p-6 shadow-material-1">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-neutral-600 dark:text-neutral-400 text-sm font-medium">Study Time</span>
+                        <span class="text-2xl">⏰</span>
+                    </div>
+                    <div class="text-3xl sm:text-4xl font-bold text-neutral-800 dark:text-white mb-1">42h</div>
+                    <div class="text-sm text-neutral-500 dark:text-neutral-400">this month</div>
+                </div>
+
+            </div>
+
+            <!-- Current Courses -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1 mb-6">
+                <h3 class="text-xl font-semibold mb-4 text-neutral-800 dark:text-white">Current Courses</h3>
+
+                <div class="space-y-4">
+                    <!-- Course 1 -->
+                    <div class="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 class="font-semibold text-neutral-800 dark:text-white">Advanced JavaScript</h4>
+                                <p class="text-sm text-neutral-600 dark:text-neutral-400">12 lessons • 8h 30m</p>
+                            </div>
+                            <span class="text-2xl">💻</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                                <span class="font-medium text-neutral-800 dark:text-white">75%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-bar-fill course-progress" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course 2 -->
+                    <div class="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 class="font-semibold text-neutral-800 dark:text-white">Data Structures & Algorithms</h4>
+                                <p class="text-sm text-neutral-600 dark:text-neutral-400">18 lessons • 12h 15m</p>
+                            </div>
+                            <span class="text-2xl">🧮</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                                <span class="font-medium text-neutral-800 dark:text-white">45%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-bar-fill course-progress" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Course 3 -->
+                    <div class="border border-gray-200 dark:border-neutral-700 rounded-lg p-4 hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h4 class="font-semibold text-neutral-800 dark:text-white">UI/UX Design Principles</h4>
+                                <p class="text-sm text-neutral-600 dark:text-neutral-400">10 lessons • 6h 45m</p>
+                            </div>
+                            <span class="text-2xl">🎨</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                                <span class="font-medium text-neutral-800 dark:text-white">90%</span>
+                            </div>
+                            <div class="skill-bar">
+                                <div class="skill-bar-fill course-progress" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1">
+                <h3 class="text-xl font-semibold mb-4 text-neutral-800 dark:text-white">Recent Achievements</h3>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="achievement-badge text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-lg">
+                        <div class="text-4xl mb-2">🏆</div>
+                        <div class="text-sm font-medium text-neutral-800 dark:text-white">Week Warrior</div>
+                        <div class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">7 day streak</div>
+                    </div>
+
+                    <div class="achievement-badge text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
+                        <div class="text-4xl mb-2">🎯</div>
+                        <div class="text-sm font-medium text-neutral-800 dark:text-white">Quiz Master</div>
+                        <div class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">50 quizzes passed</div>
+                    </div>
+
+                    <div class="achievement-badge text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
+                        <div class="text-4xl mb-2">📖</div>
+                        <div class="text-sm font-medium text-neutral-800 dark:text-white">Bookworm</div>
+                        <div class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">100 lessons</div>
+                    </div>
+
+                    <div class="achievement-badge text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg">
+                        <div class="text-4xl mb-2">⚡</div>
+                        <div class="text-sm font-medium text-neutral-800 dark:text-white">Speed Learner</div>
+                        <div class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Fast completion</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quiz Tab -->
+        <div id="quiz" class="tab-content hidden">
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1 max-w-3xl mx-auto">
+
+                <div id="quizHeader" class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl sm:text-2xl font-semibold text-neutral-800 dark:text-white">JavaScript Fundamentals Quiz</h3>
+                        <div class="text-right">
+                            <div class="text-sm text-neutral-600 dark:text-neutral-400">Question</div>
+                            <div class="text-lg font-bold text-neutral-800 dark:text-white">
+                                <span id="currentQuestion">1</span>/<span id="totalQuestions">5</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Enhanced Quiz Progress Bar -->
+                    <div class="skill-bar h-2">
+                        <div id="quizProgress" class="skill-bar-fill progress-pulse" style="width: 20%"></div>
+                    </div>
+                </div>
+
+                <div id="quizContent">
+                    <div id="questionText" class="text-lg sm:text-xl font-medium text-neutral-800 dark:text-white mb-6">
+                        What is the output of: console.log(typeof null)?
+                    </div>
+
+                    <div id="quizOptions" class="space-y-3 mb-6">
+                        <div class="quiz-option border-2 border-gray-200 dark:border-neutral-700 rounded-lg p-4" data-answer="incorrect">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center font-medium mr-3 text-neutral-800 dark:text-white">A</div>
+                                <span class="text-neutral-800 dark:text-white">"null"</span>
+                            </div>
+                        </div>
+                        <div class="quiz-option border-2 border-gray-200 dark:border-neutral-700 rounded-lg p-4" data-answer="incorrect">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center font-medium mr-3 text-neutral-800 dark:text-white">B</div>
+                                <span class="text-neutral-800 dark:text-white">"undefined"</span>
+                            </div>
+                        </div>
+                        <div class="quiz-option border-2 border-gray-200 dark:border-neutral-700 rounded-lg p-4" data-answer="correct">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center font-medium mr-3 text-neutral-800 dark:text-white">C</div>
+                                <span class="text-neutral-800 dark:text-white">"object"</span>
+                            </div>
+                        </div>
+                        <div class="quiz-option border-2 border-gray-200 dark:border-neutral-700 rounded-lg p-4" data-answer="incorrect">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center font-medium mr-3 text-neutral-800 dark:text-white">D</div>
+                                <span class="text-neutral-800 dark:text-white">"number"</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="quizFeedback" class="hidden mb-6 p-4 rounded-lg">
+                        <div id="feedbackText" class="font-medium"></div>
+                    </div>
+
+                    <button id="nextQuestionBtn" class="hidden btn-primary text-white px-6 py-3 rounded-lg font-medium text-base w-full sm:w-auto">
+                        Next Question →
+                    </button>
+                </div>
+
+                <div id="quizResults" class="hidden text-center">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-neutral-800 dark:text-white mb-2">Quiz Complete!</h3>
+                    <div class="text-4xl font-bold mb-4" style="color: var(--primary)">
+                        <span id="finalScore">0</span>%
+                    </div>
+                    <p class="text-neutral-600 dark:text-neutral-400 mb-6">
+                        You got <span id="correctAnswers">0</span> out of <span id="totalAnswers">5</span> correct!
+                    </p>
+                    <button id="retakeQuizBtn" class="btn-primary text-white px-6 py-3 rounded-lg font-medium text-base">
+                        Retake Quiz
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Flashcards Tab -->
+        <div id="flashcards" class="tab-content hidden">
+            <div class="max-w-2xl mx-auto">
+
+                <div class="text-center mb-6">
+                    <h3 class="text-xl sm:text-2xl font-semibold text-neutral-800 dark:text-white mb-2">
+                        Web Development Flashcards
+                    </h3>
+                    <p class="text-neutral-600 dark:text-neutral-400">
+                        Click cards to flip • <span id="flashcardProgress">1/6</span>
+                    </p>
+                </div>
+
+                <div class="flashcard h-80 sm:h-96 mb-6">
+                    <div class="flashcard-inner h-full">
+                        <div class="flashcard-front bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-material-2">
+                            <div class="text-center">
+                                <div class="text-sm font-medium mb-3 opacity-90">QUESTION</div>
+                                <div id="flashcardQuestion" class="text-xl sm:text-2xl font-semibold">
+                                    What does CSS stand for?
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flashcard-back bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-material-2">
+                            <div class="text-center">
+                                <div class="text-sm font-medium mb-3 opacity-90">ANSWER</div>
+                                <div id="flashcardAnswer" class="text-xl sm:text-2xl font-semibold">
+                                    Cascading Style Sheets
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <button id="prevFlashcard" class="bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-700 text-neutral-800 dark:text-white px-6 py-3 rounded-lg font-medium text-base hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                        ← Previous
+                    </button>
+                    <div class="flex space-x-2">
+                        <button class="w-3 h-3 rounded-full bg-purple-500 flashcard-indicator" data-index="0"></button>
+                        <button class="w-3 h-3 rounded-full bg-gray-300 dark:bg-neutral-600 flashcard-indicator" data-index="1"></button>
+                        <button class="w-3 h-3 rounded-full bg-gray-300 dark:bg-neutral-600 flashcard-indicator" data-index="2"></button>
+                        <button class="w-3 h-3 rounded-full bg-gray-300 dark:bg-neutral-600 flashcard-indicator" data-index="3"></button>
+                        <button class="w-3 h-3 rounded-full bg-gray-300 dark:bg-neutral-600 flashcard-indicator" data-index="4"></button>
+                        <button class="w-3 h-3 rounded-full bg-gray-300 dark:bg-neutral-600 flashcard-indicator" data-index="5"></button>
+                    </div>
+                    <button id="nextFlashcard" class="btn-primary text-white px-6 py-3 rounded-lg font-medium text-base">
+                        Next →
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Study Timer Tab -->
+        <div id="study-timer" class="tab-content hidden">
+            <div class="max-w-2xl mx-auto">
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 sm:p-8 shadow-material-1 text-center mb-6">
+
+                    <h3 class="text-xl sm:text-2xl font-semibold text-neutral-800 dark:text-white mb-6">
+                        Pomodoro Study Timer
+                    </h3>
+
+                    <!-- Enhanced Circular Progress Ring -->
+                    <div class="relative inline-block mb-8">
+                        <svg class="transform -rotate-90" width="200" height="200">
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor"
+                                    class="text-gray-200 dark:text-neutral-700" stroke-width="12"/>
+                            <circle id="timerProgress" cx="100" cy="100" r="90" fill="none"
+                                    stroke="url(#gradient)" stroke-width="12"
+                                    stroke-dasharray="565.48" stroke-dashoffset="0"
+                                    stroke-linecap="round" class="progress-ring"/>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#5D5CDE"/>
+                                    <stop offset="100%" style="stop-color:#7f7ee8"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div>
+                                <div id="timerDisplay" class="text-4xl sm:text-5xl font-bold text-neutral-800 dark:text-white timer-display">
+                                    25:00
+                                </div>
+                                <div id="timerPhase" class="text-sm text-neutral-600 dark:text-neutral-400 mt-2">
+                                    Focus Time
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-center space-x-4 mb-6">
+                        <button id="timerStart" class="btn-primary text-white px-8 py-3 rounded-lg font-medium text-base">
+                            Start
+                        </button>
+                        <button id="timerPause" class="hidden bg-gray-200 dark:bg-neutral-700 text-neutral-800 dark:text-white px-8 py-3 rounded-lg font-medium text-base hover:bg-gray-300 dark:hover:bg-neutral-600 transition-colors">
+                            Pause
+                        </button>
+                        <button id="timerReset" class="bg-white dark:bg-neutral-700 border-2 border-gray-200 dark:border-neutral-600 text-neutral-800 dark:text-white px-6 py-3 rounded-lg font-medium text-base hover:border-purple-300 dark:hover:border-purple-600 transition-colors">
+                            Reset
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-neutral-800 dark:text-white" id="pomodorosCompleted">0</div>
+                            <div class="text-sm text-neutral-600 dark:text-neutral-400">Pomodoros</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-neutral-800 dark:text-white">25</div>
+                            <div class="text-sm text-neutral-600 dark:text-neutral-400">Focus (min)</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-neutral-800 dark:text-white">5</div>
+                            <div class="text-sm text-neutral-600 dark:text-neutral-400">Break (min)</div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 shadow-material-1">
+                    <h4 class="font-semibold text-neutral-800 dark:text-white mb-3">Today's Study Sessions</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">✅</span>
+                                <div>
+                                    <div class="font-medium text-neutral-800 dark:text-white text-base">JavaScript Practice</div>
+                                    <div class="text-sm text-neutral-600 dark:text-neutral-400">9:00 AM - 9:25 AM</div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-medium text-neutral-800 dark:text-white">25 min</div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700 rounded-lg">
+                            <div class="flex items-center">
+                                <span class="text-2xl mr-3">✅</span>
+                                <div>
+                                    <div class="font-medium text-neutral-800 dark:text-white text-base">Algorithm Study</div>
+                                    <div class="text-sm text-neutral-600 dark:text-neutral-400">10:00 AM - 10:25 AM</div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-medium text-neutral-800 dark:text-white">25 min</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Progress Tab -->
+        <div id="progress" class="tab-content hidden">
+
+            <!-- Skills Overview with Enhanced Progress Bars -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1 mb-6">
+                <h3 class="text-xl font-semibold mb-6 text-neutral-800 dark:text-white">Skills Overview</h3>
+
+                <div class="space-y-5">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-neutral-800 dark:text-white text-base">JavaScript</span>
+                            <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">85%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill skill-progress" data-width="85" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-neutral-800 dark:text-white text-base">React</span>
+                            <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">70%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill skill-progress" data-width="70" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-neutral-800 dark:text-white text-base">Node.js</span>
+                            <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">65%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill skill-progress" data-width="65" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-neutral-800 dark:text-white text-base">Python</span>
+                            <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">60%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill skill-progress" data-width="60" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="font-medium text-neutral-800 dark:text-white text-base">SQL</span>
+                            <span class="text-sm font-medium text-neutral-600 dark:text-neutral-400">55%</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-bar-fill skill-progress" data-width="55" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Over Time Chart -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1 mb-6">
+                <h3 class="text-xl font-semibold mb-4 sm:mb-6 text-neutral-800 dark:text-white">
+                    Progress Over Time
+                </h3>
+                <div class="chart-container">
+                    <canvas id="progressTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Study Time Distribution -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1">
+                    <h3 class="text-xl font-semibold mb-4 sm:mb-6 text-neutral-800 dark:text-white">
+                        Study Time by Subject
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="studyTimeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1">
+                    <h3 class="text-xl font-semibold mb-4 sm:mb-6 text-neutral-800 dark:text-white">
+                        Weekly Activity
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="weeklyActivityChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Dark mode initialization
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            themeToggle.querySelector('span').textContent =
+                document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+        });
+
+        // Tab navigation
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                tabContents.forEach(content => content.classList.add('hidden'));
+                document.getElementById(tabName).classList.remove('hidden');
+
+                // Initialize charts when progress tab is opened
+                if (tabName === 'progress') {
+                    setTimeout(() => {
+                        initCharts();
+                        animateSkillBars();
+                    }, 100);
+                }
+            });
+        });
+
+        // Animate skill progress bars when visible
+        function animateSkillBars() {
+            const skillBars = document.querySelectorAll('.skill-progress');
+            skillBars.forEach((bar, index) => {
+                const targetWidth = bar.getAttribute('data-width');
+                setTimeout(() => {
+                    bar.style.width = targetWidth + '%';
+                }, index * 100); // Stagger animations
+            });
+        }
+
+        // Quiz functionality
+        const quizData = [
+            {
+                question: "What is the output of: console.log(typeof null)?",
+                options: ['"null"', '"undefined"', '"object"', '"number"'],
+                correct: 2
+            },
+            {
+                question: "Which method is used to add an element at the end of an array?",
+                options: ['push()', 'pop()', 'shift()', 'unshift()'],
+                correct: 0
+            },
+            {
+                question: "What does DOM stand for?",
+                options: ['Data Object Model', 'Document Object Model', 'Display Object Management', 'Digital Organic Matter'],
+                correct: 1
+            },
+            {
+                question: "Which symbol is used for single-line comments in JavaScript?",
+                options: ['/*', '//', '#', '<!--'],
+                correct: 1
+            },
+            {
+                question: "What is the correct syntax for a JavaScript function?",
+                options: ['function myFunc()', 'def myFunc():', 'func myFunc()', 'function: myFunc()'],
+                correct: 0
+            }
+        ];
+
+        let currentQuizQuestion = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+
+        function loadQuizQuestion() {
+            const question = quizData[currentQuizQuestion];
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('currentQuestion').textContent = currentQuizQuestion + 1;
+
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((option, index) => {
+                option.querySelector('span').textContent = question.options[index];
+                option.dataset.answer = index === question.correct ? 'correct' : 'incorrect';
+                option.classList.remove('correct', 'incorrect');
+                option.style.pointerEvents = 'auto';
+            });
+
+            document.getElementById('quizFeedback').classList.add('hidden');
+            document.getElementById('nextQuestionBtn').classList.add('hidden');
+
+            // Animate progress bar update
+            const progressBar = document.getElementById('quizProgress');
+            const newWidth = ((currentQuizQuestion + 1) / quizData.length * 100);
+            progressBar.classList.add('progress-pulse');
+            progressBar.style.width = newWidth + '%';
+
+            setTimeout(() => {
+                progressBar.classList.remove('progress-pulse');
+            }, 1000);
+
+            quizAnswered = false;
+        }
+
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', function() {
+                if (quizAnswered) return;
+
+                quizAnswered = true;
+                const isCorrect = this.dataset.answer === 'correct';
+
+                if (isCorrect) {
+                    this.classList.add('correct');
+                    quizScore++;
+                    document.getElementById('feedbackText').textContent = '✅ Correct! Well done!';
+                    document.getElementById('quizFeedback').className =
+                        'p-4 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200';
+                } else {
+                    this.classList.add('incorrect');
+                    document.querySelectorAll('.quiz-option').forEach(opt => {
+                        if (opt.dataset.answer === 'correct') {
+                            opt.classList.add('correct');
+                        }
+                    });
+                    document.getElementById('feedbackText').textContent =
+                        '❌ Incorrect. The correct answer is highlighted.';
+                    document.getElementById('quizFeedback').className =
+                        'p-4 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200';
+                }
+
+                document.getElementById('quizFeedback').classList.remove('hidden');
+                document.getElementById('nextQuestionBtn').classList.remove('hidden');
+
+                document.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+            });
+        });
+
+        document.getElementById('nextQuestionBtn').addEventListener('click', () => {
+            currentQuizQuestion++;
+            if (currentQuizQuestion < quizData.length) {
+                loadQuizQuestion();
+            } else {
+                showQuizResults();
+            }
+        });
+
+        function showQuizResults() {
+            document.getElementById('quizContent').classList.add('hidden');
+            document.getElementById('quizHeader').classList.add('hidden');
+            document.getElementById('quizResults').classList.remove('hidden');
+
+            const percentage = Math.round((quizScore / quizData.length) * 100);
+            document.getElementById('finalScore').textContent = percentage;
+            document.getElementById('correctAnswers').textContent = quizScore;
+            document.getElementById('totalAnswers').textContent = quizData.length;
+        }
+
+        document.getElementById('retakeQuizBtn').addEventListener('click', () => {
+            currentQuizQuestion = 0;
+            quizScore = 0;
+            document.getElementById('quizContent').classList.remove('hidden');
+            document.getElementById('quizHeader').classList.remove('hidden');
+            document.getElementById('quizResults').classList.add('hidden');
+            loadQuizQuestion();
+        });
+
+        // Flashcards functionality
+        const flashcardsData = [
+            { question: "What does CSS stand for?", answer: "Cascading Style Sheets" },
+            { question: "What does HTML stand for?", answer: "HyperText Markup Language" },
+            { question: "What is the purpose of JavaScript?", answer: "To add interactivity and dynamic behavior to web pages" },
+            { question: "What does API stand for?", answer: "Application Programming Interface" },
+            { question: "What is responsive design?", answer: "A design approach that makes web pages render well on different devices and screen sizes" },
+            { question: "What is Git?", answer: "A distributed version control system for tracking changes in source code" }
+        ];
+
+        let currentFlashcard = 0;
+
+        function loadFlashcard() {
+            const card = flashcardsData[currentFlashcard];
+            document.getElementById('flashcardQuestion').textContent = card.question;
+            document.getElementById('flashcardAnswer').textContent = card.answer;
+            document.getElementById('flashcardProgress').textContent =
+                `${currentFlashcard + 1}/${flashcardsData.length}`;
+
+            document.querySelector('.flashcard').classList.remove('flipped');
+
+            document.querySelectorAll('.flashcard-indicator').forEach((indicator, index) => {
+                if (index === currentFlashcard) {
+                    indicator.classList.remove('bg-gray-300', 'dark:bg-neutral-600');
+                    indicator.classList.add('bg-purple-500');
+                } else {
+                    indicator.classList.remove('bg-purple-500');
+                    indicator.classList.add('bg-gray-300', 'dark:bg-neutral-600');
+                }
+            });
+        }
+
+        document.querySelector('.flashcard').addEventListener('click', function() {
+            this.classList.toggle('flipped');
+        });
+
+        document.getElementById('prevFlashcard').addEventListener('click', () => {
+            if (currentFlashcard > 0) {
+                currentFlashcard--;
+                loadFlashcard();
+            }
+        });
+
+        document.getElementById('nextFlashcard').addEventListener('click', () => {
+            if (currentFlashcard < flashcardsData.length - 1) {
+                currentFlashcard++;
+                loadFlashcard();
+            }
+        });
+
+        document.querySelectorAll('.flashcard-indicator').forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                currentFlashcard = index;
+                loadFlashcard();
+            });
+        });
+
+        // Pomodoro Timer with Enhanced Progress Ring
+        let timerInterval;
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        let isRunning = false;
+        let pomodorosCompleted = 0;
+        let isBreak = false;
+        const FOCUS_TIME = 25 * 60;
+        const BREAK_TIME = 5 * 60;
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // Update circular progress ring with smooth animation
+            const totalTime = isBreak ? BREAK_TIME : FOCUS_TIME;
+            const progress = (timeLeft / totalTime) * 565.48;
+            document.getElementById('timerProgress').style.strokeDashoffset = 565.48 - progress;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('timerStart').classList.add('hidden');
+                document.getElementById('timerPause').classList.remove('hidden');
+
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        isRunning = false;
+
+                        if (!isBreak) {
+                            pomodorosCompleted++;
+                            document.getElementById('pomodorosCompleted').textContent = pomodorosCompleted;
+                            isBreak = true;
+                            timeLeft = BREAK_TIME;
+                            document.getElementById('timerPhase').textContent = 'Break Time';
+                        } else {
+                            isBreak = false;
+                            timeLeft = FOCUS_TIME;
+                            document.getElementById('timerPhase').textContent = 'Focus Time';
+                        }
+
+                        document.getElementById('timerStart').classList.remove('hidden');
+                        document.getElementById('timerPause').classList.add('hidden');
+                        updateTimerDisplay();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            document.getElementById('timerStart').classList.remove('hidden');
+            document.getElementById('timerPause').classList.add('hidden');
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            isBreak = false;
+            timeLeft = FOCUS_TIME;
+            document.getElementById('timerPhase').textContent = 'Focus Time';
+            document.getElementById('timerStart').classList.remove('hidden');
+            document.getElementById('timerPause').classList.add('hidden');
+            updateTimerDisplay();
+        }
+
+        document.getElementById('timerStart').addEventListener('click', startTimer);
+        document.getElementById('timerPause').addEventListener('click', pauseTimer);
+        document.getElementById('timerReset').addEventListener('click', resetTimer);
+
+        // Charts
+        let progressChart, studyTimeChart, weeklyActivityChart;
+
+        function initCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#e5e7eb' : '#374151';
+            const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.borderColor = gridColor;
+
+            // Progress Over Time Chart
+            const progressCtx = document.getElementById('progressTimeChart');
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            progressChart = new Chart(progressCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Overall Progress',
+                        data: [45, 52, 58, 65, 72, 78],
+                        borderColor: '#5D5CDE',
+                        backgroundColor: 'rgba(93, 92, 222, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+
+            // Study Time Distribution Chart
+            const studyCtx = document.getElementById('studyTimeChart');
+            if (studyTimeChart) {
+                studyTimeChart.destroy();
+            }
+            studyTimeChart = new Chart(studyCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['JavaScript', 'Python', 'Design', 'Algorithms', 'Other'],
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#5D5CDE',
+                            '#7f7ee8',
+                            '#a5a4f0',
+                            '#cac9f7',
+                            '#e5e4fb'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1500
+                    }
+                }
+            });
+
+            // Weekly Activity Chart
+            const weeklyCtx = document.getElementById('weeklyActivityChart');
+            if (weeklyActivityChart) {
+                weeklyActivityChart.destroy();
+            }
+            weeklyActivityChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Study Minutes',
+                        data: [45, 60, 30, 75, 50, 90, 40],
+                        backgroundColor: '#5D5CDE',
+                        borderRadius: 8,
+                        barThickness: 30
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' min';
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
+        // Initialize course progress bars animation on page load
+        window.addEventListener('load', () => {
+            const courseBars = document.querySelectorAll('.course-progress');
+            courseBars.forEach((bar, index) => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, index * 150);
+            });
+        });
+    </script>
+</body>
+</html>
