@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Rings - Interactive Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        .keyword { color: #569cd6; }
+        .property { color: #9cdcfe; }
+        .value { color: #ce9178; }
+        .comment { color: #6a9955; }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- Header -->
+    <header class="border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-white/80 dark:bg-[#181818]/80 backdrop-blur-sm z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                Progress Rings Masterclass
+            </h1>
+            <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">Learn the art and science of circular progress indicators</p>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Introduction Section -->
+        <section class="bg-gradient-to-br from-primary/10 to-purple-500/10 dark:from-primary/20 dark:to-purple-500/20 rounded-2xl p-6 sm:p-8">
+            <h2 class="text-xl sm:text-2xl font-bold mb-4">What Are Progress Rings?</h2>
+            <p class="text-base text-gray-700 dark:text-gray-300 mb-4">
+                Progress rings (also called circular progress indicators) are elegant UI components that visualize completion, loading states, or statistics in a circular format. They're created using SVG circles with clever manipulation of the <code class="px-2 py-1 bg-black/10 dark:bg-white/10 rounded">stroke-dasharray</code> and <code class="px-2 py-1 bg-black/10 dark:bg-white/10 rounded">stroke-dashoffset</code> properties.
+            </p>
+            <div class="grid sm:grid-cols-3 gap-4 mt-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="flex justify-center mb-3">
+                        <svg class="progress-ring" width="80" height="80">
+                            <circle cx="40" cy="40" r="36" stroke="#e5e7eb" stroke-width="8" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="40" cy="40" r="36" stroke="#5D5CDE" stroke-width="8" fill="none"
+                                    style="stroke-dasharray: 226.19; stroke-dashoffset: 56.55;"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold">Loading States</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="flex justify-center mb-3">
+                        <svg class="progress-ring" width="80" height="80">
+                            <circle cx="40" cy="40" r="36" stroke="#e5e7eb" stroke-width="8" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="40" cy="40" r="36" stroke="#10b981" stroke-width="8" fill="none"
+                                    style="stroke-dasharray: 226.19; stroke-dashoffset: 0;"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold">Task Completion</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-4 text-center">
+                    <div class="flex justify-center mb-3">
+                        <svg class="progress-ring" width="80" height="80">
+                            <circle cx="40" cy="40" r="36" stroke="#e5e7eb" stroke-width="8" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="40" cy="40" r="36" stroke="#f59e0b" stroke-width="8" fill="none"
+                                    style="stroke-dasharray: 226.19; stroke-dashoffset: 113.09;"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-semibold">Statistics</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The Math Behind It -->
+        <section>
+            <h2 class="text-xl sm:text-2xl font-bold mb-6">The Math Behind Progress Rings</h2>
+            <div class="grid lg:grid-cols-2 gap-6">
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-primary">Step 1: Circle Circumference</h3>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        First, calculate the circle's circumference using the radius:
+                    </p>
+                    <div class="code-block mb-4">
+<span class="comment">// Formula: 2 × π × radius</span>
+<span class="keyword">const</span> radius = <span class="value">40</span>;
+<span class="keyword">const</span> circumference = <span class="value">2</span> * Math.PI * radius;
+<span class="comment">// Result: 251.2</span>
+                    </div>
+                    <div class="flex justify-center">
+                        <svg width="140" height="140" class="bg-white dark:bg-gray-800 rounded-lg p-2">
+                            <circle cx="70" cy="70" r="40" stroke="#5D5CDE" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+                            <line x1="70" y1="70" x2="110" y2="70" stroke="#10b981" stroke-width="2"/>
+                            <text x="90" y="65" class="text-xs fill-green-500" font-weight="bold">r=40</text>
+                            <circle cx="70" cy="70" r="3" fill="#5D5CDE"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-primary">Step 2: Set Dash Array</h3>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        Set <code class="px-2 py-1 bg-black/10 dark:bg-white/10 rounded">stroke-dasharray</code> to the circumference:
+                    </p>
+                    <div class="code-block mb-4">
+<span class="keyword">.progress-ring-circle</span> {
+  <span class="property">stroke-dasharray</span>: <span class="value">251.2</span>;
+  <span class="comment">/* Creates a dash equal to circumference */</span>
+}
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        This creates a single dash that exactly wraps around the circle, making it appear as a complete circle.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-primary">Step 3: Calculate Offset</h3>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        For a given percentage, calculate the offset:
+                    </p>
+                    <div class="code-block mb-4">
+<span class="keyword">const</span> percent = <span class="value">75</span>; <span class="comment">// 75% complete</span>
+<span class="keyword">const</span> offset = circumference - (percent / <span class="value">100</span>) * circumference;
+<span class="comment">// offset = 251.2 - (0.75 × 251.2) = 62.8</span>
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        The offset "pushes" the dash around the circle, revealing the progress.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-primary">Step 4: Rotate -90°</h3>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                        Rotate the ring so it starts at the top:
+                    </p>
+                    <div class="code-block mb-4">
+<span class="keyword">.progress-ring</span> {
+  <span class="property">transform</span>: <span class="value">rotate(-90deg)</span>;
+  <span class="comment">/* SVG circles start at 3 o'clock */</span>
+  <span class="comment">/* -90deg rotation moves start to 12 o'clock */</span>
+}
+                    </div>
+                    <div class="flex gap-4 justify-center items-center">
+                        <div class="text-center">
+                            <svg width="60" height="60">
+                                <circle cx="30" cy="30" r="25" stroke="#e5e7eb" stroke-width="4" fill="none" class="dark:stroke-gray-700"/>
+                                <circle cx="30" cy="30" r="25" stroke="#ef4444" stroke-width="4" fill="none"
+                                        style="stroke-dasharray: 157; stroke-dashoffset: 117.75;"/>
+                            </svg>
+                            <p class="text-xs mt-1 text-gray-600 dark:text-gray-400">Before</p>
+                        </div>
+                        <span class="text-2xl text-gray-400">→</span>
+                        <div class="text-center">
+                            <svg class="progress-ring" width="60" height="60">
+                                <circle cx="30" cy="30" r="25" stroke="#e5e7eb" stroke-width="4" fill="none" class="dark:stroke-gray-700"/>
+                                <circle cx="30" cy="30" r="25" stroke="#10b981" stroke-width="4" fill="none"
+                                        style="stroke-dasharray: 157; stroke-dashoffset: 117.75;"/>
+                            </svg>
+                            <p class="text-xs mt-1 text-gray-600 dark:text-gray-400">After</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Playground -->
+        <section class="bg-gradient-to-br from-purple-500/5 to-primary/5 dark:from-purple-500/10 dark:to-primary/10 rounded-2xl p-6 sm:p-8">
+            <h2 class="text-xl sm:text-2xl font-bold mb-6">Interactive Playground</h2>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Controls -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">
+                            Progress: <span id="progressValue" class="text-primary">75</span>%
+                        </label>
+                        <input type="range" id="progressSlider" min="0" max="100" value="75"
+                               class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">
+                            Radius: <span id="radiusValue" class="text-primary">60</span>px
+                        </label>
+                        <input type="range" id="radiusSlider" min="30" max="90" value="60"
+                               class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">
+                            Stroke Width: <span id="strokeValue" class="text-primary">8</span>px
+                        </label>
+                        <input type="range" id="strokeSlider" min="2" max="20" value="8"
+                               class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Stroke Color</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            <button class="color-btn w-full aspect-square rounded-lg bg-[#5D5CDE] border-2 border-primary" data-color="#5D5CDE"></button>
+                            <button class="color-btn w-full aspect-square rounded-lg bg-[#10b981]" data-color="#10b981"></button>
+                            <button class="color-btn w-full aspect-square rounded-lg bg-[#f59e0b]" data-color="#f59e0b"></button>
+                            <button class="color-btn w-full aspect-square rounded-lg bg-[#ef4444]" data-color="#ef4444"></button>
+                            <button class="color-btn w-full aspect-square rounded-lg bg-[#8b5cf6]" data-color="#8b5cf6"></button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Line Cap</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button class="linecap-btn px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium" data-cap="round">Round</button>
+                            <button class="linecap-btn px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-medium" data-cap="butt">Butt</button>
+                            <button class="linecap-btn px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm font-medium" data-cap="square">Square</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="showTextToggle" checked class="w-4 h-4 accent-primary">
+                            <span class="text-sm font-semibold">Show percentage text</span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="animateToggle" class="w-4 h-4 accent-primary">
+                            <span class="text-sm font-semibold">Animate continuously</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="flex flex-col items-center justify-center bg-white dark:bg-gray-900 rounded-xl p-8">
+                    <div id="ringContainer" class="relative">
+                        <svg id="customRing" class="progress-ring" width="200" height="200">
+                            <circle id="bgCircle" cx="100" cy="100" r="60" stroke="#e5e7eb" stroke-width="8" fill="none" class="dark:stroke-gray-700"/>
+                            <circle id="progressCircle" class="progress-ring-circle" cx="100" cy="100" r="60"
+                                    stroke="#5D5CDE" stroke-width="8" fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 376.99; stroke-dashoffset: 94.25;"/>
+                        </svg>
+                        <div id="percentText" class="absolute inset-0 flex items-center justify-center text-3xl font-bold text-gray-900 dark:text-white">
+                            75%
+                        </div>
+                    </div>
+
+                    <div class="mt-6 space-y-2 text-sm text-gray-600 dark:text-gray-400 font-mono">
+                        <p>Circumference: <span id="calcCircum" class="text-primary font-semibold">376.99</span></p>
+                        <p>Offset: <span id="calcOffset" class="text-primary font-semibold">94.25</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generated Code -->
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold mb-3">Generated Code</h3>
+                <div class="code-block" id="generatedCode">
+<span class="comment">&lt;!-- HTML --&gt;</span>
+<span class="keyword">&lt;svg</span> <span class="property">class</span>=<span class="value">"progress-ring"</span> <span class="property">width</span>=<span class="value">"200"</span> <span class="property">height</span>=<span class="value">"200"</span><span class="keyword">&gt;</span>
+  <span class="keyword">&lt;circle</span> <span class="property">cx</span>=<span class="value">"100"</span> <span class="property">cy</span>=<span class="value">"100"</span> <span class="property">r</span>=<span class="value">"60"</span> <span class="property">stroke</span>=<span class="value">"#e5e7eb"</span> <span class="property">stroke-width</span>=<span class="value">"8"</span> <span class="property">fill</span>=<span class="value">"none"</span><span class="keyword">/&gt;</span>
+  <span class="keyword">&lt;circle</span> <span class="property">class</span>=<span class="value">"progress-ring-circle"</span> <span class="property">cx</span>=<span class="value">"100"</span> <span class="property">cy</span>=<span class="value">"100"</span> <span class="property">r</span>=<span class="value">"60"</span>
+          <span class="property">stroke</span>=<span class="value">"#5D5CDE"</span> <span class="property">stroke-width</span>=<span class="value">"8"</span> <span class="property">fill</span>=<span class="value">"none"</span> <span class="property">stroke-linecap</span>=<span class="value">"round"</span>
+          <span class="property">style</span>=<span class="value">"stroke-dasharray: 376.99; stroke-dashoffset: 94.25;"</span><span class="keyword">/&gt;</span>
+<span class="keyword">&lt;/svg&gt;</span>
+
+<span class="comment">/* CSS */</span>
+<span class="keyword">.progress-ring</span> { <span class="property">transform</span>: <span class="value">rotate(-90deg)</span>; }
+<span class="keyword">.progress-ring-circle</span> {
+  <span class="property">transition</span>: <span class="value">stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)</span>;
+}
+                </div>
+            </div>
+        </section>
+
+        <!-- Beautiful Examples -->
+        <section>
+            <h2 class="text-xl sm:text-2xl font-bold mb-6">Beautiful Design Examples</h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Example 1: Gradient Ring -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-sm font-semibold mb-4 text-center">Gradient Progress</h3>
+                    <div class="flex justify-center mb-4">
+                        <svg class="progress-ring" width="120" height="120">
+                            <defs>
+                                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#5D5CDE;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="60" cy="60" r="50" stroke="#e5e7eb" stroke-width="10" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="50" stroke="url(#gradient1)" stroke-width="10"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 314.16; stroke-dashoffset: 94.25;"/>
+                            <text x="60" y="65" text-anchor="middle" class="fill-gray-900 dark:fill-white font-bold text-xl">70%</text>
+                        </svg>
+                    </div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 text-center">Linear gradient with round caps</p>
+                </div>
+
+                <!-- Example 2: Multi-ring -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-sm font-semibold mb-4 text-center">Multi-Ring Stats</h3>
+                    <div class="flex justify-center mb-4">
+                        <svg class="progress-ring" width="120" height="120">
+                            <circle cx="60" cy="60" r="50" stroke="#e5e7eb" stroke-width="6" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="50" stroke="#10b981" stroke-width="6"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 314.16; stroke-dashoffset: 62.83;"/>
+
+                            <circle cx="60" cy="60" r="38" stroke="#e5e7eb" stroke-width="6" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="38" stroke="#f59e0b" stroke-width="6"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 238.76; stroke-dashoffset: 119.38;"/>
+
+                            <circle cx="60" cy="60" r="26" stroke="#e5e7eb" stroke-width="6" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="26" stroke="#ef4444" stroke-width="6"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 163.36; stroke-dashoffset: 49.01;"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 text-center">Concentric rings for multiple metrics</p>
+                </div>
+
+                <!-- Example 3: Animated pulse -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-sm font-semibold mb-4 text-center">Loading State</h3>
+                    <div class="flex justify-center mb-4">
+                        <svg class="progress-ring" width="120" height="120">
+                            <circle cx="60" cy="60" r="50" stroke="#e5e7eb" stroke-width="8" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle animate-pulse-ring" cx="60" cy="60" r="50" stroke="#5D5CDE" stroke-width="8"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 314.16; stroke-dashoffset: 188.5;"/>
+                        </svg>
+                    </div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 text-center">Pulsing animation for loading</p>
+                </div>
+
+                <!-- Example 4: Thick with shadow -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                    <h3 class="text-sm font-semibold mb-4 text-center">Bold & Modern</h3>
+                    <div class="flex justify-center mb-4">
+                        <svg class="progress-ring" width="120" height="120" style="filter: drop-shadow(0 4px 6px rgba(93, 92, 222, 0.3));">
+                            <circle cx="60" cy="60" r="45" stroke="#e5e7eb" stroke-width="18" fill="none" class="dark:stroke-gray-700"/>
+                            <circle class="progress-ring-circle" cx="60" cy="60" r="45" stroke="#5D5CDE" stroke-width="18"
+                                    fill="none" stroke-linecap="round"
+                                    style="stroke-dasharray: 282.74; stroke-dashoffset: 56.55;"/>
+                            <text x="60" y="68" text-anchor="middle" class="fill-gray-900 dark:fill-white font-bold text-2xl">80</text>
+                            <text x="60" y="80" text-anchor="middle" class="fill-gray-500 text-xs">POINTS</text>
+                        </svg>
+                    </div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 text-center">Thick stroke with drop shadow</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Best Practices -->
+        <section class="bg-gradient-to-br from-green-500/5 to-emerald-500/5 dark:from-green-500/10 dark:to-emerald-500/10 rounded-2xl p-6 sm:p-8">
+            <h2 class="text-xl sm:text-2xl font-bold mb-6">Design Best Practices</h2>
+            <div class="grid sm:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Use Round Line Caps</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                <code class="px-1 py-0.5 bg-black/10 dark:bg-white/10 rounded text-xs">stroke-linecap="round"</code> creates smoother, more polished endpoints
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Smooth Transitions</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Use easing functions like <code class="px-1 py-0.5 bg-black/10 dark:bg-white/10 rounded text-xs">cubic-bezier(0.4, 0, 0.2, 1)</code> for natural motion
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Adequate Contrast</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Ensure sufficient contrast between progress and background, especially in dark mode
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✓</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Meaningful Colors</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Use green for completion, orange for warnings, red for errors or critical states
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✗</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Avoid Thin Strokes on Mobile</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Stroke widths below 4px can be hard to see on small screens
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✗</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Don't Forget Accessibility</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Always include text labels or ARIA attributes for screen readers
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✗</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Avoid Overly Complex Animations</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Respect <code class="px-1 py-0.5 bg-black/10 dark:bg-white/10 rounded text-xs">prefers-reduced-motion</code> for users who need it
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">✗</div>
+                        <div>
+                            <h4 class="font-semibold text-sm mb-1">Don't Use Only Color</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Combine color with text, icons, or patterns for colorblind users
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Template -->
+        <section>
+            <h2 class="text-xl sm:text-2xl font-bold mb-6">Reusable JavaScript Function</h2>
+            <div class="code-block">
+<span class="comment">/**
+ * Updates a progress ring to a specific percentage
+ * @param {SVGCircleElement} circle - The progress circle element
+ * @param {number} percent - Progress percentage (0-100)
+ */</span>
+<span class="keyword">function</span> <span class="value">setProgress</span>(circle, percent) {
+  <span class="keyword">const</span> radius = circle.r.baseVal.value;
+  <span class="keyword">const</span> circumference = <span class="value">2</span> * Math.PI * radius;
+  <span class="keyword">const</span> offset = circumference - (percent / <span class="value">100</span>) * circumference;
+
+  circle.style.strokeDasharray = <span class="value">`${circumference}`</span>;
+  circle.style.strokeDashoffset = <span class="value">`${offset}`</span>;
+}
+
+<span class="comment">// Usage example:</span>
+<span class="keyword">const</span> progressCircle = document.querySelector(<span class="value">'.progress-ring-circle'</span>);
+setProgress(progressCircle, <span class="value">75</span>); <span class="comment">// Set to 75%</span>
+
+<span class="comment">// Animate from 0 to 100:</span>
+<span class="keyword">let</span> progress = <span class="value">0</span>;
+<span class="keyword">const</span> interval = setInterval(() => {
+  progress += <span class="value">1</span>;
+  setProgress(progressCircle, progress);
+  <span class="keyword">if</span> (progress >= <span class="value">100</span>) clearInterval(interval);
+}, <span class="value">20</span>);
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-gray-200 dark:border-gray-800 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-600 dark:text-gray-400">
+            <p>Progress Rings Masterclass • Explore, learn, and create beautiful circular progress indicators</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Interactive Playground
+        const progressSlider = document.getElementById('progressSlider');
+        const radiusSlider = document.getElementById('radiusSlider');
+        const strokeSlider = document.getElementById('strokeSlider');
+        const progressValue = document.getElementById('progressValue');
+        const radiusValue = document.getElementById('radiusValue');
+        const strokeValue = document.getElementById('strokeValue');
+        const customRing = document.getElementById('customRing');
+        const progressCircle = document.getElementById('progressCircle');
+        const bgCircle = document.getElementById('bgCircle');
+        const percentText = document.getElementById('percentText');
+        const calcCircum = document.getElementById('calcCircum');
+        const calcOffset = document.getElementById('calcOffset');
+        const generatedCode = document.getElementById('generatedCode');
+        const showTextToggle = document.getElementById('showTextToggle');
+        const animateToggle = document.getElementById('animateToggle');
+
+        let currentColor = '#5D5CDE';
+        let currentLineCap = 'round';
+        let animationInterval = null;
+
+        function updateRing() {
+            const progress = parseInt(progressSlider.value);
+            const radius = parseInt(radiusSlider.value);
+            const strokeWidth = parseInt(strokeSlider.value);
+
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (progress / 100) * circumference;
+
+            // Update SVG
+            const size = (radius + strokeWidth) * 2 + 20;
+            const center = size / 2;
+            customRing.setAttribute('width', size);
+            customRing.setAttribute('height', size);
+
+            bgCircle.setAttribute('cx', center);
+            bgCircle.setAttribute('cy', center);
+            bgCircle.setAttribute('r', radius);
+            bgCircle.setAttribute('stroke-width', strokeWidth);
+
+            progressCircle.setAttribute('cx', center);
+            progressCircle.setAttribute('cy', center);
+            progressCircle.setAttribute('r', radius);
+            progressCircle.setAttribute('stroke-width', strokeWidth);
+            progressCircle.setAttribute('stroke', currentColor);
+            progressCircle.setAttribute('stroke-linecap', currentLineCap);
+            progressCircle.style.strokeDasharray = circumference;
+            progressCircle.style.strokeDashoffset = offset;
+
+            // Update values
+            progressValue.textContent = progress;
+            radiusValue.textContent = radius;
+            strokeValue.textContent = strokeWidth;
+            calcCircum.textContent = circumference.toFixed(2);
+            calcOffset.textContent = offset.toFixed(2);
+            percentText.textContent = progress + '%';
+
+            // Update code
+            updateGeneratedCode(progress, radius, strokeWidth, circumference, offset);
+        }
+
+        function updateGeneratedCode(progress, radius, strokeWidth, circumference, offset) {
+            const size = (radius + strokeWidth) * 2 + 20;
+            const center = size / 2;
+
+            generatedCode.innerHTML = `<span class="comment">&lt;!-- HTML --&gt;</span>
+<span class="keyword">&lt;svg</span> <span class="property">class</span>=<span class="value">"progress-ring"</span> <span class="property">width</span>=<span class="value">"${size}"</span> <span class="property">height</span>=<span class="value">"${size}"</span><span class="keyword">&gt;</span>
+  <span class="keyword">&lt;circle</span> <span class="property">cx</span>=<span class="value">"${center}"</span> <span class="property">cy</span>=<span class="value">"${center}"</span> <span class="property">r</span>=<span class="value">"${radius}"</span> <span class="property">stroke</span>=<span class="value">"#e5e7eb"</span> <span class="property">stroke-width</span>=<span class="value">"${strokeWidth}"</span> <span class="property">fill</span>=<span class="value">"none"</span><span class="keyword">/&gt;</span>
+  <span class="keyword">&lt;circle</span> <span class="property">class</span>=<span class="value">"progress-ring-circle"</span> <span class="property">cx</span>=<span class="value">"${center}"</span> <span class="property">cy</span>=<span class="value">"${center}"</span> <span class="property">r</span>=<span class="value">"${radius}"</span>
+          <span class="property">stroke</span>=<span class="value">"${currentColor}"</span> <span class="property">stroke-width</span>=<span class="value">"${strokeWidth}"</span> <span class="property">fill</span>=<span class="value">"none"</span> <span class="property">stroke-linecap</span>=<span class="value">"${currentLineCap}"</span>
+          <span class="property">style</span>=<span class="value">"stroke-dasharray: ${circumference.toFixed(2)}; stroke-dashoffset: ${offset.toFixed(2)};"</span><span class="keyword">/&gt;</span>
+<span class="keyword">&lt;/svg&gt;</span>
+
+<span class="comment">/* CSS */</span>
+<span class="keyword">.progress-ring</span> { <span class="property">transform</span>: <span class="value">rotate(-90deg)</span>; }
+<span class="keyword">.progress-ring-circle</span> {
+  <span class="property">transition</span>: <span class="value">stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)</span>;
+}`;
+        }
+
+        // Color buttons
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('border-2', 'border-primary'));
+                btn.classList.add('border-2', 'border-primary');
+                currentColor = btn.dataset.color;
+                updateRing();
+            });
+        });
+
+        // Line cap buttons
+        document.querySelectorAll('.linecap-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.linecap-btn').forEach(b => {
+                    b.classList.remove('bg-primary', 'text-white');
+                    b.classList.add('bg-gray-200', 'dark:bg-gray-700');
+                });
+                btn.classList.add('bg-primary', 'text-white');
+                btn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+                currentLineCap = btn.dataset.cap;
+                updateRing();
+            });
+        });
+
+        // Show text toggle
+        showTextToggle.addEventListener('change', (e) => {
+            percentText.style.display = e.target.checked ? 'flex' : 'none';
+        });
+
+        // Animate toggle
+        animateToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                let progress = 0;
+                animationInterval = setInterval(() => {
+                    progress = (progress + 1) % 101;
+                    progressSlider.value = progress;
+                    updateRing();
+                }, 50);
+            } else {
+                if (animationInterval) {
+                    clearInterval(animationInterval);
+                    animationInterval = null;
+                }
+            }
+        });
+
+        // Slider events
+        progressSlider.addEventListener('input', updateRing);
+        radiusSlider.addEventListener('input', updateRing);
+        strokeSlider.addEventListener('input', updateRing);
+
+        // Initial render
+        updateRing();
+    </script>
+</body>
+</html>
+
