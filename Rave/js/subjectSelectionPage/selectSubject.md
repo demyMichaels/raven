@@ -1,3 +1,4 @@
+    ```javascript
         // Select subject and load its data
         async function selectSubject(subject) {
             showLoading();
