@@ -10,6 +10,7 @@
             const totalQuizzes = analyticsData.quizResults.length;
             const averageScore = Math.round(analyticsData.quizResults.reduce((sum, result) => sum + result.score, 0) / totalQuizzes);
             
+
             document.getElementById('overallStats').innerHTML = `
                 <div class="space-y-2">
 
@@ -44,7 +45,10 @@
             const subjectStatsHTML = Object.entries(subjectBreakdown).map(([subject, data]) => {
                 const avg = Math.round(data.total / data.count);
                 return `
-                    <div class="flex justify-between py-1">
+                    <div class="
+                    flex 
+                    justify-between 
+                    py-1">
                         <span>${subject}:</span>
                         <span class="font-medium">${avg}%</span>
                     </div>
