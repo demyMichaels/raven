@@ -1,7 +1,7 @@
  
        ```javascript
-    // Render subjects
 
+    // Render subjects
         function renderSubjects() {
             const subjectGrid = document.getElementById('subjectGrid');
             subjectGrid.innerHTML = '';
@@ -68,7 +68,7 @@
                 'home-economics': 'from-warning to-warning-600',      // #f59e0b to #d97706 (assuming 600)
                 'islamic-studies': 'from-primary-500 to-primary-700', // #0F2C59 to #081e39
                 'literature': 'from-accent-500 to-accent-700',        // #009F9D to #006663
-                'phe': 'error',                 // #22c55e to #16a34a (assuming 600)
+                'phe': 'from-data-500 to-data-600',,                 // #22c55e to #16a34a (assuming 600)
                 'music': 'from-premium-500 to-premium-700'            // #D2C1A7 to #b69f83
             };
 
