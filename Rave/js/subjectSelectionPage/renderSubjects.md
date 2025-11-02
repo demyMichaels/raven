@@ -3,14 +3,28 @@
             const subjectGrid = document.getElementById('subjectGrid');
             subjectGrid.innerHTML = '';
 
-            const subjectIcons = {
-                'mathematics': 'calculate',
-                'physics': 'tungsten', 
-                'chemistry': 'science',
-                'biology': 'bubble_chart',
-                'english': 'translate',
-                'english-2': 'menu_book'
-            };
+const subjectIcons = {
+    'mathematics': 'functions',           // Math functions and operations
+    'physics': 'bolt',                    // Electricity and energy
+    'chemistry': 'science',               // Science experiments
+    'biology': 'psychology',              // Brain and life sciences
+    'english': 'auto_stories',            // Storytelling and literature
+    'economics': 'show_chart',            // Data charts and trends
+    'accounting': 'summarize',            // Financial summaries
+    'agriculture': 'grass',               // Farming and crops
+    'art': 'brush',                       // Painting and drawing
+    'commerce': 'business_center',        // Business and trade
+    'computer': 'code',                   // Programming and coding
+    'crs': 'volunteer_activism',          // Faith and spirituality
+    'geography': 'public',                // Global studies
+    'government': 'gavel',                // Law and justice
+    'history': 'history_edu',             // Historical education
+    'home-economics': 'nutrition',        // Food and nutrition
+    'islamic-studies': 'star',            // Islamic symbol
+    'literature': 'book',                 // Books and reading
+    'phe': 'sports_gymnastics',           // Sports and gymnastics
+    'music': 'piano'                      // Musical instruments
+};
 
             const subjectColors = {
                 'mathematics': 'from-data-500 to-data-600',
