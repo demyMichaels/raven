@@ -1,6 +1,8 @@
         // Show quiz results - Fixed to properly hide navigation
+
         function showQuizResults(score) {
             document.getElementById('finalScore').textContent = `${Math.round(score.percentage)}%`;
+            
             document.getElementById('scoreDetails').textContent = `${score.correct} out of ${score.total} correct`;
             
             // Hide the main quiz elements
