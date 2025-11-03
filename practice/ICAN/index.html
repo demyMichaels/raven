@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven - Achievements & Progress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        // Raven Professional Brand Colors
+                        primary: {
+                            DEFAULT: "#0F2C59", // Deep Navy - Trust, Authority, Stability
+                            50: "#f0f3f8",
+                            100: "#d6e1ee",
+                            500: "#0F2C59",
+                            600: "#0a2549",
+                            700: "#081e39",
+                        },
+                        accent: {
+                            DEFAULT: "#009F9D", // Consultancy Teal - Innovation, Precision
+                            50: "#e6f7f7",
+                            100: "#b3ebea",
+                            500: "#009F9D",
+                            600: "#008280",
+                            700: "#006663",
+                        },
+                        neutral: {
+                            25: "#FEFEFE",
+                            50: "#F8F9FA", // Warm Light Gray - Cleanliness, Clarity
+                            100: "#F1F3F4",
+                            200: "#E8EAED",
+                            300: "#DADCE0",
+                            400: "#BDC1C6",
+                            500: "#9AA0A6",
+                            600: "#80868B",
+                            700: "#5F6368",
+                            800: "#2D3748", // Charcoal - Sophistication, Legibility
+                            900: "#1F2937",
+                        },
+                        premium: {
+                            DEFAULT: "#D2C1A7", // Pale Sand - Warmth, Approachability
+                            50: "#fbf9f6",
+                            100: "#f4efe6",
+                            500: "#D2C1A7",
+                            600: "#c4b095",
+                            700: "#b69f83",
+                        },
+                        data: {
+                            DEFAULT: "#5A7B9E", // Steel Blue - Logic, Intelligence
+                            50: "#f2f5f9",
+                            100: "#e1e9f2",
+                            500: "#5A7B9E",
+                            600: "#4d6a87",
+                            700: "#405970",
+                        },
+                        success: "#22c55e",
+                        warning: "#f59e0b",
+                        error: "#ef4444",
+                    },
+                    boxShadow: {
+                        'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+                        'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+                        'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+                        'material-4': '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
+                        'material-5': '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
+                    },
+                    fontFamily: {
+                        'sans': ['Roboto', 'system-ui', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'material': '4px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .material-card {
+            transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .material-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .material-button {
+            transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .material-button:active {
+            transform: scale(0.98);
+        }
+
+        .material-fab {
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12);
+            transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+
+        .material-fab:hover {
+            box-shadow: 0 5px 5px -3px rgba(0,0,0,0.2), 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12);
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Material Design Typography Scale */
+        .headline-1 { font-size: 6rem; font-weight: 300; line-height: 1.167; letter-spacing: -1.5px; }
+        .headline-2 { font-size: 3.75rem; font-weight: 300; line-height: 1.2; letter-spacing: -0.5px; }
+        .headline-3 { font-size: 3rem; font-weight: 400; line-height: 1.167; letter-spacing: 0; }
+        .headline-4 { font-size: 2.125rem; font-weight: 400; line-height: 1.235; letter-spacing: 0.25px; }
+        .headline-5 { font-size: 1.5rem; font-weight: 400; line-height: 1.334; letter-spacing: 0; }
+        .headline-6 { font-size: 1.25rem; font-weight: 500; line-height: 1.6; letter-spacing: 0.15px; }
+        
+        .subtitle-1 { font-size: 1rem; font-weight: 400; line-height: 1.75; letter-spacing: 0.15px; }
+        .subtitle-2 { font-size: 0.875rem; font-weight: 500; line-height: 1.57; letter-spacing: 0.1px; }
+        
+        .body-1 { font-size: 1rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.5px; }
+        .body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.43; letter-spacing: 0.25px; }
+        .button-text { font-size: 0.875rem; font-weight: 500; line-height: 1.75; letter-spacing: 1.25px; text-transform: uppercase; }
+        .caption { font-size: 0.75rem; font-weight: 400; line-height: 1.66; letter-spacing: 0.4px; }
+        .overline { font-size: 0.75rem; font-weight: 400; line-height: 2.66; letter-spacing: 1px; text-transform: uppercase; }
+
+        /* Dark mode enhancements */
+        .dark .material-card {
+            background-color: #1F2937;
+            border-color: #374151;
+        }
+
+        .dark .material-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        /* Achievement specific animations */
+        .achievement-unlocked {
+            animation: achievementPulse 0.6s ease-in-out;
+        }
+
+        @keyframes achievementPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .achievement-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            transition: all 0.3s ease;
+        }
+
+        .achievement-badge:hover {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            transform: translateY(-2px);
+        }
+
+        .streak-flame {
+            animation: flicker 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 100% { transform: scale(1) rotate(-1deg); }
+            50% { transform: scale(1.1) rotate(1deg); }
+        }
+
+        .celebration-confetti {
+            animation: confetti 3s ease-in-out;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+
+        .tier-badge {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .tier-platinum {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        .tier-gold {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .tier-silver {
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        }
+
+        .tier-bronze {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
+    <!-- Material Design App Bar -->
+    <header class="bg-white dark:bg-neutral-800 shadow-material-2 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-material-1">
+                            <span class="text-white font-medium text-lg">J</span>
+                        </div>
+                        <div>
+                            <h1 class="headline-6 text-neutral-800 dark:text-white">JAMB Prep Pro</h1>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">ProVista Excellence</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <button onclick="goToDashboard()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Dashboard</button>
+                    <button onclick="goToPractice()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Practice</button>
+                    <button onclick="goToMockExam()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Mock Exams</button>
+                    <button onclick="goToResults()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Results</button>
+                    <button onclick="goToStudy()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Study</button>
+                    <button onclick="goToLearning()" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg">Learning</button>
+                    <button class="nav-btn px-4 py-2 text-primary bg-primary/10 font-medium button-text rounded-lg">Achievements</button>
+                </nav>
+
+                <!-- User Actions -->
+                <div class="flex items-center space-x-3">
+                    <button class="material-button w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600">
+                        <span class="material-icons text-lg">notifications</span>
+                    </button>
+                    <div class="w-10 h-10 bg-accent rounded-full flex items-center justify-center shadow-material-1">
+                        <span class="text-white font-medium text-sm">AD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Achievement Hero Section -->
+        <div class="bg-gradient-to-r from-primary to-primary-700 rounded-2xl p-8 text-white mb-8 shadow-material-3 relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="max-w-2xl">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-16 h-16 bg-warning rounded-2xl flex items-center justify-center shadow-material-2">
+                                <span class="material-icons text-white text-2xl">emoji_events</span>
+                            </div>
+                            <div>
+                                <h2 class="headline-4 mb-2">Achievements & Progress</h2>
+                                <p class="subtitle-1 text-primary-100">Track your learning journey and celebrate every milestone!</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6 mt-6">
+                            <div class="text-center">
+                                <p class="headline-5 font-bold">23</p>
+                                <p class="caption text-primary-100">Unlocked</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="headline-5 font-bold">47</p>
+                                <p class="caption text-primary-100">Total Available</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="headline-5 font-bold">49%</p>
+                                <p class="caption text-primary-100">Completion</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden lg:block">
+                        <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <span class="material-icons text-5xl text-white">stars</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative elements -->
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
+        </div>
+
+        <!-- Achievement Categories Filter -->
+        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="headline-6 text-neutral-800 dark:text-white">Achievement Categories</h3>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="overline text-neutral-600 dark:text-neutral-400">Overall Progress</p>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-accent to-success h-2 rounded-full" style="width: 49%"></div>
+                            </div>
+                            <span class="caption font-medium text-neutral-800 dark:text-white">49%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <button onclick="filterAchievements('all')" class="achievement-filter active material-button px-4 py-2 bg-accent text-white rounded-xl shadow-material-1">
+                    <span class="button-text">All</span>
+                </button>
+                <button onclick="filterAchievements('progress')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Progress</span>
+                </button>
+                <button onclick="filterAchievements('behavioral')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Behavioral</span>
+                </button>
+                <button onclick="filterAchievements('time')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Time-based</span>
+                </button>
+                <button onclick="filterAchievements('subject')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Subject</span>
+                </button>
+                <button onclick="filterAchievements('interactive')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Interactive</span>
+                </button>
+                <button onclick="filterAchievements('consistency')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Consistency</span>
+                </button>
+                <button onclick="filterAchievements('challenge')" class="achievement-filter material-button px-4 py-2 border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-700">
+                    <span class="button-text">Challenge</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Current Streak Display -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="material-card bg-gradient-to-br from-warning to-orange-500 rounded-2xl p-6 text-white shadow-material-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <span class="material-icons text-white streak-flame">local_fire_department</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="overline text-orange-100">Current Streak</p>
+                        <p class="headline-5 font-bold">23 Days</p>
+                    </div>
+                </div>
+                <p class="body-2 text-orange-100">Keep going! You're on fire! 🔥</p>
+            </div>
+
+            <div class="material-card bg-gradient-to-br from-accent to-primary rounded-2xl p-6 text-white shadow-material-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <span class="material-icons text-white">military_tech</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="overline text-accent-100">Current Tier</p>
+                        <p class="headline-5 font-bold">Gold Scholar</p>
+                    </div>
+                </div>
+                <p class="body-2 text-accent-100">2,150 XP to Platinum</p>
+            </div>
+
+            <div class="material-card bg-gradient-to-br from-success to-emerald-600 rounded-2xl p-6 text-white shadow-material-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <span class="material-icons text-white">trending_up</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="overline text-success-100">Weekly XP</p>
+                        <p class="headline-5 font-bold">1,847</p>
+                    </div>
+                </div>
+                <p class="body-2 text-success-100">+23% from last week</p>
+            </div>
+        </div>
+
+        <!-- Achievement Grid -->
+        <div class="achievement-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Progress-based Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="progress">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-gold rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">quiz</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Question Master</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Answer 1,000 questions correctly</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">1,247 / 1,000</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+500 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Behavioral Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="behavioral">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 bg-data-500 rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">psychology</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Deep Thinker</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Spend 10+ seconds on each question</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">67 / 100</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-data-500 h-2 rounded-full transition-all duration-500" style="width: 67%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full font-medium">In Progress</span>
+                        <span class="caption text-neutral-500">+300 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time-based Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="time">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-silver rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">schedule</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Early Bird</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Study before 8 AM for 7 days</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">7 / 7</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+250 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject-specific Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="subject">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">calculate</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Math Wizard</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Score 90%+ in 5 Math practice sessions</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">3 / 5</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full transition-all duration-500" style="width: 60%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full font-medium">In Progress</span>
+                        <span class="caption text-neutral-500">+600 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Learning Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="interactive">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-bronze rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">science</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Lab Explorer</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Complete your first interactive lesson</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">1 / 1</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+200 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consistency Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="consistency">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-gold rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl streak-flame">local_fire_department</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Dedication Streak</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Study for 21 consecutive days</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">23 / 21</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+800 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Challenge Achievements -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="challenge">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 bg-error rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">emoji_events</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Speed Demon</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Complete a mock exam in under 120 minutes</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Best Time</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">135 min</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-warning h-2 rounded-full transition-all duration-500" style="width: 89%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-warning/10 text-warning px-2 py-1 rounded-full font-medium">Almost There!</span>
+                        <span class="caption text-neutral-500">+1000 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More achievements with different categories -->
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="subject">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-gold rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">translate</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Grammar Guardian</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Perfect score in English comprehension</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Best Score</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">100%</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+400 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="behavioral">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 bg-premium-600 rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">help</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Help Seeker</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Use hint feature 50 times wisely</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">23 / 50</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-premium-600 h-2 rounded-full transition-all duration-500" style="width: 46%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full font-medium">In Progress</span>
+                        <span class="caption text-neutral-500">+200 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="time">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">nights_stay</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Night Owl</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Study after 10 PM for 10 sessions</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">6 / 10</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-accent h-2 rounded-full transition-all duration-500" style="width: 60%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full font-medium">In Progress</span>
+                        <span class="caption text-neutral-500">+350 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 achievement-unlocked" data-category="progress">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-bronze rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">trending_up</span>
+                    </div>
+                    <div class="achievement-badge w-8 h-8 rounded-full flex items-center justify-center">
+                        <span class="material-icons text-white text-sm">check</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">First Steps</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Complete your first practice session</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">1 / 1</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-success/10 text-success px-2 py-1 rounded-full font-medium">✓ Completed</span>
+                        <span class="caption text-success font-bold">+100 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="achievement-card material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1" data-category="challenge">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-16 h-16 tier-platinum rounded-2xl flex items-center justify-center shadow-material-2">
+                        <span class="material-icons text-white text-2xl">military_tech</span>
+                    </div>
+                    <div class="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 rounded-full flex items-center justify-center">
+                        <span class="text-sm text-neutral-400">🔒</span>
+                    </div>
+                </div>
+                <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-2">JAMB Champion</h3>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Score 350+ in mock JAMB exam</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-neutral-600 dark:text-neutral-400">Best Score</span>
+                        <span class="font-medium text-neutral-800 dark:text-white">285 / 400</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                        <div class="bg-warning h-2 rounded-full transition-all duration-500" style="width: 71%"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="caption bg-warning/10 text-warning px-2 py-1 rounded-full font-medium">Getting Close!</span>
+                        <span class="caption text-neutral-500">+2000 XP</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- XP Leaderboard & Weekly Challenges -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Weekly Challenges -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-material-1">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="headline-6 text-neutral-800 dark:text-white">Weekly Challenges</h3>
+                    <div class="flex items-center space-x-2">
+                        <span class="material-icons text-warning">schedule</span>
+                        <span class="caption text-neutral-600 dark:text-neutral-400">3 days left</span>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="subtitle-2 text-neutral-800 dark:text-white">Speed Challenge</h4>
+                            <span class="caption bg-accent text-white px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-3">Complete 50 questions in under 45 minutes</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-20 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                                    <div class="bg-accent h-2 rounded-full" style="width: 64%"></div>
+                                </div>
+                                <span class="caption text-neutral-600">32/50</span>
+                            </div>
+                            <span class="caption text-accent font-bold">+1200 XP</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-warning/10 to-orange-100/50 border border-warning/20 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="subtitle-2 text-neutral-800 dark:text-white">Perfect Week</h4>
+                            <span class="caption bg-warning text-white px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-3">Study every day this week</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-20 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                                    <div class="bg-warning h-2 rounded-full" style="width: 71%"></div>
+                                </div>
+                                <span class="caption text-neutral-600">5/7 days</span>
+                            </div>
+                            <span class="caption text-warning font-bold">+800 XP</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-success/10 to-emerald-100/50 border border-success/20 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="subtitle-2 text-neutral-800 dark:text-white">Subject Master</h4>
+                            <span class="caption bg-success text-white px-2 py-1 rounded-full">New</span>
+                        </div>
+                        <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-3">Get 80%+ in all 4 subjects this week</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-20 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+                                    <div class="bg-success h-2 rounded-full" style="width: 25%"></div>
+                                </div>
+                                <span class="caption text-neutral-600">1/4 subjects</span>
+                            </div>
+                            <span class="caption text-success font-bold">+1500 XP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievement Progress Chart -->
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 shadow-material-1">
+                <h3 class="headline-6 text-neutral-800 dark:text-white mb-6">XP Progress This Month</h3>
+                <div class="h-64 mb-6">
+                    <canvas id="xpChart" class="w-full h-full"></canvas>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-4 bg-accent/5 rounded-lg">
+                        <p class="overline text-accent-600">This Month</p>
+                        <p class="headline-6 text-accent font-mono">8,247</p>
+                        <p class="caption text-accent-500">XP Earned</p>
+                    </div>
+                    <div class="text-center p-4 bg-success/5 rounded-lg">
+                        <p class="overline text-success-600">Rank</p>
+                        <p class="headline-6 text-success font-mono">#127</p>
+                        <p class="caption text-success-500">Global Position</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Achievement Unlock Modal -->
+    <div id="achievementModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl shadow-material-5 max-w-md w-full">
+            <div class="p-8 text-center">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-warning to-orange-500 rounded-full flex items-center justify-center celebration-confetti">
+                    <span class="material-icons text-white text-4xl">emoji_events</span>
+                </div>
+                <h3 class="headline-5 text-neutral-800 dark:text-white mb-4">Achievement Unlocked!</h3>
+                <h4 class="subtitle-1 text-warning mb-2" id="achievementTitle">Question Master</h4>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6" id="achievementDescription">Answer 1,000 questions correctly</p>
+                <div class="flex items-center justify-center space-x-4 mb-6">
+                    <div class="text-center">
+                        <p class="headline-6 text-warning font-bold" id="achievementXP">+500 XP</p>
+                        <p class="caption text-neutral-500">Experience Points</p>
+                    </div>
+                </div>
+                <button onclick="closeAchievementModal()" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+                    <span class="button-text">Continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Achievement filtering
+        function filterAchievements(category) {
+            const achievementCards = document.querySelectorAll('.achievement-card');
+            const filterButtons = document.querySelectorAll('.achievement-filter');
+
+            // Update active filter button
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-accent', 'text-white');
+                btn.classList.add('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300');
+            });
+
+            event.target.classList.remove('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300');
+            event.target.classList.add('bg-accent', 'text-white');
+
+            // Filter achievements
+            achievementCards.forEach(card => {
+                if (category === 'all' || card.dataset.category === category) {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            showMaterialToast(`Filtered to ${category === 'all' ? 'all' : category} achievements`, 'info');
+        }
+
+        // Initialize XP Progress Chart
+        let xpChart;
+        function initializeXPChart() {
+            const ctx = document.getElementById('xpChart');
+            if (!ctx) return;
+
+            xpChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'XP Earned',
+                        data: [1850, 2340, 2980, 1077],
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#009F9D',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Navigation functions (placeholder)
+        function goToDashboard() {
+            showMaterialToast('Navigating to Dashboard...', 'info');
+        }
+
+        function goToPractice() {
+            showMaterialToast('Navigating to Practice...', 'info');
+        }
+
+        function goToMockExam() {
+            showMaterialToast('Navigating to Mock Exams...', 'info');
+        }
+
+        function goToResults() {
+            showMaterialToast('Navigating to Results...', 'info');
+        }
+
+        function goToStudy() {
+            showMaterialToast('Navigating to Study...', 'info');
+        }
+
+        function goToLearning() {
+            showMaterialToast('Navigating to Learning...', 'info');
+        }
+
+        // Achievement unlock simulation
+        function unlockAchievement(title, description, xp) {
+            document.getElementById('achievementTitle').textContent = title;
+            document.getElementById('achievementDescription').textContent = description;
+            document.getElementById('achievementXP').textContent = `+${xp} XP`;
+            document.getElementById('achievementModal').classList.remove('hidden');
+            
+            // Add confetti effect
+            createConfetti();
+            showMaterialToast(`🎉 Achievement Unlocked: ${title}!`, 'success');
+        }
+
+        function closeAchievementModal() {
+            document.getElementById('achievementModal').classList.add('hidden');
+        }
+
+        // Confetti effect
+        function createConfetti() {
+            const colors = ['#009F9D', '#0F2C59', '#f59e0b', '#22c55e', '#ef4444'];
+            const confettiContainer = document.body;
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-10px';
+                    confetti.style.zIndex = '9999';
+                    confetti.style.borderRadius = '50%';
+                    confetti.classList.add('celebration-confetti');
+                    
+                    confettiContainer.appendChild(confetti);
+                    
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 50);
+            }
+        }
+
+        // Material Design Toast System
+        function showMaterialToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container') || createToastContainer();
+
+            const toast = document.createElement('div');
+            const iconMap = {
+                success: 'check_circle',
+                error: 'error',
+                warning: 'warning',
+                info: 'info'
+            };
+
+            const colorMap = {
+                success: 'bg-success text-white',
+                error: 'bg-error text-white',
+                warning: 'bg-warning text-white',
+                info: 'bg-accent text-white'
+            };
+
+            toast.className = `material-card flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-material-3 ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
+
+            toast.innerHTML = `
+                <span class="material-icons">${iconMap[type]}</span>
+                <span class="subtitle-2 flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 100);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('translate-y-2', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed bottom-6 left-6 z-50 max-w-sm';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Simulate achievement unlocking on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeXPChart();
+            
+            setTimeout(() => {
+                showMaterialToast('Welcome to your Achievement Hub! 🏆', 'success');
+            }, 1000);
+
+            // Simulate an achievement unlock after 3 seconds
+            setTimeout(() => {
+                unlockAchievement('Page Explorer', 'Visit the Achievements page for the first time', 150);
+            }, 3000);
+        });
+
+        // Add click handlers for achievement cards to show more details
+        document.addEventListener('click', function(e) {
+            const achievementCard = e.target.closest('.achievement-card');
+            if (achievementCard && achievementCard.classList.contains('achievement-unlocked')) {
+                const title = achievementCard.querySelector('.subtitle-1').textContent;
+                showMaterialToast(`Achievement: ${title} - Click to view details`, 'info');
+            }
+        });
+    </script>
+</body>
+</html>
