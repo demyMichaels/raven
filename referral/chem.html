@@ -5,11 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chemistry Learning Lab</title>
 
-    <!-- External Libraries -->
+    <!-- Tailwind CSS - Only critical library loaded upfront -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/3dmol@latest/build/3Dmol-min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <script>
         tailwind.config = {
@@ -26,8 +23,8 @@
     </script>
 
     <style>
-        /* Smooth transitions */
-        * {
+        /* Optimized transitions - only for specific properties */
+        body, .tab-btn, button, input, select {
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
         }
 
@@ -423,6 +420,10 @@
         // Global variables
         let viewer;
         let viewerInitialized = false;
+        let threeDmolScriptLoaded = false;
+        let threeDmolScriptLoading = false;
+        let chartJsLoaded = false;
+        let chartJsLoading = false;
 
         // Atomic masses for calculations
         const atomicMasses = {
@@ -601,9 +602,47 @@ H          3.77000        0.99000        0.00000`
             }
         };
 
-        // Initialize 3Dmol Viewer when needed
+        // Lazy load 3Dmol library
+        function load3DmolScript(callback) {
+            if (threeDmolScriptLoaded) {
+                if (callback) callback();
+                return;
+            }
+
+            if (threeDmolScriptLoading) {
+                // Script is already loading, wait for it
+                const checkInterval = setInterval(() => {
+                    if (threeDmolScriptLoaded) {
+                        clearInterval(checkInterval);
+                        if (callback) callback();
+                    }
+                }, 50);
+                return;
+            }
+
+            threeDmolScriptLoading = true;
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/3dmol@latest/build/3Dmol-min.js';
+            script.onload = () => {
+                threeDmolScriptLoaded = true;
+                threeDmolScriptLoading = false;
+                if (callback) callback();
+            };
+            script.onerror = () => {
+                threeDmolScriptLoading = false;
+                document.getElementById('viewer-loading').innerHTML = `
+                    <div class="text-center">
+                        <p class="text-red-600 dark:text-red-400">Failed to load 3D viewer</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Please check your connection and refresh</p>
+                    </div>
+                `;
+            };
+            document.head.appendChild(script);
+        }
+
+        // Initialize 3Dmol Viewer
         function initialize3DViewer() {
-            if (viewerInitialized || typeof $3Dmol === 'undefined') return;
+            if (viewerInitialized) return;
 
             const element = document.getElementById('3dmol-viewer');
             const isDark = document.documentElement.classList.contains('dark');
@@ -622,22 +661,38 @@ H          3.77000        0.99000        0.00000`
             loadMolecule('water');
         }
 
-        // Try to initialize viewer when libraries are loaded
-        let initAttempts = 0;
-        const initInterval = setInterval(() => {
-            if (typeof $3Dmol !== 'undefined') {
-                initialize3DViewer();
-                clearInterval(initInterval);
-            } else if (initAttempts++ > 50) { // ~5 seconds
-                clearInterval(initInterval);
-                document.getElementById('viewer-loading').innerHTML = `
-                    <div class="text-center">
-                        <p class="text-red-600 dark:text-red-400">Failed to load 3D viewer</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Please refresh the page</p>
-                    </div>
-                `;
+        // Lazy load Chart.js library
+        function loadChartJsScript(callback) {
+            if (chartJsLoaded) {
+                if (callback) callback();
+                return;
             }
-        }, 100);
+
+            if (chartJsLoading) {
+                // Script is already loading, wait for it
+                const checkInterval = setInterval(() => {
+                    if (chartJsLoaded) {
+                        clearInterval(checkInterval);
+                        if (callback) callback();
+                    }
+                }, 50);
+                return;
+            }
+
+            chartJsLoading = true;
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onload = () => {
+                chartJsLoaded = true;
+                chartJsLoading = false;
+                if (callback) callback();
+            };
+            script.onerror = () => {
+                chartJsLoading = false;
+                showCustomAlert('Failed to load Chart.js library. Please refresh the page.');
+            };
+            document.head.appendChild(script);
+        }
 
         // Tab switching
         function switchTab(tabName) {
@@ -659,6 +714,13 @@ H          3.77000        0.99000        0.00000`
             const activeTab = document.getElementById('tab-' + tabName);
             activeTab.classList.add('border-primary', 'text-primary');
             activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+
+            // Lazy load 3Dmol when viewer tab is opened
+            if (tabName === 'viewer' && !threeDmolScriptLoaded && !viewerInitialized) {
+                load3DmolScript(() => {
+                    initialize3DViewer();
+                });
+            }
         }
 
         // Load molecule to 3D viewer
@@ -820,77 +882,80 @@ H          3.77000        0.99000        0.00000`
                 return;
             }
 
-            try {
-                const elements = parseFormula(formula);
-                let totalMass = 0;
-                const elementMasses = {};
+            // Load Chart.js if not already loaded, then calculate
+            loadChartJsScript(() => {
+                try {
+                    const elements = parseFormula(formula);
+                    let totalMass = 0;
+                    const elementMasses = {};
 
-                for (const [element, count] of Object.entries(elements)) {
-                    if (!atomicMasses[element]) {
-                        showCustomAlert(`Unknown element: ${element}`);
-                        return;
+                    for (const [element, count] of Object.entries(elements)) {
+                        if (!atomicMasses[element]) {
+                            showCustomAlert(`Unknown element: ${element}`);
+                            return;
+                        }
+                        const mass = atomicMasses[element] * count;
+                        elementMasses[element] = mass;
+                        totalMass += mass;
                     }
-                    const mass = atomicMasses[element] * count;
-                    elementMasses[element] = mass;
-                    totalMass += mass;
-                }
 
-                const labels = [];
-                const percentages = [];
-                const colors = ['#5D5CDE', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'];
+                    const labels = [];
+                    const percentages = [];
+                    const colors = ['#5D5CDE', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'];
 
-                for (const [element, mass] of Object.entries(elementMasses)) {
-                    labels.push(element);
-                    percentages.push((mass / totalMass * 100).toFixed(2));
-                }
+                    for (const [element, mass] of Object.entries(elementMasses)) {
+                        labels.push(element);
+                        percentages.push((mass / totalMass * 100).toFixed(2));
+                    }
 
-                // Show result and create chart
-                document.getElementById('pc-result').classList.remove('hidden');
+                    // Show result and create chart
+                    document.getElementById('pc-result').classList.remove('hidden');
 
-                const ctx = document.getElementById('pc-chart');
+                    const ctx = document.getElementById('pc-chart');
 
-                // Destroy existing chart if any
-                if (window.percentCompChart) {
-                    window.percentCompChart.destroy();
-                }
+                    // Destroy existing chart if any
+                    if (window.percentCompChart) {
+                        window.percentCompChart.destroy();
+                    }
 
-                window.percentCompChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels.map((label, i) => `${label} (${percentages[i]}%)`),
-                        datasets: [{
-                            data: percentages,
-                            backgroundColor: colors.slice(0, labels.length)
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
+                    window.percentCompChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels.map((label, i) => `${label} (${percentages[i]}%)`),
+                            datasets: [{
+                                data: percentages,
+                                backgroundColor: colors.slice(0, labels.length)
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
+                                        font: {
+                                            size: 14
+                                        }
+                                    }
+                                },
+                                title: {
+                                    display: true,
+                                    text: `Percent Composition of ${formula}`,
                                     color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
                                     font: {
-                                        size: 14
+                                        size: 16,
+                                        weight: 'bold'
                                     }
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: `Percent Composition of ${formula}`,
-                                color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
                                 }
                             }
                         }
-                    }
-                });
+                    });
 
-            } catch (error) {
-                showCustomAlert('Error parsing formula. Please check your inputs.');
-            }
+                } catch (error) {
+                    showCustomAlert('Error parsing formula. Please check your input.');
+                }
+            });
         }
 
         // Custom alert function (since alert() is not supported)
@@ -906,6 +971,15 @@ H          3.77000        0.99000        0.00000`
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        // Auto-load 3Dmol on viewer tab (default tab on page load)
+        // Since viewer tab is open by default, start loading 3Dmol
+        if (document.getElementById('content-viewer').classList.contains('tab-content') &&
+            !document.getElementById('content-viewer').classList.contains('hidden')) {
+            load3DmolScript(() => {
+                initialize3DViewer();
+            });
         }
     </script>
 </body>
