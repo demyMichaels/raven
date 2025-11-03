@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Learning Lab</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://web.chemdoodle.com/install/9.6.0/ChemDoodleWeb.js"></script>
+    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4A49C5',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom styles for ChemDoodle */
+        .ChemDoodleWebComponent {
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-bold">Chemistry Lab</h1>
+                </div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">High School Edition</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- Tab Navigation -->
+        <div class="mb-6">
+            <div class="flex space-x-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700">
+                <button onclick="switchTab('sketcher')" id="tab-sketcher" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-primary text-primary">
+                    2D Sketcher
+                </button>
+                <button onclick="switchTab('viewer')" id="tab-viewer" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    3D Viewer
+                </button>
+                <button onclick="switchTab('calculator')" id="tab-calculator" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    Calculators
+                </button>
+                <button onclick="switchTab('molecules')" id="tab-molecules" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+                    Molecules
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+
+        <!-- 2D Sketcher Tab -->
+        <div id="content-sketcher" class="tab-content">
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-2">Molecular Structure Sketcher</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Draw molecular structures using the ChemDoodle sketcher. Click and drag to create bonds, or use the toolbar to add atoms and functional groups.</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mb-4">
+                <div id="chemdoodle-sketcher" class="w-full" style="height: 400px;"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="clearSketcher()" class="px-4 py-3 text-base bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
+                    Clear
+                </button>
+                <button onclick="loadToViewer()" class="px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                    View in 3D
+                </button>
+            </div>
+
+            <div id="sketcher-info" class="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hidden">
+                <h3 class="font-semibold mb-2">Molecular Formula</h3>
+                <p id="sketcher-formula" class="text-2xl font-mono"></p>
+                <h3 class="font-semibold mt-3 mb-2">Molecular Weight</h3>
+                <p id="sketcher-weight" class="text-xl"></p>
+            </div>
+        </div>
+
+        <!-- 3D Viewer Tab -->
+        <div id="content-viewer" class="tab-content hidden">
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-2">3D Molecular Viewer</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">View molecules in 3D using 3Dmol.js. Rotate by dragging, zoom with pinch or scroll.</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mb-4">
+                <div id="3dmol-viewer" class="w-full rounded-lg" style="height: 400px; position: relative;"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <button onclick="changeStyle('stick')" class="px-4 py-3 text-base bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
+                    Stick
+                </button>
+                <button onclick="changeStyle('sphere')" class="px-4 py-3 text-base bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
+                    Ball & Stick
+                </button>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <h3 class="font-semibold mb-3">Quick Load Molecules</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="loadMolecule('water')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">H₂O</button>
+                    <button onclick="loadMolecule('methane')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">CH₄</button>
+                    <button onclick="loadMolecule('ethanol')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">C₂H₅OH</button>
+                    <button onclick="loadMolecule('glucose')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Glucose</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="content-calculator" class="tab-content hidden">
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-2">Chemistry Calculators</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Perform common chemistry calculations with precision.</p>
+            </div>
+
+            <!-- Calculator Type Selector -->
+            <div class="mb-4">
+                <select id="calc-type" onchange="switchCalculator()" class="w-full px-4 py-3 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <option value="molar-mass">Molar Mass Calculator</option>
+                    <option value="molarity">Molarity Calculator</option>
+                    <option value="gas-laws">Ideal Gas Law (PV=nRT)</option>
+                    <option value="stoichiometry">Stoichiometry Calculator</option>
+                    <option value="percent-comp">Percent Composition</option>
+                </select>
+            </div>
+
+            <!-- Molar Mass Calculator -->
+            <div id="calc-molar-mass" class="calculator-content bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <h3 class="font-semibold mb-4">Molar Mass Calculator</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chemical Formula</label>
+                        <input type="text" id="mm-formula" placeholder="e.g., H2O, NaCl, C6H12O6" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <button onclick="calculateMolarMass()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                        Calculate
+                    </button>
+                    <div id="mm-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
+                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Molar Mass</div>
+                        <div id="mm-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Molarity Calculator -->
+            <div id="calc-molarity" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <h3 class="font-semibold mb-4">Molarity Calculator (M = n/V)</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Moles (mol)</label>
+                        <input type="number" id="mol-moles" step="0.001" placeholder="0.5" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Volume (L)</label>
+                        <input type="number" id="mol-volume" step="0.001" placeholder="1.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <button onclick="calculateMolarity()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                        Calculate
+                    </button>
+                    <div id="mol-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
+                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Molarity</div>
+                        <div id="mol-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gas Laws Calculator -->
+            <div id="calc-gas-laws" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <h3 class="font-semibold mb-4">Ideal Gas Law (PV = nRT)</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">R = 0.08206 L·atm/(mol·K)</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Pressure (atm)</label>
+                        <input type="number" id="gas-pressure" step="0.01" placeholder="1.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Volume (L)</label>
+                        <input type="number" id="gas-volume" step="0.01" placeholder="22.4" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Temperature (K)</label>
+                        <input type="number" id="gas-temp" step="0.1" placeholder="273.15" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <button onclick="calculateGasLaw()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                        Calculate Moles
+                    </button>
+                    <div id="gas-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
+                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Moles (n)</div>
+                        <div id="gas-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stoichiometry Calculator -->
+            <div id="calc-stoichiometry" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <h3 class="font-semibold mb-4">Stoichiometry Calculator</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Example: 2H₂ + O₂ → 2H₂O</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Moles of Reactant</label>
+                        <input type="number" id="stoich-moles" step="0.01" placeholder="2.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Reactant Coefficient</label>
+                        <input type="number" id="stoich-reactant-coef" step="1" placeholder="2" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Product Coefficient</label>
+                        <input type="number" id="stoich-product-coef" step="1" placeholder="2" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <button onclick="calculateStoichiometry()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                        Calculate
+                    </button>
+                    <div id="stoich-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
+                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Moles of Product</div>
+                        <div id="stoich-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Percent Composition Calculator -->
+            <div id="calc-percent-comp" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                <h3 class="font-semibold mb-4">Percent Composition</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Chemical Formula</label>
+                        <input type="text" id="pc-formula" placeholder="e.g., H2O" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    </div>
+                    <button onclick="calculatePercentComp()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
+                        Calculate
+                    </button>
+                    <div id="pc-result" class="hidden">
+                        <canvas id="pc-chart" class="mt-4"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Molecules Library Tab -->
+        <div id="content-molecules" class="tab-content hidden">
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
+                <h2 class="text-lg font-semibold mb-2">Common Molecules Library</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Explore common molecules studied in high school chemistry.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Water -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Water (H₂O)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 18.015 g/mol</p>
+                        <p>Polar molecule, bent geometry</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('water')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+
+                <!-- Methane -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Methane (CH₄)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 16.043 g/mol</p>
+                        <p>Tetrahedral geometry</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('methane')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+
+                <!-- Carbon Dioxide -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Carbon Dioxide (CO₂)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 44.010 g/mol</p>
+                        <p>Linear geometry, nonpolar</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('co2')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+
+                <!-- Ammonia -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Ammonia (NH₃)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 17.031 g/mol</p>
+                        <p>Trigonal pyramidal</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('ammonia')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+
+                <!-- Ethanol -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Ethanol (C₂H₅OH)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 46.069 g/mol</p>
+                        <p>Contains hydroxyl group</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('ethanol')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+
+                <!-- Glucose -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Glucose (C₆H₁₂O₆)</h3>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        <p>Molar Mass: 180.156 g/mol</p>
+                        <p>Simple sugar, ring structure</p>
+                    </div>
+                    <button onclick="loadMoleculeDetails('glucose')" class="w-full px-4 py-2 text-base bg-primary text-white rounded-lg hover:bg-primary-dark">
+                        View in 3D
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode setup
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Global variables
+        let sketcher;
+        let viewer;
+        let currentMolecule = null;
+
+        // Atomic masses for calculations
+        const atomicMasses = {
+            'H': 1.008, 'He': 4.003, 'Li': 6.941, 'Be': 9.012, 'B': 10.81, 'C': 12.011,
+            'N': 14.007, 'O': 15.999, 'F': 18.998, 'Ne': 20.180, 'Na': 22.990, 'Mg': 24.305,
+            'Al': 26.982, 'Si': 28.085, 'P': 30.974, 'S': 32.06, 'Cl': 35.45, 'Ar': 39.948,
+            'K': 39.098, 'Ca': 40.078, 'Br': 79.904, 'I': 126.90, 'Fe': 55.845, 'Cu': 63.546,
+            'Zn': 65.38, 'Ag': 107.87, 'Au': 196.97
+        };
+
+        // Molecule database with XYZ coordinates
+        const molecules = {
+            water: {
+                name: 'Water',
+                formula: 'H2O',
+                xyz: `3
+Water molecule
+O          0.00000        0.00000        0.11779
+H          0.00000        0.75545       -0.47116
+H          0.00000       -0.75545       -0.47116`
+            },
+            methane: {
+                name: 'Methane',
+                formula: 'CH4',
+                xyz: `5
+Methane molecule
+C          0.00000        0.00000        0.00000
+H          0.62911        0.62911        0.62911
+H         -0.62911       -0.62911        0.62911
+H         -0.62911        0.62911       -0.62911
+H          0.62911       -0.62911       -0.62911`
+            },
+            ethanol: {
+                name: 'Ethanol',
+                formula: 'C2H5OH',
+                xyz: `9
+Ethanol molecule
+C          1.14507       -0.18093        0.00000
+C         -0.21566        0.45531        0.00000
+O         -1.21945       -0.54919        0.00000
+H          1.95175        0.57126        0.00000
+H          1.24736       -0.79848        0.88835
+H          1.24736       -0.79848       -0.88835
+H         -0.31797        1.08286        0.88835
+H         -0.31797        1.08286       -0.88835
+H         -2.06528       -0.10087        0.00000`
+            },
+            glucose: {
+                name: 'Glucose',
+                formula: 'C6H12O6',
+                xyz: `24
+Glucose molecule
+C          2.36276       -0.22307        0.11568
+C          1.13847        0.69610        0.11509
+C         -0.11659       -0.16520        0.11334
+C         -1.38647        0.67410        0.11159
+C         -2.61040       -0.23507        0.11041
+O         -2.55523       -1.10263        1.24692
+O          2.31246       -1.07678        1.25905
+O          1.19301        1.54355        1.25160
+O         -0.06142       -1.01265        1.24978
+O         -1.44165        1.52155        1.24863
+H          2.35747       -0.84067       -0.78976
+H          3.29270        0.34926        0.11627
+H          1.14376        1.31370       -0.78935
+H         -0.11130       -0.78280       -0.79210
+H         -1.38118        1.29170       -0.79385
+H         -3.53034        0.34726        0.10981
+H         -2.65547       -0.85267       -0.79503
+H         -3.33773       -1.64994        1.23812
+H          3.09376       -1.62409        1.25047
+H          1.97431        2.09086        1.24300
+H          0.72988       -1.56996        1.24119
+H         -0.66035        2.07886        1.23983
+H         -2.60994       -0.35282        2.04236`
+            },
+            co2: {
+                name: 'Carbon Dioxide',
+                formula: 'CO2',
+                xyz: `3
+Carbon Dioxide molecule
+C          0.00000        0.00000        0.00000
+O          0.00000        0.00000        1.16000
+O          0.00000        0.00000       -1.16000`
+            },
+            ammonia: {
+                name: 'Ammonia',
+                formula: 'NH3',
+                xyz: `4
+Ammonia molecule
+N          0.00000        0.00000        0.11634
+H          0.00000        0.93897       -0.27147
+H          0.81321       -0.46949       -0.27147
+H         -0.81321       -0.46949       -0.27147`
+            }
+        };
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            initializeSketcher();
+            initialize3DViewer();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active state from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-primary', 'text-primary');
+                btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+
+            // Show selected tab content
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+
+            // Add active state to selected tab
+            const activeTab = document.getElementById('tab-' + tabName);
+            activeTab.classList.add('border-primary', 'text-primary');
+            activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+        }
+
+        // Initialize ChemDoodle Sketcher
+        function initializeSketcher() {
+            const container = document.getElementById('chemdoodle-sketcher');
+            const width = container.offsetWidth;
+            sketcher = new ChemDoodle.SketcherCanvas('chemdoodle-sketcher', width, 400, {
+                useServices: false,
+                oneMolecule: false
+            });
+            sketcher.styles.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--tw-bg-opacity') ? '#1f2937' : '#ffffff';
+        }
+
+        // Initialize 3Dmol Viewer
+        function initialize3DViewer() {
+            const element = document.getElementById('3dmol-viewer');
+            viewer = $3Dmol.createViewer(element, {
+                backgroundColor: 'white'
+            });
+
+            // Load default molecule (water)
+            loadMolecule('water');
+        }
+
+        // Clear sketcher
+        function clearSketcher() {
+            sketcher.clear();
+            document.getElementById('sketcher-info').classList.add('hidden');
+        }
+
+        // Load from sketcher to viewer
+        function loadToViewer() {
+            const mol = sketcher.getMolecule();
+
+            if (mol.atoms.length === 0) {
+                showCustomAlert('Please draw a molecule first!');
+                return;
+            }
+
+            // Get molecular formula
+            const formula = new ChemDoodle.informatics.HydrogenCounter().getFormula(sketcher.getMolecule());
+
+            // Calculate molecular weight
+            let weight = 0;
+            const atomCounts = {};
+            mol.atoms.forEach(atom => {
+                const symbol = atom.label || 'C';
+                atomCounts[symbol] = (atomCounts[symbol] || 0) + 1;
+                weight += atomicMasses[symbol] || 12;
+            });
+
+            // Display info
+            document.getElementById('sketcher-formula').textContent = formula;
+            document.getElementById('sketcher-weight').textContent = weight.toFixed(3) + ' g/mol';
+            document.getElementById('sketcher-info').classList.remove('hidden');
+
+            // Switch to viewer tab
+            switchTab('viewer');
+
+            // Generate XYZ from sketcher molecule (simplified 2D to 3D)
+            let xyz = `${mol.atoms.length}\nFrom sketcher\n`;
+            mol.atoms.forEach(atom => {
+                const symbol = atom.label || 'C';
+                xyz += `${symbol}          ${atom.x.toFixed(5)}        ${atom.y.toFixed(5)}        0.00000\n`;
+            });
+
+            viewer.clear();
+            viewer.addModel(xyz, 'xyz');
+            viewer.setStyle({}, {stick: {radius: 0.15}, sphere: {scale: 0.25}});
+            viewer.zoomTo();
+            viewer.render();
+        }
+
+        // Load molecule to 3D viewer
+        function loadMolecule(moleculeName) {
+            if (!molecules[moleculeName]) return;
+
+            const mol = molecules[moleculeName];
+            viewer.clear();
+            viewer.addModel(mol.xyz, 'xyz');
+            viewer.setStyle({}, {stick: {radius: 0.15}, sphere: {scale: 0.25}});
+            viewer.zoomTo();
+            viewer.render();
+
+            currentMolecule = moleculeName;
+        }
+
+        // Change 3D viewer style
+        function changeStyle(style) {
+            if (!viewer) return;
+
+            viewer.setStyle({}, style === 'stick'
+                ? {stick: {radius: 0.15}}
+                : {stick: {radius: 0.15}, sphere: {scale: 0.25}}
+            );
+            viewer.render();
+        }
+
+        // Load molecule details and switch to viewer
+        function loadMoleculeDetails(moleculeName) {
+            switchTab('viewer');
+            loadMolecule(moleculeName);
+        }
+
+        // Calculator switching
+        function switchCalculator() {
+            const calcType = document.getElementById('calc-type').value;
+
+            // Hide all calculators
+            document.querySelectorAll('.calculator-content').forEach(calc => {
+                calc.classList.add('hidden');
+            });
+
+            // Show selected calculator
+            document.getElementById('calc-' + calcType).classList.remove('hidden');
+        }
+
+        // Parse chemical formula and return element counts
+        function parseFormula(formula) {
+            const elements = {};
+            const regex = /([A-Z][a-z]?)(\d*)/g;
+            let match;
+
+            while ((match = regex.exec(formula)) !== null) {
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2]) : 1;
+                elements[element] = (elements[element] || 0) + count;
+            }
+
+            return elements;
+        }
+
+        // Calculate molar mass
+        function calculateMolarMass() {
+            const formula = document.getElementById('mm-formula').value.trim();
+
+            if (!formula) {
+                showCustomAlert('Please enter a chemical formula');
+                return;
+            }
+
+            try {
+                const elements = parseFormula(formula);
+                let molarMass = 0;
+
+                for (const [element, count] of Object.entries(elements)) {
+                    if (!atomicMasses[element]) {
+                        showCustomAlert(`Unknown element: ${element}`);
+                        return;
+                    }
+                    molarMass += atomicMasses[element] * count;
+                }
+
+                document.getElementById('mm-value').textContent = molarMass.toFixed(3) + ' g/mol';
+                document.getElementById('mm-result').classList.remove('hidden');
+            } catch (error) {
+                showCustomAlert('Error parsing formula. Please check your input.');
+            }
+        }
+
+        // Calculate molarity
+        function calculateMolarity() {
+            const moles = parseFloat(document.getElementById('mol-moles').value);
+            const volume = parseFloat(document.getElementById('mol-volume').value);
+
+            if (isNaN(moles) || isNaN(volume)) {
+                showCustomAlert('Please enter valid numbers');
+                return;
+            }
+
+            if (volume === 0) {
+                showCustomAlert('Volume cannot be zero');
+                return;
+            }
+
+            const molarity = math.evaluate(`${moles} / ${volume}`);
+            document.getElementById('mol-value').textContent = molarity.toFixed(4) + ' M';
+            document.getElementById('mol-result').classList.remove('hidden');
+        }
+
+        // Calculate gas law
+        function calculateGasLaw() {
+            const pressure = parseFloat(document.getElementById('gas-pressure').value);
+            const volume = parseFloat(document.getElementById('gas-volume').value);
+            const temp = parseFloat(document.getElementById('gas-temp').value);
+
+            if (isNaN(pressure) || isNaN(volume) || isNaN(temp)) {
+                showCustomAlert('Please enter valid numbers');
+                return;
+            }
+
+            if (temp === 0) {
+                showCustomAlert('Temperature cannot be zero');
+                return;
+            }
+
+            const R = 0.08206; // L·atm/(mol·K)
+            const moles = math.evaluate(`(${pressure} * ${volume}) / (${R} * ${temp})`);
+
+            document.getElementById('gas-value').textContent = moles.toFixed(4) + ' mol';
+            document.getElementById('gas-result').classList.remove('hidden');
+        }
+
+        // Calculate stoichiometry
+        function calculateStoichiometry() {
+            const moles = parseFloat(document.getElementById('stoich-moles').value);
+            const reactantCoef = parseFloat(document.getElementById('stoich-reactant-coef').value);
+            const productCoef = parseFloat(document.getElementById('stoich-product-coef').value);
+
+            if (isNaN(moles) || isNaN(reactantCoef) || isNaN(productCoef)) {
+                showCustomAlert('Please enter valid numbers');
+                return;
+            }
+
+            if (reactantCoef === 0) {
+                showCustomAlert('Reactant coefficient cannot be zero');
+                return;
+            }
+
+            const productMoles = math.evaluate(`${moles} * ${productCoef} / ${reactantCoef}`);
+
+            document.getElementById('stoich-value').textContent = productMoles.toFixed(4) + ' mol';
+            document.getElementById('stoich-result').classList.remove('hidden');
+        }
+
+        // Calculate percent composition
+        function calculatePercentComp() {
+            const formula = document.getElementById('pc-formula').value.trim();
+
+            if (!formula) {
+                showCustomAlert('Please enter a chemical formula');
+                return;
+            }
+
+            try {
+                const elements = parseFormula(formula);
+                let totalMass = 0;
+                const elementMasses = {};
+
+                for (const [element, count] of Object.entries(elements)) {
+                    if (!atomicMasses[element]) {
+                        showCustomAlert(`Unknown element: ${element}`);
+                        return;
+                    }
+                    const mass = atomicMasses[element] * count;
+                    elementMasses[element] = mass;
+                    totalMass += mass;
+                }
+
+                const labels = [];
+                const percentages = [];
+                const colors = ['#5D5CDE', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'];
+
+                let colorIndex = 0;
+                for (const [element, mass] of Object.entries(elementMasses)) {
+                    labels.push(element);
+                    percentages.push((mass / totalMass * 100).toFixed(2));
+                }
+
+                // Show result and create chart
+                document.getElementById('pc-result').classList.remove('hidden');
+
+                const ctx = document.getElementById('pc-chart');
+
+                // Destroy existing chart if any
+                if (window.percentCompChart) {
+                    window.percentCompChart.destroy();
+                }
+
+                window.percentCompChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels.map((label, i) => `${label} (${percentages[i]}%)`),
+                        datasets: [{
+                            data: percentages,
+                            backgroundColor: colors.slice(0, labels.length)
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
+                                    font: {
+                                        size: 14
+                                    }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: `Percent Composition of ${formula}`,
+                                color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                showCustomAlert('Error parsing formula. Please check your input.');
+            }
+        }
+
+        // Custom alert function (since alert() is not supported)
+        function showCustomAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="w-full px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg font-medium">
+                        OK
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+    </script>
+</body>
+</html>
