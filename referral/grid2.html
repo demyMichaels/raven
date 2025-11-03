@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Academy - Interactive Learning Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .grid-cell {
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.25rem;
+            min-height: 80px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .grid-cell:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 12px rgba(93, 92, 222, 0.3);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(93, 92, 222, 0.3) 1px, rgba(93, 92, 222, 0.3) 2px),
+                repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(93, 92, 222, 0.3) 1px, rgba(93, 92, 222, 0.3) 2px);
+            background-size: 100% calc(100% / var(--rows, 1)), calc(100% / var(--cols, 1)) 100%;
+        }
+
+        .code-editor {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 2px solid #333;
+        }
+
+        .live-preview {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            min-height: 200px;
+            border: 2px dashed #5D5CDE;
+        }
+
+        .dark .live-preview {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-5deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+        }
+
+        .celebrate {
+            animation: celebrate 0.5s ease-in-out;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .has-tooltip:hover .tooltip {
+            opacity: 1;
+        }
+
+        .lesson-section {
+            border-left: 4px solid #5D5CDE;
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .dark .lesson-section {
+            background: #1a202c;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .grid-visualizer {
+            position: relative;
+            border: 3px solid #5D5CDE;
+            border-radius: 8px;
+            padding: 1rem;
+            background: rgba(93, 92, 222, 0.05);
+        }
+
+        .grid-line {
+            position: absolute;
+            background: rgba(93, 92, 222, 0.3);
+            z-index: 10;
+        }
+
+        .grid-line.horizontal {
+            height: 2px;
+            width: 100%;
+            left: 0;
+        }
+
+        .grid-line.vertical {
+            width: 2px;
+            height: 100%;
+            top: 0;
+        }
+
+        .interactive-playground {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .dark .interactive-playground {
+            background: #2d3748;
+        }
+
+        .control-panel {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+        }
+
+        .dark .control-panel {
+            background: #1a202c;
+            border-color: #4a5568;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .badge.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .badge.warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .badge.info {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .split-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .split-view {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            width: 30px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .step-dot.completed {
+            background: #48bb78;
+        }
+
+        .quiz-option {
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .dark .quiz-option {
+            background: #2d3748;
+            border-color: #4a5568;
+        }
+
+        .quiz-option:hover {
+            border-color: #5D5CDE;
+            transform: translateX(4px);
+        }
+
+        .quiz-option.correct {
+            border-color: #48bb78;
+            background: #f0fff4;
+        }
+
+        .dark .quiz-option.correct {
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .quiz-option.incorrect {
+            border-color: #f56565;
+            background: #fff5f5;
+        }
+
+        .dark .quiz-option.incorrect {
+            background: rgba(245, 101, 101, 0.1);
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- Hero Header -->
+    <header class="relative overflow-hidden bg-gradient-to-r from-primary via-purple-600 to-pink-600 text-white py-20 px-4">
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-10 left-10 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-xl animate-pulse"></div>
+            <div class="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-xl animate-pulse" style="animation-delay: 1s;"></div>
+        </div>
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="text-center">
+                <div class="inline-block mb-4 px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm">
+                    <span class="text-sm font-semibold">🎓 Interactive Learning Platform</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight">
+                    CSS Grid Academy
+                </h1>
+                <p class="text-xl md:text-2xl font-light mb-8 max-w-3xl mx-auto">
+                    Master CSS Grid through interactive lessons, live coding, and hands-on challenges
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="scrollToSection('tutorial')" class="bg-white text-primary px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+                        🚀 Start Learning
+                    </button>
+                    <button id="themeToggle" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/30 transition-all border-2 border-white/50">
+                        🌙 Toggle Theme
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Tracker -->
+    <div class="sticky top-0 z-50 bg-white dark:bg-gray-800 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🎯</span>
+                    <div>
+                        <p class="font-bold text-sm">Your Progress</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400"><span id="progressText">0</span>% Complete</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">⭐</span>
+                    <span id="scoreDisplay" class="font-bold text-xl">0</span>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+
+        <!-- Learning Path Overview -->
+        <section class="mb-16 animate-slide-in">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🗺️</span>
+                    Your Learning Journey
+                </h2>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl">
+                        <div class="text-4xl mb-3">📚</div>
+                        <h3 class="font-bold text-lg mb-2">Learn</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Interactive tutorials & visual explanations</p>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl">
+                        <div class="text-4xl mb-3">💻</div>
+                        <h3 class="font-bold text-lg mb-2">Code</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Live code editors with instant preview</p>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 rounded-xl">
+                        <div class="text-4xl mb-3">🎮</div>
+                        <h3 class="font-bold text-lg mb-2">Practice</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Challenges & quizzes to test skills</p>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-xl">
+                        <div class="text-4xl mb-3">🏆</div>
+                        <h3 class="font-bold text-lg mb-2">Master</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Build real-world layouts</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Tutorial Section -->
+        <section id="tutorial" class="mb-16">
+            <div class="lesson-section">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-3xl font-bold flex items-center gap-3">
+                        <span class="text-4xl">📖</span>
+                        Lesson 1: Grid Fundamentals
+                    </h2>
+                    <span class="badge info">Beginner</span>
+                </div>
+
+                <!-- Step Indicators -->
+                <div class="step-indicator mb-6">
+                    <div class="step-dot active" data-step="1"></div>
+                    <div class="step-dot" data-step="2"></div>
+                    <div class="step-dot" data-step="3"></div>
+                    <div class="step-dot" data-step="4"></div>
+                    <div class="step-dot" data-step="5"></div>
+                </div>
+
+                <div id="tutorialContent">
+                    <!-- Step 1 -->
+                    <div class="tutorial-step active" data-step="1">
+                        <h3 class="text-2xl font-bold mb-4 text-primary">🎯 What is CSS Grid?</h3>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-6 rounded-r-lg mb-6">
+                            <p class="text-lg mb-4">CSS Grid is a powerful layout system that lets you create complex two-dimensional layouts using rows and columns.</p>
+                            <p class="text-lg font-semibold">Think of it like a table, but much more flexible! 📊</p>
+                        </div>
+
+                        <div class="split-view">
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">📝 The Code</h4>
+                                <div class="code-editor">
+&lt;div class="grid grid-cols-3 gap-4"&gt;
+  &lt;div&gt;Item 1&lt;/div&gt;
+  &lt;div&gt;Item 2&lt;/div&gt;
+  &lt;div&gt;Item 3&lt;/div&gt;
+&lt;/div&gt;
+                                </div>
+                                <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                    <p class="text-sm"><strong>💡 Key Concepts:</strong></p>
+                                    <ul class="text-sm mt-2 space-y-1 list-disc list-inside">
+                                        <li><code class="bg-white dark:bg-gray-700 px-2 py-1 rounded">grid</code> creates a grid container</li>
+                                        <li><code class="bg-white dark:bg-gray-700 px-2 py-1 rounded">grid-cols-3</code> makes 3 columns</li>
+                                        <li><code class="bg-white dark:bg-gray-700 px-2 py-1 rounded">gap-4</code> adds space between items</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">👁️ Live Preview</h4>
+                                <div class="live-preview">
+                                    <div class="grid grid-cols-3 gap-4">
+                                        <div class="grid-cell" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">1</div>
+                                        <div class="grid-cell" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">2</div>
+                                        <div class="grid-cell" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">3</div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">👆 Notice how items are arranged in 3 equal columns!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="tutorial-step hidden" data-step="2">
+                        <h3 class="text-2xl font-bold mb-4 text-primary">🎨 Controlling Columns</h3>
+                        <div class="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 p-6 rounded-r-lg mb-6">
+                            <p class="text-lg">You can create grids with different numbers of columns. Let's experiment!</p>
+                        </div>
+
+                        <div class="interactive-playground">
+                            <div class="control-panel mb-6">
+                                <label class="block font-bold mb-3">🎛️ Number of Columns: <span id="colsDisplay2">3</span></label>
+                                <input type="range" id="colsSlider2" min="1" max="6" value="3" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    <span>1</span>
+                                    <span>2</span>
+                                    <span>3</span>
+                                    <span>4</span>
+                                    <span>5</span>
+                                    <span>6</span>
+                                </div>
+                            </div>
+
+                            <div class="live-preview" id="preview2">
+                                <div id="dynamicGrid2" class="grid grid-cols-3 gap-4">
+                                    <div class="grid-cell">1</div>
+                                    <div class="grid-cell">2</div>
+                                    <div class="grid-cell">3</div>
+                                    <div class="grid-cell">4</div>
+                                    <div class="grid-cell">5</div>
+                                    <div class="grid-cell">6</div>
+                                </div>
+                            </div>
+
+                            <div class="code-editor mt-4" id="code2">
+&lt;div class="grid grid-cols-3 gap-4"&gt;
+  &lt;!-- 6 items --&gt;
+&lt;/div&gt;
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="tutorial-step hidden" data-step="3">
+                        <h3 class="text-2xl font-bold mb-4 text-primary">📏 Understanding Gaps</h3>
+                        <div class="bg-pink-50 dark:bg-pink-900/20 border-l-4 border-pink-500 p-6 rounded-r-lg mb-6">
+                            <p class="text-lg">Gaps control the space between grid items. Let's see the difference!</p>
+                        </div>
+
+                        <div class="interactive-playground">
+                            <div class="control-panel mb-6">
+                                <label class="block font-bold mb-3">📐 Gap Size: <span id="gapDisplay3">1rem</span></label>
+                                <input type="range" id="gapSlider3" min="0" max="8" value="4" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    <span>0</span>
+                                    <span>1rem</span>
+                                    <span>2rem</span>
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold mb-2">No Gap (gap-0)</h4>
+                                    <div class="live-preview">
+                                        <div class="grid grid-cols-3 gap-0">
+                                            <div class="grid-cell">1</div>
+                                            <div class="grid-cell">2</div>
+                                            <div class="grid-cell">3</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold mb-2">Your Gap Setting</h4>
+                                    <div class="live-preview" id="preview3">
+                                        <div id="dynamicGrid3" class="grid grid-cols-3 gap-4">
+                                            <div class="grid-cell">1</div>
+                                            <div class="grid-cell">2</div>
+                                            <div class="grid-cell">3</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="tutorial-step hidden" data-step="4">
+                        <h3 class="text-2xl font-bold mb-4 text-primary">⭐ Spanning Columns</h3>
+                        <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-6 rounded-r-lg mb-6">
+                            <p class="text-lg mb-3">Make items span across multiple columns using <code class="bg-white dark:bg-gray-700 px-2 py-1 rounded">col-span-{n}</code>!</p>
+                            <p class="text-lg font-semibold">This creates interesting asymmetric layouts! 🎨</p>
+                        </div>
+
+                        <div class="split-view">
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">The Magic Code ✨</h4>
+                                <div class="code-editor">
+&lt;div class="grid grid-cols-4 gap-4"&gt;
+  &lt;div class="col-span-2"&gt;
+    Spans 2 columns
+  &lt;/div&gt;
+  &lt;div&gt;Normal&lt;/div&gt;
+  &lt;div&gt;Normal&lt;/div&gt;
+  &lt;div class="col-span-3"&gt;
+    Spans 3 columns
+  &lt;/div&gt;
+  &lt;div&gt;Normal&lt;/div&gt;
+&lt;/div&gt;
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="font-bold text-lg mb-3">Result 🎉</h4>
+                                <div class="live-preview">
+                                    <div class="grid grid-cols-4 gap-4">
+                                        <div class="grid-cell col-span-2" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">Spans 2</div>
+                                        <div class="grid-cell">1</div>
+                                        <div class="grid-cell">2</div>
+                                        <div class="grid-cell col-span-3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">Spans 3</div>
+                                        <div class="grid-cell">3</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl">
+                            <p class="font-bold text-lg mb-3">🎮 Interactive Challenge: Try It Yourself!</p>
+                            <div class="control-panel mb-4">
+                                <label class="block font-semibold mb-2">Make the first item span: <span id="spanDisplay4">1</span> columns</label>
+                                <input type="range" id="spanSlider4" min="1" max="4" value="1" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                            </div>
+                            <div class="live-preview" id="preview4">
+                                <div class="grid grid-cols-4 gap-4">
+                                    <div id="spanItem4" class="grid-cell col-span-1" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">Watch me grow!</div>
+                                    <div class="grid-cell">2</div>
+                                    <div class="grid-cell">3</div>
+                                    <div class="grid-cell">4</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="tutorial-step hidden" data-step="5">
+                        <h3 class="text-2xl font-bold mb-4 text-primary">🎓 Quick Knowledge Check!</h3>
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500 p-6 rounded-r-lg mb-6">
+                            <p class="text-lg">Let's test what you've learned! Answer these questions:</p>
+                        </div>
+
+                        <div id="quiz1" class="space-y-6">
+                            <div class="quiz-question">
+                                <p class="font-bold text-lg mb-4">1. Which class creates a grid container in Tailwind CSS?</p>
+                                <div class="space-y-3">
+                                    <div class="quiz-option" data-answer="correct" data-question="1">
+                                        <span class="font-semibold">A)</span> grid
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="1">
+                                        <span class="font-semibold">B)</span> display-grid
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="1">
+                                        <span class="font-semibold">C)</span> grid-container
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="1">
+                                        <span class="font-semibold">D)</span> flex-grid
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="quiz-question">
+                                <p class="font-bold text-lg mb-4">2. To make an item span across 3 columns, you use:</p>
+                                <div class="space-y-3">
+                                    <div class="quiz-option" data-answer="wrong" data-question="2">
+                                        <span class="font-semibold">A)</span> span-3
+                                    </div>
+                                    <div class="quiz-option" data-answer="correct" data-question="2">
+                                        <span class="font-semibold">B)</span> col-span-3
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="2">
+                                        <span class="font-semibold">C)</span> column-span-3
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="2">
+                                        <span class="font-semibold">D)</span> grid-span-3
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="quiz-question">
+                                <p class="font-bold text-lg mb-4">3. What does the <code class="bg-white dark:bg-gray-700 px-2 py-1 rounded">gap-4</code> class do?</p>
+                                <div class="space-y-3">
+                                    <div class="quiz-option" data-answer="wrong" data-question="3">
+                                        <span class="font-semibold">A)</span> Creates 4 columns
+                                    </div>
+                                    <div class="quiz-option" data-answer="correct" data-question="3">
+                                        <span class="font-semibold">B)</span> Adds space between grid items
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="3">
+                                        <span class="font-semibold">C)</span> Makes items 4px wide
+                                    </div>
+                                    <div class="quiz-option" data-answer="wrong" data-question="3">
+                                        <span class="font-semibold">D)</span> Creates 4 rows
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="quizResult1" class="hidden mt-6"></div>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between items-center mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700">
+                    <button id="prevBtn" class="px-6 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50" disabled>
+                        ← Previous
+                    </button>
+                    <div id="stepInfo" class="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                        Step <span id="currentStep">1</span> of 5
+                    </div>
+                    <button id="nextBtn" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 transition-all">
+                        Next →
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Challenge Section -->
+        <section id="challenges" class="mb-16">
+            <div class="challenge-card">
+                <h2 class="text-3xl font-bold mb-4 relative z-10 flex items-center gap-3">
+                    <span class="text-4xl">🎮</span>
+                    Coding Challenge: Build a Photo Gallery
+                </h2>
+                <p class="text-lg mb-6 relative z-10">Create a responsive photo gallery using CSS Grid! Try to match the target layout below.</p>
+                <span class="badge success relative z-10">Hands-On Practice</span>
+            </div>
+
+            <div class="mt-6 lesson-section">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>🎯</span> Target Layout
+                        </h3>
+                        <div class="live-preview">
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="col-span-2 row-span-2 bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-2xl min-h-[200px]">
+                                    Featured
+                                </div>
+                                <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">2</div>
+                                <div class="bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">3</div>
+                                <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">4</div>
+                                <div class="bg-gradient-to-br from-red-400 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">5</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p class="font-semibold mb-2">💡 Hints:</p>
+                            <ul class="text-sm space-y-1 list-disc list-inside">
+                                <li>Use <code class="bg-white dark:bg-gray-700 px-1 rounded">grid-cols-4</code> for 4 columns</li>
+                                <li>First item should span 2 columns AND 2 rows</li>
+                                <li>Use <code class="bg-white dark:bg-gray-700 px-1 rounded">col-span-2</code> and <code class="bg-white dark:bg-gray-700 px-1 rounded">row-span-2</code></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>💻</span> Your Code
+                        </h3>
+                        <div class="mb-4">
+                            <label class="block font-semibold mb-2">Grid Container Classes:</label>
+                            <input type="text" id="challengeInput1" placeholder="e.g., grid grid-cols-4 gap-3" class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:border-primary focus:outline-none">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block font-semibold mb-2">First Item Classes (Featured):</label>
+                            <input type="text" id="challengeInput2" placeholder="e.g., col-span-2 row-span-2" class="w-full px-4 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:border-primary focus:outline-none">
+                        </div>
+
+                        <h4 class="font-semibold mb-2">Preview:</h4>
+                        <div class="live-preview mb-4">
+                            <div id="challengePreview" class="grid grid-cols-1 gap-4">
+                                <div class="bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-xl min-h-[100px]">Featured</div>
+                                <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">2</div>
+                                <div class="bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">3</div>
+                                <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">4</div>
+                                <div class="bg-gradient-to-br from-red-400 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">5</div>
+                            </div>
+                        </div>
+
+                        <button id="checkChallenge" class="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-4 rounded-lg font-bold text-lg hover:from-green-600 hover:to-teal-600 transition-all transform hover:scale-105">
+                            ✅ Check My Solution
+                        </button>
+                        <div id="challengeFeedback" class="mt-4 hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Layouts Showcase -->
+        <section id="layouts" class="mb-16">
+            <div class="lesson-section">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🏗️</span>
+                    Real-World Layout Examples
+                </h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Click on each layout to see the code and interact with it!</p>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Dashboard Layout -->
+                    <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showLayoutModal('dashboard')">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>📊</span> Dashboard Layout
+                        </h3>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                            <div class="grid grid-cols-4 auto-rows-[60px] gap-2">
+                                <div class="col-span-2 row-span-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">Main</div>
+                                <div class="bg-gradient-to-br from-green-400 to-green-600 rounded flex items-center justify-center text-white text-xs">Stats</div>
+                                <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded flex items-center justify-center text-white text-xs">Stats</div>
+                                <div class="bg-gradient-to-br from-orange-400 to-orange-600 rounded flex items-center justify-center text-white text-xs">Stats</div>
+                                <div class="bg-gradient-to-br from-pink-400 to-pink-600 rounded flex items-center justify-center text-white text-xs">Stats</div>
+                                <div class="col-span-4 bg-gradient-to-r from-teal-400 to-cyan-600 rounded flex items-center justify-center text-white text-xs">Activity</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">Perfect for admin panels and analytics dashboards</p>
+                    </div>
+
+                    <!-- Magazine Layout -->
+                    <div class="bg-gradient-to-br from-pink-50 to-red-50 dark:from-pink-900/20 dark:to-red-900/20 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showLayoutModal('magazine')">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>📰</span> Magazine Layout
+                        </h3>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                            <div class="grid grid-cols-6 gap-2">
+                                <div class="col-span-4 row-span-2 bg-gradient-to-br from-purple-400 to-indigo-600 rounded flex items-center justify-center text-white text-xs font-bold min-h-[100px]">Featured</div>
+                                <div class="col-span-2 bg-gradient-to-br from-pink-400 to-rose-600 rounded flex items-center justify-center text-white text-xs min-h-[48px]">Story</div>
+                                <div class="col-span-2 bg-gradient-to-br from-cyan-400 to-blue-600 rounded flex items-center justify-center text-white text-xs min-h-[48px]">Story</div>
+                                <div class="col-span-2 bg-gradient-to-br from-green-400 to-teal-600 rounded flex items-center justify-center text-white text-xs min-h-[48px]">Story</div>
+                                <div class="col-span-2 bg-gradient-to-br from-yellow-400 to-orange-600 rounded flex items-center justify-center text-white text-xs min-h-[48px]">Story</div>
+                                <div class="col-span-2 bg-gradient-to-br from-red-400 to-pink-600 rounded flex items-center justify-center text-white text-xs min-h-[48px]">Story</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">Editorial-style asymmetric content layouts</p>
+                    </div>
+
+                    <!-- Holy Grail Layout -->
+                    <div class="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showLayoutModal('holygrail')">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>🏛️</span> Holy Grail Layout
+                        </h3>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                            <div class="grid grid-rows-[auto_1fr_auto] gap-2 min-h-[150px]">
+                                <div class="bg-gradient-to-r from-purple-400 to-pink-600 rounded flex items-center justify-center text-white text-xs font-bold h-8">Header</div>
+                                <div class="grid grid-cols-[80px_1fr] gap-2">
+                                    <div class="bg-gradient-to-b from-blue-400 to-cyan-600 rounded flex items-center justify-center text-white text-xs">Side</div>
+                                    <div class="bg-gradient-to-br from-green-400 to-teal-600 rounded flex items-center justify-center text-white text-xs">Main</div>
+                                </div>
+                                <div class="bg-gradient-to-r from-orange-400 to-red-600 rounded flex items-center justify-center text-white text-xs font-bold h-8">Footer</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">Classic web layout with header, sidebar, main, footer</p>
+                    </div>
+
+                    <!-- Card Gallery -->
+                    <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-6 cursor-pointer hover:shadow-xl transition-all" onclick="showLayoutModal('gallery')">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span>🖼️</span> Responsive Gallery
+                        </h3>
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="bg-gradient-to-br from-pink-400 to-purple-600 rounded aspect-square flex items-center justify-center text-white text-xs">1</div>
+                                <div class="bg-gradient-to-br from-blue-400 to-cyan-600 rounded aspect-square flex items-center justify-center text-white text-xs">2</div>
+                                <div class="bg-gradient-to-br from-green-400 to-teal-600 rounded aspect-square flex items-center justify-center text-white text-xs">3</div>
+                                <div class="bg-gradient-to-br from-yellow-400 to-orange-600 rounded aspect-square flex items-center justify-center text-white text-xs">4</div>
+                                <div class="bg-gradient-to-br from-red-400 to-pink-600 rounded aspect-square flex items-center justify-center text-white text-xs">5</div>
+                                <div class="bg-gradient-to-br from-indigo-400 to-purple-600 rounded aspect-square flex items-center justify-center text-white text-xs">6</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-3">Auto-responsive photo and product galleries</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Visual Grid Playground -->
+        <section id="playground" class="mb-16">
+            <div class="lesson-section">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🎨</span>
+                    Visual Grid Playground
+                </h2>
+                <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Experiment with grid properties and see the grid lines in action!</p>
+
+                <div class="grid lg:grid-cols-[300px_1fr] gap-6">
+                    <!-- Control Panel -->
+                    <div class="control-panel space-y-6">
+                        <div>
+                            <label class="block font-bold mb-2 flex items-center gap-2">
+                                <span>📊</span> Columns: <span id="playgroundCols">3</span>
+                            </label>
+                            <input type="range" id="playgroundColsSlider" min="1" max="6" value="3" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-2 flex items-center gap-2">
+                                <span>📏</span> Rows: <span id="playgroundRows">3</span>
+                            </label>
+                            <input type="range" id="playgroundRowsSlider" min="1" max="6" value="3" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-2 flex items-center gap-2">
+                                <span>📐</span> Gap: <span id="playgroundGap">1rem</span>
+                            </label>
+                            <input type="range" id="playgroundGapSlider" min="0" max="8" value="4" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-2 flex items-center gap-2">
+                                <span>🔢</span> Items: <span id="playgroundItems">9</span>
+                            </label>
+                            <input type="range" id="playgroundItemsSlider" min="1" max="20" value="9" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700">
+                        </div>
+                        <div class="pt-4 border-t border-gray-300 dark:border-gray-600">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="showGridLines" checked class="w-5 h-5 text-primary">
+                                <span class="font-semibold">Show Grid Lines</span>
+                            </label>
+                        </div>
+                        <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-lg">
+                            <p class="text-sm font-semibold mb-2">💡 Generated Code:</p>
+                            <code id="playgroundCode" class="text-xs block bg-white dark:bg-gray-800 p-2 rounded">grid grid-cols-3 gap-4</code>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div>
+                        <div class="relative" id="playgroundContainer">
+                            <div id="playgroundGrid" class="grid grid-cols-3 grid-rows-3 gap-4 p-6 bg-white dark:bg-gray-800 rounded-xl relative" style="min-height: 400px;">
+                                <!-- Grid lines will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Achievement System -->
+        <section id="achievements" class="mb-16">
+            <div class="lesson-section">
+                <h2 class="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <span class="text-4xl">🏆</span>
+                    Your Achievements
+                </h2>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div id="achievement1" class="achievement-card opacity-50 bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/30 dark:to-yellow-800/30 p-6 rounded-xl text-center">
+                        <div class="text-5xl mb-3">🌟</div>
+                        <h3 class="font-bold text-lg mb-2">First Steps</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete the tutorial</p>
+                    </div>
+                    <div id="achievement2" class="achievement-card opacity-50 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 p-6 rounded-xl text-center">
+                        <div class="text-5xl mb-3">💻</div>
+                        <h3 class="font-bold text-lg mb-2">Code Master</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Complete a challenge</p>
+                    </div>
+                    <div id="achievement3" class="achievement-card opacity-50 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 p-6 rounded-xl text-center">
+                        <div class="text-5xl mb-3">🎓</div>
+                        <h3 class="font-bold text-lg mb-2">Grid Expert</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Ace all quizzes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Layout Modal -->
+    <div id="layoutModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="sticky top-0 bg-gradient-to-r from-primary to-purple-600 text-white p-6 rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h3 id="modalTitle" class="text-2xl font-bold"></h3>
+                    <button onclick="closeLayoutModal()" class="text-white hover:bg-white/20 rounded-full p-2 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="modalContent" class="p-6"></div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-gray-800 to-gray-900 dark:from-black dark:to-gray-900 text-white py-12 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <h3 class="text-2xl font-bold mb-4">🎉 Keep Learning!</h3>
+            <p class="text-lg mb-6 text-gray-300">Master CSS Grid one step at a time</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="#tutorial" class="px-6 py-3 bg-primary rounded-full font-semibold hover:bg-primary/90 transition-all">Start Tutorial</a>
+                <a href="#challenges" class="px-6 py-3 bg-white/20 rounded-full font-semibold hover:bg-white/30 transition-all">Try Challenges</a>
+            </div>
+            <p class="text-sm text-gray-400 mt-8">Built with ❤️ for learners everywhere</p>
+        </div>
+    </footer>
+
+    <script>
+        // State Management
+        let currentStep = 1;
+        let score = 0;
+        let completedLessons = new Set();
+        let quizAnswers = { 1: null, 2: null, 3: null };
+
+        // Dark Mode
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            html.classList.add('dark');
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                html.classList.add('dark');
+            } else {
+                html.classList.remove('dark');
+            }
+        });
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+        });
+
+        // Tutorial Navigation
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const currentStepDisplay = document.getElementById('currentStep');
+
+        function updateTutorialStep(step) {
+            document.querySelectorAll('.tutorial-step').forEach(s => s.classList.add('hidden'));
+            document.querySelector(`[data-step="${step}"]`).classList.remove('hidden');
+
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    dot.classList.add('completed');
+                } else if (index + 1 === step) {
+                    dot.classList.add('active');
+                }
+            });
+
+            currentStepDisplay.textContent = step;
+            prevBtn.disabled = step === 1;
+
+            if (step === 5) {
+                nextBtn.textContent = 'Finish Lesson ✨';
+            } else {
+                nextBtn.textContent = 'Next →';
+            }
+
+            window.scrollTo({ top: document.getElementById('tutorial').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep--;
+                updateTutorialStep(currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < 5) {
+                currentStep++;
+                updateTutorialStep(currentStep);
+                updateProgress(currentStep * 20);
+            } else {
+                completedLessons.add('tutorial');
+                unlockAchievement('achievement1');
+                addScore(100);
+                showCustomAlert('🎉 Congratulations!', 'You completed the tutorial! Ready for some challenges?');
+            }
+        });
+
+        // Step 2: Column Slider
+        const colsSlider2 = document.getElementById('colsSlider2');
+        const colsDisplay2 = document.getElementById('colsDisplay2');
+        const dynamicGrid2 = document.getElementById('dynamicGrid2');
+        const code2 = document.getElementById('code2');
+
+        colsSlider2.addEventListener('input', (e) => {
+            const cols = e.target.value;
+            colsDisplay2.textContent = cols;
+            dynamicGrid2.className = `grid grid-cols-${cols} gap-4`;
+            code2.textContent = `<div class="grid grid-cols-${cols} gap-4">\n  <!-- 6 items -->\n</div>`;
+        });
+
+        // Step 3: Gap Slider
+        const gapSlider3 = document.getElementById('gapSlider3');
+        const gapDisplay3 = document.getElementById('gapDisplay3');
+        const dynamicGrid3 = document.getElementById('dynamicGrid3');
+
+        gapSlider3.addEventListener('input', (e) => {
+            const gap = e.target.value;
+            gapDisplay3.textContent = `${gap * 0.25}rem`;
+            dynamicGrid3.className = `grid grid-cols-3 gap-${gap}`;
+        });
+
+        // Step 4: Span Slider
+        const spanSlider4 = document.getElementById('spanSlider4');
+        const spanDisplay4 = document.getElementById('spanDisplay4');
+        const spanItem4 = document.getElementById('spanItem4');
+
+        spanSlider4.addEventListener('input', (e) => {
+            const span = e.target.value;
+            spanDisplay4.textContent = span;
+            spanItem4.className = `grid-cell col-span-${span}`;
+            spanItem4.style.background = 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+        });
+
+        // Quiz Logic
+        document.querySelectorAll('.quiz-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const question = this.dataset.question;
+                const answer = this.dataset.answer;
+
+                // Remove previous selections for this question
+                document.querySelectorAll(`[data-question="${question}"]`).forEach(opt => {
+                    opt.classList.remove('correct', 'incorrect');
+                });
+
+                // Mark this answer
+                quizAnswers[question] = answer;
+
+                if (answer === 'correct') {
+                    this.classList.add('correct');
+                    addScore(20);
+                    createConfetti(this);
+                } else {
+                    this.classList.add('incorrect');
+                }
+
+                // Check if all questions answered
+                if (Object.values(quizAnswers).every(a => a !== null)) {
+                    const correctCount = Object.values(quizAnswers).filter(a => a === 'correct').length;
+                    const total = Object.keys(quizAnswers).length;
+
+                    setTimeout(() => {
+                        const resultDiv = document.getElementById('quizResult1');
+                        resultDiv.classList.remove('hidden');
+
+                        if (correctCount === total) {
+                            resultDiv.innerHTML = `
+                                <div class="p-6 bg-green-50 dark:bg-green-900/20 border-2 border-green-500 rounded-xl text-center">
+                                    <div class="text-6xl mb-4">🎉</div>
+                                    <h4 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-2">Perfect Score!</h4>
+                                    <p class="text-lg">You got all ${total} questions right! You're a Grid genius! 🌟</p>
+                                </div>
+                            `;
+                            unlockAchievement('achievement3');
+                            addScore(50);
+                        } else {
+                            resultDiv.innerHTML = `
+                                <div class="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 rounded-xl text-center">
+                                    <div class="text-6xl mb-4">📚</div>
+                                    <h4 class="text-2xl font-bold text-yellow-700 dark:text-yellow-400 mb-2">Good Try!</h4>
+                                    <p class="text-lg">You got ${correctCount} out of ${total} questions right. Review the tutorial and try again! 💪</p>
+                                </div>
+                            `;
+                        }
+                    }, 500);
+                }
+            });
+        });
+
+        // Challenge Logic
+        const challengeInput1 = document.getElementById('challengeInput1');
+        const challengeInput2 = document.getElementById('challengeInput2');
+        const challengePreview = document.getElementById('challengePreview');
+        const checkChallenge = document.getElementById('checkChallenge');
+        const challengeFeedback = document.getElementById('challengeFeedback');
+
+        function updateChallengePreview() {
+            const containerClasses = challengeInput1.value.trim();
+            const itemClasses = challengeInput2.value.trim();
+
+            challengePreview.className = containerClasses || 'grid grid-cols-1 gap-4';
+
+            challengePreview.innerHTML = `
+                <div class="${itemClasses} bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-xl min-h-[100px]">Featured</div>
+                <div class="bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">2</div>
+                <div class="bg-gradient-to-br from-green-400 to-teal-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">3</div>
+                <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">4</div>
+                <div class="bg-gradient-to-br from-red-400 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold min-h-[80px]">5</div>
+            `;
+        }
+
+        challengeInput1.addEventListener('input', updateChallengePreview);
+        challengeInput2.addEventListener('input', updateChallengePreview);
+
+        checkChallenge.addEventListener('click', () => {
+            const container = challengeInput1.value.trim().toLowerCase();
+            const item = challengeInput2.value.trim().toLowerCase();
+
+            const correctContainer = container.includes('grid') &&
+                                   container.includes('grid-cols-4') &&
+                                   container.includes('gap');
+            const correctItem = item.includes('col-span-2') && item.includes('row-span-2');
+
+            challengeFeedback.classList.remove('hidden');
+
+            if (correctContainer && correctItem) {
+                challengeFeedback.innerHTML = `
+                    <div class="p-6 bg-green-50 dark:bg-green-900/20 border-2 border-green-500 rounded-xl text-center">
+                        <div class="text-6xl mb-4">🎊</div>
+                        <h4 class="text-2xl font-bold text-green-700 dark:text-green-400 mb-2">Perfect!</h4>
+                        <p class="text-lg">You nailed it! Your layout matches perfectly! 🌟</p>
+                    </div>
+                `;
+                unlockAchievement('achievement2');
+                addScore(150);
+                createConfetti(checkChallenge);
+            } else {
+                let hints = [];
+                if (!correctContainer) hints.push('Check your grid container classes (grid, grid-cols-4, gap-3)');
+                if (!correctItem) hints.push('The featured item needs both col-span-2 and row-span-2');
+
+                challengeFeedback.innerHTML = `
+                    <div class="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-500 rounded-xl">
+                        <div class="text-4xl mb-3">🤔</div>
+                        <h4 class="text-xl font-bold text-yellow-700 dark:text-yellow-400 mb-2">Not quite there yet!</h4>
+                        <p class="mb-3">Here are some hints:</p>
+                        <ul class="text-sm space-y-2 list-disc list-inside">
+                            ${hints.map(h => `<li>${h}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        });
+
+        // Playground
+        const playgroundColsSlider = document.getElementById('playgroundColsSlider');
+        const playgroundRowsSlider = document.getElementById('playgroundRowsSlider');
+        const playgroundGapSlider = document.getElementById('playgroundGapSlider');
+        const playgroundItemsSlider = document.getElementById('playgroundItemsSlider');
+        const showGridLines = document.getElementById('showGridLines');
+        const playgroundGrid = document.getElementById('playgroundGrid');
+        const playgroundCode = document.getElementById('playgroundCode');
+
+        function updatePlayground() {
+            const cols = parseInt(playgroundColsSlider.value);
+            const rows = parseInt(playgroundRowsSlider.value);
+            const gap = parseInt(playgroundGapSlider.value);
+            const items = parseInt(playgroundItemsSlider.value);
+
+            document.getElementById('playgroundCols').textContent = cols;
+            document.getElementById('playgroundRows').textContent = rows;
+            document.getElementById('playgroundGap').textContent = `${gap * 0.25}rem`;
+            document.getElementById('playgroundItems').textContent = items;
+
+            playgroundGrid.className = `grid grid-cols-${cols} grid-rows-${rows} gap-${gap} p-6 bg-white dark:bg-gray-800 rounded-xl relative`;
+            playgroundCode.textContent = `grid grid-cols-${cols} grid-rows-${rows} gap-${gap}`;
+
+            // Clear and rebuild grid
+            playgroundGrid.innerHTML = '';
+
+            // Add grid items
+            for (let i = 1; i <= items; i++) {
+                const item = document.createElement('div');
+                item.className = 'grid-cell';
+                item.textContent = i;
+                const hue = (i * 360 / items);
+                item.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 60%) 0%, hsl(${hue + 30}, 70%, 50%) 100%)`;
+                playgroundGrid.appendChild(item);
+            }
+
+            // Add grid lines if enabled
+            if (showGridLines.checked) {
+                playgroundGrid.style.setProperty('--cols', cols);
+                playgroundGrid.style.setProperty('--rows', rows);
+
+                // Create overlay
+                const overlay = document.createElement('div');
+                overlay.className = 'grid-overlay';
+                playgroundGrid.appendChild(overlay);
+            }
+        }
+
+        playgroundColsSlider.addEventListener('input', updatePlayground);
+        playgroundRowsSlider.addEventListener('input', updatePlayground);
+        playgroundGapSlider.addEventListener('input', updatePlayground);
+        playgroundItemsSlider.addEventListener('input', updatePlayground);
+        showGridLines.addEventListener('change', updatePlayground);
+
+        // Initialize playground
+        updatePlayground();
+
+        // Layout Modal
+        function showLayoutModal(type) {
+            const modal = document.getElementById('layoutModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+
+            const layouts = {
+                dashboard: {
+                    title: '📊 Dashboard Layout',
+                    code: `<div class="grid grid-cols-4 auto-rows-[200px] gap-4">
+  <div class="col-span-2 row-span-2">Main Chart</div>
+  <div>Users</div>
+  <div>Revenue</div>
+  <div>Growth</div>
+  <div>Goals</div>
+  <div class="col-span-4">Activity</div>
+</div>`,
+                    description: 'Perfect for admin panels and analytics dashboards. The main chart takes prominence while smaller stats are easily scannable.'
+                },
+                magazine: {
+                    title: '📰 Magazine Layout',
+                    code: `<div class="grid grid-cols-6 gap-4">
+  <article class="col-span-4 row-span-2">Featured Article</article>
+  <article class="col-span-2">Story 2</article>
+  <article class="col-span-2">Story 3</article>
+  <article class="col-span-2">Story 4</article>
+  <article class="col-span-2">Story 5</article>
+  <article class="col-span-2">Story 6</article>
+</div>`,
+                    description: 'Editorial-style asymmetric layout perfect for blogs and news sites. Creates visual hierarchy through size variation.'
+                },
+                holygrail: {
+                    title: '🏛️ Holy Grail Layout',
+                    code: `<div class="grid grid-rows-[auto_1fr_auto] min-h-screen gap-4">
+  <header>Header</header>
+  <div class="grid grid-cols-[200px_1fr] gap-4">
+    <aside>Sidebar</aside>
+    <main>Main Content</main>
+  </div>
+  <footer>Footer</footer>
+</div>`,
+                    description: 'The classic web layout pattern with header, sidebar, main content, and footer. Works great for web applications.'
+                },
+                gallery: {
+                    title: '🖼️ Responsive Gallery',
+                    code: `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+  <div class="card">Card 1</div>
+  <div class="card">Card 2</div>
+  <div class="card">Card 3</div>
+  <div class="card">Card 4</div>
+</div>`,
+                    description: 'Auto-responsive gallery that adjusts columns based on screen size. No media queries needed!'
+                }
+            };
+
+            const layout = layouts[type];
+            modalTitle.textContent = layout.title;
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <p class="text-lg text-gray-600 dark:text-gray-400">${layout.description}</p>
+
+                    <div>
+                        <h4 class="font-bold text-lg mb-3">💻 Code:</h4>
+                        <div class="code-editor">${layout.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-lg mb-3">👁️ Live Preview:</h4>
+                        <div class="live-preview min-h-[300px]">
+                            ${type === 'dashboard' ? `
+                                <div class="grid grid-cols-4 auto-rows-[100px] gap-3">
+                                    <div class="col-span-2 row-span-2 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold">Main Chart</div>
+                                    <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center text-white font-bold">Users</div>
+                                    <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">Revenue</div>
+                                    <div class="bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold">Growth</div>
+                                    <div class="bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold">Goals</div>
+                                    <div class="col-span-4 bg-gradient-to-r from-teal-400 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold">Recent Activity</div>
+                                </div>
+                            ` : type === 'magazine' ? `
+                                <div class="grid grid-cols-6 gap-3">
+                                    <div class="col-span-4 row-span-2 bg-gradient-to-br from-purple-400 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[200px]">Featured Article</div>
+                                    <div class="col-span-2 bg-gradient-to-br from-pink-400 to-rose-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">Story 2</div>
+                                    <div class="col-span-2 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">Story 3</div>
+                                    <div class="col-span-2 bg-gradient-to-br from-green-400 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">Story 4</div>
+                                    <div class="col-span-2 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">Story 5</div>
+                                    <div class="col-span-2 bg-gradient-to-br from-red-400 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold min-h-[96px]">Story 6</div>
+                                </div>
+                            ` : type === 'holygrail' ? `
+                                <div class="grid grid-rows-[auto_1fr_auto] gap-3 min-h-[300px]">
+                                    <div class="bg-gradient-to-r from-purple-400 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold h-16">Header</div>
+                                    <div class="grid grid-cols-[150px_1fr] gap-3">
+                                        <div class="bg-gradient-to-b from-blue-400 to-cyan-600 rounded-lg flex items-center justify-center text-white font-bold">Sidebar</div>
+                                        <div class="bg-gradient-to-br from-green-400 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold">Main Content</div>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-orange-400 to-red-600 rounded-lg flex items-center justify-center text-white font-bold h-16">Footer</div>
+                                </div>
+                            ` : `
+                                <div class="grid grid-cols-3 gap-4">
+                                    ${[1,2,3,4,5,6].map(i => {
+                                        const colors = ['from-pink-400 to-purple-600', 'from-blue-400 to-cyan-600', 'from-green-400 to-teal-600', 'from-yellow-400 to-orange-600', 'from-red-400 to-pink-600', 'from-indigo-400 to-purple-600'];
+                                        return `<div class="bg-gradient-to-br ${colors[i-1]} rounded-lg aspect-square flex items-center justify-center text-white font-bold text-2xl">${i}</div>`;
+                                    }).join('')}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeLayoutModal() {
+            document.getElementById('layoutModal').classList.add('hidden');
+        }
+
+        // Close modal on background click
+        document.getElementById('layoutModal').addEventListener('click', (e) => {
+            if (e.target.id === 'layoutModal') {
+                closeLayoutModal();
+            }
+        });
+
+        // Helper Functions
+        function updateProgress(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = Math.round(percentage);
+        }
+
+        function addScore(points) {
+            score += points;
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.textContent = score;
+            scoreDisplay.classList.add('celebrate');
+            setTimeout(() => scoreDisplay.classList.remove('celebrate'), 500);
+        }
+
+        function unlockAchievement(id) {
+            const achievement = document.getElementById(id);
+            if (achievement.classList.contains('opacity-50')) {
+                achievement.classList.remove('opacity-50');
+                achievement.classList.add('celebrate');
+                createConfetti(achievement);
+                setTimeout(() => achievement.classList.remove('celebrate'), 500);
+            }
+        }
+
+        function createConfetti(element) {
+            const rect = element.getBoundingClientRect();
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = rect.left + rect.width / 2 + 'px';
+                confetti.style.top = rect.top + rect.height / 2 + 'px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px) rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function scrollToSection(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function showCustomAlert(title, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl z-50 max-w-md';
+            alertDiv.innerHTML = `
+                <h3 class="text-2xl font-bold mb-4">${title}</h3>
+                <p class="text-lg mb-6">${message}</p>
+                <button onclick="this.parentElement.remove()" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-primary/90">
+                    Awesome! 🚀
+                </button>
+            `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+
+        // Smooth scroll for all anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Initialize
+        updateTutorialStep(1);
+        updateProgress(0);
+    </script>
+</body>
+</html>
+
