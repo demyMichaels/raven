@@ -3,409 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chemistry Learning Lab</title>
-
-    <!-- Tailwind CSS - Only critical library loaded upfront -->
+    <title>PubChem Molecule Comparison Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        'roboto': ['Roboto', 'sans-serif'],
+                    },
                     colors: {
-                        primary: '#5D5CDE',
-                        'primary-dark': '#4A49C5',
+                        primary: {
+                            50: '#ecfeff',
+                            100: '#cffafe',
+                            200: '#a5f3fc',
+                            300: '#67e8f9',
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                            700: '#0e7490',
+                            800: '#155e75',
+                            900: '#164e63',
+                        },
+                        secondary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
                     }
                 }
             }
         }
     </script>
-
     <style>
-        /* Optimized transitions - only for specific properties */
-        body, .tab-btn, button, input, select {
-            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        body {
+            font-family: 'Roboto', sans-serif;
         }
 
-        /* Hide scrollbars but keep functionality */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Loading animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .animate-spin {
+        .loading-spinner {
+            border: 3px solid rgba(6, 182, 212, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #06b6d4;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .molecule-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .molecule-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(6, 182, 212, 0.15);
+        }
+
+        .property-row {
+            transition: background-color 0.2s;
+        }
+
+        .property-row:hover {
+            background-color: rgba(6, 182, 212, 0.05);
+        }
+
+        .dark .property-row:hover {
+            background-color: rgba(6, 182, 212, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-gray-100 min-h-screen">
-
+<body class="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 min-h-screen">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-                        </svg>
-                    </div>
-                    <h1 class="text-xl font-bold">Chemistry Lab</h1>
-                </div>
-                <div class="text-sm text-gray-500 dark:text-gray-400">High School Edition</div>
-            </div>
+    <header class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-secondary-600">
+                🧪 Molecule Comparison Tool
+            </h1>
+            <p class="text-gray-600 dark:text-gray-300 mt-2 text-base">Compare chemical compounds from PubChem database</p>
         </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 py-6">
-
-        <!-- Tab Navigation -->
-        <div class="mb-6">
-            <div class="flex space-x-2 overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-gray-700">
-                <button onclick="switchTab('viewer')" id="tab-viewer" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-primary text-primary">
-                    3D Molecules
-                </button>
-                <button onclick="switchTab('calculator')" id="tab-calculator" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                    Calculators
-                </button>
-                <button onclick="switchTab('periodic')" id="tab-periodic" class="tab-btn px-4 py-3 font-medium text-base whitespace-nowrap border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
-                    Periodic Table
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Search Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-8 fade-in">
+            <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Add Compound to Compare</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Enter compound name (e.g., aspirin, caffeine, glucose)"
+                    class="flex-1 px-4 py-3 text-base border-2 border-primary-300 dark:border-primary-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-gray-100 transition"
+                >
+                <button
+                    id="searchBtn"
+                    class="px-8 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 text-white font-medium rounded-lg hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition transform hover:scale-105 active:scale-95"
+                >
+                    Add Compound
                 </button>
             </div>
+            <div id="searchStatus" class="mt-4 text-base"></div>
         </div>
 
-        <!-- Tab Content -->
-
-        <!-- 3D Viewer Tab -->
-        <div id="content-viewer" class="tab-content">
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-                <h2 class="text-lg font-semibold mb-2">3D Molecular Viewer</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Explore molecules in 3D. Rotate by dragging, zoom with pinch or scroll.</p>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm mb-4">
-                <div id="viewer-loading" class="flex items-center justify-center h-96">
-                    <div class="text-center">
-                        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                        <p class="text-gray-600 dark:text-gray-400">Loading 3D viewer...</p>
-                    </div>
-                </div>
-                <div id="3dmol-viewer" class="w-full rounded-lg hidden" style="height: 400px; position: relative;"></div>
-                <div id="molecule-info" class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hidden">
-                    <h3 class="font-semibold text-sm mb-1" id="mol-name"></h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400" id="mol-formula"></p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400" id="mol-mass"></p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <button onclick="changeStyle('stick')" class="px-4 py-3 text-base bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
-                    Stick
-                </button>
-                <button onclick="changeStyle('sphere')" class="px-4 py-3 text-base bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
-                    Ball & Stick
-                </button>
-            </div>
-
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <h3 class="font-semibold mb-3">Common Molecules</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <button onclick="loadMolecule('water')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">H₂O</button>
-                    <button onclick="loadMolecule('methane')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">CH₄</button>
-                    <button onclick="loadMolecule('co2')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">CO₂</button>
-                    <button onclick="loadMolecule('ammonia')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">NH₃</button>
-                    <button onclick="loadMolecule('ethanol')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Ethanol</button>
-                    <button onclick="loadMolecule('glucose')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Glucose</button>
-                    <button onclick="loadMolecule('benzene')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Benzene</button>
-                    <button onclick="loadMolecule('caffeine')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Caffeine</button>
-                    <button onclick="loadMolecule('dna')" class="px-3 py-2 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">DNA Base</button>
-                </div>
-            </div>
+        <!-- Comparison Grid -->
+        <div id="comparisonGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Molecule cards will be added here -->
         </div>
 
-        <!-- Calculator Tab -->
-        <div id="content-calculator" class="tab-content hidden">
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-                <h2 class="text-lg font-semibold mb-2">Chemistry Calculators</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Perform common chemistry calculations with precision.</p>
-            </div>
-
-            <!-- Calculator Type Selector -->
-            <div class="mb-4">
-                <select id="calc-type" onchange="switchCalculator()" class="w-full px-4 py-3 text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    <option value="molar-mass">Molar Mass Calculator</option>
-                    <option value="molarity">Molarity Calculator</option>
-                    <option value="gas-laws">Ideal Gas Law (PV=nRT)</option>
-                    <option value="stoichiometry">Stoichiometry Calculator</option>
-                    <option value="percent-comp">Percent Composition</option>
-                </select>
-            </div>
-
-            <!-- Molar Mass Calculator -->
-            <div id="calc-molar-mass" class="calculator-content bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <h3 class="font-semibold mb-4">Molar Mass Calculator</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chemical Formula</label>
-                        <input type="text" id="mm-formula" placeholder="e.g., H2O, NaCl, C6H12O6" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <button onclick="calculateMolarMass()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
-                        Calculate
-                    </button>
-                    <div id="mm-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
-                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Molar Mass</div>
-                        <div id="mm-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Molarity Calculator -->
-            <div id="calc-molarity" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <h3 class="font-semibold mb-4">Molarity Calculator (M = n/V)</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Moles (mol)</label>
-                        <input type="number" id="mol-moles" step="0.001" placeholder="0.5" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Volume (L)</label>
-                        <input type="number" id="mol-volume" step="0.001" placeholder="1.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <button onclick="calculateMolarity()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
-                        Calculate
-                    </button>
-                    <div id="mol-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
-                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Molarity</div>
-                        <div id="mol-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gas Laws Calculator -->
-            <div id="calc-gas-laws" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <h3 class="font-semibold mb-4">Ideal Gas Law (PV = nRT)</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">R = 0.08206 L·atm/(mol·K)</p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Pressure (atm)</label>
-                        <input type="number" id="gas-pressure" step="0.01" placeholder="1.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Volume (L)</label>
-                        <input type="number" id="gas-volume" step="0.01" placeholder="22.4" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Temperature (K)</label>
-                        <input type="number" id="gas-temp" step="0.1" placeholder="273.15" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <button onclick="calculateGasLaw()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
-                        Calculate Moles
-                    </button>
-                    <div id="gas-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
-                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Moles (n)</div>
-                        <div id="gas-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stoichiometry Calculator -->
-            <div id="calc-stoichiometry" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <h3 class="font-semibold mb-4">Stoichiometry Calculator</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Example: 2H₂ + O₂ → 2H₂O</p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Moles of Reactant</label>
-                        <input type="number" id="stoich-moles" step="0.01" placeholder="2.0" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Reactant Coefficient</label>
-                        <input type="number" id="stoich-reactant-coef" step="1" placeholder="2" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Product Coefficient</label>
-                        <input type="number" id="stoich-product-coef" step="1" placeholder="2" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <button onclick="calculateStoichiometry()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
-                        Calculate
-                    </button>
-                    <div id="stoich-result" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 hidden">
-                        <div class="text-sm font-medium text-green-800 dark:text-green-200 mb-1">Moles of Product</div>
-                        <div id="stoich-value" class="text-2xl font-bold text-green-900 dark:text-green-100"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Percent Composition Calculator -->
-            <div id="calc-percent-comp" class="calculator-content hidden bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                <h3 class="font-semibold mb-4">Percent Composition</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">Chemical Formula</label>
-                        <input type="text" id="pc-formula" placeholder="e.g., H2O" class="w-full px-4 py-3 text-base bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg">
-                    </div>
-                    <button onclick="calculatePercentComp()" class="w-full px-4 py-3 text-base bg-primary text-white rounded-lg hover:bg-primary-dark font-medium">
-                        Calculate
-                    </button>
-                    <div id="pc-result" class="hidden">
-                        <canvas id="pc-chart" class="mt-4"></canvas>
-                    </div>
-                </div>
-            </div>
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-16 fade-in">
+            <div class="text-6xl mb-4">🔬</div>
+            <h3 class="text-2xl font-semibold text-gray-700 dark:text-gray-300 mb-2">No Compounds Added Yet</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-lg">Search for a compound above to start comparing</p>
         </div>
-
-        <!-- Periodic Table Tab -->
-        <div id="content-periodic" class="tab-content hidden">
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4">
-                <h2 class="text-lg font-semibold mb-2">Periodic Table Reference</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Quick reference for common elements and their properties.</p>
-            </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                <!-- Common elements -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-blue-300 dark:border-blue-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">1</div>
-                    <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">H</div>
-                    <div class="text-sm">Hydrogen</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">1.008</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">6</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">C</div>
-                    <div class="text-sm">Carbon</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">12.011</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">7</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">N</div>
-                    <div class="text-sm">Nitrogen</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">14.007</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">8</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">O</div>
-                    <div class="text-sm">Oxygen</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">15.999</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-yellow-300 dark:border-yellow-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">11</div>
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">Na</div>
-                    <div class="text-sm">Sodium</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">22.990</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-yellow-300 dark:border-yellow-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">12</div>
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">Mg</div>
-                    <div class="text-sm">Magnesium</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">24.305</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">15</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">P</div>
-                    <div class="text-sm">Phosphorus</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">30.974</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">16</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">S</div>
-                    <div class="text-sm">Sulfur</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">32.06</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">17</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">Cl</div>
-                    <div class="text-sm">Chlorine</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">35.45</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-yellow-300 dark:border-yellow-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">19</div>
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">K</div>
-                    <div class="text-sm">Potassium</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">39.098</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-yellow-300 dark:border-yellow-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">20</div>
-                    <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">Ca</div>
-                    <div class="text-sm">Calcium</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">40.078</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-orange-300 dark:border-orange-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">26</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">Fe</div>
-                    <div class="text-sm">Iron</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">55.845</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-orange-300 dark:border-orange-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">29</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">Cu</div>
-                    <div class="text-sm">Copper</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">63.546</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-orange-300 dark:border-orange-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">30</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">Zn</div>
-                    <div class="text-sm">Zinc</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">65.38</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">35</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">Br</div>
-                    <div class="text-sm">Bromine</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">79.904</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-orange-300 dark:border-orange-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">47</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">Ag</div>
-                    <div class="text-sm">Silver</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">107.87</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-green-300 dark:border-green-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">53</div>
-                    <div class="text-2xl font-bold text-green-600 dark:text-green-400">I</div>
-                    <div class="text-sm">Iodine</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">126.90</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border-2 border-orange-300 dark:border-orange-600">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">79</div>
-                    <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">Au</div>
-                    <div class="text-sm">Gold</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">196.97</div>
-                </div>
-            </div>
-
-            <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg p-4">
-                <h3 class="font-semibold mb-3">Legend</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-blue-300 dark:bg-blue-600 rounded"></div>
-                        <span>Nonmetals</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-green-300 dark:bg-green-600 rounded"></div>
-                        <span>Nonmetals & Halogens</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-yellow-300 dark:bg-yellow-600 rounded"></div>
-                        <span>Alkali & Alkaline Earth Metals</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-4 h-4 bg-orange-300 dark:bg-orange-600 rounded"></div>
-                        <span>Transition Metals</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // Dark mode setup
+        // Dark mode detection
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.documentElement.classList.add('dark');
         }
@@ -417,570 +155,201 @@
             }
         });
 
-        // Global variables
-        let viewer;
-        let viewerInitialized = false;
-        let threeDmolScriptLoaded = false;
-        let threeDmolScriptLoading = false;
-        let chartJsLoaded = false;
-        let chartJsLoading = false;
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchStatus = document.getElementById('searchStatus');
+        const comparisonGrid = document.getElementById('comparisonGrid');
+        const emptyState = document.getElementById('emptyState');
 
-        // Atomic masses for calculations
-        const atomicMasses = {
-            'H': 1.008, 'He': 4.003, 'Li': 6.941, 'Be': 9.012, 'B': 10.81, 'C': 12.011,
-            'N': 14.007, 'O': 15.999, 'F': 18.998, 'Ne': 20.180, 'Na': 22.990, 'Mg': 24.305,
-            'Al': 26.982, 'Si': 28.085, 'P': 30.974, 'S': 32.06, 'Cl': 35.45, 'Ar': 39.948,
-            'K': 39.098, 'Ca': 40.078, 'Br': 79.904, 'I': 126.90, 'Fe': 55.845, 'Cu': 63.546,
-            'Zn': 65.38, 'Ag': 107.87, 'Au': 196.97
-        };
+        let compounds = [];
 
-        // Molecule database with XYZ coordinates
-        const molecules = {
-            water: {
-                name: 'Water',
-                formula: 'H₂O',
-                mass: '18.015 g/mol',
-                xyz: `3
-Water molecule
-O          0.00000        0.00000        0.11779
-H          0.00000        0.75545       -0.47116
-H          0.00000       -0.75545       -0.47116`
-            },
-            methane: {
-                name: 'Methane',
-                formula: 'CH₄',
-                mass: '16.043 g/mol',
-                xyz: `5
-Methane molecule
-C          0.00000        0.00000        0.00000
-H          0.62911        0.62911        0.62911
-H         -0.62911       -0.62911        0.62911
-H         -0.62911        0.62911       -0.62911
-H          0.62911       -0.62911       -0.62911`
-            },
-            ethanol: {
-                name: 'Ethanol',
-                formula: 'C₂H₅OH',
-                mass: '46.069 g/mol',
-                xyz: `9
-Ethanol molecule
-C          1.14507       -0.18093        0.00000
-C         -0.21566        0.45531        0.00000
-O         -1.21945       -0.54919        0.00000
-H          1.95175        0.57126        0.00000
-H          1.24736       -0.79848        0.88835
-H          1.24736       -0.79848       -0.88835
-H         -0.31797        1.08286        0.88835
-H         -0.31797        1.08286       -0.88835
-H         -2.06528       -0.10087        0.00000`
-            },
-            glucose: {
-                name: 'Glucose',
-                formula: 'C₆H₁₂O₆',
-                mass: '180.156 g/mol',
-                xyz: `24
-Glucose molecule
-C          2.36276       -0.22307        0.11568
-C          1.13847        0.69610        0.11509
-C         -0.11659       -0.16520        0.11334
-C         -1.38647        0.67410        0.11159
-C         -2.61040       -0.23507        0.11041
-O         -2.55523       -1.10263        1.24692
-O          2.31246       -1.07678        1.25905
-O          1.19301        1.54355        1.25160
-O         -0.06142       -1.01265        1.24978
-O         -1.44165        1.52155        1.24863
-H          2.35747       -0.84067       -0.78976
-H          3.29270        0.34926        0.11627
-H          1.14376        1.31370       -0.78935
-H         -0.11130       -0.78280       -0.79210
-H         -1.38118        1.29170       -0.79385
-H         -3.53034        0.34726        0.10981
-H         -2.65547       -0.85267       -0.79503
-H         -3.33773       -1.64994        1.23812
-H          3.09376       -1.62409        1.25047
-H          1.97431        2.09086        1.24300
-H          0.72988       -1.56996        1.24119
-H         -0.66035        2.07886        1.23983
-H         -2.60994       -0.35282        2.04236`
-            },
-            co2: {
-                name: 'Carbon Dioxide',
-                formula: 'CO₂',
-                mass: '44.010 g/mol',
-                xyz: `3
-Carbon Dioxide molecule
-C          0.00000        0.00000        0.00000
-O          0.00000        0.00000        1.16000
-O          0.00000        0.00000       -1.16000`
-            },
-            ammonia: {
-                name: 'Ammonia',
-                formula: 'NH₃',
-                mass: '17.031 g/mol',
-                xyz: `4
-Ammonia molecule
-N          0.00000        0.00000        0.11634
-H          0.00000        0.93897       -0.27147
-H          0.81321       -0.46949       -0.27147
-H         -0.81321       -0.46949       -0.27147`
-            },
-            benzene: {
-                name: 'Benzene',
-                formula: 'C₆H₆',
-                mass: '78.114 g/mol',
-                xyz: `12
-Benzene molecule
-C          1.39000        0.00000        0.00000
-C          0.69500        1.20370        0.00000
-C         -0.69500        1.20370        0.00000
-C         -1.39000        0.00000        0.00000
-C         -0.69500       -1.20370        0.00000
-C          0.69500       -1.20370        0.00000
-H          2.47000        0.00000        0.00000
-H          1.23500        2.13890        0.00000
-H         -1.23500        2.13890        0.00000
-H         -2.47000        0.00000        0.00000
-H         -1.23500       -2.13890        0.00000
-H          1.23500       -2.13890        0.00000`
-            },
-            caffeine: {
-                name: 'Caffeine',
-                formula: 'C₈H₁₀N₄O₂',
-                mass: '194.191 g/mol',
-                xyz: `24
-Caffeine molecule
-C          1.18000       -0.94000        0.00000
-C          0.00000        0.00000        0.00000
-C         -1.31000       -0.47000        0.00000
-N         -1.42000       -1.82000        0.00000
-C         -0.17000       -2.38000        0.00000
-N          0.76000       -1.42000        0.00000
-N         -2.31000        0.39000        0.00000
-C         -1.80000        1.64000        0.00000
-N         -0.49000        1.74000        0.00000
-C          2.55000       -0.38000        0.00000
-O          0.09000       -3.58000        0.00000
-O         -2.51000        2.58000        0.00000
-C         -3.69000       -0.02000        0.00000
-H          3.31000       -1.14000        0.00000
-H          2.68000        0.24000        0.88000
-H          2.68000        0.24000       -0.88000
-H         -4.41000        0.79000        0.00000
-H         -3.84000       -0.64000        0.88000
-H         -3.84000       -0.64000       -0.88000
-C         -2.68000       -2.63000        0.00000
-H         -2.48000       -3.25000        0.88000
-H         -2.48000       -3.25000       -0.88000
-H         -3.60000       -2.06000        0.00000
-C          0.08000        3.05000        0.00000
-H         -0.68000        3.82000        0.00000
-H          0.71000        3.18000        0.88000
-H          0.71000        3.18000       -0.88000`
-            },
-            dna: {
-                name: 'Adenine (DNA Base)',
-                formula: 'C₅H₅N₅',
-                mass: '135.127 g/mol',
-                xyz: `15
-Adenine molecule
-N          1.32000        0.71000        0.00000
-C          0.00000        0.49000        0.00000
-N         -0.68000       -0.64000        0.00000
-C          0.17000       -1.68000        0.00000
-C          1.54000       -1.52000        0.00000
-C          2.05000       -0.21000        0.00000
-N         -0.62000        1.69000        0.00000
-C         -0.12000        2.89000        0.00000
-N          0.92000        3.08000        0.00000
-N          3.36000        0.07000        0.00000
-H         -0.23000       -2.68000        0.00000
-H          2.20000       -2.37000        0.00000
-H         -0.90000        3.63000        0.00000
-H          3.93000       -0.76000        0.00000
-H          3.77000        0.99000        0.00000`
+        // Enter key support
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
             }
-        };
+        });
 
-        // Lazy load 3Dmol library
-        function load3DmolScript(callback) {
-            if (threeDmolScriptLoaded) {
-                if (callback) callback();
+        // Search button click handler
+        searchBtn.addEventListener('click', async () => {
+            const query = searchInput.value.trim();
+            if (!query) {
+                showStatus('Please enter a compound name', 'error');
                 return;
             }
 
-            if (threeDmolScriptLoading) {
-                // Script is already loading, wait for it
-                const checkInterval = setInterval(() => {
-                    if (threeDmolScriptLoaded) {
-                        clearInterval(checkInterval);
-                        if (callback) callback();
-                    }
-                }, 50);
-                return;
-            }
+            await searchCompound(query);
+        });
 
-            threeDmolScriptLoading = true;
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/3dmol@latest/build/3Dmol-min.js';
-            script.onload = () => {
-                threeDmolScriptLoaded = true;
-                threeDmolScriptLoading = false;
-                if (callback) callback();
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const colors = {
+                info: 'text-primary-600 dark:text-primary-400',
+                error: 'text-red-600 dark:text-red-400',
+                success: 'text-green-600 dark:text-green-400'
             };
-            script.onerror = () => {
-                threeDmolScriptLoading = false;
-                document.getElementById('viewer-loading').innerHTML = `
-                    <div class="text-center">
-                        <p class="text-red-600 dark:text-red-400">Failed to load 3D viewer</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Please check your connection and refresh</p>
-                    </div>
-                `;
-            };
-            document.head.appendChild(script);
+            searchStatus.innerHTML = `<p class="${colors[type]} font-medium">${message}</p>`;
         }
 
-        // Initialize 3Dmol Viewer
-        function initialize3DViewer() {
-            if (viewerInitialized) return;
-
-            const element = document.getElementById('3dmol-viewer');
-            const isDark = document.documentElement.classList.contains('dark');
-
-            viewer = $3Dmol.createViewer(element, {
-                backgroundColor: isDark ? '#1f2937' : 'white'
-            });
-
-            viewerInitialized = true;
-
-            // Hide loading, show viewer
-            document.getElementById('viewer-loading').classList.add('hidden');
-            document.getElementById('3dmol-viewer').classList.remove('hidden');
-
-            // Load default molecule (water)
-            loadMolecule('water');
-        }
-
-        // Lazy load Chart.js library
-        function loadChartJsScript(callback) {
-            if (chartJsLoaded) {
-                if (callback) callback();
-                return;
-            }
-
-            if (chartJsLoading) {
-                // Script is already loading, wait for it
-                const checkInterval = setInterval(() => {
-                    if (chartJsLoaded) {
-                        clearInterval(checkInterval);
-                        if (callback) callback();
-                    }
-                }, 50);
-                return;
-            }
-
-            chartJsLoading = true;
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-            script.onload = () => {
-                chartJsLoaded = true;
-                chartJsLoading = false;
-                if (callback) callback();
-            };
-            script.onerror = () => {
-                chartJsLoading = false;
-                showCustomAlert('Failed to load Chart.js library. Please refresh the page.');
-            };
-            document.head.appendChild(script);
-        }
-
-        // Tab switching
-        function switchTab(tabName) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-
-            // Remove active state from all tabs
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('border-primary', 'text-primary');
-                btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-            });
-
-            // Show selected tab content
-            document.getElementById('content-' + tabName).classList.remove('hidden');
-
-            // Add active state to selected tab
-            const activeTab = document.getElementById('tab-' + tabName);
-            activeTab.classList.add('border-primary', 'text-primary');
-            activeTab.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
-
-            // Lazy load 3Dmol when viewer tab is opened
-            if (tabName === 'viewer' && !threeDmolScriptLoaded && !viewerInitialized) {
-                load3DmolScript(() => {
-                    initialize3DViewer();
-                });
-            }
-        }
-
-        // Load molecule to 3D viewer
-        function loadMolecule(moleculeName) {
-            if (!viewerInitialized || !molecules[moleculeName]) return;
-
-            const mol = molecules[moleculeName];
-            viewer.clear();
-            viewer.addModel(mol.xyz, 'xyz');
-            viewer.setStyle({}, {stick: {radius: 0.15}, sphere: {scale: 0.25}});
-            viewer.zoomTo();
-            viewer.render();
-
-            // Show molecule info
-            document.getElementById('mol-name').textContent = mol.name;
-            document.getElementById('mol-formula').textContent = 'Formula: ' + mol.formula;
-            document.getElementById('mol-mass').textContent = 'Molar Mass: ' + mol.mass;
-            document.getElementById('molecule-info').classList.remove('hidden');
-        }
-
-        // Change 3D viewer style
-        function changeStyle(style) {
-            if (!viewerInitialized) return;
-
-            viewer.setStyle({}, style === 'stick'
-                ? {stick: {radius: 0.15}}
-                : {stick: {radius: 0.15}, sphere: {scale: 0.25}}
-            );
-            viewer.render();
-        }
-
-        // Calculator switching
-        function switchCalculator() {
-            const calcType = document.getElementById('calc-type').value;
-
-            // Hide all calculators
-            document.querySelectorAll('.calculator-content').forEach(calc => {
-                calc.classList.add('hidden');
-            });
-
-            // Show selected calculator
-            document.getElementById('calc-' + calcType).classList.remove('hidden');
-        }
-
-        // Parse chemical formula and return element counts
-        function parseFormula(formula) {
-            const elements = {};
-            const regex = /([A-Z][a-z]?)(\d*)/g;
-            let match;
-
-            while ((match = regex.exec(formula)) !== null) {
-                const element = match[1];
-                const count = match[2] ? parseInt(match[2]) : 1;
-                elements[element] = (elements[element] || 0) + count;
-            }
-
-            return elements;
-        }
-
-        // Calculate molar mass
-        function calculateMolarMass() {
-            const formula = document.getElementById('mm-formula').value.trim();
-
-            if (!formula) {
-                showCustomAlert('Please enter a chemical formula');
-                return;
-            }
+        // Search for compound in PubChem
+        async function searchCompound(name) {
+            showStatus('Searching for compound...', 'info');
+            searchBtn.disabled = true;
+            searchBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
 
             try {
-                const elements = parseFormula(formula);
-                let molarMass = 0;
+                // First, get the CID from compound name
+                const cidResponse = await fetch(
+                    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/${encodeURIComponent(name)}/cids/JSON`
+                );
 
-                for (const [element, count] of Object.entries(elements)) {
-                    if (!atomicMasses[element]) {
-                        showCustomAlert(`Unknown element: ${element}`);
-                        return;
-                    }
-                    molarMass += atomicMasses[element] * count;
+                if (!cidResponse.ok) {
+                    throw new Error('Compound not found');
                 }
 
-                document.getElementById('mm-value').textContent = molarMass.toFixed(3) + ' g/mol';
-                document.getElementById('mm-result').classList.remove('hidden');
+                const cidData = await cidResponse.json();
+                const cid = cidData.IdentifierList.CID[0];
+
+                // Check if compound already added
+                if (compounds.some(c => c.cid === cid)) {
+                    showStatus('This compound is already in the comparison', 'error');
+                    return;
+                }
+
+                // Get compound properties
+                const propsResponse = await fetch(
+                    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/property/MolecularFormula,MolecularWeight,IUPACName,CanonicalSMILES,IsomericSMILES,InChI,InChIKey,XLogP,ExactMass,MonoisotopicMass,TPSA,Complexity,Charge,HBondDonorCount,HBondAcceptorCount,RotatableBondCount/JSON`
+                );
+
+                const propsData = await propsResponse.json();
+                const properties = propsData.PropertyTable.Properties[0];
+
+                // Get synonyms (common names)
+                const synonymsResponse = await fetch(
+                    `https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${cid}/synonyms/JSON`
+                );
+                const synonymsData = await synonymsResponse.json();
+                const synonyms = synonymsData.InformationList.Information[0].Synonym.slice(0, 3);
+
+                const compound = {
+                    cid: cid,
+                    name: synonyms[0],
+                    synonyms: synonyms,
+                    ...properties
+                };
+
+                compounds.push(compound);
+                renderCompounds();
+                searchInput.value = '';
+                showStatus(`Successfully added ${compound.name}`, 'success');
+
             } catch (error) {
-                showCustomAlert('Error parsing formula. Please check your input.');
+                showStatus(`Error: ${error.message}. Please try another compound.`, 'error');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = 'Add Compound';
             }
         }
 
-        // Calculate molarity
-        function calculateMolarity() {
-            const moles = parseFloat(document.getElementById('mol-moles').value);
-            const volume = parseFloat(document.getElementById('mol-volume').value);
-
-            if (isNaN(moles) || isNaN(volume)) {
-                showCustomAlert('Please enter valid numbers');
-                return;
+        // Remove compound
+        function removeCompound(cid) {
+            compounds = compounds.filter(c => c.cid !== cid);
+            renderCompounds();
+            if (compounds.length === 0) {
+                showStatus('', 'info');
             }
-
-            if (volume === 0) {
-                showCustomAlert('Volume cannot be zero');
-                return;
-            }
-
-            const molarity = moles / volume;
-            document.getElementById('mol-value').textContent = molarity.toFixed(4) + ' M';
-            document.getElementById('mol-result').classList.remove('hidden');
         }
 
-        // Calculate gas law
-        function calculateGasLaw() {
-            const pressure = parseFloat(document.getElementById('gas-pressure').value);
-            const volume = parseFloat(document.getElementById('gas-volume').value);
-            const temp = parseFloat(document.getElementById('gas-temp').value);
-
-            if (isNaN(pressure) || isNaN(volume) || isNaN(temp)) {
-                showCustomAlert('Please enter valid numbers');
+        // Render all compounds
+        function renderCompounds() {
+            if (compounds.length === 0) {
+                emptyState.style.display = 'block';
+                comparisonGrid.innerHTML = '';
                 return;
             }
 
-            if (temp === 0) {
-                showCustomAlert('Temperature cannot be zero');
-                return;
-            }
+            emptyState.style.display = 'none';
 
-            const R = 0.08206; // L·atm/(mol·K)
-            const moles = (pressure * volume) / (R * temp);
+            comparisonGrid.innerHTML = compounds.map(compound => `
+                <div class="molecule-card bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden fade-in">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-primary-600 to-secondary-600 p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold text-white break-words flex-1">${compound.name}</h3>
+                            <button
+                                onclick="removeCompound(${compound.cid})"
+                                class="ml-2 text-white hover:text-red-200 transition text-2xl leading-none"
+                                title="Remove compound"
+                            >×</button>
+                        </div>
+                        <p class="text-primary-100 text-sm mt-1">CID: ${compound.cid}</p>
+                    </div>
 
-            document.getElementById('gas-value').textContent = moles.toFixed(4) + ' mol';
-            document.getElementById('gas-result').classList.remove('hidden');
+                    <!-- Structure Image -->
+                    <div class="p-4 bg-gray-50 dark:bg-gray-700 flex justify-center">
+                        <img
+                            src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${compound.cid}/PNG"
+                            alt="${compound.name} structure"
+                            class="max-w-full h-48 object-contain"
+                            onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22%3ENo Image%3C/text%3E%3C/svg%3E'"
+                        />
+                    </div>
+
+                    <!-- Properties -->
+                    <div class="p-4">
+                        <h4 class="font-semibold text-lg text-gray-800 dark:text-gray-100 mb-3">Properties</h4>
+                        <div class="space-y-2 text-sm">
+                            ${renderProperty('Molecular Formula', compound.MolecularFormula)}
+                            ${renderProperty('Molecular Weight', compound.MolecularWeight ? `${compound.MolecularWeight.toFixed(2)} g/mol` : 'N/A')}
+                            ${renderProperty('Exact Mass', compound.ExactMass ? `${compound.ExactMass.toFixed(4)} g/mol` : 'N/A')}
+                            ${renderProperty('XLogP', compound.XLogP ?? 'N/A')}
+                            ${renderProperty('H-Bond Donors', compound.HBondDonorCount ?? 'N/A')}
+                            ${renderProperty('H-Bond Acceptors', compound.HBondAcceptorCount ?? 'N/A')}
+                            ${renderProperty('Rotatable Bonds', compound.RotatableBondCount ?? 'N/A')}
+                            ${renderProperty('TPSA', compound.TPSA ? `${compound.TPSA} Ų` : 'N/A')}
+                            ${renderProperty('Complexity', compound.Complexity ? compound.Complexity.toFixed(1) : 'N/A')}
+                            ${renderProperty('Charge', compound.Charge ?? '0')}
+                        </div>
+
+                        <!-- Synonyms -->
+                        ${compound.synonyms && compound.synonyms.length > 1 ? `
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h5 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-2">Also Known As:</h5>
+                                <div class="flex flex-wrap gap-2">
+                                    ${compound.synonyms.slice(1).map(syn => `
+                                        <span class="px-2 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded-full text-xs">
+                                            ${syn.length > 20 ? syn.substring(0, 20) + '...' : syn}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- IUPAC Name -->
+                        ${compound.IUPACName ? `
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h5 class="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-1">IUPAC Name:</h5>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 break-words">${compound.IUPACName}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Calculate stoichiometry
-        function calculateStoichiometry() {
-            const moles = parseFloat(document.getElementById('stoich-moles').value);
-            const reactantCoef = parseFloat(document.getElementById('stoich-reactant-coef').value);
-            const productCoef = parseFloat(document.getElementById('stoich-product-coef').value);
-
-            if (isNaN(moles) || isNaN(reactantCoef) || isNaN(productCoef)) {
-                showCustomAlert('Please enter valid numbers');
-                return;
-            }
-
-            if (reactantCoef === 0) {
-                showCustomAlert('Reactant coefficient cannot be zero');
-                return;
-            }
-
-            const productMoles = moles * productCoef / reactantCoef;
-
-            document.getElementById('stoich-value').textContent = productMoles.toFixed(4) + ' mol';
-            document.getElementById('stoich-result').classList.remove('hidden');
-        }
-
-        // Calculate percent composition
-        function calculatePercentComp() {
-            const formula = document.getElementById('pc-formula').value.trim();
-
-            if (!formula) {
-                showCustomAlert('Please enter a chemical formula');
-                return;
-            }
-
-            // Load Chart.js if not already loaded, then calculate
-            loadChartJsScript(() => {
-                try {
-                    const elements = parseFormula(formula);
-                    let totalMass = 0;
-                    const elementMasses = {};
-
-                    for (const [element, count] of Object.entries(elements)) {
-                        if (!atomicMasses[element]) {
-                            showCustomAlert(`Unknown element: ${element}`);
-                            return;
-                        }
-                        const mass = atomicMasses[element] * count;
-                        elementMasses[element] = mass;
-                        totalMass += mass;
-                    }
-
-                    const labels = [];
-                    const percentages = [];
-                    const colors = ['#5D5CDE', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6', '#EC4899'];
-
-                    for (const [element, mass] of Object.entries(elementMasses)) {
-                        labels.push(element);
-                        percentages.push((mass / totalMass * 100).toFixed(2));
-                    }
-
-                    // Show result and create chart
-                    document.getElementById('pc-result').classList.remove('hidden');
-
-                    const ctx = document.getElementById('pc-chart');
-
-                    // Destroy existing chart if any
-                    if (window.percentCompChart) {
-                        window.percentCompChart.destroy();
-                    }
-
-                    window.percentCompChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels.map((label, i) => `${label} (${percentages[i]}%)`),
-                            datasets: [{
-                                data: percentages,
-                                backgroundColor: colors.slice(0, labels.length)
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
-                                        font: {
-                                            size: 14
-                                        }
-                                    }
-                                },
-                                title: {
-                                    display: true,
-                                    text: `Percent Composition of ${formula}`,
-                                    color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#1f2937',
-                                    font: {
-                                        size: 16,
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
-                    });
-
-                } catch (error) {
-                    showCustomAlert('Error parsing formula. Please check your input.');
-                }
-            });
-        }
-
-        // Custom alert function (since alert() is not supported)
-        function showCustomAlert(message) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
-            modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
-                    <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
-                    <button onclick="this.closest('.fixed').remove()" class="w-full px-4 py-2 bg-primary text-white hover:bg-primary-dark rounded-lg font-medium">
-                        OK
-                    </button>
+        // Helper function to render a property row
+        function renderProperty(label, value) {
+            return `
+                <div class="property-row flex justify-between py-2 px-3 rounded">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">${label}:</span>
+                    <span class="text-gray-600 dark:text-gray-400 text-right">${value}</span>
                 </div>
             `;
-            document.body.appendChild(modal);
         }
 
-        // Auto-load 3Dmol on viewer tab (default tab on page load)
-        // Since viewer tab is open by default, start loading 3Dmol
-        if (document.getElementById('content-viewer').classList.contains('tab-content') &&
-            !document.getElementById('content-viewer').classList.contains('hidden')) {
-            load3DmolScript(() => {
-                initialize3DViewer();
-            });
-        }
+        // Initial render
+        renderCompounds();
     </script>
 </body>
 </html>
+
