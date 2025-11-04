@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brew & Balance: Coffee Shop CVP Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #5D5CDE;
+            --coffee-brown: #6F4E37;
+            --cream: #FFF8DC;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .dark body {
+            background: linear-gradient(135deg, #1e3a8a 0%, #4c1d95 100%);
+        }
+
+        .game-container {
+            background: white;
+            max-width: 1400px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .dark .game-container {
+            background: #1f2937;
+        }
+
+        .coffee-shop-scene {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .interactive:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
+            transition: all 0.2s;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: transform 0.2s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .dark .metric-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(93, 92, 222, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 8px;
+        }
+
+        .dark .progress-bar {
+            background: #374151;
+        }
+
+        .progress-fill {
+            background: var(--success);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .customer-sprite {
+            animation: walkIn 1s ease-out;
+        }
+
+        @keyframes walkIn {
+            from {
+                transform: translateX(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .coin-popup {
+            animation: coinFloat 1s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes coinFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            pointer-events: none;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .modal-overlay {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+        }
+
+        input[type="number"], input[type="range"] {
+            font-size: 16px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-800 dark:to-orange-800 text-white p-4 shadow-lg">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">☕ Brew & Balance</h1>
+                    <p class="text-sm opacity-90">Master the Art of Coffee Shop Profit</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <div class="text-2xl font-bold">$<span id="cash">1000</span></div>
+                        <div class="text-sm opacity-90">Cash on Hand</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xl font-bold">Day <span id="currentDay">1</span></div>
+                        <div class="text-sm opacity-90"><span id="customersServed">0</span> customers today</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <div class="grid md:grid-cols-3 gap-4 p-4">
+            <!-- Coffee Shop Scene -->
+            <div class="md:col-span-2 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200">Your Coffee Shop</h2>
+                    <button id="startDay" class="btn-primary">Start Day</button>
+                </div>
+
+                <svg id="coffeeShop" class="coffee-shop-scene w-full" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Background -->
+                    <rect width="800" height="500" fill="#f5e6d3"/>
+
+                    <!-- Floor -->
+                    <rect y="350" width="800" height="150" fill="#8b7355"/>
+
+                    <!-- Back Wall -->
+                    <rect y="100" width="800" height="250" fill="#d4a373"/>
+
+                    <!-- Window -->
+                    <rect x="50" y="120" width="200" height="180" fill="#87ceeb" stroke="#654321" stroke-width="8"/>
+                    <line x1="150" y1="120" x2="150" y2="300" stroke="#654321" stroke-width="4"/>
+                    <line x1="50" y1="210" x2="250" y2="210" stroke="#654321" stroke-width="4"/>
+
+                    <!-- Menu Board -->
+                    <rect x="550" y="140" width="200" height="140" fill="#2d1810" stroke="#654321" stroke-width="4"/>
+                    <text x="650" y="170" text-anchor="middle" fill="#f0e68c" font-size="24" font-weight="bold">MENU</text>
+                    <text x="650" y="200" text-anchor="middle" fill="#fff" font-size="18">Coffee</text>
+                    <text x="650" y="230" text-anchor="middle" fill="#90EE90" font-size="24" font-weight="bold" id="menuPrice">$3.00</text>
+                    <text x="650" y="260" text-anchor="middle" fill="#fff" font-size="14" id="menuStock">Stock: 0 cups</text>
+
+                    <!-- Counter -->
+                    <rect x="200" y="300" width="400" height="50" fill="#654321"/>
+                    <rect x="200" y="280" width="400" height="20" fill="#8b6f47"/>
+
+                    <!-- Coffee Machine -->
+                    <g id="coffeeMachine" class="interactive" style="cursor: pointer;">
+                        <rect x="450" y="230" width="100" height="70" fill="#c0c0c0" stroke="#808080" stroke-width="2"/>
+                        <rect x="470" y="240" width="60" height="40" fill="#333" rx="5"/>
+                        <circle cx="530" cy="250" r="8" fill="#ff0000"/>
+                        <rect x="480" y="285" width="40" height="15" fill="#654321"/>
+                    </g>
+
+                    <!-- Supply Cupboard -->
+                    <g id="supplyCupboard" class="interactive" style="cursor: pointer;">
+                        <rect x="300" y="220" width="80" height="80" fill="#8b6f47" stroke="#654321" stroke-width="3"/>
+                        <rect x="335" y="240" width="10" height="40" fill="#ffd700"/>
+                        <text x="340" y="210" text-anchor="middle" fill="#654321" font-size="14" font-weight="bold">SUPPLIES</text>
+                    </g>
+
+                    <!-- Cash Register -->
+                    <g id="cashRegister" class="interactive" style="cursor: pointer;">
+                        <rect x="250" y="250" width="60" height="50" fill="#2d5016" stroke="#1a3010" stroke-width="2"/>
+                        <rect x="255" y="255" width="50" height="25" fill="#90EE90"/>
+                        <circle cx="280" cy="267" r="3" fill="#333"/>
+                        <text x="280" y="315" text-anchor="middle" fill="#654321" font-size="12">REGISTER</text>
+                    </g>
+
+                    <!-- Customer Queue Area -->
+                    <g id="customerQueue">
+                        <!-- Customers will be dynamically added here -->
+                    </g>
+
+                    <!-- Tutorial Pointer (hidden by default) -->
+                    <g id="tutorialPointer" style="display: none;">
+                        <path d="M 0 0 L 20 10 L 10 10 L 10 20 Z" fill="#FFD700" stroke="#FF8C00" stroke-width="2"/>
+                        <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite"/>
+                    </g>
+                </svg>
+
+                <!-- Game Messages -->
+                <div id="gameMessage" class="mt-4 p-4 rounded-lg text-center font-semibold text-lg"></div>
+            </div>
+
+            <!-- Control Panel & Metrics -->
+            <div class="space-y-4">
+                <!-- CVP Metrics Dashboard -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">📊 CVP Metrics</h3>
+
+                    <div class="space-y-3">
+                        <div class="metric-card">
+                            <div class="text-sm opacity-90">Selling Price</div>
+                            <div class="text-2xl font-bold">$<span id="sellingPrice">3.00</span></div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="text-sm opacity-90">Variable Cost per Cup</div>
+                            <div class="text-2xl font-bold">$<span id="variableCost">1.50</span></div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="text-sm opacity-90">Contribution Margin</div>
+                            <div class="text-2xl font-bold">$<span id="contributionMargin">1.50</span></div>
+                            <div class="text-xs opacity-80">(<span id="contributionMarginPercent">50</span>%)</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="text-sm opacity-90">Fixed Costs (Daily)</div>
+                            <div class="text-2xl font-bold">$<span id="fixedCosts">100</span></div>
+                            <div class="text-xs opacity-80">Rent, utilities, wages</div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="text-sm opacity-90">Break-Even Point</div>
+                            <div class="text-2xl font-bold"><span id="breakEvenUnits">67</span> cups</div>
+                            <div class="text-xs opacity-80">$<span id="breakEvenRevenue">200</span> revenue</div>
+                        </div>
+
+                        <div class="p-4 rounded-lg" id="profitCard" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                            <div class="text-sm opacity-90 text-white">Today's Profit/Loss</div>
+                            <div class="text-3xl font-bold text-white">$<span id="todayProfit">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">⚡ Quick Actions</h3>
+                    <div class="space-y-2">
+                        <button id="buySuppliesBtn" class="btn-primary w-full">🛒 Buy Supplies</button>
+                        <button id="setPriceBtn" class="btn-primary w-full">💰 Set Price</button>
+                        <button id="viewAnalyticsBtn" class="btn-primary w-full">📈 View Analytics</button>
+                    </div>
+                </div>
+
+                <!-- Goals & Progress -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">🎯 Current Goal</h3>
+                    <div id="currentGoal" class="space-y-2">
+                        <p class="text-gray-700 dark:text-gray-300 font-semibold" id="goalText">Complete the tutorial</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="goalProgress" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400" id="goalDescription">Learn the basics of running your coffee shop</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Tutorial Modal -->
+    <div id="tutorialModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full mx-4 slide-up">
+            <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white p-6 rounded-t-lg">
+                <h2 class="text-3xl font-bold">☕ Welcome to Brew & Balance!</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-lg text-gray-700 dark:text-gray-300">
+                    Welcome, aspiring entrepreneur! You've just inherited a small coffee shop. Your goal is to turn it into a profitable business by mastering <strong>Cost-Volume-Profit (CVP) Analysis</strong>.
+                </p>
+
+                <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                    <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">🎓 Learn the Fundamentals:</h3>
+                    <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                        <li><strong>Fixed Costs:</strong> Daily expenses that don't change (rent, utilities, wages) = $100/day</li>
+                        <li><strong>Variable Costs:</strong> Cost per cup of coffee (beans, milk, cup) = $1.50/cup</li>
+                        <li><strong>Selling Price:</strong> What you charge customers = You decide!</li>
+                        <li><strong>Contribution Margin:</strong> Selling Price - Variable Cost = Profit per cup</li>
+                        <li><strong>Break-Even Point:</strong> Fixed Costs ÷ Contribution Margin = Cups needed to cover costs</li>
+                    </ul>
+                </div>
+
+                <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg">
+                    <h3 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">🎮 How to Play:</h3>
+                    <ol class="space-y-2 text-gray-700 dark:text-gray-300 list-decimal list-inside">
+                        <li>Click <strong>SUPPLIES cupboard</strong> to buy coffee supplies</li>
+                        <li>Click <strong>REGISTER</strong> to set your selling price</li>
+                        <li>Click <strong>"Start Day"</strong> to open for business</li>
+                        <li>Click the <strong>COFFEE MACHINE</strong> to serve customers</li>
+                        <li>Watch your CVP metrics and adjust your strategy!</li>
+                    </ol>
+                </div>
+
+                <div class="bg-amber-50 dark:bg-amber-900 p-4 rounded-lg">
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">💡 First Goal: Make $50 profit in one day!</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Think strategically: What price will attract customers while covering your costs?</p>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-b-lg">
+                <button id="startTutorial" class="btn-primary w-full text-lg">Let's Start! ☕</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buy Supplies Modal -->
+    <div id="buySuppliesModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 slide-up">
+            <div class="bg-gradient-to-r from-amber-600 to-orange-600 text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold">🛒 Buy Coffee Supplies</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        <strong>Cost per cup:</strong> $1.50 (beans, milk, cup, lid)<br>
+                        This is your <strong>variable cost</strong> - it increases with each cup you can make.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
+                        Number of cups to stock:
+                    </label>
+                    <input type="number" id="supplyQuantity" min="1" max="500" value="50"
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200">
+                </div>
+
+                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-700 dark:text-gray-300">Quantity:</span>
+                        <span class="font-bold text-gray-800 dark:text-gray-200" id="supplyQuantityDisplay">50 cups</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-700 dark:text-gray-300">Cost per cup:</span>
+                        <span class="font-bold text-gray-800 dark:text-gray-200">$1.50</span>
+                    </div>
+                    <div class="flex justify-between text-lg pt-2 border-t border-gray-300 dark:border-gray-600">
+                        <span class="text-gray-800 dark:text-gray-200 font-bold">Total Cost:</span>
+                        <span class="font-bold text-amber-600 dark:text-amber-400">$<span id="totalSupplyCost">75.00</span></span>
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    💰 Cash available: $<span id="cashInModal">1000</span>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex gap-3">
+                <button id="cancelSupplies" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500">Cancel</button>
+                <button id="confirmSupplies" class="flex-1 btn-primary">Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Price Modal -->
+    <div id="setPriceModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full mx-4 slide-up">
+            <div class="bg-gradient-to-r from-green-600 to-teal-600 text-white p-6 rounded-t-lg">
+                <h2 class="text-2xl font-bold">💰 Set Coffee Price</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        <strong>Pricing Strategy:</strong> Balance profit and customer demand!
+                    </p>
+                    <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <li>💚 $2.00-$3.00: High demand, lower margins</li>
+                        <li>💛 $3.00-$4.00: Balanced approach</li>
+                        <li>🧡 $4.00-$5.00: Higher margins, moderate demand</li>
+                        <li>❤️ $5.00+: Premium pricing, low demand</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 dark:text-gray-300 font-semibold mb-2">
+                        Price per cup: $<span id="priceDisplay">3.00</span>
+                    </label>
+                    <input type="range" id="priceSlider" min="1.50" max="8.00" step="0.25" value="3.00"
+                           class="w-full">
+                </div>
+
+                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-700 dark:text-gray-300">Selling Price:</span>
+                        <span class="font-bold text-green-600 dark:text-green-400">$<span id="newPrice">3.00</span></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-700 dark:text-gray-300">Variable Cost:</span>
+                        <span class="font-bold text-red-600 dark:text-red-400">-$1.50</span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-gray-300 dark:border-gray-600">
+                        <span class="text-gray-800 dark:text-gray-200 font-bold">Contribution Margin:</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400">$<span id="newContributionMargin">1.50</span></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">Break-even (daily):</span>
+                        <span class="font-semibold text-gray-700 dark:text-gray-300"><span id="newBreakEven">67</span> cups</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">Expected demand:</span>
+                        <span class="font-semibold" id="demandEstimate">~70 cups</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-b-lg flex gap-3">
+                <button id="cancelPrice" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-400 dark:hover:bg-gray-500">Cancel</button>
+                <button id="confirmPrice" class="flex-1 btn-primary">Set Price</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analyticsModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full mx-4 slide-up max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-lg sticky top-0">
+                <h2 class="text-2xl font-bold">📈 CVP Analytics Dashboard</h2>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Break-Even Chart -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Break-Even Analysis</h3>
+                    <div class="chart-container">
+                        <canvas id="breakEvenChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Profit-Volume Chart -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Profit-Volume Graph</h3>
+                    <div class="chart-container">
+                        <canvas id="profitVolumeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Historical Performance -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200">Daily Performance History</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- CVP Summary -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900 dark:to-indigo-900 p-4 rounded-lg">
+                    <h3 class="text-lg font-bold mb-3 text-gray-800 dark:text-gray-200">📊 Current CVP Summary</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400">Contribution Margin Ratio:</p>
+                            <p class="text-xl font-bold text-blue-600 dark:text-blue-400"><span id="analyticsMarginRatio">50</span>%</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400">Safety Margin:</p>
+                            <p class="text-xl font-bold text-green-600 dark:text-green-400"><span id="analyticsSafetyMargin">0</span> cups</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400">Total Revenue (Today):</p>
+                            <p class="text-xl font-bold text-purple-600 dark:text-purple-400">$<span id="analyticsTotalRevenue">0</span></p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400">Total Variable Costs:</p>
+                            <p class="text-xl font-bold text-red-600 dark:text-red-400">$<span id="analyticsTotalVC">0</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-b-lg sticky bottom-0">
+                <button id="closeAnalytics" class="btn-primary w-full">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Day Summary Modal -->
+    <div id="daySummaryModal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-lg w-full mx-4 slide-up">
+            <div class="p-6 rounded-t-lg" id="summaryHeader">
+                <h2 class="text-3xl font-bold text-white">📊 Day <span id="summaryDay">1</span> Complete!</h2>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Customers Served</p>
+                        <p class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="summaryCustomers">0</p>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Revenue</p>
+                        <p class="text-3xl font-bold text-green-600 dark:text-green-400">$<span id="summaryRevenue">0</span></p>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Variable Costs</p>
+                        <p class="text-3xl font-bold text-red-600 dark:text-red-400">$<span id="summaryVC">0</span></p>
+                    </div>
+                    <div class="bg-orange-50 dark:bg-orange-900 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Fixed Costs</p>
+                        <p class="text-3xl font-bold text-orange-600 dark:text-orange-400">$<span id="summaryFC">100</span></p>
+                    </div>
+                </div>
+
+                <div class="p-6 rounded-lg text-center" id="summaryProfitCard">
+                    <p class="text-lg text-white opacity-90">Net Profit/Loss</p>
+                    <p class="text-5xl font-bold text-white" id="summaryProfit">$0</p>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg" id="summaryInsight">
+                    <p class="text-sm text-gray-700 dark:text-gray-300 font-semibold">💡 Insight:</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1" id="summaryInsightText"></p>
+                </div>
+            </div>
+            <div class="p-6 bg-gray-50 dark:bg-gray-700 rounded-b-lg">
+                <button id="nextDay" class="btn-primary w-full text-lg">Continue to Next Day →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode setup
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Game State
+        const gameState = {
+            cash: 1000,
+            inventory: 0,
+            sellingPrice: 3.00,
+            variableCost: 1.50,
+            fixedCosts: 100,
+            currentDay: 1,
+            customersServedToday: 0,
+            dayInProgress: false,
+            totalCustomersWaiting: 0,
+            dailyHistory: [],
+            goalProgress: 0,
+            currentGoal: 'tutorial',
+            tutorialStep: 0
+        };
+
+        // Chart instances
+        let breakEvenChart, profitVolumeChart, performanceChart;
+
+        // Update UI
+        function updateUI() {
+            document.getElementById('cash').textContent = gameState.cash.toFixed(2);
+            document.getElementById('currentDay').textContent = gameState.currentDay;
+            document.getElementById('customersServed').textContent = gameState.customersServedToday;
+            document.getElementById('menuPrice').textContent = '$' + gameState.sellingPrice.toFixed(2);
+            document.getElementById('menuStock').textContent = `Stock: ${gameState.inventory} cups`;
+
+            const contributionMargin = gameState.sellingPrice - gameState.variableCost;
+            const contributionMarginPercent = (contributionMargin / gameState.sellingPrice * 100);
+            const breakEvenUnits = Math.ceil(gameState.fixedCosts / contributionMargin);
+            const breakEvenRevenue = breakEvenUnits * gameState.sellingPrice;
+
+            document.getElementById('sellingPrice').textContent = gameState.sellingPrice.toFixed(2);
+            document.getElementById('variableCost').textContent = gameState.variableCost.toFixed(2);
+            document.getElementById('contributionMargin').textContent = contributionMargin.toFixed(2);
+            document.getElementById('contributionMarginPercent').textContent = contributionMarginPercent.toFixed(0);
+            document.getElementById('fixedCosts').textContent = gameState.fixedCosts.toFixed(2);
+            document.getElementById('breakEvenUnits').textContent = breakEvenUnits;
+            document.getElementById('breakEvenRevenue').textContent = breakEvenRevenue.toFixed(2);
+
+            const todayRevenue = gameState.customersServedToday * gameState.sellingPrice;
+            const todayVC = gameState.customersServedToday * gameState.variableCost;
+            const todayProfit = todayRevenue - todayVC - gameState.fixedCosts;
+
+            document.getElementById('todayProfit').textContent = todayProfit.toFixed(2);
+            const profitCard = document.getElementById('profitCard');
+            if (todayProfit >= 0) {
+                profitCard.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+            } else {
+                profitCard.style.background = 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)';
+            }
+
+            // Update Start Day button
+            const startDayBtn = document.getElementById('startDay');
+            if (gameState.dayInProgress) {
+                startDayBtn.textContent = 'Day in Progress...';
+                startDayBtn.disabled = true;
+            } else {
+                startDayBtn.textContent = 'Start Day';
+                startDayBtn.disabled = false;
+            }
+        }
+
+        // Calculate demand based on price
+        function calculateDemand() {
+            // Simple demand curve: lower prices = more customers
+            const baseDemand = 100;
+            const priceElasticity = 15;
+            const optimalPrice = 3.50;
+            const priceDifference = gameState.sellingPrice - optimalPrice;
+            const demand = Math.max(20, Math.floor(baseDemand - (priceDifference * priceElasticity) + (Math.random() * 20 - 10)));
+            return demand;
+        }
+
+        // Show message
+        function showMessage(text, type = 'info') {
+            const messageEl = document.getElementById('gameMessage');
+            messageEl.textContent = text;
+            messageEl.className = 'mt-4 p-4 rounded-lg text-center font-semibold text-lg slide-up';
+
+            if (type === 'success') {
+                messageEl.classList.add('bg-green-100', 'dark:bg-green-900', 'text-green-800', 'dark:text-green-200');
+            } else if (type === 'error') {
+                messageEl.classList.add('bg-red-100', 'dark:bg-red-900', 'text-red-800', 'dark:text-red-200');
+            } else if (type === 'warning') {
+                messageEl.classList.add('bg-yellow-100', 'dark:bg-yellow-900', 'text-yellow-800', 'dark:text-yellow-200');
+            } else {
+                messageEl.classList.add('bg-blue-100', 'dark:bg-blue-900', 'text-blue-800', 'dark:text-blue-200');
+            }
+
+            setTimeout(() => {
+                messageEl.textContent = '';
+                messageEl.className = 'mt-4 p-4 rounded-lg text-center font-semibold text-lg';
+            }, 3000);
+        }
+
+        // Tutorial Modal
+        document.getElementById('startTutorial').addEventListener('click', () => {
+            document.getElementById('tutorialModal').classList.add('hidden');
+            showMessage('Click the SUPPLIES cupboard to buy your first batch of coffee!', 'info');
+            highlightElement('supplyCupboard');
+        });
+
+        function highlightElement(elementId) {
+            const pointer = document.getElementById('tutorialPointer');
+            const element = document.getElementById(elementId);
+            if (element) {
+                const bbox = element.getBBox();
+                pointer.setAttribute('transform', `translate(${bbox.x - 30}, ${bbox.y - 30})`);
+                pointer.style.display = 'block';
+            }
+        }
+
+        function hideHighlight() {
+            document.getElementById('tutorialPointer').style.display = 'none';
+        }
+
+        // Buy Supplies Modal
+        document.getElementById('supplyCupboard').addEventListener('click', () => {
+            openBuySuppliesModal();
+        });
+
+        document.getElementById('buySuppliesBtn').addEventListener('click', () => {
+            openBuySuppliesModal();
+        });
+
+        function openBuySuppliesModal() {
+            hideHighlight();
+            document.getElementById('cashInModal').textContent = gameState.cash.toFixed(2);
+            document.getElementById('buySuppliesModal').classList.remove('hidden');
+            updateSupplyCost();
+        }
+
+        document.getElementById('supplyQuantity').addEventListener('input', updateSupplyCost);
+
+        function updateSupplyCost() {
+            const quantity = parseInt(document.getElementById('supplyQuantity').value) || 0;
+            const total = quantity * gameState.variableCost;
+            document.getElementById('supplyQuantityDisplay').textContent = quantity + ' cups';
+            document.getElementById('totalSupplyCost').textContent = total.toFixed(2);
+        }
+
+        document.getElementById('cancelSupplies').addEventListener('click', () => {
+            document.getElementById('buySuppliesModal').classList.add('hidden');
+        });
+
+        document.getElementById('confirmSupplies').addEventListener('click', () => {
+            const quantity = parseInt(document.getElementById('supplyQuantity').value) || 0;
+            const total = quantity * gameState.variableCost;
+
+            if (quantity <= 0) {
+                showMessage('Please enter a valid quantity!', 'error');
+                return;
+            }
+
+            if (total > gameState.cash) {
+                showMessage('Not enough cash! You need $' + total.toFixed(2), 'error');
+                return;
+            }
+
+            gameState.cash -= total;
+            gameState.inventory += quantity;
+            document.getElementById('buySuppliesModal').classList.add('hidden');
+            updateUI();
+            showMessage(`Purchased ${quantity} cups worth of supplies for $${total.toFixed(2)}!`, 'success');
+
+            if (gameState.tutorialStep === 0) {
+                gameState.tutorialStep = 1;
+                setTimeout(() => {
+                    showMessage('Great! Now click the REGISTER to set your selling price.', 'info');
+                    highlightElement('cashRegister');
+                }, 3500);
+            }
+        });
+
+        // Set Price Modal
+        document.getElementById('cashRegister').addEventListener('click', () => {
+            openSetPriceModal();
+        });
+
+        document.getElementById('setPriceBtn').addEventListener('click', () => {
+            openSetPriceModal();
+        });
+
+        function openSetPriceModal() {
+            hideHighlight();
+            document.getElementById('setPriceModal').classList.remove('hidden');
+            document.getElementById('priceSlider').value = gameState.sellingPrice;
+            updatePricePreview();
+        }
+
+        document.getElementById('priceSlider').addEventListener('input', updatePricePreview);
+
+        function updatePricePreview() {
+            const price = parseFloat(document.getElementById('priceSlider').value);
+            const contributionMargin = price - gameState.variableCost;
+            const breakEven = Math.ceil(gameState.fixedCosts / contributionMargin);
+            const demand = Math.max(20, Math.floor(100 - ((price - 3.50) * 15)));
+
+            document.getElementById('priceDisplay').textContent = price.toFixed(2);
+            document.getElementById('newPrice').textContent = price.toFixed(2);
+            document.getElementById('newContributionMargin').textContent = contributionMargin.toFixed(2);
+            document.getElementById('newBreakEven').textContent = breakEven;
+            document.getElementById('demandEstimate').textContent = `~${demand} cups`;
+
+            const demandEstimate = document.getElementById('demandEstimate');
+            if (price < 2.50) {
+                demandEstimate.style.color = '#10B981';
+            } else if (price < 4.00) {
+                demandEstimate.style.color = '#F59E0B';
+            } else {
+                demandEstimate.style.color = '#EF4444';
+            }
+        }
+
+        document.getElementById('cancelPrice').addEventListener('click', () => {
+            document.getElementById('setPriceModal').classList.add('hidden');
+        });
+
+        document.getElementById('confirmPrice').addEventListener('click', () => {
+            const newPrice = parseFloat(document.getElementById('priceSlider').value);
+
+            if (newPrice < gameState.variableCost) {
+                showMessage('Price must be higher than variable cost ($1.50)!', 'error');
+                return;
+            }
+
+            gameState.sellingPrice = newPrice;
+            document.getElementById('setPriceModal').classList.add('hidden');
+            updateUI();
+            showMessage(`Price set to $${newPrice.toFixed(2)} per cup!`, 'success');
+
+            if (gameState.tutorialStep === 1) {
+                gameState.tutorialStep = 2;
+                setTimeout(() => {
+                    showMessage('Perfect! Now click "Start Day" to open for business!', 'info');
+                }, 3500);
+            }
+        });
+
+        // Start Day
+        document.getElementById('startDay').addEventListener('click', () => {
+            if (gameState.inventory === 0) {
+                showMessage('You need to buy supplies first!', 'error');
+                return;
+            }
+
+            if (gameState.dayInProgress) {
+                return;
+            }
+
+            gameState.dayInProgress = true;
+            gameState.customersServedToday = 0;
+            gameState.totalCustomersWaiting = calculateDemand();
+
+            updateUI();
+            showMessage(`Day ${gameState.currentDay} started! ${gameState.totalCustomersWaiting} customers expected. Click the coffee machine to serve them!`, 'success');
+
+            if (gameState.tutorialStep === 2) {
+                gameState.tutorialStep = 3;
+                setTimeout(() => {
+                    highlightElement('coffeeMachine');
+                    showMessage('Click the COFFEE MACHINE to serve customers!', 'info');
+                }, 3500);
+            }
+
+            spawnCustomers();
+        });
+
+        // Serve Customer (Coffee Machine)
+        document.getElementById('coffeeMachine').addEventListener('click', () => {
+            if (!gameState.dayInProgress) {
+                showMessage('Start the day first!', 'warning');
+                return;
+            }
+
+            if (gameState.inventory === 0) {
+                showMessage('Out of stock! Buy more supplies.', 'error');
+                endDay();
+                return;
+            }
+
+            if (gameState.totalCustomersWaiting === 0) {
+                showMessage('No more customers today!', 'info');
+                endDay();
+                return;
+            }
+
+            // Serve customer
+            gameState.inventory--;
+            gameState.customersServedToday++;
+            gameState.totalCustomersWaiting--;
+            gameState.cash += gameState.sellingPrice;
+
+            updateUI();
+
+            // Show coin animation
+            showCoinAnimation();
+
+            // Remove customer from queue
+            const queue = document.getElementById('customerQueue');
+            if (queue.children.length > 0) {
+                queue.removeChild(queue.children[0]);
+            }
+
+            if (gameState.totalCustomersWaiting === 0) {
+                setTimeout(() => endDay(), 1000);
+            }
+        });
+
+        function spawnCustomers() {
+            const queue = document.getElementById('customerQueue');
+            queue.innerHTML = '';
+
+            const customersToShow = Math.min(gameState.totalCustomersWaiting, 5);
+            for (let i = 0; i < customersToShow; i++) {
+                const customer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                customer.classList.add('customer-sprite');
+                customer.innerHTML = `
+                    <circle cx="${100 + i * 80}" cy="380" r="20" fill="#FFD1A1"/>
+                    <rect x="${90 + i * 80}" y="400" width="20" height="40" fill="#4A90E2"/>
+                    <line x1="${100 + i * 80}" y1="410" x2="${80 + i * 80}" y2="430" stroke="#4A90E2" stroke-width="3"/>
+                    <line x1="${100 + i * 80}" y1="410" x2="${120 + i * 80}" y2="430" stroke="#4A90E2" stroke-width="3"/>
+                `;
+                queue.appendChild(customer);
+            }
+        }
+
+        function showCoinAnimation() {
+            const svg = document.getElementById('coffeeShop');
+            const coin = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            coin.classList.add('coin-popup');
+            coin.innerHTML = `
+                <circle cx="500" cy="260" r="15" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+                <text x="500" y="267" text-anchor="middle" fill="#8B4513" font-size="16" font-weight="bold">$</text>
+            `;
+            svg.appendChild(coin);
+
+            setTimeout(() => {
+                svg.removeChild(coin);
+            }, 1000);
+        }
+
+        function endDay() {
+            gameState.dayInProgress = false;
+            hideHighlight();
+
+            const revenue = gameState.customersServedToday * gameState.sellingPrice;
+            const variableCosts = gameState.customersServedToday * gameState.variableCost;
+            const profit = revenue - variableCosts - gameState.fixedCosts;
+
+            gameState.dailyHistory.push({
+                day: gameState.currentDay,
+                customers: gameState.customersServedToday,
+                revenue: revenue,
+                variableCosts: variableCosts,
+                fixedCosts: gameState.fixedCosts,
+                profit: profit
+            });
+
+            showDaySummary(revenue, variableCosts, profit);
+        }
+
+        function showDaySummary(revenue, variableCosts, profit) {
+            document.getElementById('summaryDay').textContent = gameState.currentDay;
+            document.getElementById('summaryCustomers').textContent = gameState.customersServedToday;
+            document.getElementById('summaryRevenue').textContent = revenue.toFixed(2);
+            document.getElementById('summaryVC').textContent = variableCosts.toFixed(2);
+            document.getElementById('summaryFC').textContent = gameState.fixedCosts.toFixed(2);
+            document.getElementById('summaryProfit').textContent = profit.toFixed(2);
+
+            const summaryHeader = document.getElementById('summaryHeader');
+            const summaryProfitCard = document.getElementById('summaryProfitCard');
+
+            if (profit >= 0) {
+                summaryHeader.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+                summaryProfitCard.style.background = 'linear-gradient(135deg, #10B981 0%, #059669 100%)';
+            } else {
+                summaryHeader.style.background = 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)';
+                summaryProfitCard.style.background = 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)';
+            }
+
+            // Generate insight
+            let insight = '';
+            const contributionMargin = gameState.sellingPrice - gameState.variableCost;
+            const breakEven = Math.ceil(gameState.fixedCosts / contributionMargin);
+
+            if (profit >= 50 && gameState.currentDay === 1) {
+                insight = '🎉 Congratulations! You\'ve completed the first goal! You understand CVP basics. Try increasing your price to see how it affects demand and profit.';
+            } else if (gameState.customersServedToday < breakEven) {
+                insight = `You served ${gameState.customersServedToday} customers but needed ${breakEven} to break even. Try lowering your price to attract more customers or ensure you have enough stock!`;
+            } else if (profit < 0) {
+                insight = `Your contribution margin is $${contributionMargin.toFixed(2)} per cup. You needed to sell ${breakEven} cups to cover fixed costs. Consider adjusting your price or reducing costs.`;
+            } else if (gameState.inventory > 50) {
+                insight = `You have ${gameState.inventory} cups in stock. Remember, supplies cost money upfront - only buy what you can sell to maximize cash flow!`;
+            } else {
+                insight = `Nice work! Your contribution margin of $${contributionMargin.toFixed(2)} per cup helped you exceed the break-even point. Keep optimizing!`;
+            }
+
+            document.getElementById('summaryInsightText').textContent = insight;
+            document.getElementById('daySummaryModal').classList.remove('hidden');
+        }
+
+        document.getElementById('nextDay').addEventListener('click', () => {
+            document.getElementById('daySummaryModal').classList.add('hidden');
+            gameState.currentDay++;
+            updateUI();
+
+            // Clear customer queue
+            document.getElementById('customerQueue').innerHTML = '';
+        });
+
+        // Analytics Modal
+        document.getElementById('viewAnalyticsBtn').addEventListener('click', () => {
+            openAnalytics();
+        });
+
+        function openAnalytics() {
+            document.getElementById('analyticsModal').classList.remove('hidden');
+
+            const contributionMargin = gameState.sellingPrice - gameState.variableCost;
+            const contributionMarginRatio = (contributionMargin / gameState.sellingPrice * 100);
+            const breakEvenUnits = Math.ceil(gameState.fixedCosts / contributionMargin);
+            const safetyMargin = Math.max(0, gameState.customersServedToday - breakEvenUnits);
+
+            const todayRevenue = gameState.customersServedToday * gameState.sellingPrice;
+            const todayVC = gameState.customersServedToday * gameState.variableCost;
+
+            document.getElementById('analyticsMarginRatio').textContent = contributionMarginRatio.toFixed(1);
+            document.getElementById('analyticsSafetyMargin').textContent = safetyMargin;
+            document.getElementById('analyticsTotalRevenue').textContent = todayRevenue.toFixed(2);
+            document.getElementById('analyticsTotalVC').textContent = todayVC.toFixed(2);
+
+            createBreakEvenChart();
+            createProfitVolumeChart();
+            createPerformanceChart();
+        }
+
+        function createBreakEvenChart() {
+            const ctx = document.getElementById('breakEvenChart').getContext('2d');
+            const contributionMargin = gameState.sellingPrice - gameState.variableCost;
+            const breakEvenUnits = Math.ceil(gameState.fixedCosts / contributionMargin);
+
+            const maxUnits = Math.max(150, breakEvenUnits * 2);
+            const units = [];
+            const revenue = [];
+            const totalCosts = [];
+
+            for (let i = 0; i <= maxUnits; i += 5) {
+                units.push(i);
+                revenue.push(i * gameState.sellingPrice);
+                totalCosts.push(gameState.fixedCosts + (i * gameState.variableCost));
+            }
+
+            if (breakEvenChart) {
+                breakEvenChart.destroy();
+            }
+
+            breakEvenChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: units,
+                    datasets: [
+                        {
+                            label: 'Total Revenue',
+                            data: revenue,
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        },
+                        {
+                            label: 'Total Costs',
+                            data: totalCosts,
+                            borderColor: '#EF4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Break-Even Point: ${breakEvenUnits} cups`,
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Units Sold (cups)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Dollars ($)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createProfitVolumeChart() {
+            const ctx = document.getElementById('profitVolumeChart').getContext('2d');
+            const contributionMargin = gameState.sellingPrice - gameState.variableCost;
+            const breakEvenUnits = Math.ceil(gameState.fixedCosts / contributionMargin);
+
+            const maxUnits = Math.max(150, breakEvenUnits * 2);
+            const units = [];
+            const profit = [];
+
+            for (let i = 0; i <= maxUnits; i += 5) {
+                units.push(i);
+                const p = (i * contributionMargin) - gameState.fixedCosts;
+                profit.push(p);
+            }
+
+            if (profitVolumeChart) {
+                profitVolumeChart.destroy();
+            }
+
+            profitVolumeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: units,
+                    datasets: [
+                        {
+                            label: 'Profit/Loss',
+                            data: profit,
+                            borderColor: '#8B5CF6',
+                            backgroundColor: function(context) {
+                                const value = context.parsed.y;
+                                return value >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                            },
+                            borderWidth: 3,
+                            fill: true,
+                            segment: {
+                                borderColor: ctx => {
+                                    const value = ctx.p1.parsed.y;
+                                    return value >= 0 ? '#10B981' : '#EF4444';
+                                }
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Profit-Volume Relationship',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Units Sold (cups)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Profit/Loss ($)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPerformanceChart() {
+            if (gameState.dailyHistory.length === 0) {
+                return;
+            }
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            const days = gameState.dailyHistory.map(d => `Day ${d.day}`);
+            const profits = gameState.dailyHistory.map(d => d.profit);
+            const revenues = gameState.dailyHistory.map(d => d.revenue);
+
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: 'Daily Profit',
+                            data: profits,
+                            backgroundColor: profits.map(p => p >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                            borderColor: profits.map(p => p >= 0 ? '#10B981' : '#EF4444'),
+                            borderWidth: 2,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Daily Revenue',
+                            data: revenues,
+                            type: 'line',
+                            borderColor: '#3B82F6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Performance Over Time',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Profit ($)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Revenue ($)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('closeAnalytics').addEventListener('click', () => {
+            document.getElementById('analyticsModal').classList.add('hidden');
+        });
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
