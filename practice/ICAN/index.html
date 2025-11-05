@@ -1571,40 +1571,59 @@ function renderTopics(topics) {
     selectedSubjectTitle.textContent = currentSubject.name;
     topicGrid.innerHTML = '';
 
-    // Group topics by category
+    // Predefined color schemes that will be assigned dynamically
+    const colorSchemes = [
+        { primary: 'from-blue-500 to-blue-600', accent: 'blue' },
+        { primary: 'from-purple-500 to-purple-600', accent: 'purple' },
+        { primary: 'from-green-500 to-green-600', accent: 'green' },
+        { primary: 'from-emerald-500 to-emerald-600', accent: 'emerald' },
+        { primary: 'from-orange-500 to-orange-600', accent: 'orange' },
+        { primary: 'from-amber-500 to-amber-600', accent: 'amber' },
+        { primary: 'from-teal-500 to-teal-600', accent: 'teal' },
+        { primary: 'from-red-500 to-red-600', accent: 'red' },
+        { primary: 'from-indigo-500 to-indigo-600', accent: 'indigo' },
+        { primary: 'from-pink-500 to-pink-600', accent: 'pink' }
+    ];
+
+    // Group topics by category and assign colors
     const categories = {};
     Object.entries(topics).forEach(([topicId, topic]) => {
         if (!categories[topic.category]) {
-            categories[topic.category] = [];
+            categories[topic.category] = {
+                topics: [],
+                colorIndex: Object.keys(categories).length % colorSchemes.length
+            };
         }
-        categories[topic.category].push({ id: topicId, ...topic });
+        categories[topic.category].topics.push({ id: topicId, ...topic });
     });
 
     // Render each category
-    Object.entries(categories).forEach(([category, categoryTopics]) => {
+    Object.entries(categories).forEach(([category, categoryData]) => {
+        const colors = colorSchemes[categoryData.colorIndex];
+        
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'col-span-full mt-8 mb-2';
         categoryDiv.innerHTML = `
             <div class="flex items-center space-x-3 mb-4">
-                <div class="w-1 h-6 bg-gradient-to-b from-accent to-accent-600 rounded-full"></div>
-                <h3 class="text-xl font-semibold text-primary dark:text-white font-roboto">${category}</h3>
+                <div class="w-1 h-6 bg-gradient-to-b ${colors.primary} rounded-full"></div>
+                <h3 class="text-xl font-semibold text-${colors.accent}-600 dark:text-${colors.accent}-400 font-roboto">${category}</h3>
                 <div class="flex-1 h-px bg-gradient-to-r from-neutral-300 to-transparent dark:from-neutral-600"></div>
             </div>
         `;
         topicGrid.appendChild(categoryDiv);
 
-        categoryTopics.forEach((topic, index) => {
+        categoryData.topics.forEach((topic, index) => {
             const topicCard = document.createElement('div');
             const questionCount = topic.questions ? topic.questions.length : 0;
             const progressData = getTopicProgress(currentSubject.id, topic.name);
             
-            topicCard.className = `material-card stagger-animation material-button w-full flex items-start space-x-4 p-5 sm:p-6 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-2xl hover:border-accent/30 dark:hover:border-accent/40 hover:shadow-material-2 transition-all duration-300 bg-white dark:bg-neutral-800/50 backdrop-blur-sm ${questionCount > 0 ? 'cursor-pointer hover:scale-[1.02]' : 'opacity-60 cursor-not-allowed'}`;
+            topicCard.className = `material-card stagger-animation material-button w-full flex items-start space-x-4 p-5 sm:p-6 border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-2xl hover:border-${colors.accent}-300 dark:hover:border-${colors.accent}-400 hover:shadow-material-2 transition-all duration-300 bg-white dark:bg-neutral-800/50 backdrop-blur-sm ${questionCount > 0 ? 'cursor-pointer hover:scale-[1.02]' : 'opacity-60 cursor-not-allowed'}`;
             
             // Get appropriate icon for topic
             const topicIcon = getTopicIcon(topic.name, topic.category);
             
             topicCard.innerHTML = `
-                <div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-accent to-accent-600 rounded-xl flex items-center justify-center shadow-material-1 group-hover:shadow-material-2 transition-shadow duration-300 mt-1">
+                <div class="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br ${colors.primary} rounded-xl flex items-center justify-center shadow-material-1 group-hover:shadow-material-2 transition-shadow duration-300 mt-1">
                     <span class="material-icons text-white text-base sm:text-lg">${topicIcon}</span>
                 </div>
                 <div class="flex-1 min-w-0 overflow-hidden">
@@ -1614,7 +1633,7 @@ function renderTopics(topics) {
                         `<div class="space-y-2">
                             <div class="flex justify-between items-center text-xs font-roboto">
                                 <span class="text-neutral-500 dark:text-neutral-400">Progress</span>
-                                <span class="font-medium text-accent-600 dark:text-accent-400">${Math.round(progressData.averageScore)}%</span>
+                                <span class="font-medium text-${colors.accent}-600 dark:text-${colors.accent}-400">${Math.round(progressData.averageScore)}%</span>
                             </div>
                             <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5">
                                 <div class="h-1.5 rounded-full transition-all duration-500 ease-out" style="width: ${progressData.averageScore}%; background: ${getProgressBarColor(progressData.averageScore)}"></div>
@@ -1628,7 +1647,7 @@ function renderTopics(topics) {
                         `<div class="text-xs text-neutral-400 dark:text-neutral-500 italic font-roboto">Not attempted yet</div>`
                     }
                 </div>
-                <span class="material-icons text-neutral-300 dark:text-neutral-500 group-hover:text-accent-600 dark:group-hover:text-accent-400 transition-colors duration-300 flex-shrink-0 mt-1 ${questionCount === 0 ? 'opacity-50' : ''}">arrow_forward_ios</span>
+                <span class="material-icons text-neutral-300 dark:text-neutral-500 group-hover:text-${colors.accent}-600 dark:group-hover:text-${colors.accent}-400 transition-colors duration-300 flex-shrink-0 mt-1 ${questionCount === 0 ? 'opacity-50' : ''}">arrow_forward_ios</span>
             `;
             
             topicCard.style.animationDelay = `${(index + 1) * 0.08}s`;
@@ -1645,6 +1664,8 @@ function renderTopics(topics) {
         });
     });
 }
+
+
 
 // Start quiz for selected topic
         function startQuiz(topic) {
