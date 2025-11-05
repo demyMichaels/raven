@@ -1571,35 +1571,45 @@ function renderTopics(topics) {
     selectedSubjectTitle.textContent = currentSubject.name;
     topicGrid.innerHTML = '';
 
-    // Predefined color schemes that will be assigned dynamically
+    // High-contrast color schemes arranged for maximum visual differentiation
     const colorSchemes = [
-        { primary: 'from-blue-500 to-blue-600', accent: 'blue' },
-        { primary: 'from-purple-500 to-purple-600', accent: 'purple' },
-        { primary: 'from-green-500 to-green-600', accent: 'green' },
-        { primary: 'from-emerald-500 to-emerald-600', accent: 'emerald' },
-        { primary: 'from-orange-500 to-orange-600', accent: 'orange' },
-        { primary: 'from-amber-500 to-amber-600', accent: 'amber' },
-        { primary: 'from-teal-500 to-teal-600', accent: 'teal' },
-        { primary: 'from-red-500 to-red-600', accent: 'red' },
-        { primary: 'from-indigo-500 to-indigo-600', accent: 'indigo' },
-        { primary: 'from-pink-500 to-pink-600', accent: 'pink' }
+        { primary: 'from-blue-500 to-blue-600', accent: 'blue' },      // Cool
+        { primary: 'from-orange-500 to-orange-600', accent: 'orange' }, // Warm
+        { primary: 'from-green-500 to-green-600', accent: 'green' },    // Cool
+        { primary: 'from-red-500 to-red-600', accent: 'red' },         // Warm
+        { primary: 'from-purple-500 to-purple-600', accent: 'purple' }, // Cool
+        { primary: 'from-amber-500 to-amber-600', accent: 'amber' },   // Warm
+        { primary: 'from-teal-500 to-teal-600', accent: 'teal' },      // Cool
+        { primary: 'from-pink-500 to-pink-600', accent: 'pink' },      // Warm
+        { primary: 'from-indigo-500 to-indigo-600', accent: 'indigo' }, // Cool
+        { primary: 'from-lime-500 to-lime-600', accent: 'lime' }       // Warm
     ];
 
-    // Group topics by category and assign colors
+    // Group topics by category
     const categories = {};
     Object.entries(topics).forEach(([topicId, topic]) => {
         if (!categories[topic.category]) {
-            categories[topic.category] = {
-                topics: [],
-                colorIndex: Object.keys(categories).length % colorSchemes.length
-            };
+            categories[topic.category] = [];
         }
-        categories[topic.category].topics.push({ id: topicId, ...topic });
+        categories[topic.category].push({ id: topicId, ...topic });
+    });
+
+    // Get category names and assign high-contrast colors
+    const categoryNames = Object.keys(categories);
+    const categoryColors = {};
+    
+    categoryNames.forEach((category, index) => {
+        // Use alternating pattern: cool, warm, cool, warm, etc.
+        const colorIndex = index % 2 === 0 
+            ? (index * 2) % colorSchemes.length  // Even indices: 0, 2, 4, 6, 8
+            : (index * 2 + 1) % colorSchemes.length; // Odd indices: 1, 3, 5, 7, 9
+        
+        categoryColors[category] = colorSchemes[colorIndex];
     });
 
     // Render each category
-    Object.entries(categories).forEach(([category, categoryData]) => {
-        const colors = colorSchemes[categoryData.colorIndex];
+    Object.entries(categories).forEach(([category, categoryTopics]) => {
+        const colors = categoryColors[category];
         
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'col-span-full mt-8 mb-2';
@@ -1612,7 +1622,7 @@ function renderTopics(topics) {
         `;
         topicGrid.appendChild(categoryDiv);
 
-        categoryData.topics.forEach((topic, index) => {
+        categoryTopics.forEach((topic, index) => {
             const topicCard = document.createElement('div');
             const questionCount = topic.questions ? topic.questions.length : 0;
             const progressData = getTopicProgress(currentSubject.id, topic.name);
@@ -1664,7 +1674,6 @@ function renderTopics(topics) {
         });
     });
 }
-
 
 
 // Start quiz for selected topic
