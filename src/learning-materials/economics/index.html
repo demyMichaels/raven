@@ -539,140 +539,38 @@
             renderTopics(highlightedTopics);
         }
 
-// Function to handle topic opening with Tailwind CSS error page
+// Function to handle topic opening - SPA style
 async function openTopic(folderName, title) {
     showMaterialToast(`Loading ${title}...`, 'info');
     
     try {
-        // Load content dynamically with multiple fallback paths
+        // Load content dynamically
         const content = await loadTopicContent(folderName);
         displayTopicContent(content, title);
-        showMaterialToast(`${title} loaded successfully`, 'success');
-    
     } catch (error) {
+        showMaterialToast(`Error loading ${title}`, 'error');
         console.error('Error loading topic:', error);
-        // Show error page directly in the content area
-        showErrorPage(title, error.message);
-        showMaterialToast(`Failed to load ${title}`, 'error');
     }
 }
 
-// Content loading function with your paths
 async function loadTopicContent(folderName) {
-    // Try multiple fallback options
-    const contentPaths = [
-        `./src/learning-materials/economics/${folderName}/`,
-        `./src/learning-materials/economics/${folderName}/index.html`
-    ];
-    
-    let lastError;
-    
-    for (const path of contentPaths) {
-        try {
-            const response = await fetch(path);
-            if (response.ok) {
-                if (path.endsWith('.json')) {
-                    return await response.json();
-                } else {
-                    return { html: await response.text() };
-                }
-            }
-        } catch (error) {
-            lastError = error;
-            continue; // Try next path
-        }
-    }
-    
-    throw new Error(`Content not found for ${folderName}. Tried: ${contentPaths.join(', ')}`);
+    // Fetch content from local JSON or HTML files
+    const response = await fetch(`./src/learning-materials/${folderName}.json`);
+    if (!response.ok) throw new Error('Failed to load content');
+    return await response.json();
 }
 
-// Error page function with Tailwind CSS
-function showErrorPage(title, errorMessage) {
-    const contentArea = document.getElementById('content-area');
-    
-    contentArea.innerHTML = `
-        <div class="max-w-2xl mx-auto p-6">
-            <!-- Error Icon -->
-            <div class="text-6xl text-yellow-500 mb-6 text-center">⚠️</div>
-            
-            <!-- Error Header -->
-            <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold text-red-600 mb-3">Failed to Load Content</h1>
-                <p class="text-lg text-gray-700 mb-2">We couldn't load "${title}".</p>
-                <p class="text-sm text-gray-500 bg-gray-100 p-3 rounded-lg font-mono">
-                    Error: ${errorMessage}
-                </p>
-            </div>
-            
-            <!-- Suggestions -->
-            <div class="bg-gray-50 rounded-xl p-6 mb-8">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">What you can do:</h3>
-                <ul class="space-y-2 text-gray-700">
-                    <li class="flex items-center">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                        Check your internet connection
-                    </li>
-                    <li class="flex items-center">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                        Try again later
-                    </li>
-                    <li class="flex items-center">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                        Return to the home page
-                    </li>
-                </ul>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button 
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                    onclick="retryTopicLoading('${title}')"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Try Again
-                </button>
-                
-                <button 
-                    class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                    onclick="goBackToHome()"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m-6 0h6"></path>
-                    </svg>
-                    Go Home
-                </button>
-            </div>
+function displayTopicContent(content, title) {
+    // Update page content without refreshing
+    document.getElementById('content-area').innerHTML = `
+        <div class="topic-content">
+            <h2>${title}</h2>
+            <div>${content.html || content.text}</div>
         </div>
     `;
-}
-
-// Helper function for retry (you'll need to implement getTopicByTitle based on your data)
-function retryTopicLoading(title) {
-    const topic = getTopicByTitle(title); // You need to implement this
-    if (topic) {
-        openTopic(topic.folderName, topic.title);
-    }
-}
-
-// Helper function to go back home
-function goBackToHome() {
-    // Your existing home navigation logic
-    window.location.href = '/'; // or your home page URL
-}
-
-// Placeholder - you need to implement this based on your topic data structure
-function getTopicByTitle(title) {
-    // This should return { folderName: 'folder-name', title: 'Display Title' }
-    // Example implementation:
-    const topics = {
-        'Basic Concepts': { folderName: 'basic-concepts', title: 'Basic Concepts' },
-        'Supply and Demand': { folderName: 'supply-demand', title: 'Supply and Demand' },
-        // Add your actual topics here
-    };
-    return topics[title];
+    
+    // Update browser URL without reloading (SPA navigation)
+    history.pushState({}, title, `?topic=${encodeURIComponent(title)}`);
 }
 
 
