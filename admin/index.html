@@ -369,373 +369,70 @@
         </main>
     </section>
 
-    <script>
-        /* eslint-disable no-restricted-globals */
-        // Admin credentials
-        const ADMIN_USERNAME = 'admin';
-        const ADMIN_PASSWORD = 'admin123';
+<script>
+    // Admin credentials
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'admin123';
 
-        // DOM Elements
-        const loginSection = document.getElementById('loginSection');
-        const adminSection = document.getElementById('adminSection');
+    // DOM Elements
+    const loginSection = document.getElementById('loginSection');
+    const adminSection = document.getElementById('adminSection');
 
-        // Data
-        let allUsers = [];
-        let activationCodes = [];
-        let generatedCodesCache = [];
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            checkAdminSession();
-        });
-
-        // Check if admin is logged in
-        function checkAdminSession() {
-            const isAdminLoggedIn = sessionStorage.getItem('admin_logged_in');
-            if (isAdminLoggedIn === 'true') {
-                loadData();
-                showAdminDashboard();
-            } else {
-                showLoginSection();
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - checking admin session');
+        
+        // Check if already logged in
+        const isLoggedIn = sessionStorage.getItem('admin_logged_in');
+        if (isLoggedIn === 'true') {
+            showAdminDashboard();
+        } else {
+            showLoginSection();
         }
 
-        // Show sections
-        function showLoginSection() {
-            loginSection.classList.remove('hidden-content');
-            adminSection.classList.add('hidden-content');
-        }
-
-        function showAdminDashboard() {
-            loginSection.classList.add('hidden-content');
-            adminSection.classList.remove('hidden-content');
-        }
-
-        // Admin Login
-        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+        // Login form handler
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('Form submitted');
+            
             const username = document.getElementById('adminUsername').value;
             const password = document.getElementById('adminPassword').value;
-
+            
+            console.log('Username:', username, 'Password:', password);
+            
             if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                console.log('Credentials correct - logging in');
                 sessionStorage.setItem('admin_logged_in', 'true');
-                loadData();
                 showAdminDashboard();
-                showToast('Login successful! Welcome Admin 👨‍💼', 'success');
             } else {
-                showToast('Invalid admin credentials!', 'error');
+                console.log('Invalid credentials');
+                alert('Invalid username or password! Use: admin / admin123');
             }
         });
+    });
 
-        // Logout Admin
-        function logoutAdmin() {
-            sessionStorage.removeItem('admin_logged_in');
-            showLoginSection();
-            showToast('Logged out successfully', 'info');
-        }
+    function showLoginSection() {
+        console.log('Showing login section');
+        loginSection.style.display = 'block';
+        adminSection.style.display = 'none';
+    }
 
-        // Load data from localStorage
-        function loadData() {
-            allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
-            activationCodes = JSON.parse(localStorage.getItem('raven_activation_codes')) || [];
-            updateStats();
-            renderUsersTable();
-            renderCodesTable();
-        }
+    function showAdminDashboard() {
+        console.log('Showing admin dashboard');
+        loginSection.style.display = 'none';
+        adminSection.style.display = 'block';
+        loadData();
+    }
 
-        // Update stats
-        function updateStats() {
-            const now = new Date();
-            const activeUsers = allUsers.filter(u => u.isActive && new Date(u.activationExpiry) > now).length;
-            const unusedCodes = activationCodes.filter(c => !c.used).length;
-            const usedCodes = activationCodes.filter(c => c.used).length;
+    function logoutAdmin() {
+        sessionStorage.removeItem('admin_logged_in');
+        showLoginSection();
+    }
 
-            document.getElementById('totalUsersCount').textContent = allUsers.length;
-            document.getElementById('activeUsersCount').textContent = activeUsers;
-            document.getElementById('activeCodesCount').textContent = unusedCodes;
-            document.getElementById('usedCodesCount').textContent = usedCodes;
-        }
-
-        // Generate activation codes
-        function generateCodes(type) {
-            const countInput = type === 'trial' ? 'trialCodeCount' : 'monthlyCodeCount';
-            const count = parseInt(document.getElementById(countInput).value);
-
-            if (count < 1 || count > 100) {
-                showToast('Please enter a number between 1 and 100', 'warning');
-                return;
-            }
-
-            const newCodes = [];
-            for (let i = 0; i < count; i++) {
-                const code = generateRandomCode();
-                newCodes.push({
-                    code: code,
-                    duration: type,
-                    generated: new Date().toISOString(),
-                    used: false,
-                    usedBy: null,
-                    usedDate: null
-                });
-            }
-
-            activationCodes.push(...newCodes);
-            localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
-
-            // Display generated codes
-            generatedCodesCache = newCodes;
-            displayGeneratedCodes(newCodes, type);
-
-            loadData();
-            showToast(`${count} ${type} code(s) generated successfully!`, 'success');
-        }
-
-        // Display generated codes
-        function displayGeneratedCodes(codes, type) {
-            const display = document.getElementById('generatedCodesDisplay');
-            const codesList = document.getElementById('generatedCodesList');
-
-            const typeLabel = type === 'trial' ? '7-Day Trial' : '30-Day Paid';
-            const typeColor = type === 'trial' ? 'accent' : 'primary';
-
-            codesList.innerHTML = codes.map(c => `
-                <div class="code-item">
-                    <div>
-                        <span class="font-mono text-lg font-semibold text-${typeColor}">${c.code}</span>
-                        <span class="ml-3 caption text-neutral-500">${typeLabel}</span>
-                    </div>
-                    <button onclick="copyCode('${c.code}')" class="material-icons text-neutral-500 hover:text-${typeColor} cursor-pointer">content_copy</button>
-                </div>
-            `).join('');
-
-            display.classList.remove('hidden');
-        }
-
-        // Generate random code
-        function generateRandomCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 12; i++) {
-                if (i > 0 && i % 4 === 0) code += '-';
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        // Copy single code
-        function copyCode(code) {
-            navigator.clipboard.writeText(code).then(() => {
-                showToast('Code copied to clipboard!', 'success');
-            });
-        }
-
-        // Copy all codes
-        function copyAllCodes() {
-            const allCodesText = generatedCodesCache.map(c => c.code).join('\n');
-            navigator.clipboard.writeText(allCodesText).then(() => {
-                showToast(`${generatedCodesCache.length} codes copied to clipboard!`, 'success');
-            });
-        }
-
-        // Render users table
-        function renderUsersTable() {
-            const tbody = document.getElementById('usersTableBody');
-
-            if (allUsers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-neutral-500">No users found</td></tr>';
-                return;
-            }
-
-            const now = new Date();
-            tbody.innerHTML = allUsers.map(user => {
-                let statusClass = 'status-inactive';
-                let statusText = 'Inactive';
-
-                if (user.isActive) {
-                    if (new Date(user.activationExpiry) > now) {
-                        statusClass = 'status-active';
-                        statusText = 'Active';
-                    } else {
-                        statusClass = 'status-expired';
-                        statusText = 'Expired';
-                    }
-                }
-
-                const expiryDate = user.activationExpiry
-                    ? new Date(user.activationExpiry).toLocaleDateString()
-                    : '-';
-
-                const subjects = user.subjects ? user.subjects.join(', ') : '-';
-
-                return `
-                    <tr>
-                        <td class="font-medium">${user.name}</td>
-                        <td>${user.email}</td>
-                        <td>${user.institute || '-'}</td>
-                        <td class="text-sm">${subjects}</td>
-                        <td>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                        </td>
-                        <td>${expiryDate}</td>
-                        <td class="text-sm">${new Date(user.registrationDate).toLocaleDateString()}</td>
-                        <td>
-                            <button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger">
-                                Delete
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Render codes table
-        function renderCodesTable() {
-            const tbody = document.getElementById('codesTableBody');
-
-            if (activationCodes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-neutral-500">No codes generated yet</td></tr>';
-                return;
-            }
-
-            // Sort by generation date, newest first
-            const sortedCodes = [...activationCodes].sort((a, b) =>
-                new Date(b.generated) - new Date(a.generated)
-            );
-
-            tbody.innerHTML = sortedCodes.map(code => {
-                const statusClass = code.used ? 'status-expired' : 'status-active';
-                const statusText = code.used ? 'Used' : 'Active';
-                const typeText = code.duration === 'trial' ? '7-Day Trial' : '30-Day Paid';
-                const usedDate = code.usedDate ? new Date(code.usedDate).toLocaleDateString() : '-';
-
-                return `
-                    <tr>
-                        <td class="font-mono font-semibold">${code.code}</td>
-                        <td>${typeText}</td>
-                        <td>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                        </td>
-                        <td>${code.usedBy || '-'}</td>
-                        <td class="text-sm">${new Date(code.generated).toLocaleDateString()}</td>
-                        <td class="text-sm">${usedDate}</td>
-                        <td>
-                            ${!code.used ? `<button onclick="deleteCode('${code.code}')" class="material-button btn-sm btn-danger">Delete</button>` : '-'}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        // Delete user
-        function deleteUser(email) {
-            showConfirmDialog(
-                'Delete User',
-                `Are you sure you want to delete the user with email: ${email}? This action cannot be undone.`,
-                () => {
-                    allUsers = allUsers.filter(u => u.email !== email);
-                    localStorage.setItem('raven_users', JSON.stringify(allUsers));
-                    loadData();
-                    showToast('User deleted successfully', 'info');
-                }
-            );
-        }
-
-        // Delete code
-        function deleteCode(code) {
-            showConfirmDialog(
-                'Delete Code',
-                `Are you sure you want to delete the activation code: ${code}?`,
-                () => {
-                    activationCodes = activationCodes.filter(c => c.code !== code);
-                    localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
-                    loadData();
-                    showToast('Code deleted successfully', 'info');
-                }
-            );
-        }
-
-        // Confirm dialog
-        function showConfirmDialog(title, message, onConfirm) {
-            const modal = document.createElement('div');
-            modal.className = 'modal-backdrop';
-            modal.innerHTML = `
-                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full shadow-xl">
-                    <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">${title}</h3>
-                    <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6">${message}</p>
-                    <div class="flex gap-3">
-                        <button onclick="this.closest('.modal-backdrop').remove(); (${onConfirm.toString()})();" class="material-button flex-1 px-4 py-2 bg-error text-white rounded-lg">
-                            <span class="button-text">Confirm</span>
-                        </button>
-                        <button onclick="this.closest('.modal-backdrop').remove()" class="material-button flex-1 px-4 py-2 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg">
-                            <span class="button-text">Cancel</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        // Toast notification system
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toast-container') || createToastContainer();
-
-            const toast = document.createElement('div');
-            const iconMap = {
-                success: 'check_circle',
-                error: 'error',
-                warning: 'warning',
-                info: 'info'
-            };
-
-            const colorMap = {
-                success: 'bg-success text-white',
-                error: 'bg-error text-white',
-                warning: 'bg-warning text-white',
-                info: 'bg-accent text-white'
-            };
-
-            toast.className = `material-card flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-xl ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
-
-            toast.innerHTML = `
-                <span class="material-icons">${iconMap[type]}</span>
-                <span class="subtitle-2 flex-1">${message}</span>
-                <button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
-            `;
-
-            toastContainer.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 100);
-
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.classList.add('translate-y-2', 'opacity-0');
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, 3000);
-        }
-
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'fixed bottom-6 right-6 z-50 max-w-sm';
-            document.body.appendChild(container);
-            return container;
-        }
-
-        // Dark mode detection
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-        /* eslint-enable no-restricted-globals */
-    </script>
+    // Temporary loadData function for testing
+    function loadData() {
+        console.log('Loading admin data...');
+        // Your existing loadData code here
+    }
+</script>
 </body>
 </html>
