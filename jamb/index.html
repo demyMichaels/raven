@@ -459,366 +459,70 @@
             </div>
         </section>
     </main>
+<script>
+    // Admin credentials
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'admin123';
 
-    <script>
-        /* eslint-disable no-restricted-globals */
-        // Global variables
-        let allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
-        let activationCodes = JSON.parse(localStorage.getItem('raven_activation_codes')) || [];
-        let currentUser = null;
+    // DOM Elements
+    const loginSection = document.getElementById('loginSection');
+    const adminSection = document.getElementById('adminSection');
 
-        // DOM Elements
-        const landingSection = document.getElementById('landingSection');
-        const loginSection = document.getElementById('loginSection');
-        const registerSection = document.getElementById('registerSection');
-        const activationSection = document.getElementById('activationSection');
-        const dashboardSection = document.getElementById('dashboardSection');
-        const mainHeader = document.getElementById('mainHeader');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeSubjectSelection();
-            checkExistingSession();
-        });
-
-        // Subject selection logic
-        function initializeSubjectSelection() {
-            const checkboxes = document.querySelectorAll('input[name="subjects"]');
-            const countDisplay = document.getElementById('subjectCount');
-
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    const checked = document.querySelectorAll('input[name="subjects"]:checked');
-                    countDisplay.textContent = `${checked.length}/4 selected`;
-
-                    // Disable unchecked boxes if 4 are selected
-                    if (checked.length >= 4) {
-                        checkboxes.forEach(cb => {
-                            if (!cb.checked && cb.id !== 'subject_English') {
-                                cb.disabled = true;
-                            }
-                        });
-                    } else {
-                        checkboxes.forEach(cb => {
-                            if (cb.id !== 'subject_English') {
-                                cb.disabled = false;
-                            }
-                        });
-                    }
-                });
-            });
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - checking admin session');
+        
+        // Check if already logged in
+        const isLoggedIn = sessionStorage.getItem('admin_logged_in');
+        if (isLoggedIn === 'true') {
+            showAdminDashboard();
+        } else {
+            showLoginSection();
         }
 
-        // Check if user is already logged in
-        function checkExistingSession() {
-            const userEmail = localStorage.getItem('currentUserEmail');
-            if (userEmail) {
-                const user = allUsers.find(u => u.email === userEmail);
-                if (user) {
-                    currentUser = user;
-                    if (user.isActive && new Date(user.activationExpiry) > new Date()) {
-                        updateUserDisplay(user);
-                        renderDashboard();
-                        showSection(dashboardSection);
-                    } else if (user.isActive) {
-                        // Expired activation
-                        user.isActive = false;
-                        saveUsers();
-                        showSection(activationSection);
-                        showMaterialToast('Your activation has expired. Please enter a new code.', 'warning');
-                    } else {
-                        showSection(activationSection);
-                    }
-                } else {
-                    showSection(landingSection);
-                }
-            } else {
-                showSection(landingSection);
-            }
-        }
-
-        // Show/Hide Sections
-        function showSection(section) {
-            [landingSection, loginSection, registerSection, activationSection, dashboardSection].forEach(s => {
-                s.classList.add('hidden-content');
-            });
-
-            section.classList.remove('hidden-content');
-
-            if (section === dashboardSection) {
-                mainHeader.style.display = 'block';
-            } else {
-                mainHeader.style.display = 'none';
-            }
-
-            window.scrollTo(0, 0);
-        }
-
-        // Login Form Handler
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // Login form handler
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-
-            const user = allUsers.find(u => u.email === email && u.password === password);
-
-            if (user) {
-                localStorage.setItem('currentUserEmail', email);
-                currentUser = user;
-
-                if (user.isActive && new Date(user.activationExpiry) > new Date()) {
-                    updateUserDisplay(user);
-                    renderDashboard();
-                    showSection(dashboardSection);
-                    showMaterialToast('Welcome back! 🎓', 'success');
-                } else if (user.isActive && new Date(user.activationExpiry) <= new Date()) {
-                    user.isActive = false;
-                    saveUsers();
-                    showSection(activationSection);
-                    showMaterialToast('Your activation has expired. Please enter a new code.', 'warning');
-                } else {
-                    showSection(activationSection);
-                    showMaterialToast('Please activate your account', 'info');
-                }
+            console.log('Form submitted');
+            
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            console.log('Username:', username, 'Password:', password);
+            
+            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                console.log('Credentials correct - logging in');
+                sessionStorage.setItem('admin_logged_in', 'true');
+                showAdminDashboard();
             } else {
-                showMaterialToast('Invalid email or password!', 'error');
+                console.log('Invalid credentials');
+                alert('Invalid username or password! Use: admin / admin123');
             }
         });
+    });
 
-        // Register Form Handler
-        document.getElementById('registerForm').addEventListener('submit', (e) => {
-            e.preventDefault();
+    function showLoginSection() {
+        console.log('Showing login section');
+        loginSection.style.display = 'block';
+        adminSection.style.display = 'none';
+    }
 
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const institute = document.getElementById('registerInstitute').value;
-            const targetScore = document.getElementById('registerTargetScore').value;
-            const password = document.getElementById('registerPassword').value;
-            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    function showAdminDashboard() {
+        console.log('Showing admin dashboard');
+        loginSection.style.display = 'none';
+        adminSection.style.display = 'block';
+        loadData();
+    }
 
-            // Get selected subjects
-            const selectedSubjects = Array.from(document.querySelectorAll('input[name="subjects"]:checked'))
-                .map(cb => cb.value);
+    function logoutAdmin() {
+        sessionStorage.removeItem('admin_logged_in');
+        showLoginSection();
+    }
 
-            if (selectedSubjects.length !== 4) {
-                showMaterialToast('Please select exactly 4 subjects (including English)', 'error');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showMaterialToast('Passwords do not match!', 'error');
-                return;
-            }
-
-            if (allUsers.find(user => user.email === email)) {
-                showMaterialToast('User with this email already exists!', 'error');
-                return;
-            }
-
-            // Create user object
-            const newUser = {
-                id: allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id || 0)) + 1 : 1,
-                name: name,
-                email: email,
-                password: password,
-                institute: institute,
-                targetScore: parseInt(targetScore),
-                subjects: selectedSubjects,
-                registrationDate: new Date().toISOString(),
-                isActive: false,
-                activationExpiry: null,
-                activationCode: null,
-            };
-
-            allUsers.push(newUser);
-            saveUsers();
-
-            localStorage.setItem('currentUserEmail', email);
-            currentUser = newUser;
-
-            showSection(activationSection);
-            showMaterialToast('Account created successfully! Please activate your account.', 'success');
-        });
-
-        // Activation Form Handler
-        document.getElementById('activationForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const code = document.getElementById('activationCode').value.trim().toUpperCase();
-
-            const codeObj = activationCodes.find(c => c.code === code && !c.used);
-
-            if (codeObj) {
-                // Mark code as used
-                codeObj.used = true;
-                codeObj.usedBy = currentUser.email;
-                codeObj.usedDate = new Date().toISOString();
-                saveCodes();
-
-                // Calculate expiry date
-                const now = new Date();
-                let expiryDate;
-                if (codeObj.duration === 'trial') {
-                    expiryDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-                } else if (codeObj.duration === 'monthly') {
-                    expiryDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
-                }
-
-                // Activate user
-                currentUser.isActive = true;
-                currentUser.activationCode = code;
-                currentUser.activationExpiry = expiryDate.toISOString();
-                currentUser.activationDuration = codeObj.duration;
-
-                const userIndex = allUsers.findIndex(u => u.email === currentUser.email);
-                if (userIndex !== -1) {
-                    allUsers[userIndex] = currentUser;
-                    saveUsers();
-                }
-
-                updateUserDisplay(currentUser);
-                renderDashboard();
-                showSection(dashboardSection);
-
-                const durationText = codeObj.duration === 'trial' ? '7-day trial' : '30-day';
-                showMaterialToast(`Account activated! Your ${durationText} access is now active 🎓`, 'success');
-            } else {
-                showMaterialToast('Invalid or already used activation code!', 'error');
-            }
-        });
-
-        // Render Dashboard
-        function renderDashboard() {
-            if (!currentUser) return;
-
-            document.getElementById('dashboardUserName').textContent = currentUser.name.split(' ')[0];
-            document.getElementById('instituteDisplay').textContent = currentUser.institute || '-';
-            document.getElementById('targetScoreDisplay').textContent = currentUser.targetScore || '-';
-
-            if (currentUser.activationExpiry) {
-                const expiryDate = new Date(currentUser.activationExpiry);
-                document.getElementById('activationExpiry').textContent = expiryDate.toLocaleDateString();
-            }
-
-            // Display user subjects
-            const subjectsList = document.getElementById('userSubjectsList');
-            const subjectIcons = {
-                'English': 'menu_book',
-                'Mathematics': 'calculate',
-                'Physics': 'science',
-                'Chemistry': 'biotech',
-                'Biology': 'eco',
-                'Economics': 'trending_up',
-                'Accounting': 'account_balance',
-                'Agriculture': 'agriculture',
-                'Art': 'palette',
-                'Commerce': 'store',
-                'Computer': 'computer',
-                'CRS': 'church',
-                'Geography': 'public',
-                'Government': 'gavel',
-                'History': 'history_edu',
-                'Home Economics': 'home',
-                'Islamic Studies': 'mosque',
-                'Literature': 'auto_stories',
-                'PHE': 'sports',
-                'Music': 'music_note'
-            };
-
-            subjectsList.innerHTML = currentUser.subjects.map(subject => `
-                <div class="material-card bg-primary/10 rounded-lg p-4 text-center">
-                    <span class="material-icons text-primary text-3xl mb-2">${subjectIcons[subject] || 'book'}</span>
-                    <p class="subtitle-2 text-neutral-800 dark:text-white">${subject}</p>
-                </div>
-            `).join('');
-        }
-
-        // Update user display
-        function updateUserDisplay(user) {
-            const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            document.getElementById('userInitials').textContent = initials;
-            logoutBtn.classList.remove('hidden');
-        }
-
-        // Logout functionality
-        function logout() {
-            localStorage.removeItem('currentUserEmail');
-            currentUser = null;
-            logoutBtn.classList.add('hidden');
-            showSection(landingSection);
-            showMaterialToast('Logged out successfully', 'info');
-        }
-
-        // Helper functions
-        function saveUsers() {
-            localStorage.setItem('raven_users', JSON.stringify(allUsers));
-        }
-
-        function saveCodes() {
-            localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
-        }
-
-        // Material Design Toast System
-        function showMaterialToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toast-container') || createToastContainer();
-
-            const toast = document.createElement('div');
-            const iconMap = {
-                success: 'check_circle',
-                error: 'error',
-                warning: 'warning',
-                info: 'info'
-            };
-
-            const colorMap = {
-                success: 'bg-success text-white',
-                error: 'bg-error text-white',
-                warning: 'bg-warning text-white',
-                info: 'bg-accent text-white'
-            };
-
-            toast.className = `material-card flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-xl ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
-
-            toast.innerHTML = `
-                <span class="material-icons">${iconMap[type]}</span>
-                <span class="subtitle-2 flex-1">${message}</span>
-                <button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
-            `;
-
-            toastContainer.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 100);
-
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.classList.add('translate-y-2', 'opacity-0');
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, 3000);
-        }
-
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'fixed bottom-6 left-6 z-50 max-w-sm';
-            document.body.appendChild(container);
-            return container;
-        }
-
-        // Dark mode detection
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-        /* eslint-enable no-restricted-globals */
-    </script>
+    // Temporary loadData function for testing
+    function loadData() {
+        console.log('Loading admin data...');
+        // Your existing loadData code here
+    }
+</script>
 </body>
 </html>
