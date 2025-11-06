@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antonym</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        primaryDark: '#4b4ab2',
+                        correct: '#58cc02',
+                        correctDark: '#46a302',
+                        incorrect: '#ff4b4b',
+                        incorrectDark: '#d92b2b'
+                    },
+                    animation: {
+                        'bounce-once': 'bounce 0.6s ease-in-out 1',
+                        'shake': 'shake 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%': { transform: 'translateX(-10px)' },
+                            '40%': { transform: 'translateX(10px)' },
+                            '60%': { transform: 'translateX(-10px)' },
+                            '80%': { transform: 'translateX(10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .option-btn {
+            transition: all 0.2s ease;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .option-btn:hover:not(.disabled) {
+            border-color: #5D5CDE;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .option-btn.disabled {
+            cursor: default;
+        }
+        
+        .correct {
+            background-color: #58cc02;
+            color: white;
+            border-color: #46a302;
+        }
+        
+        .dark .correct {
+            background-color: #46a302;
+            border-color: #3b8a01;
+        }
+        
+        .incorrect {
+            background-color: #ff4b4b;
+            color: white;
+            border-color: #d92b2b;
+        }
+        
+        .dark .incorrect {
+            background-color: #d92b2b;
+            border-color: #b91c1c;
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .highlight {
+            color: #5D5CDE;
+            font-weight: bold;
+        }
+        
+        .dark .highlight {
+            color: #7c7bf0;
+        }
+        
+        .check-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 dark:text-white">
+    <div class="container mx-auto px-4 py-8 max-w-3xl">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center">
+                <svg class="w-10 h-10 text-primary dark:text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0 2c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm3.493 5.889h-2.492v-2.493h-2.001v2.493h-2.493v2.001h2.493v2.493h2.001v-2.493h2.492v-2.001z"/>
+                </svg>
+                <h1 class="text-2xl md:text-3xl font-bold ml-2">Antonym Master</h1>
+            </div>
+            
+            <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                <svg id="lightIcon" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z"></path>
+                </svg>
+                <svg id="darkIcon" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 7C10 10.866 13.134 14 17 14C18.9584 14 20.729 13.1957 21.9995 11.8995C22 11.933 22 11.9665 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C12.0335 2 12.067 2 12.1005 2.00049C10.8043 3.27105 10 5.04157 10 7ZM4 12C4 16.4183 7.58172 20 12 20C15.0583 20 17.7158 18.2839 19.062 15.7621C18.3945 15.9196 17.7035 16 17 16C12.0294 16 8 11.9706 8 7C8 6.29648 8.08036 5.60547 8.2379 4.938C5.71611 6.28423 4 8.9417 4 12Z"></path>
+                </svg>
+            </button>
+        </header>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-200 h-4 rounded-full overflow-hidden mb-8 dark:bg-gray-700">
+            <div id="progressBar" class="progress-bar h-full bg-primary dark:bg-primaryDark" style="width: 5%;"></div>
+        </div>
+        
+        <!-- Main Quiz Container -->
+        <main id="quizContainer" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+            <div id="questionArea" class="mb-6">
+                <h2 class="text-lg md:text-xl font-bold mb-4">Choose the antonym for the highlighted word:</h2>
+                <p id="question" class="text-lg md:text-xl mb-4 leading-relaxed"></p>
+            </div>
+            
+            <div id="optionsArea" class="space-y-3 mb-6">
+                <!-- Options will be generated here -->
+            </div>
+            
+            <div id="feedbackArea" class="mb-6 hidden text-center p-4 rounded-lg">
+                <!-- Feedback will appear here -->
+            </div>
+            
+            <div class="flex justify-between">
+                <button id="checkBtn" class="px-6 py-3 rounded-lg bg-primary hover:bg-primaryDark text-white font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-primary dark:hover:bg-primaryDark">
+                    Check
+                </button>
+                <button id="nextBtn" class="px-6 py-3 rounded-lg bg-primary hover:bg-primaryDark text-white font-bold transition-colors hidden dark:bg-primary dark:hover:bg-primaryDark">
+                    Continue
+                </button>
+            </div>
+        </main>
+        
+        <!-- Results Screen (Hidden initially) -->
+        <div id="resultsScreen" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+            <h2 class="text-2xl font-bold mb-4">Great job!</h2>
+            <div class="mb-6">
+                <svg class="w-24 h-24 mx-auto text-correct dark:text-correctDark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75999 11.7574L8.17421 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path>
+                </svg>
+            </div>
+            <p class="text-xl mb-2">You scored:</p>
+            <p id="finalScore" class="text-3xl font-bold mb-6 text-primary dark:text-primary">0/20</p>
+            <p class="mb-6">Keep practicing to master your antonyms!</p>
+            <button id="restartBtn" class="px-6 py-3 rounded-lg bg-primary hover:bg-primaryDark text-white font-bold transition-colors dark:bg-primary dark:hover:bg-primaryDark">
+                Start Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection and toggle
+        function setTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('lightIcon').classList.remove('hidden');
+                document.getElementById('darkIcon').classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('darkIcon').classList.remove('hidden');
+                document.getElementById('lightIcon').classList.add('hidden');
+            }
+        }
+
+        setTheme();
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);
+        
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('lightIcon').classList.toggle('hidden');
+            document.getElementById('darkIcon').classList.toggle('hidden');
+        });
+
+
+        // Questions data
+        const questions = [
+            {
+                text: "The doctor was very [gentle] with his Patients in the examining room.",
+                options: ["harsh", "rude", "rough", "unkind", "callous"],
+                correctIndex: 0 // "harsh" is the antonym of "gentle"
+            },
+            {
+                text: "James is a disco-addict. He takes his studies rather [lightly].",
+                options: ["humorously", "gloomily", "tediously", "carefully", "seriously"],
+                correctIndex: 4 // "seriously" is the antonym of "lightly"
+            },
+            {
+                text: "My cousin is very lazy. He will not take his studies seriously. His future looks quite [bleak].",
+                options: ["cloudy", "cheerless", "bright", "huge", "sturdy"],
+                correctIndex: 2 // "bright" is the antonym of "bleak"
+            },
+            {
+                text: "While most of our recently elected legislators are living a life of [affluence] and ostentation, the vast majority of those who elected them into ofﬁce are unhappy.",
+                options: ["inﬂuence", "pleasure", "poverty", "happiness", "consequence"],
+                correctIndex: 2 // "poverty" is the antonym of "affluence"
+            },
+            {
+                text: "It is generally believed [misers] are not loved by many.",
+                options: ["spendthrift", "spenders", "hoarders", "savers", "thieves"],
+                correctIndex: 1 // "spenders" is the antonym of "misers"
+            },
+            {
+                text: "My brother's primary school foundation was [solid] and this affected his secondary education.",
+                options: ["sound", "sordid", "shaky", "weak", "uneventful"],
+                correctIndex: 3 // "weak" is the antonym of "solid"
+            },
+            {
+                text: "Politicians are holders of political appointments are generally assumed to be [cunning].",
+                options: ["kind", "straightforward", "generous", "even-handed", "sly"],
+                correctIndex: 1 // "straightforward" is the antonym of "cunning"
+            },
+            {
+                text: "The long straight trunk of the tree is [ideal] for round wood uses like railway sleepers, rafters and fence posts.",
+                options: ["best", "perfect", "most unsuitable", "satisfactory", "poor"],
+                correctIndex: 2 // "most unsuitable" is the antonym of "ideal"
+            },
+            {
+                text: "A book on style without abundant examples seems to me as [ineffectual] as a book on biology without abundant illustrations.",
+                options: ["useless", "difﬁcult", "interesting", "satisfactory", "attractive"],
+                correctIndex: 3 // "satisfactory" is the antonym of "ineffectual"
+            },
+            {
+                text: "To most people last Christmas was an [austere] period.",
+                options: ["prosperous", "harsh", "severe", "sour", "stem"],
+                correctIndex: 0 // "prosperous" is the antonym of "austere"
+            },
+            {
+                text: "The Chief was [generous] in his award of university scholarships",
+                options: ["noble", "considerate", "liberal", "mean", "honest"],
+                correctIndex: 3 // "mean" is the antonym of "generous"
+            },
+            {
+                text: "Chidi is naturally [taciturn]",
+                options: ["friendly", "cheerful", "dumb", "lively", "garrulous"],
+                correctIndex: 4 // "garrulous" is the antonym of "taciturn"
+            },
+            {
+                text: "He is loved for his [altruism].",
+                options: ["benevolence", "sincerity", "selfishness", "selflessness", "kindness"],
+                correctIndex: 2 // "selfishness" is the antonym of "altruism"
+            },
+            {
+                text: "The Military Governor [upheld] the decision of his cabinet.",
+                options: ["held up", "undercut", "maintained", "abolished", "reversed"],
+                correctIndex: 4 // "reversed" is the antonym of "upheld"
+            },
+            {
+                text: "Many untrustworthy students give [evasive] answers to question they fully understand.",
+                options: ["direct", "outspoken", "simple", "truthful", "clever"],
+                correctIndex: 0 // "direct" is the antonym of "evasive"
+            },
+            {
+                text: "The deafening noise of the two jet planes which flew across our compound yesterday made people fear that an assault on the country might be [imminent].",
+                options: ["impending", "ahead", "remote", "eminent", "threatening"],
+                correctIndex: 2 // "remote" is the antonym of "imminent"
+            },
+            {
+                text: "Disgruntled people are [indifferent] to any plans to rid the society of evil.",
+                options: ["different from", "different about", "in agreement with", "interested in", "opposed to"],
+                correctIndex: 3 // "interested in" is the antonym of "indifferent"
+            },
+            {
+                text: "The [severity] of the harmattan helped me to complete my writing assignment in record time because I had no choice but to lock myself indoors.",
+                options: ["warmth", "mildness", "moderation", "leniency", "gentility"],
+                correctIndex: 1 // "mildness" is the antonym of "severity"
+            },
+            {
+                text: "The increase in transport fares [deterred] our club from planning an excursion this year.",
+                options: ["deferred", "irritated", "implied", "restricted", "encouraged"],
+                correctIndex: 4 // "encouraged" is the antonym of "deterred"
+            },
+            {
+                text: "This care [entitles] you to attend the film show.",
+                options: ["disqualifies", "discourages", "disenchants", "proclaims", "satisfies"],
+                correctIndex: 0 // "disqualifies" is the antonym of "entitles"
+            },
+
+            //Group 2
+    {
+        text: "This is an [abridged] edition of Oliver Twist.",
+        options: ["reprinted", "enlarged", "outdated", "extinct", "banned"],
+        correctIndex: 1
+    },
+    {
+        text: "Mr. Jack was most [flexible] in his instructions.",
+        options: ["rigid", "correct", "stuff", "upright"],
+        correctIndex: 0
+    },
+    {
+        text: "The University has offered [temporary] accommodation to its staff.",
+        options: ["popular", "permanent", "recognized", "regular"],
+        correctIndex: 1
+    },
+    {
+        text: "Mary complained that she slept on the [coarse] floor.",
+        options: ["smooth", "rough", "bad", "harsh"],
+        correctIndex: 0
+    },
+    {
+        text: "Jim was one of the [spectators] at the concert.",
+        options: ["ushers", "judges", "guests", "performers"],
+        correctIndex: 3
+    },
+    {
+        text: "The Governor [declined] to give audience to the journalist.",
+        options: ["ignored", "accepted", "forgot", "rejected"],
+        correctIndex: 1
+    },
+    {
+        text: "The debtor’s husband is [liable] for his wife’s debts.",
+        options: ["unanswerable", "responsible", "unquestionable", "accountable"],
+        correctIndex: 0
+    },
+    {
+        text: "The lotion recommended by the doctor [soothed] Okon's aching tooth.",
+        options: ["calmed", "extracted", "excited", "worsened"],
+        correctIndex: 3
+    },
+    {
+        text: "The sun cast its [shadow] on the wall.",
+        options: ["reflection", "rays", "resemblance", "substance"],
+        correctIndex: 1
+    },
+    {
+        text: "The lady acted [courageously] when thieves attacked her.",
+        options: ["shyly", "fearlessly", "indiscreetly", "timidly"],
+        correctIndex: 3
+    },
+    {
+        text: "Unless we see the evils dearly, contending against them is like [fighting] the air.",
+        options: ["avoiding", "snuggling with", "combating", "repelling"],
+        correctIndex: 0
+    },
+    {
+        text: "The explosive growth of world population has not been caused by a [sudden] increase in human fertility.",
+        options: ["fantastic", "gradual", "combustible", "dangerous"],
+        correctIndex: 1
+    },
+    {
+        text: "It is generally believed that [misers] are not loved by many.",
+        options: ["spendthrifts", "spenders", "boarders", "savers"],
+        correctIndex: 0
+    },
+    {
+        text: "My brother's primary school foundation was [solid] and this influenced his secondary education.",
+        options: ["sound", "sordid", "shaky", "weak"],
+        correctIndex: 2
+    },
+    {
+        text: "Our government is making a [determined] effort to eradicate illiteracy.",
+        options: ["compulsory", "ineffective", "innocent", "unreliable"],
+        correctIndex: 1
+    },
+    {
+        text: "Makerere University has a large [intake] of students each year.",
+        options: ["rejection", "product", "output", "turn-out"],
+        correctIndex: 0
+    },
+    {
+        text: "Florence flogged the girl [reluctantly].",
+        options: ["eagerly", "calmly", "furiously", "laboriously"],
+        correctIndex: 0
+    },
+    {
+        text: "Sola's car is badly damaged; he has to look for an [expert] mechanic to fix it.",
+        options: ["uneducated", "amateurish", "awkward", "unscientific"],
+        correctIndex: 1
+    },
+    {
+        text: "Coastal plains are often very [densely] populated.",
+        options: ["weakly", "badly", "rarely", "sparsely"],
+        correctIndex: 3
+    },
+    {
+        text: "Wilfred was a [mindless] criminal.",
+        options: ["strong", "mindful", "feeling", "memorable"],
+        correctIndex: 1
+    },
+
+        //Group 3
+    {
+        text: "The thieves [vandalized] the vault’s lock.",
+        options: ["repaired", "arranged", "serviced", "actuated"],
+        correctIndex: 0
+    },
+    {
+        text: "The [angry] waves swallowed the boat.",
+        options: ["gentle", "unruffled", "cool", "serene"],
+        correctIndex: 0
+    },
+    {
+        text: "Lola was [agitated] when the sad news of her mother’s accident was broken to her.",
+        options: ["excited", "calm", "uncontrollable", "unreasonable"],
+        correctIndex: 1
+    },
+    {
+        text: "Though his parents’ poverty placed many [obstacles] in his path as a young man, Olu succeeded at last.",
+        options: ["hurdles", "advantages", "temptations", "diversions"],
+        correctIndex: 1
+    },
+    {
+        text: "Binta [sobbed] by the door because she had lost her mother’s precious necklace.",
+        options: ["cried", "smiled", "wept", "laughed"],
+        correctIndex: 3
+    },
+    {
+        text: "The president took exception to the [ignoble] role the young man played in the matter.",
+        options: ["honourable", "embarrassing", "dishonourable", "extraordinary"],
+        correctIndex: 0
+    },
+    {
+        text: "The man who had been seriously ill was [convalescing] at a sea-side resort.",
+        options: ["regaining health", "deteriorating in health", "recuperating", "relaxing"],
+        correctIndex: 1
+    },
+    {
+        text: "For millions of years, the world’s resources have remained [boundless].",
+        options: ["unlimited", "scarce", "indomitable", "limited"],
+        correctIndex: 3
+    },
+    {
+        text: "It seems fashionable, in some quarters today, to [decry] examinations and the ability to pass them.",
+        options: ["extol", "abuse", "entreat", "discourage"],
+        correctIndex: 0
+    },
+    {
+        text: "Ogedegbe was an [intrepid] fighter for human freedom and dignity.",
+        options: ["timid", "half-hearted", "fearless", "undaunted"],
+        correctIndex: 0
+    },
+    {
+        text: "The difference between the experimental procedures was [imperceptible] to me.",
+        options: ["negligible", "significant", "obvious", "obscure"],
+        correctIndex: 2
+    },
+    {
+        text: "His [antipathy] to religious ideas makes him unpopular.",
+        options: ["remedy", "consciousness", "hostility", "receptiveness"],
+        correctIndex: 3
+    },
+    {
+        text: "I am happy to inform you that your boys are [conscientious].",
+        options: ["industrious", "carefree", "careful", "corrupt"],
+        correctIndex: 1
+    },
+    {
+        text: "My father is very [prosperous] businessman.",
+        options: ["ungrateful", "unscrupulous", "unskilled", "unsuccessful"],
+        correctIndex: 3
+    },
+    {
+        text: "The hostess greeted her guest in a [relaxed] manner.",
+        options: ["energetic", "athletic", "stiff", "perplexed"],
+        correctIndex: 2
+    },
+    {
+        text: "Ayo takes his studies rather [lightly].",
+        options: ["humorously", "tediously", "carefully", "seriously"],
+        correctIndex: 3
+    },
+    {
+        text: "The doctor was very [gentle] with his patients in the examining room.",
+        options: ["harsh", "rude", "tough", "unkind"],
+        correctIndex: 0
+    },
+    {
+        text: "Ojo’s response [infuriated] his wife.",
+        options: ["annoyed", "pleased", "surprised", "confused"],
+        correctIndex: 1
+    },
+    {
+        text: "He accepted a [mundane] task without hesitation.",
+        options: ["great", "lowly", "menial", "moderate"],
+        correctIndex: 0
+    },
+    {
+        text: "It is a [unique] opportunity for her to demonstrate the reality of her faith.",
+        options: ["strange", "usual", "golden", "unusual"],
+        correctIndex: 1
+    },
+
+    //Group 4
+    {
+        text: "Her [identification] with the king is publicly known.",
+        options: ["hatred", "disassociation", "relationship", "intimacy"],
+        correctIndex: 1
+    },
+    {
+        text: "The economic situation in the country is obviously [gloomy].",
+        options: ["encouraging", "moody", "unknown", "regrettable"],
+        correctIndex: 0
+    },
+    {
+        text: "One wonders if the situation will [improve].",
+        options: ["brighten", "diminish", "disintegrate", "worsen"],
+        correctIndex: 3
+    },
+    {
+        text: "Language teachers believe that grammar exercises [stretch] the mind.",
+        options: ["expand", "ruin", "enrich", "restrict"],
+        correctIndex: 3
+    },
+    {
+        text: "These two books are [identical].",
+        options: ["alike", "similar", "different", "equal"],
+        correctIndex: 2
+    },
+    {
+        text: "The doctor tried to [alleviate] his patient's pain.",
+        options: ["relieve", "worsen", "kill", "cure"],
+        correctIndex: 1
+    },
+    {
+        text: "The instructions on the examination paper are [explicit].",
+        options: ["simple", "ambiguous", "detailed", "definite"],
+        correctIndex: 1
+    },
+    {
+        text: "Okoro is an [amateur].",
+        options: ["skillful", "good", "professional", "strong"],
+        correctIndex: 2
+    },
+    {
+        text: "The effect of rising prices has [snowballed] considerably.",
+        options: ["risen", "deceased", "frozen", "grown"],
+        correctIndex: 1
+    },
+    {
+        text: "The economic situation is responsible for the recent [discord] in many families.",
+        options: ["division", "resourcefulness", "harmony", "suffering"],
+        correctIndex: 2
+    },
+    {
+        text: "The college was worried about Tunji's [garrulous] tendencies.",
+        options: ["reticent", "loquacious", "quarrelsome", "outspoken"],
+        correctIndex: 0
+    },
+    {
+        text: "Surveying the sky in the quiet of the night gives me an [ethereal] feeling.",
+        options: ["human", "earthly", "mundane", "commonplace"],
+        correctIndex: 1
+    },
+    {
+        text: "The awareness of [morality] has always imposed some restraint on man's excesses.",
+        options: ["celestiality", "eternity", "continuity", "inexistence"],
+        correctIndex: 3
+    },
+    {
+        text: "The decision we have taken is [irrevocable].",
+        options: ["responsible", "irresponsible", "reversible", "irreversible"],
+        correctIndex: 2
+    },
+    {
+        text: "The lawyer pointed out a [discrepancy] in the two stories.",
+        options: ["similarity", "gap", "falsehood", "difference"],
+        correctIndex: 0
+    },
+    {
+        text: "Their high level of dishonesty has made that department [infamous] in the entire secretariat.",
+        options: ["reputable", "notorious", "unpopular", "acceptable"],
+        correctIndex: 0
+    },
+    {
+        text: "The paper carries many [humorous] cartoons on Saturdays.",
+        options: ["amorous", "grievous", "hilarious", "grave"],
+        correctIndex: 3
+    },
+    {
+        text: "All through his years in public office, he found his father’s advice [invaluable].",
+        options: ["priceless", "hopeless", "worthless", "helpful"],
+        correctIndex: 2
+    },
+    {
+        text: "The lecturer was merely [obfuscating] the issue with his endless examples.",
+        options: ["complicating", "clarifying", "confusing", "summarizing"],
+        correctIndex: 1
+    },
+    {
+        text: "Such measures end up [exacerbating] the pain.",
+        options: ["aggravating", "increasing", "eliminating", "alleviating"],
+        correctIndex: 3
+    },
+
+    //Group 5
+    {
+        text: "In a sentence, there must always be [concord] between a subject and its verb.",
+        options: ["breach", "departure", "disagreement", "dispute"],
+        correctIndex: 0
+    },
+    {
+        text: "In the course of the debate, the speakers were advised to [summarize] their points.",
+        options: ["argue", "develop", "round-off", "round-up"],
+        correctIndex: 2
+    },
+    {
+        text: "We should discourage further investment in [existing] factories.",
+        options: ["productive", "prosperous", "prospective", "precious"],
+        correctIndex: 2
+    },
+    {
+        text: "Nigeria is gradually experiencing economic [recession].",
+        options: ["birth", "discovery", "recovery", "destruction"],
+        correctIndex: 2
+    },
+    {
+        text: "Good student can easily identify [spurious].",
+        options: ["genuine", "interesting", "false", "illogical"],
+        correctIndex: 0
+    },
+    {
+        text: "Eze's skin now looks [flabby] as a result of his changed circumstances.",
+        options: ["neat", "firm", "weak", "oily"],
+        correctIndex: 1
+    },
+    {
+        text: "He and his lieutenants have been accused of remaining [intransigent].",
+        options: ["rigid", "stubborn", "compromising", "popular"],
+        correctIndex: 2
+    },
+    {
+        text: "In the opinion of most observers, it was a [disinterested] decision.",
+        options: ["neutral", "impartial", "biased", "candid"],
+        correctIndex: 2
+    },
+    {
+        text: "We watched in wonder as she rattled away in [esoteric] language.",
+        options: ["inscrutable", "familiar", "secret", "obscure"],
+        correctIndex: 1
+    },
+    {
+        text: "Many species in creation have [mutated] over the years into new forms of life.",
+        options: ["stabilized", "manifested", "transformed", "standardized"],
+        correctIndex: 2
+    },
+    {
+        text: "His textile business deals are [ingress].",
+        options: ["wholesale", "imported", "retailed", "exported"],
+        correctIndex: 1
+    },
+    {
+        text: "The government is [initiating] new effective programmes to boost production.",
+        options: ["ending/enhance", "reviewing/renew", "rearranging/increase", "terminating/reduce"],
+        correctIndex: 3
+    },
+    {
+        text: "The culprit [unwittingly] subjected himself to great humiliation.",
+        options: ["cunningly", "curiously", "foolishly", "subtly"],
+        correctIndex: 2
+    },
+    {
+        text: "In his [solidarity], the party leader undertook a nation-wide tour.",
+        options: ["unity", "resistant", "mobilization", "re-organization"],
+        correctIndex: 0
+    },
+    {
+        text: "Our party is [wielding] potent political power.",
+        options: ["assuming", "renouncing", "restoring", "reappraising"],
+        correctIndex: 0
+    },
+    {
+        text: "The rulers expect full [allegiance] from his subjects at all times.",
+        options: ["obedience", "homage", "disloyalty", "disapproval"],
+        correctIndex: 2
+    },
+    {
+        text: "In spite many days of fasting, Musa is still [fastidious] about his food.",
+        options: ["particular", "undecided", "indifferent", "unmindful"],
+        correctIndex: 2
+    },
+    {
+        text: "The leader called for [concerted] efforts in order to get over the problems.",
+        options: ["antiquated", "useless", "fashionable", "functional"],
+        correctIndex: 1
+    },
+    {
+        text: "The video tape recorder was made [obsolete] by the introduction of the satellite dish.",
+        options: ["antiquated", "useless", "fashionable", "functional"],
+        correctIndex: 1
+    },
+    {
+        text: "Segun is somebody who always follows his own [inclination].",
+        options: ["impulses", "aversions", "dispositions", "deviations"],
+        correctIndex: 2
+    },
+
+//Group 6
+    {
+        text: "The poor man is compelled to [languish] in his poverty-stricken situation.",
+        options: ["luxuriate in", "deteriorate in", "suffer in", "laugh at"],
+        correctIndex: 0
+    },
+    {
+        text: "The engineers have been urged to make a [prototype] of the long-awaited Nigeria car.",
+        options: ["specimen", "original", "copy", "drawing"],
+        correctIndex: 2
+    },
+    {
+        text: "He gave a [painstaking] account of his encounter with the ghost of his father.",
+        options: ["sordid", "fearful", "half-hearted", "tender-hearted"],
+        correctIndex: 2
+    },
+    {
+        text: "Since [mortality] is the lot of man, argued the preacher, we must all accept death with equanimity.",
+        options: ["concern", "uncertainty", "serenity", "anxiety"],
+        correctIndex: 3
+    },
+    {
+        text: "We admire the minister’s [passionate] and dynamic characters.",
+        options: ["cruel and passive", "kind and forceful", "passive and charmless", "charmless and cruel"],
+        correctIndex: 2
+    },
+    {
+        text: "I was advised to stay away from cities that are [ravaged] by crime.",
+        options: ["spoilt by", "free from", "suffering from", "haven of"],
+        correctIndex: 1
+    },
+    {
+        text: "You can use [lethal] means if it’s necessary to stop dangerous characters from molesting innocent citizens.",
+        options: ["fatal", "cruel", "harmless", "soft"],
+        correctIndex: 2
+    },
+    {
+        text: "His intention was actually to punish the villagers, and in any case, he is now making moves to [pacify] them.",
+        options: ["placate", "ridicule", "appease", "annoy"],
+        correctIndex: 3
+    },
+    {
+        text: "If you are really keen to immediate results, you just have to adopt this [pragmatic] approach.",
+        options: ["practical", "unrealistic", "opportunities", "sensible"],
+        correctIndex: 1
+    },
+    {
+        text: "My friend was reduced to [beggary] by various ill-advised business deals.",
+        options: ["affluence", "penury", "influence", "poverty"],
+        correctIndex: 0
+    },
+    {
+        text: "Measures were taken to [authenticate] the number of the booklets received.",
+        options: ["reaffirm", "discredit", "discountenance", "count"],
+        correctIndex: 1
+    },
+    {
+        text: "He urged other [progressives] in the country to join forces with his association.",
+        options: ["radicals", "conservatives", "pessimists", "activists"],
+        correctIndex: 1
+    },
+    {
+        text: "Adama's father simply [condoned] her bad habits instead of punishing her appropriately.",
+        options: ["opposed", "blamed", "accepted", "forbade"],
+        correctIndex: 0
+    },
+    {
+        text: "The undesirable elements who [perpetuate] these vices are never detected.",
+        options: ["aggravate", "overlook", "discontinue", "encourage"],
+        correctIndex: 2
+    },
+    {
+        text: "Some travelers [unwittingly] render themselves open prey to questionable characters.",
+        options: ["genuinely", "wholesomely", "knowingly", "inadvertently"],
+        correctIndex: 2
+    },
+    {
+        text: "His father is a [shrewd] businessman.",
+        options: ["gullible", "orderly", "reliable", "resourceful"],
+        correctIndex: 0
+    },
+    {
+        text: "Many people have raised the issue about the need for an [equitable] distribution of our wealth.",
+        options: ["a fair", "an even", "an unjust", "an undue"],
+        correctIndex: 2
+    },
+    {
+        text: "The pastor decided to [exorcise] the evil spirit as the afflicted member of his congregation cried for help.",
+        options: ["expel", "drive", "invite", "charm"],
+        correctIndex: 2
+    },
+    {
+        text: "He [mumbled] a few words at the trial and then cried.",
+        options: ["shouted", "murmured", "charm", "invite"],
+        correctIndex: 0
+    },
+    {
+        text: "There are many areas of [convergence] between male and female behaviour.",
+        options: ["concomitance", "concordance", "incompatibility", "incomparability"],
+        correctIndex: 2
+    },
+    {
+        text: "The greenhouse effect is beginning to [abate] in Europe.",
+        options: ["intensify", "extenuate", "surface", "ameliorate"],
+        correctIndex: 0
+    },
+    {
+        text: "The chairman's verdict [redressed] the injustice meted out by the secretary.",
+        options: ["corrected", "restored", "aggravated", "addressed"],
+        correctIndex: 2
+    },
+    {
+        text: "Uche could not travel last December because of the [severity] of the harmattan.",
+        options: ["cold", "mildness", "warmth", "moderation"],
+        correctIndex: 1
+    },
+    {
+        text: "Mrs. Kofi is very [provocative] in her style of dressing.",
+        options: ["modest", "happy", "angry", "beautiful"],
+        correctIndex: 0
+    },
+    {
+        text: "Akoso thought that her father was very [callous].",
+        options: ["indifferent", "compassionate", "wicked", "careless"],
+        correctIndex: 1
+    },
+
+    //Group 7
+    {
+        text: "The Lions of Cameroon is really an [indomitable] team.",
+        options: ["a powerful", "a prominent", "a weak", "a cowardly"],
+        correctIndex: 2
+    },
+    {
+        text: "To almost everyone in the little village, Ada's behaviour was most [odious].",
+        options: ["repulsive", "difficult", "attractive", "charming"],
+        correctIndex: 2
+    },
+    {
+        text: "Aduma was so [vociferous] during the meeting of the congregation that he succeeded in incurring the wrath of the chairman.",
+        options: ["anger", "admiration", "displeasure", "sympathy"],
+        correctIndex: 1
+    },
+    {
+        text: "It was an [inopportune] moment for you to make that suggestion.",
+        options: ["an ideal", "a wrong", "an exact", "a sad"],
+        correctIndex: 0
+    },
+    {
+        text: "He devoted too much time to the [peripheral] aspects.",
+        options: ["unimportant", "superficial", "minor", "main"],
+        correctIndex: 3
+    },
+    {
+        text: "The climate of Nigeria is an [enervating] one.",
+        options: ["a weakening", "an energy-sapping", "an invigorating", "a sluggish"],
+        correctIndex: 2
+    },
+    {
+        text: "Once he has decided that something needs doing, my brother is very [unswerving] of purpose.",
+        options: ["erratic", "tenacious", "stubborn", "simple"],
+        correctIndex: 0
+    },
+    {
+        text: "Those were the days of the [fallacy] that some languages are primitive while others are not.",
+        options: ["argument", "excuse", "misconception", "truth"],
+        correctIndex: 3
+    },
+    {
+        text: "She is [immune] to the flattery of young men.",
+        options: ["resistant", "susceptible", "insensible", "unresponsive"],
+        correctIndex: 1
+    },
+    {
+        text: "Events in South Africa indicate a kind of political [renaissance].",
+        options: ["rejuvenation", "decline", "turbulence", "upheaval"],
+        correctIndex: 1
+    },
+    {
+        text: "If we must live together as one people, we must learn to tolerate [disparate] dispositions.",
+        options: ["converging", "accommodating", "conflicting", "opposing"],
+        correctIndex: 0
+    },
+    {
+        text: "The presidential aspirant warned of the political [catastrophe] that would follow if the election were rigged.",
+        options: ["problem", "turmoil", "success", "conflagration"],
+        correctIndex: 2
+    },
+    {
+        text: "The officer asked for a more [temperate] assessment of the matter.",
+        options: ["extreme", "moderate", "radical", "human"],
+        correctIndex: 0
+    },
+    {
+        text: "My father's advice to me was quite [invaluable].",
+        options: ["useless", "useful", "helpful", "unsolicited"],
+        correctIndex: 0
+    },
+    {
+        text: "Musa hates Hadiza for her constant [bellicose] behaviour.",
+        options: ["violent", "gentle", "meek", "troublesome"],
+        correctIndex: 1
+    },
+    {
+        text: "There is much [indifference] in his behaviour.",
+        options: ["concern", "nonchalance", "willingness", "inconsistency"],
+        correctIndex: 0
+    },
+    {
+        text: "My brother married a [loquacious] woman.",
+        options: ["quiet", "noisy", "talkative", "beautiful"],
+        correctIndex: 0
+    },
+    {
+        text: "Most warring countries end up in a state of [satiation].",
+        options: ["hunger", "thirst", "danger", "famine"],
+        correctIndex: 0
+    },
+    {
+        text: "Abdul is fond of his teacher though he sometimes makes [derogatory] remarks about him.",
+        options: ["unpleasant", "complimentary", "expressive", "inconsiderate"],
+        correctIndex: 1
+    },
+    {
+        text: "The Minister has finally been dropped from the present cabinet because of his [ignoble] act.",
+        options: ["criminal", "ignorant", "honourable", "selfish"],
+        correctIndex: 2
+    },
+    {
+        text: "His cruelty to his mother [defies] logical explanation.",
+        options: ["demands", "offers", "projects", "precludes"],
+        correctIndex: 0
+    },
+    {
+        text: "Orinya balances the pail on her head with [accustomed] ease.",
+        options: ["convincing", "surprising", "unwary", "unusual"],
+        correctIndex: 1
+    },
+    {
+        text: "They attacked all regulations designed to [emasculate] student militancy.",
+        options: ["condone", "isolate", "punish", "strengthen"],
+        correctIndex: 3
+    },
+    {
+        text: "There is no point [dissipating] energy on a useless argument.",
+        options: ["destroying", "conserving", "marshaling", "storing"],
+        correctIndex: 1
+    },
+    {
+        text: "Everyone, including the Principal, believed that he was a very [assiduous] student.",
+        options: ["assertive", "industrious", "aggressive", "casual"],
+        correctIndex: 3
+    },
+    
+    
+    //Group 8
+    {
+        text: "My eldest brother is now faced with the [vicissitudes] of married life.",
+        options: ["amazement", "sweetness", "amiability", "stability"],
+        correctIndex: 3
+    },
+    {
+        text: "The dancing troupe put up a [flawless] performance.",
+        options: ["an interesting", "an imperfect", "a satisfactory", "a careless"],
+        correctIndex: 1
+    },
+    {
+        text: "The officer said that he knew nothing to the [detriment] of the applicant.",
+        options: ["damage", "disfavor", "advantage", "background"],
+        correctIndex: 2
+    },
+    {
+        text: "Common sense requires that one should be [decorous] at formal gatherings.",
+        options: ["courteous", "impolite", "incurious", "careful"],
+        correctIndex: 1
+    },
+    {
+        text: "The string was [taut].",
+        options: ["loose", "firm", "stretched", "tight"],
+        correctIndex: 0
+    },
+    {
+        text: "The diminutive figure bounces over the track with [unfathomable] lightness.",
+        options: ["invigorating", "irresistible", "predictable", "impressive"],
+        correctIndex: 2
+    },
+    {
+        text: "The teacher announced that the class would be making a [fleeting] visit to the zoo.",
+        options: ["routine", "brief", "long", "guided"],
+        correctIndex: 2
+    },
+    {
+        text: "We intend to make the reception a [diurnal] event.",
+        options: ["a nightly", "a weekly", "a short", "an annual"],
+        correctIndex: 0
+    },
+    {
+        text: "The project is designed to [alleviate] poverty in the country.",
+        options: ["tackle", "exacerbate", "eradicate", "assuage"],
+        correctIndex: 1
+    },
+    {
+        text: "It is surprising that this politician has now turned [renegade].",
+        options: ["militant", "corrupt", "loyal", "quiet"],
+        correctIndex: 2
+    },
+    {
+        text: "Hypertension is a [debilitating] disease that everyone should prevent.",
+        options: ["a mortal", "an enervating", "an energizing", "a horrible"],
+        correctIndex: 2
+    },
+    {
+        text: "The striking workers have vowed not to return to work until the decision is [rescinded].",
+        options: ["changed", "dismissed", "implemented", "incorporated"],
+        correctIndex: 2
+    },
+    {
+        text: "I'm not interested in buying that shirt. I think it is [overpriced].",
+        options: ["too expensive", "overrated", "priceless", "cheap"],
+        correctIndex: 3
+    },
+    {
+        text: "Civil engineering is [predominantly] a male profession.",
+        options: ["absolutely", "essentially", "generally", "seldom"],
+        correctIndex: 3
+    },
+    {
+        text: "As these boys never act in public, the police are now worried about their [covert] activities.",
+        options: ["cryptic", "ignoble", "evil", "open"],
+        correctIndex: 3
+    },
+    {
+        text: "Some equatorial areas have a [sultry] climate.",
+        options: ["a temperate", "an inclement", "a stable", "a hot"],
+        correctIndex: 0
+    },
+    {
+        text: "Updating the Board's brochure is an [arduous] task.",
+        options: ["an annual", "an easy", "a regular", "a difficult"],
+        correctIndex: 1
+    },
+    {
+        text: "What a [harmless] thought he has!",
+        options: ["pleasant", "pernicious", "perfect", "pertinent"],
+        correctIndex: 1
+    },
+    {
+        text: "In his [naivety], he believed all the stories his friend told him.",
+        options: ["incredulity", "stupidity", "friendliness", "artlessness"],
+        correctIndex: 0
+    },
+    {
+        text: "It is [inconceivable] that the rat devoured the cat.",
+        options: ["credible", "unimaginable", "contestable", "incomprehensible"],
+        correctIndex: 0
+    },
+    {
+        text: "Ali wondered why the principal was [ambivalent] about the students' future.",
+        options: ["decisive", "inconsiderate", "anxious", "ambitious"],
+        correctIndex: 0
+    },
+    {
+        text: "The teacher taught the [rudiments] of Chemistry to the first grade.",
+        options: ["theory", "fundamentals", "elements", "basics"],
+        correctIndex: 0
+    },
+    {
+        text: "The journalist's write-up contained a [plethora] of detail.",
+        options: ["simplicity", "spectrum", "shortage", "complexity"],
+        correctIndex: 2
+    },
+    {
+        text: "The town was all [agog] at his unexpected return.",
+        options: ["unexcited", "excited", "on fire", "surprised"],
+        correctIndex: 0
+    },
+    {
+        text: "The lecture seemed [interminable].",
+        options: ["boring", "brief", "unending", "interesting"],
+        correctIndex: 1
+    },
+
+    //Group 9
+    {
+        text: "In the latter part of his life, the famous soldier showed signs of [youthfulness].",
+        options: ["senility", "energy", "vitality", "bravery"],
+        correctIndex: 0
+    },
+    {
+        text: "There is much [apathy] towards reading among students nowadays.",
+        options: ["indifference", "indecision", "disinclination", "enthusiasm"],
+        correctIndex: 3
+    },
+    {
+        text: "The witness [averred] that she had seen Dosun at the scene of the crime.",
+        options: ["argued", "confirmed", "denied", "affirmed"],
+        correctIndex: 2
+    },
+    {
+        text: "The high cost of living these days calls for a lot of [frugality].",
+        options: ["extravagance", "economy", "recklessness", "prudence"],
+        correctIndex: 0
+    },
+    {
+        text: "Tunde's reaction [underscores] the point I was making.",
+        options: ["justifies", "emphasizes", "summarizes", "contradicts"],
+        correctIndex: 3
+    },
+    {
+        text: "Everyone admired the manager's [adroit] handling of the crises in the company.",
+        options: ["clever", "tactless", "skilful", "clumsy"],
+        correctIndex: 3
+    },
+    {
+        text: "The principal took exception to the [ignoble] role the teacher played in the matter.",
+        options: ["embarrassing", "honourable", "extraordinary", "dishonourable"],
+        correctIndex: 1
+    },
+    {
+        text: "He is [notorious] for his drunkenness.",
+        options: ["popular", "known", "well known", "renowned"],
+        correctIndex: 0
+    },
+    {
+        text: "The chairman's conduct [redounds] to the image of the company.",
+        options: ["assists in", "reflects on", "contributes to", "detracts from"],
+        correctIndex: 3
+    },
+    {
+        text: "Her [phlegmatic] temperament endears her to her friends.",
+        options: ["stoic", "irritable", "lively", "cold"],
+        correctIndex: 2
+    },
+    {
+        text: "The workers suddenly became [restive].",
+        options: ["fidgety", "disorderly", "submissive", "calm"],
+        correctIndex: 3
+    },
+    {
+        text: "The Governor's visit is an [unprecedented] event in the history of the social club.",
+        options: ["a perfect", "a momentous", "an insignificant", "an unnecessary"],
+        correctIndex: 2
+    },
+    {
+        text: "The athlete has unexpectedly become [indomitable].",
+        options: ["weak", "disoriented", "unruly", "unconquerable"],
+        correctIndex: 0
+    },
+    {
+        text: "The evidence the leader gave was [incontrovertible].",
+        options: ["indubitable", "contestable", "practicable", "logical"],
+        correctIndex: 1
+    },
+    {
+        text: "The hardline posture of the labour leader has not helped matters.",
+        options: ["compromising", "imposing", "uncompromising", "difficult"],
+        correctIndex: 0
+    },
+    {
+        text: "The President gave another [extemporaneous] speech last Friday.",
+        options: ["unprepared", "fascinating", "planned", "unfavourable"],
+        correctIndex: 2
+    },
+    {
+        text: "Only those who are [gullible] fall victim to his trickery.",
+        options: ["saucy", "devastated", "courteous", "astute"],
+        correctIndex: 3
+    },
+    {
+        text: "He is well known for his [inordinate] ambition.",
+        options: ["excessive", "passionate", "moderate", "sound"],
+        correctIndex: 2
+    },
+    {
+        text: "Students could be [timid].",
+        options: ["friendly", "bold", "covetous", "pugnacious"],
+        correctIndex: 1
+    },
+    {
+        text: "The witness decided to [conceal] the evidence.",
+        options: ["divulge", "hide", "destroy", "pugnacious"],
+        correctIndex: 0
+    },
+    {
+        text: "The members of the congregation were [inspired] by the sermon.",
+        options: ["bewitched", "enthralled", "disenchanted", "disorientated"],
+        correctIndex: 2
+    },
+    {
+        text: "Agbenu was [ecstatic] about her result.",
+        options: ["dispassionate", "sad", "pessimistic", "mad"],
+        correctIndex: 1
+    },
+    {
+        text: "The labour leader's [recalcitrant] stance was applauded.",
+        options: ["stubborn", "feeble", "uncompromising", "well informed"],
+        correctIndex: 1
+    },
+    {
+        text: "A cool bath in a hot weather can be truly [invigorating].",
+        options: ["devastating", "unpalatable", "debilitating", "disgusting"],
+        correctIndex: 2
+    },
+    {
+        text: "I am [loath] to do the assignment.",
+        options: ["willing", "unwilling", "waiting", "dying"],
+        correctIndex: 0
+    },
+
+    //Group 10
+    {
+        text: "In the latter part of his life, the famous soldier showed signs of [youthfulness].",
+        options: ["senility", "energy", "vitality", "bravery"],
+        correctIndex: 0
+    },
+    {
+        text: "There is much [apathy] towards reading among students nowadays.",
+        options: ["indifference", "indecision", "disinclination", "enthusiasm"],
+        correctIndex: 3
+    },
+    {
+        text: "The witness [averred] that she had seen Dosun at the scene of the crime.",
+        options: ["argued", "confirmed", "denied", "affirmed"],
+        correctIndex: 2
+    },
+    {
+        text: "The high cost of living these days calls for a lot of [frugality].",
+        options: ["extravagance", "economy", "recklessness", "prudence"],
+        correctIndex: 0
+    },
+    {
+        text: "Tunde's reaction [underscores] the point I was making.",
+        options: ["justifies", "emphasizes", "summarizes", "contradicts"],
+        correctIndex: 3
+    },
+    {
+        text: "Everyone admired the manager's [adroit] handling of the crises in the company.",
+        options: ["clever", "tactless", "skilful", "clumsy"],
+        correctIndex: 3
+    },
+    {
+        text: "The principal took exception to the [ignoble] role the teacher played in the matter.",
+        options: ["embarrassing", "honourable", "extraordinary", "dishonourable"],
+        correctIndex: 1
+    },
+    {
+        text: "He is [notorious] for his drunkenness.",
+        options: ["popular", "known", "well known", "renowned"],
+        correctIndex: 0
+    },
+    {
+        text: "The chairman's conduct [redounds] to the image of the company.",
+        options: ["assists in", "reflects on", "contributes to", "detracts from"],
+        correctIndex: 3
+    },
+    {
+        text: "Her [phlegmatic] temperament endears her to her friends.",
+        options: ["stoic", "irritable", "lively", "cold"],
+        correctIndex: 2
+    },
+    {
+        text: "The workers suddenly became [restive].",
+        options: ["fidgety", "disorderly", "submissive", "calm"],
+        correctIndex: 3
+    },
+    {
+        text: "The Governor's visit is an [unprecedented] event in the history of the social club.",
+        options: ["a perfect", "a momentous", "an insignificant", "an unnecessary"],
+        correctIndex: 2
+    },
+    {
+        text: "The athlete has unexpectedly become [indomitable].",
+        options: ["weak", "disoriented", "unruly", "unconquerable"],
+        correctIndex: 0
+    },
+    {
+        text: "The evidence the leader gave was [incontrovertible].",
+        options: ["indubitable", "contestable", "practicable", "logical"],
+        correctIndex: 1
+    },
+    {
+        text: "The hardline posture of the labour leader has not helped matters.",
+        options: ["compromising", "imposing", "uncompromising", "difficult"],
+        correctIndex: 0
+    },
+    {
+        text: "The President gave another [extemporaneous] speech last Friday.",
+        options: ["unprepared", "fascinating", "planned", "unfavourable"],
+        correctIndex: 2
+    },
+    {
+        text: "Only those who are [gullible] fall victim to his trickery.",
+        options: ["saucy", "devastated", "courteous", "astute"],
+        correctIndex: 3
+    },
+    {
+        text: "He is well known for his [inordinate] ambition.",
+        options: ["excessive", "passionate", "moderate", "sound"],
+        correctIndex: 2
+    },
+    {
+        text: "Students could be [timid].",
+        options: ["friendly", "bold", "covetous", "pugnacious"],
+        correctIndex: 1
+    },
+    {
+        text: "The witness decided to [conceal] the evidence.",
+        options: ["divulge", "hide", "destroy", "pugnacious"],
+        correctIndex: 0
+    },
+    {
+        text: "The members of the congregation were [inspired] by the sermon.",
+        options: ["bewitched", "enthralled", "disenchanted", "disorientated"],
+        correctIndex: 2
+    },
+    {
+        text: "Agbenu was [ecstatic] about her result.",
+        options: ["dispassionate", "sad", "pessimistic", "mad"],
+        correctIndex: 1
+    },
+    {
+        text: "The labour leader's [recalcitrant] stance was applauded.",
+        options: ["stubborn", "feeble", "uncompromising", "well informed"],
+        correctIndex: 1
+    },
+    {
+        text: "A cool bath in a hot weather can be truly [invigorating].",
+        options: ["devastating", "unpalatable", "debilitating", "disgusting"],
+        correctIndex: 2
+    },
+    {
+        text: "I am [loath] to do the assignment.",
+        options: ["willing", "unwilling", "waiting", "dying"],
+        correctIndex: 0
+    }
+        ];
+
+
+        // Quiz variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedOptionIndex = -1;
+        let answeredQuestions = 0;
+
+        // DOM elements
+        const questionEl = document.getElementById('question');
+        const optionsAreaEl = document.getElementById('optionsArea');
+        const feedbackAreaEl = document.getElementById('feedbackArea');
+        const progressBarEl = document.getElementById('progressBar');
+        const checkBtnEl = document.getElementById('checkBtn');
+        const nextBtnEl = document.getElementById('nextBtn');
+        const quizContainerEl = document.getElementById('quizContainer');
+        const resultsScreenEl = document.getElementById('resultsScreen');
+        const finalScoreEl = document.getElementById('finalScore');
+        const restartBtnEl = document.getElementById('restartBtn');
+
+        // Initialize the quiz
+        function initQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredQuestions = 0;
+            quizContainerEl.classList.remove('hidden');
+            resultsScreenEl.classList.add('hidden');
+            loadQuestion();
+            updateProgressBar();
+        }
+
+        // Load a question
+        function loadQuestion() {
+            selectedOptionIndex = -1;
+            checkBtnEl.disabled = true;
+            nextBtnEl.classList.add('hidden');
+            checkBtnEl.classList.remove('hidden');
+            feedbackAreaEl.classList.add('hidden');
+            
+            const question = questions[currentQuestionIndex];
+            
+            // Format the question with highlighting
+            const formattedQuestion = question.text.replace(/\[(.*?)\]/g, '<span class="highlight">$1</span>');
+            questionEl.innerHTML = formattedQuestion;
+            
+            // Generate option buttons
+            optionsAreaEl.innerHTML = '';
+            
+            const optionLetters = ['A', 'B', 'C', 'D', 'E'];
+            question.options.forEach((option, index) => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'option-btn w-full text-left p-4 rounded-lg flex items-center hover:shadow-md transition-all';
+                optionBtn.innerHTML = `
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 mr-3 font-bold">${optionLetters[index]}</span>
+                    <span>${option}</span>
+                `;
+                
+                optionBtn.addEventListener('click', () => selectOption(index, optionBtn));
+                optionsAreaEl.appendChild(optionBtn);
+            });
+        }
+
+        // Select an option
+        function selectOption(index, buttonEl) {
+            if (nextBtnEl.classList.contains('hidden')) {
+                // Clear previous selections
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'border-primary');
+                });
+                
+                // Mark this option as selected
+                buttonEl.classList.add('bg-gray-100', 'dark:bg-gray-700', 'border-primary');
+                selectedOptionIndex = index;
+                checkBtnEl.disabled = false;
+            }
+        }
+
+        // Check the answer
+        function checkAnswer() {
+            const question = questions[currentQuestionIndex];
+            const optionButtons = document.querySelectorAll('.option-btn');
+            
+            // Disable all options
+            optionButtons.forEach(btn => {
+                btn.classList.add('disabled');
+            });
+            
+            // Mark correct and incorrect
+            optionButtons.forEach((btn, index) => {
+                if (index === question.correctIndex) {
+                    btn.classList.add('correct');
+                } else if (index === selectedOptionIndex) {
+                    btn.classList.add('incorrect', 'animate-shake');
+                }
+            });
+            
+            // Update score and feedback
+            if (selectedOptionIndex === question.correctIndex) {
+                score++;
+                feedbackAreaEl.innerHTML = `
+                    <div class="flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2 text-correct dark:text-correctDark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM11.0026 16L6.75999 11.7574L8.17421 10.3431L11.0026 13.1716L16.6595 7.51472L18.0737 8.92893L11.0026 16Z"></path>
+                        </svg>
+                        <span class="text-correct dark:text-correctDark font-bold">Correct!</span>
+                    </div>
+                `;
+                feedbackAreaEl.classList.add('bg-green-100', 'dark:bg-green-900', 'dark:bg-opacity-20');
+            } else {
+                feedbackAreaEl.innerHTML = `
+                    <div class="flex items-center justify-center">
+                        <svg class="w-6 h-6 mr-2 text-incorrect dark:text-incorrectDark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20ZM12 10.5858L14.8284 7.75736L16.2426 9.17157L13.4142 12L16.2426 14.8284L14.8284 16.2426L12 13.4142L9.17157 16.2426L7.75736 14.8284L10.5858 12L7.75736 9.17157L9.17157 7.75736L12 10.5858Z"></path>
+                        </svg>
+                        <span class="text-incorrect dark:text-incorrectDark font-bold">Incorrect!</span>
+                    </div>
+                    <div class="mt-2">The correct answer is: ${question.options[question.correctIndex]}</div>
+                `;
+                feedbackAreaEl.classList.add('bg-red-100', 'dark:bg-red-900', 'dark:bg-opacity-20');
+            }
+            
+            feedbackAreaEl.classList.remove('hidden');
+            
+            // Hide check button, show next button
+            checkBtnEl.classList.add('hidden');
+            nextBtnEl.classList.remove('hidden');
+            
+            answeredQuestions++;
+            updateProgressBar();
+        }
+
+        // Go to next question
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const progressPercentage = (answeredQuestions / questions.length) * 100;
+            progressBarEl.style.width = `${progressPercentage}%`;
+        }
+
+        // Show results screen
+        function showResults() {
+            quizContainerEl.classList.add('hidden');
+            resultsScreenEl.classList.remove('hidden');
+            finalScoreEl.textContent = `${score}/${questions.length}`;
+        }
+
+        // Event listeners
+        checkBtnEl.addEventListener('click', checkAnswer);
+        nextBtnEl.addEventListener('click', nextQuestion);
+        restartBtnEl.addEventListener('click', initQuiz);
+
+        // Start the quiz
+        initQuiz();
+    </script>
+</body>
+</html>
