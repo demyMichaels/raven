@@ -539,14 +539,47 @@
             renderTopics(highlightedTopics);
         }
 
-        // Function to handle topic opening
-        function openTopic(folderName, title) {
-            showMaterialToast(`Opening ${title}...`, 'info');
-            setTimeout(() => {
-                // Navigate to actual GitHub Pages directory structure
-                window.location.href = `https://demymichaels.github.io/raven/src/learning-materials/economics/${folderName}/`;
-            }, 300);
-        }
+// Function to handle topic opening - SPA style
+async function openTopic(folderName, title) {
+    showMaterialToast(`Loading ${title}...`, 'info');
+    
+    try {
+        // Load content dynamically
+        const content = await loadTopicContent(folderName);
+        displayTopicContent(content, title);
+    } catch (error) {
+        showMaterialToast(`Error loading ${title}`, 'error');
+        console.error('Error loading topic:', error);
+    }
+}
+
+async function loadTopicContent(folderName) {
+    // Fetch content from local JSON or HTML files
+    const response = await fetch(`./src/learning-materials/${folderName}.json`);
+    if (!response.ok) throw new Error('Failed to load content');
+    return await response.json();
+}
+
+function displayTopicContent(content, title) {
+    // Update page content without refreshing
+    document.getElementById('content-area').innerHTML = `
+        <div class="topic-content">
+            <h2>${title}</h2>
+            <div>${content.html || content.text}</div>
+        </div>
+    `;
+    
+    // Update browser URL without reloading (SPA navigation)
+    history.pushState({}, title, `?topic=${encodeURIComponent(title)}`);
+}
+
+
+
+
+
+
+
+
 
         // Material Design Toast System
         function showMaterialToast(message, type = 'info') {
