@@ -390,36 +390,43 @@
         }
 
         // Login form handler
-        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            console.log('Form submitted');
-            
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
-            
-            console.log('Username:', username, 'Password:', password);
-            
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                console.log('Credentials correct - logging in');
-                sessionStorage.setItem('admin_logged_in', 'true');
-                showAdminDashboard();
-            } else {
-                console.log('Invalid credentials');
-                alert('Invalid username or password! Use: admin / admin123');
-            }
-        });
+        const loginForm = document.getElementById('adminLoginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Form submitted');
+                
+                const username = document.getElementById('adminUsername').value;
+                const password = document.getElementById('adminPassword').value;
+                
+                console.log('Username:', username, 'Password:', password);
+                
+                if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+                    console.log('Credentials correct - logging in');
+                    sessionStorage.setItem('admin_logged_in', 'true');
+                    showAdminDashboard();
+                } else {
+                    console.log('Invalid credentials');
+                    alert('Invalid username or password! Use: admin / admin123');
+                }
+            });
+        } else {
+            console.error('Login form not found!');
+        }
     });
 
     function showLoginSection() {
         console.log('Showing login section');
-        loginSection.style.display = 'block';
-        adminSection.style.display = 'none';
+        // Remove hidden class from login, add to admin
+        loginSection.classList.remove('hidden-content');
+        adminSection.classList.add('hidden-content');
     }
 
     function showAdminDashboard() {
         console.log('Showing admin dashboard');
-        loginSection.style.display = 'none';
-        adminSection.style.display = 'block';
+        // Remove hidden class from admin, add to login
+        adminSection.classList.remove('hidden-content');
+        loginSection.classList.add('hidden-content');
         loadData();
     }
 
@@ -428,10 +435,224 @@
         showLoginSection();
     }
 
-    // Temporary loadData function for testing
+    // Load data from localStorage
     function loadData() {
         console.log('Loading admin data...');
-        // Your existing loadData code here
+        
+        // Initialize data if not exists
+        if (!localStorage.getItem('raven_users')) {
+            localStorage.setItem('raven_users', JSON.stringify([]));
+        }
+        if (!localStorage.getItem('raven_activation_codes')) {
+            localStorage.setItem('raven_activation_codes', JSON.stringify([]));
+        }
+        
+        const allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
+        const activationCodes = JSON.parse(localStorage.getItem('raven_activation_codes')) || [];
+        
+        console.log('Users:', allUsers);
+        console.log('Activation codes:', activationCodes);
+        
+        // Update stats
+        updateStats(allUsers, activationCodes);
+        renderUsersTable(allUsers);
+        renderCodesTable(activationCodes);
+    }
+
+    function updateStats(allUsers, activationCodes) {
+        const now = new Date();
+        const activeUsers = allUsers.filter(u => u.isActive && new Date(u.activationExpiry) > now).length;
+        const unusedCodes = activationCodes.filter(c => !c.used).length;
+        const usedCodes = activationCodes.filter(c => c.used).length;
+
+        document.getElementById('totalUsersCount').textContent = allUsers.length;
+        document.getElementById('activeUsersCount').textContent = activeUsers;
+        document.getElementById('activeCodesCount').textContent = unusedCodes;
+        document.getElementById('usedCodesCount').textContent = usedCodes;
+    }
+
+    function renderUsersTable(allUsers) {
+        const tbody = document.getElementById('usersTableBody');
+        
+        if (allUsers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-neutral-500">No users found</td></tr>';
+            return;
+        }
+
+        const now = new Date();
+        tbody.innerHTML = allUsers.map(user => {
+            let statusClass = 'status-inactive';
+            let statusText = 'Inactive';
+
+            if (user.isActive) {
+                if (new Date(user.activationExpiry) > now) {
+                    statusClass = 'status-active';
+                    statusText = 'Active';
+                } else {
+                    statusClass = 'status-expired';
+                    statusText = 'Expired';
+                }
+            }
+
+            const expiryDate = user.activationExpiry
+                ? new Date(user.activationExpiry).toLocaleDateString()
+                : '-';
+
+            const subjects = user.subjects ? user.subjects.join(', ') : '-';
+
+            return `
+                <tr>
+                    <td class="font-medium">${user.name || '-'}</td>
+                    <td>${user.email}</td>
+                    <td>${user.institute || '-'}</td>
+                    <td class="text-sm">${subjects}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td>${expiryDate}</td>
+                    <td class="text-sm">${new Date(user.registrationDate).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderCodesTable(activationCodes) {
+        const tbody = document.getElementById('codesTableBody');
+        
+        if (activationCodes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-neutral-500">No codes generated yet</td></tr>';
+            return;
+        }
+
+        // Sort by generation date, newest first
+        const sortedCodes = [...activationCodes].sort((a, b) =>
+            new Date(b.generated) - new Date(a.generated)
+        );
+
+        tbody.innerHTML = sortedCodes.map(code => {
+            const statusClass = code.used ? 'status-expired' : 'status-active';
+            const statusText = code.used ? 'Used' : 'Active';
+            const typeText = code.duration === 'trial' ? '7-Day Trial' : '30-Day Paid';
+            const usedDate = code.usedDate ? new Date(code.usedDate).toLocaleDateString() : '-';
+
+            return `
+                <tr>
+                    <td class="font-mono font-semibold">${code.code}</td>
+                    <td>${typeText}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                    <td>${code.usedBy || '-'}</td>
+                    <td class="text-sm">${new Date(code.generated).toLocaleDateString()}</td>
+                    <td class="text-sm">${usedDate}</td>
+                    <td>
+                        ${!code.used ? `<button onclick="deleteCode('${code.code}')" class="material-button btn-sm btn-danger">Delete</button>` : '-'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function deleteUser(email) {
+        if (confirm(`Are you sure you want to delete user: ${email}?`)) {
+            const allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
+            const updatedUsers = allUsers.filter(u => u.email !== email);
+            localStorage.setItem('raven_users', JSON.stringify(updatedUsers));
+            loadData();
+            alert('User deleted successfully');
+        }
+    }
+
+    function deleteCode(code) {
+        if (confirm(`Are you sure you want to delete code: ${code}?`)) {
+            const activationCodes = JSON.parse(localStorage.getItem('raven_activation_codes')) || [];
+            const updatedCodes = activationCodes.filter(c => c.code !== code);
+            localStorage.setItem('raven_activation_codes', JSON.stringify(updatedCodes));
+            loadData();
+            alert('Code deleted successfully');
+        }
+    }
+
+    // Add these functions for the generate codes functionality
+    function generateCodes(type) {
+        const countInput = type === 'trial' ? document.getElementById('trialCodeCount') : document.getElementById('monthlyCodeCount');
+        const count = parseInt(countInput.value);
+
+        if (count < 1 || count > 100) {
+            alert('Please enter a number between 1 and 100');
+            return;
+        }
+
+        const activationCodes = JSON.parse(localStorage.getItem('raven_activation_codes')) || [];
+        const newCodes = [];
+
+        for (let i = 0; i < count; i++) {
+            const code = generateRandomCode();
+            newCodes.push({
+                code: code,
+                duration: type,
+                generated: new Date().toISOString(),
+                used: false,
+                usedBy: null,
+                usedDate: null
+            });
+        }
+
+        activationCodes.push(...newCodes);
+        localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
+        
+        // Show generated codes
+        displayGeneratedCodes(newCodes, type);
+        loadData();
+        alert(`${count} ${type} code(s) generated successfully!`);
+    }
+
+    function generateRandomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 12; i++) {
+            if (i > 0 && i % 4 === 0) code += '-';
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+
+    function displayGeneratedCodes(codes, type) {
+        const display = document.getElementById('generatedCodesDisplay');
+        const codesList = document.getElementById('generatedCodesList');
+
+        const typeLabel = type === 'trial' ? '7-Day Trial' : '30-Day Paid';
+
+        codesList.innerHTML = codes.map(c => `
+            <div class="code-item">
+                <div>
+                    <span class="font-mono text-lg font-semibold text-accent">${c.code}</span>
+                    <span class="ml-3 caption text-neutral-500">${typeLabel}</span>
+                </div>
+                <button onclick="copyCode('${c.code}')" class="material-icons text-neutral-500 hover:text-accent cursor-pointer">content_copy</button>
+            </div>
+        `).join('');
+
+        display.classList.remove('hidden');
+    }
+
+    function copyCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert('Code copied to clipboard!');
+        });
+    }
+
+    function copyAllCodes() {
+        const codes = document.querySelectorAll('.code-item .font-mono');
+        const allCodes = Array.from(codes).map(code => code.textContent).join('\n');
+        navigator.clipboard.writeText(allCodes).then(() => {
+            alert('All codes copied to clipboard!');
+        });
     }
 </script>
 </body>
