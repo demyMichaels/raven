@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Cuboid Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        #cuboidCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .info-panel {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 8px;
+        }
+        
+        .dimensions {
+            margin-bottom: 15px;
+        }
+        
+        .dimension-control {
+            margin-bottom: 12px;
+        }
+        
+        .dimension-control label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .dimension-control input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .properties {
+            margin-bottom: 15px;
+        }
+        
+        .property {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 12px 8px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+        }
+        
+        /* Mobile-specific styles */
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .mobile-controls button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+        
+        /* Media queries for responsiveness */
+        @media (min-width: 768px) {
+            .content {
+                flex-direction: row;
+            }
+            
+            .canvas-container {
+                flex: 1;
+                height: 450px;
+            }
+            
+            .info-panel {
+                flex: 1;
+                min-width: 300px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .mobile-controls {
+                display: grid;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .canvas-container {
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .controls, .mobile-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .canvas-container {
+                height: 250px;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            button {
+                padding: 14px 10px;
+                min-height: 44px; /* Minimum touch target size */
+            }
+            
+            .dimension-control input {
+                min-height: 44px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>3D Cuboid Visualization</h1>
+            <p class="subtitle">Interactive cuboid with customizable dimensions</p>
+        </header>
+        
+        <div class="content">
+            <div class="canvas-container">
+                <canvas id="cuboidCanvas"></canvas>
+            </div>
+            
+            <div class="info-panel">
+                <h2>Dimensions</h2>
+                <div class="dimensions">
+                    <div class="dimension-control">
+                        <label for="width">Width (cm):</label>
+                        <input type="number" id="width" min="1" max="20" value="6">
+                    </div>
+                    <div class="dimension-control">
+                        <label for="height">Height (cm):</label>
+                        <input type="number" id="height" min="1" max="20" value="4">
+                    </div>
+                    <div class="dimension-control">
+                        <label for="depth">Depth (cm):</label>
+                        <input type="number" id="depth" min="1" max="20" value="8">
+                    </div>
+                </div>
+                
+                <h2>Properties</h2>
+                <div class="properties">
+                    <div class="property">
+                        <span>Volume:</span>
+                        <span id="volume">192 cm³</span>
+                    </div>
+                    <div class="property">
+                        <span>Surface Area:</span>
+                        <span id="surfaceArea">208 cm²</span>
+                    </div>
+                    <div class="property">
+                        <span>Space Diagonal:</span>
+                        <span id="spaceDiagonal">10.77 cm</span>
+                    </div>
+                </div>
+                
+                <h2>Controls</h2>
+                <div class="controls">
+                    <button id="wireframeToggle">Toggle Wireframe</button>
+                    <button id="resetView">Reset View</button>
+                    <button id="rotateToggle">Auto-Rotate</button>
+                    <button id="changeColor">Change Colors</button>
+                </div>
+                
+                <div class="mobile-controls">
+                    <button id="zoomIn">Zoom In</button>
+                    <button id="zoomOut">Zoom Out</button>
+                    <button id="resetMobile">Reset</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>Interaction Guide</h2>
+            <ul>
+                <li><strong>Drag with mouse/finger</strong> to rotate the cuboid</li>
+                <li><strong>Scroll/Pinch</strong> to zoom in and out</li>
+                <li><strong>Adjust dimensions</strong> using the input fields</li>
+                <li>Use the buttons to change visualization modes</li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>Created with Three.js - Interactive 3D Cuboid Visualization</p>
+        </footer>
+    </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    
+    <script>
+        // Initialize Three.js scene
+        let scene, camera, renderer, controls;
+        let cuboid, wireframeVisible = false, autoRotate = true;
+        let colors = [0x3498db, 0xe74c3c, 0x2ecc71, 0xf39c12, 0x9b59b6, 0x1abc9c];
+        
+        // Initial dimensions
+        let width = 6, height = 4, depth = 8;
+        
+        // Check if mobile device
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0c1445);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, 
+                document.getElementById('cuboidCanvas').clientWidth / 
+                document.getElementById('cuboidCanvas').clientHeight, 
+                0.1, 1000
+            );
+            
+            // Adjust camera position based on device type
+            if (isMobile) {
+                camera.position.z = 25;
+            } else {
+                camera.position.z = 20;
+            }
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('cuboidCanvas'),
+                antialias: true 
+            });
+            renderer.setSize(
+                document.getElementById('cuboidCanvas').clientWidth,
+                document.getElementById('cuboidCanvas').clientHeight
+            );
+            
+            // Adjust pixel ratio for mobile devices
+            if (isMobile) {
+                renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1.5 : 1);
+            }
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = autoRotate;
+            controls.autoRotateSpeed = 1.0;
+            
+            // Adjust controls for touch devices
+            if (isMobile) {
+                controls.enablePan = false;
+                controls.touchRotateSpeed = 0.5;
+            }
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+            
+            const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
+            backLight.position.set(-5, -5, -5);
+            scene.add(backLight);
+            
+            // Create the cuboid
+            createCuboid();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Add event listeners to buttons
+            document.getElementById('wireframeToggle').addEventListener('click', toggleWireframe);
+            document.getElementById('resetView').addEventListener('click', resetView);
+            document.getElementById('rotateToggle').addEventListener('click', toggleRotation);
+            document.getElementById('changeColor').addEventListener('click', changeColors);
+            
+            // Add event listeners to mobile controls
+            document.getElementById('zoomIn').addEventListener('click', () => zoom(0.8));
+            document.getElementById('zoomOut').addEventListener('click', () => zoom(1.2));
+            document.getElementById('resetMobile').addEventListener('click', resetView);
+            
+            // Add event listeners to dimension inputs
+            document.getElementById('width').addEventListener('input', updateDimensions);
+            document.getElementById('height').addEventListener('input', updateDimensions);
+            document.getElementById('depth').addEventListener('input', updateDimensions);
+            
+            // Add touch event listeners for mobile
+            if (isMobile) {
+                addTouchListeners();
+            }
+            
+            // Start animation loop
+            animate();
+        }
+        
+        function createCuboid() {
+            // Remove existing cuboid if any
+            if (cuboid) {
+                scene.remove(cuboid);
+            }
+            
+            // Create a group to hold the cuboid
+            cuboid = new THREE.Group();
+            
+            // Create box geometry
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            
+            // Create materials for each face
+            const materials = [
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[0],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                }),
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[1],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                }),
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[2],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                }),
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[3],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                }),
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[4],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                }),
+                new THREE.MeshPhongMaterial({ 
+                    color: colors[5],
+                    transparent: true, 
+                    opacity: 0.8,
+                    shininess: 100
+                })
+            ];
+            
+            // Create mesh
+            const mesh = new THREE.Mesh(geometry, materials);
+            cuboid.add(mesh);
+            
+            // Create wireframe
+            const wireframe = new THREE.WireframeGeometry(geometry);
+            const line = new THREE.LineSegments(wireframe);
+            line.material.color.setHex(0x000000);
+            line.material.transparent = true;
+            line.material.opacity = 0.5;
+            line.material.linewidth = 2;
+            cuboid.add(line);
+            
+            // Add the cuboid to the scene
+            scene.add(cuboid);
+            
+            // Update properties
+            updateProperties();
+        }
+        
+        function updateDimensions() {
+            width = parseFloat(document.getElementById('width').value) || 1;
+            height = parseFloat(document.getElementById('height').value) || 1;
+            depth = parseFloat(document.getElementById('depth').value) || 1;
+            
+            // Limit values for mobile performance
+            if (isMobile) {
+                width = Math.min(width, 15);
+                height = Math.min(height, 15);
+                depth = Math.min(depth, 15);
+            }
+            
+            createCuboid();
+        }
+        
+        function updateProperties() {
+            // Calculate volume
+            const volume = width * height * depth;
+            document.getElementById('volume').textContent = volume.toFixed(1) + ' cm³';
+            
+            // Calculate surface area
+            const surfaceArea = 2 * (width * height + width * depth + height * depth);
+            document.getElementById('surfaceArea').textContent = surfaceArea.toFixed(1) + ' cm²';
+            
+            // Calculate space diagonal
+            const spaceDiagonal = Math.sqrt(width * width + height * height + depth * depth);
+            document.getElementById('spaceDiagonal').textContent = spaceDiagonal.toFixed(2) + ' cm';
+        }
+        
+        function toggleWireframe() {
+            wireframeVisible = !wireframeVisible;
+            cuboid.children.forEach(child => {
+                if (child instanceof THREE.LineSegments) {
+                    child.visible = wireframeVisible;
+                }
+            });
+        }
+        
+        function resetView() {
+            controls.reset();
+            if (isMobile) {
+                camera.position.z = 25;
+            } else {
+                camera.position.z = 20;
+            }
+        }
+        
+        function toggleRotation() {
+            autoRotate = !autoRotate;
+            controls.autoRotate = autoRotate;
+        }
+        
+        function changeColors() {
+            // Shift colors array
+            colors.push(colors.shift());
+            createCuboid();
+        }
+        
+        function zoom(factor) {
+            camera.position.z *= factor;
+        }
+        
+        function onWindowResize() {
+            const canvas = document.getElementById('cuboidCanvas');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        }
+        
+        function addTouchListeners() {
+            // Double-tap to reset view
+            let lastTap = 0;
+            const canvas = document.getElementById('cuboidCanvas');
+            
+            canvas.addEventListener('touchend', function(e) {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                
+                if (tapLength < 300 && tapLength > 0) {
+                    // Double tap detected
+                    resetView();
+                    e.preventDefault();
+                }
+                
+                lastTap = currentTime;
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize the scene
+        init();
+    </script>
+</body>
+</html>

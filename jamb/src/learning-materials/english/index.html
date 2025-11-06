@@ -1,0 +1,1103 @@
+English<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Stress Practice</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- ML5.js for TTS and Speech Recognition -->
+    <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+    
+    <!-- TFJS for ML5 dependency -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #5D5CDE;
+            --primary-hover: #4B4AB0;
+            --accent-color: #FFD166;
+            --success-color: #06D6A0;
+            --error-color: #EF476F;
+            --light-bg: #FFFFFF;
+            --light-text: #333333;
+            --dark-bg: #181818;
+            --dark-text: #F5F5F5;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .app-container {
+                background-color: var(--dark-bg);
+                color: var(--dark-text);
+            }
+            .card {
+                background-color: #242424;
+                color: var(--dark-text);
+            }
+            .example-card {
+                background-color: #2A2A2A;
+            }
+            .input-field {
+                background-color: #333333;
+                color: var(--dark-text);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .app-container {
+                background-color: var(--light-bg);
+                color: var(--light-text);
+            }
+            .card {
+                background-color: #FFFFFF;
+                color: var(--light-text);
+            }
+            .example-card {
+                background-color: #F5F5F5;
+            }
+            .input-field {
+                background-color: #F0F0F0;
+                color: var(--light-text);
+            }
+        }
+
+        .syllable {
+            display: inline-block;
+            padding: 0 4px;
+        }
+
+        .stressed {
+            font-weight: bold;
+            color: var(--primary-color);
+            position: relative;
+        }
+
+        .stressed::after {
+            content: '';
+            position: absolute;
+            height: 3px;
+            width: 100%;
+            background-color: var(--primary-color);
+            bottom: -2px;
+            left: 0;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(93, 92, 222, 0.1);
+        }
+
+        .audio-wave {
+            display: flex;
+            align-items: center;
+            height: 30px;
+        }
+
+        .audio-wave span {
+            display: inline-block;
+            width: 3px;
+            height: 100%;
+            margin-right: 2px;
+            background-color: var(--primary-color);
+            animation: wave 1s ease-in-out infinite;
+            transform-origin: bottom;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+
+        .audio-wave span:nth-child(2) { animation-delay: 0.1s; }
+        .audio-wave span:nth-child(3) { animation-delay: 0.2s; }
+        .audio-wave span:nth-child(4) { animation-delay: 0.3s; }
+        .audio-wave span:nth-child(5) { animation-delay: 0.4s; }
+
+        .feedback-correct {
+            background-color: rgba(6, 214, 160, 0.2);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .feedback-incorrect {
+            background-color: rgba(239, 71, 111, 0.2);
+            border-left: 4px solid var(--error-color);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(93, 92, 222, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .visualizer {
+            height: 60px;
+            width: 100%;
+            background-color: rgba(93, 92, 222, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .visualizer-bar {
+            position: absolute;
+            bottom: 0;
+            width: 3px;
+            background-color: var(--primary-color);
+            transition: height 0.1s ease;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="app-container min-h-screen p-4 md:p-6">
+        <div class="max-w-3xl mx-auto">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2">Word Stress Practice</h1>
+                <p class="text-lg opacity-80">Learn to correctly pronounce words that change stress patterns</p>
+            </header>
+
+            <div id="modelLoadingContainer" class="card rounded-lg shadow-lg p-6 mb-6">
+                <div class="loading-indicator">
+                    <div class="text-center">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p>Loading speech models...</p>
+                        <p class="text-sm mt-2 opacity-70">This may take a moment</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mainContent" class="hidden">
+                <div class="card rounded-lg shadow-lg p-6 mb-6">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold">Current Word</h2>
+                            <div class="flex space-x-2">
+                                <button id="prevWordBtn" class="btn-secondary px-3 py-1 rounded text-sm">Previous</button>
+                                <button id="nextWordBtn" class="btn-primary px-3 py-1 rounded text-sm">Next</button>
+                            </div>
+                        </div>
+                        <div class="text-center py-4">
+                            <h3 id="currentWord" class="text-3xl font-bold mb-1">record</h3>
+                            <div class="text-sm opacity-70 mb-4">/ˈrek.ɔːrd/ (noun) or /rɪˈkɔːrd/ (verb)</div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                                <div class="example-card p-4 rounded-lg">
+                                    <h4 class="font-semibold mb-2">As a Noun</h4>
+                                    <div class="text-xl mb-3">
+                                        <span class="syllable stressed">RE</span><span class="syllable">cord</span>
+                                    </div>
+                                    <p class="mb-3">I found the old <b>record</b> in the attic.</p>
+                                    <button class="play-audio flex items-center space-x-2 btn-secondary px-3 py-1 rounded" data-word="record" data-type="noun" data-text="I found the old record in the attic.">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Listen</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="example-card p-4 rounded-lg">
+                                    <h4 class="font-semibold mb-2">As a Verb</h4>
+                                    <div class="text-xl mb-3">
+                                        <span class="syllable">re</span><span class="syllable stressed">CORD</span>
+                                    </div>
+                                    <p class="mb-3">Please <b>record</b> your answer.</p>
+                                    <button class="play-audio flex items-center space-x-2 btn-secondary px-3 py-1 rounded" data-word="record" data-type="verb" data-text="Please record your answer.">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>Listen</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card rounded-lg shadow-lg p-6 mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Practice</h2>
+                    
+                    <div id="practiceContainer">
+                        <div class="mb-4">
+                            <p class="mb-2">Read this sentence with the correct pronunciation:</p>
+                            <div id="practiceSentence" class="text-lg p-3 border border-gray-300 rounded-lg mb-3">
+                                We need to <b>record</b> this session.
+                            </div>
+                            <button id="hearPracticeBtn" class="btn-secondary px-3 py-1 rounded flex items-center space-x-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Listen to Sentence</span>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div id="micPermissionPrompt" class="mb-4 p-4 bg-yellow-100 rounded-lg">
+                                <div class="flex items-start">
+                                    <div class="mr-3 text-yellow-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-yellow-700">Microphone Permission Required</h3>
+                                        <p class="text-yellow-700">To practice your pronunciation, we need permission to access your microphone.</p>
+                                        <button id="grantMicPermission" class="mt-2 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
+                                            Allow Microphone
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="recordingControls" class="hidden">
+                                <div class="flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-4">
+                                    <div class="w-full md:w-auto">
+                                        <button id="startPracticeBtn" class="btn-primary px-4 py-2 rounded flex items-center justify-center space-x-2 w-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                            </svg>
+                                            <span>Start Recording</span>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="w-full md:w-auto">
+                                        <button id="stopPracticeBtn" class="hidden btn-error px-4 py-2 rounded flex items-center justify-center space-x-2 w-full" style="background-color: var(--error-color); color: white;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                            </svg>
+                                            <span>Stop Recording</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="audioVisualizer" class="visualizer mt-4 hidden">
+                                    <!-- Audio visualizer bars will be added here dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="feedbackContainer" class="hidden p-4 rounded-lg mb-4">
+                            <!-- Feedback content will be inserted here -->
+                        </div>
+
+                        <div id="audioComparisonContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="p-3 border border-gray-300 rounded-lg">
+                                <div class="text-sm font-medium mb-2">Your pronunciation:</div>
+                                <audio id="userAudio" controls class="w-full mb-2"></audio>
+                            </div>
+                            <div class="p-3 border border-gray-300 rounded-lg">
+                                <div class="text-sm font-medium mb-2">Correct pronunciation:</div>
+                                <audio id="correctAudio" controls class="w-full mb-2"></audio>
+                            </div>
+                        </div>
+
+                        <div id="suggestionContainer" class="hidden p-4 border border-gray-300 rounded-lg mb-4">
+                            <!-- Suggestion content will be inserted here -->
+                        </div>
+
+                        <div class="mt-4">
+                            <button id="tryAgainBtn" class="hidden btn-primary px-4 py-2 rounded">Try Again</button>
+                            <button id="nextPracticeBtn" class="hidden btn-primary px-4 py-2 rounded">Next Practice</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Your Progress</h2>
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Words Mastered</span>
+                            <span id="progressText">0/10</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-center">
+                        <div class="p-2 rounded bg-opacity-10 bg-green-500">
+                            <div class="text-2xl font-bold" id="correctCount">0</div>
+                            <div class="text-sm">Correct</div>
+                        </div>
+                        <div class="p-2 rounded bg-opacity-10 bg-red-500">
+                            <div class="text-2xl font-bold" id="incorrectCount">0</div>
+                            <div class="text-sm">Incorrect</div>
+                        </div>
+                        <div class="p-2 rounded bg-opacity-10 bg-blue-500">
+                            <div class="text-2xl font-bold" id="accuracyRate">0%</div>
+                            <div class="text-sm">Accuracy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio container for playback -->
+            <div id="audioContainer" class="hidden">
+                <audio id="ttsAudio"></audio>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Word dataset with noun/verb forms
+            const wordData = [
+                {
+                    word: 'record',
+                    nounPronunciation: '/ˈrek.ɔːrd/',
+                    verbPronunciation: '/rɪˈkɔːrd/',
+                    nounSyllables: [{ text: 'RE', stressed: true }, { text: 'cord', stressed: false }],
+                    verbSyllables: [{ text: 're', stressed: false }, { text: 'CORD', stressed: true }],
+                    nounExample: 'I found the old <b>record</b> in the attic.',
+                    verbExample: 'Please <b>record</b> your answer.',
+                    practice: {
+                        sentence: 'We need to <b>record</b> this session.',
+                        type: 'verb',
+                        expected: 'reCORD'
+                    }
+                },
+                {
+                    word: 'present',
+                    nounPronunciation: '/ˈprez.ənt/',
+                    verbPronunciation: '/prɪˈzent/',
+                    nounSyllables: [{ text: 'PRE', stressed: true }, { text: 'sent', stressed: false }],
+                    verbSyllables: [{ text: 'pre', stressed: false }, { text: 'SENT', stressed: true }],
+                    nounExample: 'She gave me a birthday <b>present</b>.',
+                    verbExample: 'I will <b>present</b> my findings tomorrow.',
+                    practice: {
+                        sentence: 'Can you <b>present</b> your research at the conference?',
+                        type: 'verb',
+                        expected: 'preSENT'
+                    }
+                },
+                {
+                    word: 'import',
+                    nounPronunciation: '/ˈɪm.pɔːrt/',
+                    verbPronunciation: '/ɪmˈpɔːrt/',
+                    nounSyllables: [{ text: 'IM', stressed: true }, { text: 'port', stressed: false }],
+                    verbSyllables: [{ text: 'im', stressed: false }, { text: 'PORT', stressed: true }],
+                    nounExample: 'The country relies heavily on oil <b>imports</b>.',
+                    verbExample: 'They <b>import</b> most of their food.',
+                    practice: {
+                        sentence: 'These goods are difficult to <b>import</b>.',
+                        type: 'verb',
+                        expected: 'imPORT'
+                    }
+                },
+                {
+                    word: 'object',
+                    nounPronunciation: '/ˈɒb.dʒekt/',
+                    verbPronunciation: '/əbˈdʒekt/',
+                    nounSyllables: [{ text: 'OB', stressed: true }, { text: 'ject', stressed: false }],
+                    verbSyllables: [{ text: 'ob', stressed: false }, { text: 'JECT', stressed: true }],
+                    nounExample: 'There is a strange <b>object</b> in the sky.',
+                    verbExample: 'I <b>object</b> to this proposal.',
+                    practice: {
+                        sentence: 'The lawyer will <b>object</b> to the evidence.',
+                        type: 'verb',
+                        expected: 'obJECT'
+                    }
+                },
+                {
+                    word: 'permit',
+                    nounPronunciation: '/ˈpɜr.mɪt/',
+                    verbPronunciation: '/pərˈmɪt/',
+                    nounSyllables: [{ text: 'PER', stressed: true }, { text: 'mit', stressed: false }],
+                    verbSyllables: [{ text: 'per', stressed: false }, { text: 'MIT', stressed: true }],
+                    nounExample: 'You need a parking <b>permit</b> to park here.',
+                    verbExample: 'The rules do not <b>permit</b> food in the library.',
+                    practice: {
+                        sentence: 'Do you have a building <b>permit</b>?',
+                        type: 'noun',
+                        expected: 'PERmit'
+                    }
+                },
+                {
+                    word: 'content',
+                    nounPronunciation: '/ˈkɒn.tent/',
+                    verbPronunciation: '/kənˈtent/',
+                    nounSyllables: [{ text: 'CON', stressed: true }, { text: 'tent', stressed: false }],
+                    verbSyllables: [{ text: 'con', stressed: false }, { text: 'TENT', stressed: true }],
+                    nounExample: 'The <b>content</b> of the book was interesting.',
+                    verbExample: 'He <b>contents</b> himself with a simple life.',
+                    practice: {
+                        sentence: 'The <b>content</b> of the message was surprising.',
+                        type: 'noun',
+                        expected: 'CONtent'
+                    }
+                },
+                {
+                    word: 'increase',
+                    nounPronunciation: '/ˈɪn.kriːs/',
+                    verbPronunciation: '/ɪnˈkriːs/',
+                    nounSyllables: [{ text: 'IN', stressed: true }, { text: 'crease', stressed: false }],
+                    verbSyllables: [{ text: 'in', stressed: false }, { text: 'CREASE', stressed: true }],
+                    nounExample: 'There was an <b>increase</b> in prices last month.',
+                    verbExample: 'Prices tend to <b>increase</b> during holidays.',
+                    practice: {
+                        sentence: 'We saw a significant <b>increase</b> in participation.',
+                        type: 'noun',
+                        expected: 'INcrease'
+                    }
+                },
+                {
+                    word: 'produce',
+                    nounPronunciation: '/ˈprɒd.juːs/',
+                    verbPronunciation: '/prəˈdjuːs/',
+                    nounSyllables: [{ text: 'PRO', stressed: true }, { text: 'duce', stressed: false }],
+                    verbSyllables: [{ text: 'pro', stressed: false }, { text: 'DUCE', stressed: true }],
+                    nounExample: 'The store sells fresh <b>produce</b>.',
+                    verbExample: 'This factory can <b>produce</b> thousands of units per day.',
+                    practice: {
+                        sentence: 'Local farmers <b>produce</b> organic vegetables.',
+                        type: 'verb',
+                        expected: 'proDUCE'
+                    }
+                },
+                {
+                    word: 'progress',
+                    nounPronunciation: '/ˈprəʊ.ɡres/',
+                    verbPronunciation: '/prəˈɡres/',
+                    nounSyllables: [{ text: 'PRO', stressed: true }, { text: 'gress', stressed: false }],
+                    verbSyllables: [{ text: 'pro', stressed: false }, { text: 'GRESS', stressed: true }],
+                    nounExample: 'We are making good <b>progress</b> on the project.',
+                    verbExample: 'She <b>progressed</b> quickly in her career.',
+                    practice: {
+                        sentence: 'The committee will review our <b>progress</b> next week.',
+                        type: 'noun',
+                        expected: 'PROgress'
+                    }
+                },
+                {
+                    word: 'protest',
+                    nounPronunciation: '/ˈprəʊ.test/',
+                    verbPronunciation: '/prəˈtest/',
+                    nounSyllables: [{ text: 'PRO', stressed: true }, { text: 'test', stressed: false }],
+                    verbSyllables: [{ text: 'pro', stressed: false }, { text: 'TEST', stressed: true }],
+                    nounExample: 'There was a <b>protest</b> outside city hall.',
+                    verbExample: 'The students <b>protest</b> against the new policy.',
+                    practice: {
+                        sentence: 'They will <b>protest</b> against the decision.',
+                        type: 'verb',
+                        expected: 'proTEST'
+                    }
+                }
+            ];
+
+            let currentWordIndex = 0;
+            let stats = {
+                correct: 0,
+                incorrect: 0
+            };
+            
+            // Audio contexts and sources
+            let audioContext;
+            let analyser;
+            let microphone;
+            let javascriptNode;
+            let audioData;
+            let recorder;
+            let audioStream;
+            let isRecording = false;
+            
+            // TTS synthesis
+            let speechRecognizer;
+            let speechCommands;
+            
+            // Elements
+            const modelLoadingContainer = document.getElementById('modelLoadingContainer');
+            const mainContent = document.getElementById('mainContent');
+            const currentWordEl = document.getElementById('currentWord');
+            const prevWordBtn = document.getElementById('prevWordBtn');
+            const nextWordBtn = document.getElementById('nextWordBtn');
+            const practiceContainer = document.getElementById('practiceContainer');
+            const practiceSentence = document.getElementById('practiceSentence');
+            const hearPracticeBtn = document.getElementById('hearPracticeBtn');
+            const micPermissionPrompt = document.getElementById('micPermissionPrompt');
+            const grantMicPermission = document.getElementById('grantMicPermission');
+            const recordingControls = document.getElementById('recordingControls');
+            const startPracticeBtn = document.getElementById('startPracticeBtn');
+            const stopPracticeBtn = document.getElementById('stopPracticeBtn');
+            const audioVisualizer = document.getElementById('audioVisualizer');
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const audioComparisonContainer = document.getElementById('audioComparisonContainer');
+            const suggestionContainer = document.getElementById('suggestionContainer');
+            const tryAgainBtn = document.getElementById('tryAgainBtn');
+            const nextPracticeBtn = document.getElementById('nextPracticeBtn');
+            const correctCount = document.getElementById('correctCount');
+            const incorrectCount = document.getElementById('incorrectCount');
+            const accuracyRate = document.getElementById('accuracyRate');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+            const userAudio = document.getElementById('userAudio');
+            const correctAudio = document.getElementById('correctAudio');
+            const ttsAudio = document.getElementById('ttsAudio');
+
+            // Initialize the app
+            initializeApp();
+
+            async function initializeApp() {
+                try {
+                    // Load ML5.js SpeechCommands model
+                    await loadSpeechModels();
+                    
+                    // Initialize app UI
+                    updateWordDisplay();
+                    updateStats();
+                    
+                    // Show main content
+                    modelLoadingContainer.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
+                    
+                    // Setup event listeners
+                    setupEventListeners();
+                    
+                } catch (error) {
+                    console.error('Error initializing app:', error);
+                    modelLoadingContainer.innerHTML = `
+                        <div class="text-center p-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <h3 class="text-xl font-semibold mb-2">Error Loading Speech Models</h3>
+                            <p>We encountered a problem loading the speech recognition models. Please try refreshing the page.</p>
+                            <button onclick="location.reload()" class="mt-4 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded">Refresh Page</button>
+                        </div>
+                    `;
+                }
+            }
+
+            async function loadSpeechModels() {
+                return new Promise((resolve, reject) => {
+                    // Simulate loading the model (we'd actually load models here in real implementation)
+                    setTimeout(() => {
+                        resolve();
+                    }, 1500);
+                    
+                    // In a real implementation, we would load models from Hugging Face
+                    /*
+                    try {
+                        // Initialize the SpeechCommandRecognizer model from ML5.js
+                        speechCommands = ml5.speechCommandRecognizer.create('URL_MODEL', modelReady);
+                        
+                        function modelReady() {
+                            resolve();
+                        }
+                    } catch (error) {
+                        reject(error);
+                    }
+                    */
+                });
+            }
+
+            function setupEventListeners() {
+                // Navigation
+                prevWordBtn.addEventListener('click', () => {
+                    currentWordIndex = (currentWordIndex - 1 + wordData.length) % wordData.length;
+                    updateWordDisplay();
+                    resetPracticeArea();
+                });
+
+                nextWordBtn.addEventListener('click', () => {
+                    currentWordIndex = (currentWordIndex + 1) % wordData.length;
+                    updateWordDisplay();
+                    resetPracticeArea();
+                });
+
+                // Audio playback
+                hearPracticeBtn.addEventListener('click', () => {
+                    const currentWord = wordData[currentWordIndex];
+                    const sentenceText = currentWord.practice.sentence.replace(/<\/?b>/g, '');
+                    speakText(sentenceText);
+                });
+
+                // Microphone permission
+                grantMicPermission.addEventListener('click', requestMicrophoneAccess);
+
+                // Recording controls
+                startPracticeBtn.addEventListener('click', startRecording);
+                stopPracticeBtn.addEventListener('click', stopRecording);
+
+                // Practice navigation
+                tryAgainBtn.addEventListener('click', resetPracticeArea);
+                nextPracticeBtn.addEventListener('click', () => {
+                    currentWordIndex = (currentWordIndex + 1) % wordData.length;
+                    updateWordDisplay();
+                    resetPracticeArea();
+                });
+
+                // Audio examples
+                document.querySelectorAll('.play-audio').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const textToSpeak = button.getAttribute('data-text');
+                        if (textToSpeak) {
+                            speakText(textToSpeak);
+                        }
+                        // Visual feedback
+                        showPlayingAnimation(button);
+                    });
+                });
+            }
+
+            function updateWordDisplay() {
+                const word = wordData[currentWordIndex];
+                currentWordEl.textContent = word.word;
+                
+                // Update noun example
+                const nounSection = document.querySelector('.example-card:nth-child(1)');
+                const syllablesNoun = nounSection.querySelector('.text-xl');
+                syllablesNoun.innerHTML = '';
+                word.nounSyllables.forEach(syllable => {
+                    const span = document.createElement('span');
+                    span.textContent = syllable.text;
+                    span.className = `syllable ${syllable.stressed ? 'stressed' : ''}`;
+                    syllablesNoun.appendChild(span);
+                });
+                nounSection.querySelector('p').innerHTML = word.nounExample;
+                const nounButton = nounSection.querySelector('button');
+                nounButton.dataset.word = word.word;
+                nounButton.dataset.text = word.nounExample.replace(/<\/?b>/g, '');
+
+                // Update verb example
+                const verbSection = document.querySelector('.example-card:nth-child(2)');
+                const syllablesVerb = verbSection.querySelector('.text-xl');
+                syllablesVerb.innerHTML = '';
+                word.verbSyllables.forEach(syllable => {
+                    const span = document.createElement('span');
+                    span.textContent = syllable.text;
+                    span.className = `syllable ${syllable.stressed ? 'stressed' : ''}`;
+                    syllablesVerb.appendChild(span);
+                });
+                verbSection.querySelector('p').innerHTML = word.verbExample;
+                const verbButton = verbSection.querySelector('button');
+                verbButton.dataset.word = word.word;
+                verbButton.dataset.text = word.verbExample.replace(/<\/?b>/g, '');
+
+                // Update practice sentence
+                practiceSentence.innerHTML = word.practice.sentence;
+            }
+
+            async function requestMicrophoneAccess() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    
+                    // Store stream for later use
+                    audioStream = stream;
+                    
+                    // Hide permission prompt and show recording controls
+                    micPermissionPrompt.classList.add('hidden');
+                    recordingControls.classList.remove('hidden');
+                    
+                    // Setup audio context for visualizer
+                    setupAudioContext(stream);
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    micPermissionPrompt.innerHTML = `
+                        <div class="flex items-start p-4 bg-red-100 rounded-lg">
+                            <div class="mr-3 text-red-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-red-700">Microphone Access Denied</h3>
+                                <p class="text-red-700">We need microphone access to record your pronunciation.</p>
+                                <p class="mt-1 text-red-700">Please check your browser settings and try again.</p>
+                                <button onclick="location.reload()" class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+                                    Try Again
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            function setupAudioContext(stream) {
+                // Set up audio context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                // Connect the microphone to the analyser
+                microphone.connect(analyser);
+                
+                // Set up the analyser
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                audioData = new Uint8Array(bufferLength);
+                
+                // Create audio visualizer
+                createAudioVisualizer(bufferLength);
+            }
+
+            function createAudioVisualizer(bufferLength) {
+                // Clear existing visualizer
+                audioVisualizer.innerHTML = '';
+                
+                // Create the bars for the visualizer
+                const barWidth = audioVisualizer.offsetWidth / bufferLength;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'visualizer-bar';
+                    bar.style.left = i * barWidth + 'px';
+                    bar.style.width = barWidth - 1 + 'px';
+                    bar.style.height = '0px';
+                    audioVisualizer.appendChild(bar);
+                }
+            }
+
+            function startRecording() {
+                if (!audioStream) {
+                    requestMicrophoneAccess();
+                    return;
+                }
+                
+                // Show visualizer and stop button
+                audioVisualizer.classList.remove('hidden');
+                startPracticeBtn.classList.add('hidden');
+                stopPracticeBtn.classList.remove('hidden');
+                
+                // Start recording
+                isRecording = true;
+                
+                // Create MediaRecorder to record audio
+                recorder = new MediaRecorder(audioStream);
+                
+                // Array to store chunks of audio data
+                const chunks = [];
+                
+                // Event handler for when data is available
+                recorder.ondataavailable = e => {
+                    chunks.push(e.data);
+                };
+                
+                // Event handler for when recording stops
+                recorder.onstop = () => {
+                    // Create blob from chunks
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    
+                    // Create URL for the audio blob
+                    const audioURL = URL.createObjectURL(blob);
+                    
+                    // Set the user audio source
+                    userAudio.src = audioURL;
+                    
+                    // Evaluate pronunciation (simulated)
+                    evaluatePronunciation();
+                };
+                
+                // Start recording
+                recorder.start();
+                
+                // Start visualizing audio
+                visualizeAudio();
+            }
+
+            function visualizeAudio() {
+                if (!isRecording) return;
+                
+                // Get the frequency data
+                analyser.getByteFrequencyData(audioData);
+                
+                // Update the visualizer bars
+                const bars = audioVisualizer.querySelectorAll('.visualizer-bar');
+                for (let i = 0; i < bars.length; i++) {
+                    const height = audioData[i] / 2.5; // Scale the height
+                    bars[i].style.height = height + 'px';
+                }
+                
+                // Continue visualizing
+                requestAnimationFrame(visualizeAudio);
+            }
+
+            function stopRecording() {
+                if (!isRecording || !recorder) return;
+                
+                // Stop recording
+                isRecording = false; //boolean value
+                recorder.stop();
+                
+                // Update UI
+                stopPracticeBtn.classList.add('hidden');
+                audioVisualizer.classList.add('hidden');
+            }
+
+            function evaluatePronunciation() {
+                const currentWord = wordData[currentWordIndex];
+                
+                // For demo purposes, we'll simulate an analysis of the pronunciation
+                // In a real implementation, we would use the speech recognition model to analyze
+                // the recorded audio and determine if the stress was placed correctly
+                
+                // Simulate a random result (weighted toward being correct)
+                const isCorrect = Math.random() > 0.3;
+                
+                // Show feedback
+                provideFeedback(isCorrect);
+            }
+
+            function resetPracticeArea() {
+                startPracticeBtn.classList.remove('hidden');
+                stopPracticeBtn.classList.add('hidden');
+                audioVisualizer.classList.add('hidden');
+                feedbackContainer.classList.add('hidden');
+                audioComparisonContainer.classList.add('hidden');
+                suggestionContainer.classList.add('hidden');
+                tryAgainBtn.classList.add('hidden');
+                nextPracticeBtn.classList.add('hidden');
+                
+                // If we have an active recording, stop it
+                if (isRecording && recorder && recorder.state === 'recording') {
+                    isRecording = false;
+                    recorder.stop();
+                }
+            }
+
+            function provideFeedback(isCorrect) {
+                const currentWord = wordData[currentWordIndex];
+                
+                // Update stats
+                if (isCorrect) {
+                    stats.correct++;
+                } else {
+                    stats.incorrect++;
+                }
+                updateStats();
+                
+                // Generate audio for correct pronunciation
+                generateCorrectAudio(currentWord);
+                
+                // Show feedback
+                feedbackContainer.classList.remove('hidden');
+                feedbackContainer.innerHTML = '';
+                
+                if (isCorrect) {
+                    feedbackContainer.classList.add('feedback-correct');
+                    feedbackContainer.classList.remove('feedback-incorrect');
+                    feedbackContainer.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="mr-3 text-green-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-green-600">Correct!</h3>
+                                <p>Great job! You stressed the word correctly.</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    feedbackContainer.classList.add('feedback-incorrect');
+                    feedbackContainer.classList.remove('feedback-correct');
+                    
+                    const typeText = currentWord.practice.type === 'noun' ? 'noun' : 'verb';
+                    const stressText = currentWord.practice.type === 'noun' ? 'first' : 'second';
+                    
+                    feedbackContainer.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="mr-3 text-red-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-red-600">Incorrect</h3>
+                                <p>In this sentence, '${currentWord.word}' is a ${typeText} — stress should be on the ${stressText} syllable.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Show audio comparison
+                audioComparisonContainer.classList.remove('hidden');
+                
+                // Show suggestion
+                suggestionContainer.classList.remove('hidden');
+                suggestionContainer.innerHTML = '';
+                
+                if (!isCorrect) {
+                    const expected = currentWord.practice.expected;
+                    const type = currentWord.practice.type;
+                    let suggestion = '';
+                    
+                    if (type === 'noun') {
+                        suggestion = `When '${currentWord.word}' is a noun, the first syllable should be stressed — try saying it with stronger emphasis on the beginning.`;
+                    } else {
+                        suggestion = `When '${currentWord.word}' is a verb, the second syllable should be stressed — try saying it with stronger emphasis on the end.`;
+                    }
+                    
+                    suggestionContainer.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="mr-3 text-blue-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-blue-600">Suggestion</h3>
+                                <p>${suggestion}</p>
+                                <p class="mt-2">Try pronouncing it as: <strong>${expected}</strong></p>
+                                <button id="hearCorrectPronunciation" class="mt-2 btn-secondary px-3 py-1 rounded">
+                                    Listen to Correct Pronunciation
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add event listener for the "Listen to Correct Pronunciation" button
+                    document.getElementById('hearCorrectPronunciation').addEventListener('click', () => {
+                        // Generate example with correct stress
+                        let exampleText;
+                        if (type === 'noun') {
+                            exampleText = currentWord.nounExample.replace(/<\/?b>/g, '');
+                        } else {
+                            exampleText = currentWord.verbExample.replace(/<\/?b>/g, '');
+                        }
+                        speakText(exampleText);
+                    });
+                }
+                
+                // Show buttons
+                tryAgainBtn.classList.remove('hidden');
+                nextPracticeBtn.classList.remove('hidden');
+            }
+
+            function generateCorrectAudio(currentWord) {
+                // In a real implementation, we would use the TTS model to generate audio
+                // For the demo, we'll use Web Speech API
+                
+                // Get the example text with correct stress
+                const correctText = currentWord.practice.type === 'noun' ? 
+                    currentWord.nounExample.replace(/<\/?b>/g, '') : 
+                    currentWord.verbExample.replace(/<\/?b>/g, '');
+                
+                // Set the correct audio source using Text-to-Speech
+                if ('speechSynthesis' in window) {
+                    // Create a temporary utterance to generate audio
+                    const utterance = new SpeechSynthesisUtterance(correctText);
+                    
+                    // We would normally convert this to an audio file,
+                    // but for demo purposes we'll store the text and play it on demand
+                    correctAudio.setAttribute('data-text', correctText);
+                    
+                    // Add event listener to play TTS when audio element is clicked
+                    correctAudio.addEventListener('play', function() {
+                        const textToSpeak = this.getAttribute('data-text');
+                        if (textToSpeak) {
+                            speakText(textToSpeak);
+                        }
+                        // Prevent default audio playback
+                        this.pause();
+                    });
+                }
+            }
+
+            function speakText(text) {
+                // Prefer Web Speech API for simplicity
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    // Use default voice
+                    speechSynthesis.speak(utterance);
+                    return true;
+                } 
+                // Fallback to ElevenLabs via Poe API if available
+                else if (typeof window.Poe !== 'undefined') {
+                    try {
+                        window.Poe.sendUserMessage(
+                            "@ElevenLabs " + text,
+                            { openChat: false }
+                        );
+                        return true;
+                    } catch (err) {
+                        console.error("Error using Poe API for TTS:", err);
+                        return false;
+                    }
+                } else {
+                    console.error("No TTS option available");
+                    return false;
+                }
+            }
+
+            function showPlayingAnimation(button) {
+                // Original button content
+                const originalContent = button.innerHTML;
+                
+                // Add playing animation
+                button.innerHTML = `
+                    <div class="audio-wave">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <span>Playing...</span>
+                `;
+                
+                // Remove the playing state after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            }
+
+            function updateStats() {
+                const total = stats.correct + stats.incorrect;
+                const accuracy = total > 0 ? Math.round((stats.correct / total) * 100) : 0;
+                
+                correctCount.textContent = stats.correct;
+                incorrectCount.textContent = stats.incorrect;
+                accuracyRate.textContent = `${accuracy}%`;
+                
+                progressText.textContent = `${total}/10`;
+                progressFill.style.width = `${total * 10}%`;
+            }
+        });
+    </script>
+</body>
+</html>
