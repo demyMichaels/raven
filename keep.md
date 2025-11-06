@@ -1653,3 +1653,115 @@ function createToastContainer() {
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+=====================
+
+
+function loadAdminData() {
+    // Update stats
+    document.getElementById('totalUsersCount').textContent = allUsers.length;
+    document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.hasPaid).length;
+    document.getElementById('activeCodesCount').textContent = activationCodes.filter(c => !c.used).length;
+
+    // Populate users table
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = allUsers.map(user => `
+        <tr>
+            <td class="py-3">${user.name}</td>
+            <td class="py-3">${user.email}</td>
+            <td class="py-3">${user.institute || '-'}</td>
+            <td class="py-3">
+                <span class="status-badge ${user.hasPaid ? 'status-paid' : 'status-pending'}">
+                    ${user.hasPaid ? 'Active' : 'Pending'}
+                </span>
+            </td>
+            <td class="py-3">${new Date(user.registrationDate).toLocaleDateString()}</td>
+            <td class="py-3">
+                <button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger rounded">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function generateActivationCodes() {
+    const count = parseInt(document.getElementById('codeCount').value);
+
+    if (count < 1 || count > 100) {
+        showMaterialToast('Please enter a number between 1 and 100', 'warning');
+        return;
+    }
+
+    const newCodes = [];
+    for (let i = 0; i < count; i++) {
+        const code = generateRandomCode();
+        newCodes.push({
+            code: code,
+            generated: new Date().toISOString(),
+            used: false,
+            usedBy: null,
+            usedDate: null
+        });
+    }
+
+    activationCodes.push(...newCodes);
+    localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
+
+    // Display codes
+    const codesDiv = document.getElementById('generatedCodes');
+    const codesList = document.getElementById('codesList');
+    codesList.innerHTML = newCodes.map(c => `<div class="mb-1">${c.code}</div>`).join('');
+    codesDiv.classList.remove('hidden');
+
+    loadAdminData();
+    showMaterialToast(`${count} activation code(s) generated successfully!`, 'success');
+}
+
+function generateRandomCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 12; i++) {
+        if (i > 0 && i % 4 === 0) code += '-';
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+function deleteUser(email) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.innerHTML = `
+        <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full shadow-material-5">
+            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Confirm Deletion</h3>
+            <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
+            <div class="flex gap-3">
+                <button onclick="confirmDeleteUser('${email}'); this.closest('.modal-backdrop').remove();" class="material-button flex-1 px-4 py-2 bg-error text-white rounded-lg">
+                    <span class="button-text">Delete</span>
+                </button>
+                <button onclick="this.closest('.modal-backdrop').remove()" class="material-button flex-1 px-4 py-2 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg">
+                    <span class="button-text">Cancel</span>
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function confirmDeleteUser(email) {
+    allUsers = allUsers.filter(u => u.email !== email);
+    localStorage.setItem('raven_users', JSON.stringify(allUsers));
+    loadAdminData();
+    showMaterialToast('User deleted successfully', 'info');
+}
