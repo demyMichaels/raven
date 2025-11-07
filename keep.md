@@ -1,15 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-
-    <!-- Google tag (gtag.js) -->
+<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-8LYQ579PW8"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
 
-  gtag('config', 'G-8LYQ579PW8');
+gtag('config', 'G-8LYQ579PW8');
 </script>
 
 
@@ -254,91 +250,91 @@ min-width: 44px;
 
 /* Hidden content */
 .hidden-content {
-    display: none !important;
+display: none !important;
 }
 
 /* Status badges */
 .status-badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+padding: 5px 12px;
+border-radius: 20px;
+font-size: 0.8rem;
+font-weight: 600;
 }
 
 .status-paid {
-    background: #d4edda;
-    color: #155724;
+background: #d4edda;
+color: #155724;
 }
 
 .status-pending {
-    background: #fff3cd;
-    color: #856404;
+background: #fff3cd;
+color: #856404;
 }
 
 /* Admin table styles */
 .admin-table {
-    width: 100%;
-    border-collapse: collapse;
+width: 100%;
+border-collapse: collapse;
 }
 
 .admin-table th,
 .admin-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
+padding: 12px 15px;
+text-align: left;
+border-bottom: 1px solid #eee;
 }
 
 .admin-table th {
-    background-color: var(--primary);
-    color: white;
-    font-weight: 600;
+background-color: var(--primary);
+color: white;
+font-weight: 600;
 }
 
 .admin-table tr:hover {
-    background-color: #f8f9fa;
+background-color: #f8f9fa;
 }
 
 .dark .admin-table tr:hover {
-    background-color: #374151;
+background-color: #374151;
 }
 
 .dark .admin-table th {
-    background-color: #0a2549;
+background-color: #0a2549;
 }
 
 .dark .admin-table td {
-    border-bottom-color: #374151;
+border-bottom-color: #374151;
 }
 
 .btn-sm {
-    padding: 5px 10px;
-    font-size: 0.8rem;
+padding: 5px 10px;
+font-size: 0.8rem;
 }
 
 .btn-danger {
-    background-color: #ef4444;
-    color: white;
+background-color: #ef4444;
+color: white;
 }
 
 .btn-danger:hover {
-    background-color: #dc2626;
+background-color: #dc2626;
 }
 
 /* Modal backdrop */
 .modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    padding: 1rem;
+position: fixed;
+inset: 0;
+background-color: rgba(0, 0, 0, 0.5);
+display: flex;
+align-items: center;
+justify-content: center;
+z-index: 100;
+padding: 1rem;
 }
 
 .modal-content {
-    max-height: 90vh;
-    overflow-y: auto;
+max-height: 90vh;
+overflow-y: auto;
 }
 </style>
 </head>
@@ -380,15 +376,15 @@ min-width: 44px;
 <!-- Mobile & Desktop Actions -->
 <div class="flex items-center space-x-2 sm:space-x-3">
 
-    <!-- Admin Button (only visible when logged in as admin) -->
+<!-- Admin Button (only visible when logged in as admin) -->
 <button id="adminBtn" class="hidden material-button touch-target px-3 py-2 bg-warning text-white rounded-lg text-sm" onclick="requestAdminAccess()">
-    <span class="material-icons text-sm">admin_panel_settings</span>
+<span class="material-icons text-sm">admin_panel_settings</span>
 </button>
 
 
 <!-- Logout Button -->
 <button id="logoutBtn" class="hidden material-button touch-target px-3 py-2 bg-error text-white rounded-lg text-sm" onclick="logout()">
-    Logout
+Logout
 </button>
 
 <!-- Mobile Menu Button -->
@@ -491,214 +487,214 @@ min-width: 44px;
 
 <!-- Landing Page (Initial View - No Auth) -->
 <section id="landingSection" class="hidden-content">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3 text-center">
-            <div class="mb-6">
-                <div class="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-material-2">
-                    <span class="material-icons text-4xl text-white">school</span>
-                </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Welcome to Raven</h2>
-                <p class="body-1 text-neutral-600 dark:text-neutral-400">Your gateway to exam success</p>
-            </div>
-            <div class="space-y-3">
-                <button onclick="showSection(loginSection)" class="material-button w-full px-6 py-3 bg-primary text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
-                    <span class="button-text">Login</span>
-                </button>
-                <button onclick="showSection(registerSection)" class="material-button w-full px-6 py-3 border-2 border-primary text-primary rounded-xl hover:bg-primary/10">
-                    <span class="button-text">Register</span>
-                </button>
-            </div>
-        </div>
-    </div>
+<div class="min-h-screen flex items-center justify-center">
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3 text-center">
+<div class="mb-6">
+<div class="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-material-2">
+<span class="material-icons text-4xl text-white">school</span>
+</div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Welcome to Raven</h2>
+<p class="body-1 text-neutral-600 dark:text-neutral-400">Your gateway to exam success</p>
+</div>
+<div class="space-y-3">
+<button onclick="showSection(loginSection)" class="material-button w-full px-6 py-3 bg-primary text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+<span class="button-text">Login</span>
+</button>
+<button onclick="showSection(registerSection)" class="material-button w-full px-6 py-3 border-2 border-primary text-primary rounded-xl hover:bg-primary/10">
+<span class="button-text">Register</span>
+</button>
+</div>
+</div>
+</div>
 </section>
 
 <!-- Login Form -->
 <section id="loginSection" class="hidden-content">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <span class="material-icons text-3xl text-white">person</span>
-                </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Login to Your Account</h2>
-                <p class="body-2 text-neutral-600 dark:text-neutral-400">Access your courses and continue learning</p>
-            </div>
-            <form id="loginForm" class="space-y-4">
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
-                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-neutral-700 dark:text-white" placeholder="Enter your email" style="font-size: 16px;">
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Password</label>
-                    <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-neutral-700 dark:text-white" placeholder="Enter your password" style="font-size: 16px;">
-                </div>
-                <button type="submit" class="material-button w-full px-6 py-3 bg-primary text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
-                    <span class="button-text">Login</span>
-                </button>
-            </form>
-            <div class="text-center mt-4">
-                <p class="body-2 text-neutral-600 dark:text-neutral-400">Don't have an account? <a href="#" onclick="showSection(registerSection); return false;" class="text-primary font-medium">Register here</a></p>
-            </div>
-        </div>
-    </div>
+<div class="min-h-screen flex items-center justify-center">
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3">
+<div class="text-center mb-6">
+<div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+<span class="material-icons text-3xl text-white">person</span>
+</div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Login to Your Account</h2>
+<p class="body-2 text-neutral-600 dark:text-neutral-400">Access your courses and continue learning</p>
+</div>
+<form id="loginForm" class="space-y-4">
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
+<input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-neutral-700 dark:text-white" placeholder="Enter your email" style="font-size: 16px;">
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Password</label>
+<input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-neutral-700 dark:text-white" placeholder="Enter your password" style="font-size: 16px;">
+</div>
+<button type="submit" class="material-button w-full px-6 py-3 bg-primary text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+<span class="button-text">Login</span>
+</button>
+</form>
+<div class="text-center mt-4">
+<p class="body-2 text-neutral-600 dark:text-neutral-400">Don't have an account? <a href="#" onclick="showSection(registerSection); return false;" class="text-primary font-medium">Register here</a></p>
+</div>
+</div>
+</div>
 </section>
 
 
 <!-- Register Form -->
 <section id="registerSection" class="hidden-content">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <span class="material-icons text-3xl text-white">person_add</span>
-                </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Create an Account</h2>
-                <p class="body-2 text-neutral-600 dark:text-neutral-400">Join thousands of students learning with us</p>
-            </div>
-            <form id="registerForm" class="space-y-4">
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
-                    <input type="text" id="registerName" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Enter your full name" style="font-size: 16px;">
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
-                    <input type="email" id="registerEmail" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Enter your email" style="font-size: 16px;">
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
-                    <select id="registerInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
-                        <option value="">Select your target institution</option>
-                        <option value="UNILAG">University of Lagos (UNILAG)</option>
-                        <option value="UI">University of Ibadan (UI)</option>
-                        <option value="OAU">Obafemi Awolowo University (OAU)</option>
-                        <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
-                        <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
-                        <option value="UNIBEN">University of Benin (UNIBEN)</option>
-                        <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
-                        <option value="COVENANT">Covenant University</option>
-                        <option value="OTHER">Other</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
-                    <input type="number" id="registerTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="e.g., 320" style="font-size: 16px;">
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Password</label>
-                    <input type="password" id="registerPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Create a password" style="font-size: 16px;">
-                </div>
-                <div>
-                    <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Confirm Password</label>
-                    <input type="password" id="registerConfirmPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Confirm your password" style="font-size: 16px;">
-                </div>
-                <button type="submit" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
-                    <span class="button-text">Register</span>
-                </button>
-            </form>
-            <div class="text-center mt-4">
-                <p class="body-2 text-neutral-600 dark:text-neutral-400">Already have an account? <a href="#" onclick="showSection(loginSection); return false;" class="text-accent font-medium">Login here</a></p>
-            </div>
-        </div>
-    </div>
+<div class="min-h-screen flex items-center justify-center">
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3">
+<div class="text-center mb-6">
+<div class="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
+<span class="material-icons text-3xl text-white">person_add</span>
+</div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Create an Account</h2>
+<p class="body-2 text-neutral-600 dark:text-neutral-400">Join thousands of students learning with us</p>
+</div>
+<form id="registerForm" class="space-y-4">
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
+<input type="text" id="registerName" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Enter your full name" style="font-size: 16px;">
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
+<input type="email" id="registerEmail" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Enter your email" style="font-size: 16px;">
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
+<select id="registerInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+<option value="">Select your target institution</option>
+<option value="UNILAG">University of Lagos (UNILAG)</option>
+<option value="UI">University of Ibadan (UI)</option>
+<option value="OAU">Obafemi Awolowo University (OAU)</option>
+<option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+<option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+<option value="UNIBEN">University of Benin (UNIBEN)</option>
+<option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+<option value="COVENANT">Covenant University</option>
+<option value="OTHER">Other</option>
+</select>
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
+<input type="number" id="registerTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="e.g., 320" style="font-size: 16px;">
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Password</label>
+<input type="password" id="registerPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Create a password" style="font-size: 16px;">
+</div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Confirm Password</label>
+<input type="password" id="registerConfirmPassword" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Confirm your password" style="font-size: 16px;">
+</div>
+<button type="submit" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+<span class="button-text">Register</span>
+</button>
+</form>
+<div class="text-center mt-4">
+<p class="body-2 text-neutral-600 dark:text-neutral-400">Already have an account? <a href="#" onclick="showSection(loginSection); return false;" class="text-accent font-medium">Login here</a></p>
+</div>
+</div>
+</div>
 </section>
 
 <!-- Activation Code / Payment Page -->
 <section id="paymentSection" class="hidden-content">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-2xl w-full shadow-material-3">
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-material-2">
-                    <span class="material-icons text-4xl text-white">vpn_key</span>
-                </div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Activate Your Account</h2>
-                <p class="body-1 text-neutral-600 dark:text-neutral-400">Enter your activation code to unlock premium features</p>
-            </div>
+<div class="min-h-screen flex items-center justify-center">
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-2xl w-full shadow-material-3">
+<div class="text-center mb-8">
+<div class="w-20 h-20 bg-accent rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-material-2">
+<span class="material-icons text-4xl text-white">vpn_key</span>
+</div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Activate Your Account</h2>
+<p class="body-1 text-neutral-600 dark:text-neutral-400">Enter your activation code to unlock premium features</p>
+</div>
 
-            <!-- Activation Code Form -->
-            <div class="mb-8">
-                <form id="activationForm" class="space-y-4">
-                    <div>
-                        <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Activation Code</label>
-                        <input type="text" id="activationCode" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white text-center text-lg tracking-wider font-mono" placeholder="XXXX-XXXX-XXXX" style="font-size: 16px;">
-                        <p class="caption text-neutral-500 dark:text-neutral-400 mt-2">Enter the 12-character code you received</p>
-                    </div>
-                    <button type="submit" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
-                        <span class="button-text">Activate Account</span>
-                    </button>
-                </form>
-            </div>
+<!-- Activation Code Form -->
+<div class="mb-8">
+<form id="activationForm" class="space-y-4">
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Activation Code</label>
+<input type="text" id="activationCode" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white text-center text-lg tracking-wider font-mono" placeholder="XXXX-XXXX-XXXX" style="font-size: 16px;">
+<p class="caption text-neutral-500 dark:text-neutral-400 mt-2">Enter the 12-character code you received</p>
+</div>
+<button type="submit" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+<span class="button-text">Activate Account</span>
+</button>
+</form>
+</div>
 
-            <!-- Pricing Information -->
-            <div class="border-t border-neutral-200 dark:border-neutral-700 pt-8">
-                <h3 class="subtitle-1 text-center mb-6 text-neutral-800 dark:text-white">Don't have a code? Subscribe now</h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                    <!-- Monthly Plan -->
-                    <div class="material-card bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6">
-                        <div class="text-center mb-4">
-                            <h4 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Monthly Plan</h4>
-                            <div class="flex items-baseline justify-center">
-                                <span class="headline-4 text-primary dark:text-accent">₦2,500</span>
-                                <span class="body-2 text-neutral-600 dark:text-neutral-400 ml-2">/month</span>
-                            </div>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-start">
-                                <span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-neutral-700 dark:text-neutral-300">Unlimited practice questions</span>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-neutral-700 dark:text-neutral-300">Mock exams</span>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-neutral-700 dark:text-neutral-300">Performance analytics</span>
-                            </li>
-                        </ul>
-                        <button onclick="handlePayment('monthly')" class="material-button w-full px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary/10">
-                            <span class="button-text">Get Started</span>
-                        </button>
-                    </div>
+<!-- Pricing Information -->
+<div class="border-t border-neutral-200 dark:border-neutral-700 pt-8">
+<h3 class="subtitle-1 text-center mb-6 text-neutral-800 dark:text-white">Don't have a code? Subscribe now</h3>
+<div class="grid md:grid-cols-2 gap-4">
+<!-- Monthly Plan -->
+<div class="material-card bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6">
+<div class="text-center mb-4">
+<h4 class="subtitle-1 text-neutral-800 dark:text-white mb-2">Monthly Plan</h4>
+<div class="flex items-baseline justify-center">
+<span class="headline-4 text-primary dark:text-accent">₦2,500</span>
+<span class="body-2 text-neutral-600 dark:text-neutral-400 ml-2">/month</span>
+</div>
+</div>
+<ul class="space-y-2 mb-6">
+<li class="flex items-start">
+<span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-neutral-700 dark:text-neutral-300">Unlimited practice questions</span>
+</li>
+<li class="flex items-start">
+<span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-neutral-700 dark:text-neutral-300">Mock exams</span>
+</li>
+<li class="flex items-start">
+<span class="material-icons text-success text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-neutral-700 dark:text-neutral-300">Performance analytics</span>
+</li>
+</ul>
+<button onclick="handlePayment('monthly')" class="material-button w-full px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary/10">
+<span class="button-text">Get Started</span>
+</button>
+</div>
 
-                    <!-- Annual Plan -->
-                    <div class="material-card bg-primary dark:bg-primary-600 rounded-xl p-6 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 bg-warning text-white px-3 py-1 text-xs font-semibold rounded-bl-lg">
-                            BEST VALUE
-                        </div>
-                        <div class="text-center mb-4">
-                            <h4 class="subtitle-1 text-white mb-2">Annual Plan</h4>
-                            <div class="flex items-baseline justify-center">
-                                <span class="headline-4 text-white">₦25,000</span>
-                                <span class="body-2 text-primary-100 ml-2">/year</span>
-                            </div>
-                            <p class="caption text-primary-100 mt-1">Save ₦5,000 per year</p>
-                        </div>
-                        <ul class="space-y-2 mb-6">
-                            <li class="flex items-start">
-                                <span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-white">Everything in Monthly</span>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-white">Priority support</span>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
-                                <span class="body-2 text-white">Exclusive study materials</span>
-                            </li>
-                        </ul>
-                        <button onclick="handlePayment('annual')" class="material-button w-full px-4 py-2 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
-                            <span class="button-text">Subscribe Now</span>
-                        </button>
-                    </div>
-                </div>
+<!-- Annual Plan -->
+<div class="material-card bg-primary dark:bg-primary-600 rounded-xl p-6 relative overflow-hidden">
+<div class="absolute top-0 right-0 bg-warning text-white px-3 py-1 text-xs font-semibold rounded-bl-lg">
+BEST VALUE
+</div>
+<div class="text-center mb-4">
+<h4 class="subtitle-1 text-white mb-2">Annual Plan</h4>
+<div class="flex items-baseline justify-center">
+<span class="headline-4 text-white">₦25,000</span>
+<span class="body-2 text-primary-100 ml-2">/year</span>
+</div>
+<p class="caption text-primary-100 mt-1">Save ₦5,000 per year</p>
+</div>
+<ul class="space-y-2 mb-6">
+<li class="flex items-start">
+<span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-white">Everything in Monthly</span>
+</li>
+<li class="flex items-start">
+<span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-white">Priority support</span>
+</li>
+<li class="flex items-start">
+<span class="material-icons text-accent text-sm mr-2 mt-0.5">check_circle</span>
+<span class="body-2 text-white">Exclusive study materials</span>
+</li>
+</ul>
+<button onclick="handlePayment('annual')" class="material-button w-full px-4 py-2 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
+<span class="button-text">Subscribe Now</span>
+</button>
+</div>
+</div>
 
-                <div class="mt-6 text-center">
-                    <p class="body-2 text-neutral-600 dark:text-neutral-400">Secure payment powered by Paystack</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="mt-6 text-center">
+<p class="body-2 text-neutral-600 dark:text-neutral-400">Secure payment powered by Paystack</p>
+</div>
+</div>
+</div>
+</div>
 </section>
 
 
@@ -798,202 +794,202 @@ min-width: 44px;
 </div>
 
 
-            <!-- Subject Progress & Insights -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-                <!-- Subject Progress -->
-                <div class="lg:col-span-2">
-                    <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
-                        <h3 class="headline-6 mb-4 sm:mb-6 text-neutral-800 dark:text-white">Subject Progress</h3>
-                        <div class="space-y-3 sm:space-y-4" id="subjectProgressList">
-                            <!-- Subject progress items will be rendered here -->
-                        </div>
-                    </div>
-                </div>
+<!-- Subject Progress & Insights -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+<!-- Subject Progress -->
+<div class="lg:col-span-2">
+<div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+<h3 class="headline-6 mb-4 sm:mb-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+<div class="space-y-3 sm:space-y-4" id="subjectProgressList">
+<!-- Subject progress items will be rendered here -->
+</div>
+</div>
+</div>
 
-                <!-- Insights & Achievements -->
-                <div class="space-y-4 sm:space-y-6">
-                    <!-- Performance Insights -->
-                    <div class="material-card bg-premium-50 dark:bg-premium-900/20 border border-premium-200 dark:border-premium-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
-                        <div class="flex items-center space-x-3 mb-3 sm:mb-4">
-                            <span class="material-icons text-premium-600 dark:text-premium-400">insights</span>
-                            <h4 class="subtitle-1 text-premium-800 dark:text-premium-200">Study Insights</h4>
-                        </div>
-                        <div id="studyInsights">
-                            <p class="body-2 text-premium-700 dark:text-premium-300 mb-3 sm:mb-4">Complete more quizzes to get personalized insights!</p>
-                        </div>
-                    </div>
-
-
-                <!-- Recent Sessions -->
-                <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1">
-                    <h3 class="subtitle-1 mb-4 text-neutral-800 dark:text-white">Recent Sessions</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="text-left border-b border-neutral-300 dark:border-neutral-600">
-                                <tr>
-                                    <th class="pb-3 text-xs sm:text-sm">Subject</th>
-                                    <th class="pb-3 text-xs sm:text-sm">Score</th>
-                                    <th class="pb-3 text-xs sm:text-sm">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sessions-table" class="text-xs sm:text-sm">
-                                <tr>
-                                    <td colspan="3" class="pt-4 text-neutral-600 dark:text-neutral-400 text-center">No sessions yet</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                    <!-- Recent Activity -->
-                    <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
-                        <h4 class="subtitle-1 mb-3 sm:mb-4 text-neutral-800 dark:text-white">Recent Activity</h4>
-                        <div class="space-y-3" id="recentActivity">
-                            <p class="body-2 text-neutral-600 dark:text-neutral-400">No recent activity to show.</p>
-                        </div>
-                    </div>
+<!-- Insights & Achievements -->
+<div class="space-y-4 sm:space-y-6">
+<!-- Performance Insights -->
+<div class="material-card bg-premium-50 dark:bg-premium-900/20 border border-premium-200 dark:border-premium-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+<div class="flex items-center space-x-3 mb-3 sm:mb-4">
+<span class="material-icons text-premium-600 dark:text-premium-400">insights</span>
+<h4 class="subtitle-1 text-premium-800 dark:text-premium-200">Study Insights</h4>
+</div>
+<div id="studyInsights">
+<p class="body-2 text-premium-700 dark:text-premium-300 mb-3 sm:mb-4">Complete more quizzes to get personalized insights!</p>
+</div>
+</div>
 
 
-                </div>
-            </div>
+<!-- Recent Sessions -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-4 sm:p-6 shadow-material-1">
+<h3 class="subtitle-1 mb-4 text-neutral-800 dark:text-white">Recent Sessions</h3>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead class="text-left border-b border-neutral-300 dark:border-neutral-600">
+<tr>
+<th class="pb-3 text-xs sm:text-sm">Subject</th>
+<th class="pb-3 text-xs sm:text-sm">Score</th>
+<th class="pb-3 text-xs sm:text-sm">Date</th>
+</tr>
+</thead>
+<tbody id="sessions-table" class="text-xs sm:text-sm">
+<tr>
+<td colspan="3" class="pt-4 text-neutral-600 dark:text-neutral-400 text-center">No sessions yet</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Recent Activity -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-material-1">
+<h4 class="subtitle-1 mb-3 sm:mb-4 text-neutral-800 dark:text-white">Recent Activity</h4>
+<div class="space-y-3" id="recentActivity">
+<p class="body-2 text-neutral-600 dark:text-neutral-400">No recent activity to show.</p>
+</div>
+</div>
+
+
+</div>
+</div>
 </section>
 
 <!-- Admin Section -->
 <section id="adminSection" class="hidden-content">
-    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 shadow-material-3">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Admin Dashboard</h2>
-                <p class="body-1 text-neutral-600 dark:text-neutral-400">Manage users and activation codes</p>
-            </div>
-            <button onclick="showSection(dashboardSection)" class="material-button px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-white rounded-lg">
-                <span class="button-text">Back to Dashboard</span>
-            </button>
-        </div>
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 shadow-material-3">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Admin Dashboard</h2>
+<p class="body-1 text-neutral-600 dark:text-neutral-400">Manage users and activation codes</p>
+</div>
+<button onclick="showSection(dashboardSection)" class="material-button px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-white rounded-lg">
+<span class="button-text">Back to Dashboard</span>
+</button>
+</div>
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="material-card bg-primary/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-primary text-2xl">people</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Total Users</p>
-                        <p class="headline-5 text-primary" id="totalUsersCount">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="material-card bg-success/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-success text-2xl">verified_user</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Users</p>
-                        <p class="headline-5 text-success" id="activeUsersCount">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="material-card bg-warning/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-warning text-2xl">vpn_key</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Codes</p>
-                        <p class="headline-5 text-warning" id="activeCodesCount">0</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+<div class="material-card bg-primary/10 rounded-xl p-4">
+<div class="flex items-center space-x-3">
+<span class="material-icons text-primary text-2xl">people</span>
+<div>
+<p class="caption text-neutral-600 dark:text-neutral-400">Total Users</p>
+<p class="headline-5 text-primary" id="totalUsersCount">0</p>
+</div>
+</div>
+</div>
+<div class="material-card bg-success/10 rounded-xl p-4">
+<div class="flex items-center space-x-3">
+<span class="material-icons text-success text-2xl">verified_user</span>
+<div>
+<p class="caption text-neutral-600 dark:text-neutral-400">Active Users</p>
+<p class="headline-5 text-success" id="activeUsersCount">0</p>
+</div>
+</div>
+</div>
+<div class="material-card bg-warning/10 rounded-xl p-4">
+<div class="flex items-center space-x-3">
+<span class="material-icons text-warning text-2xl">vpn_key</span>
+<div>
+<p class="caption text-neutral-600 dark:text-neutral-400">Active Codes</p>
+<p class="headline-5 text-warning" id="activeCodesCount">0</p>
+</div>
+</div>
+</div>
+</div>
 
-        <!-- Generate Activation Code -->
-        <div class="material-card bg-accent/10 border border-accent/30 rounded-xl p-6 mb-8">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Generate Activation Codes</h3>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <input type="number" id="codeCount" min="1" max="100" value="1" class="flex-1 px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Number of codes" style="font-size: 16px;">
-                <button onclick="generateActivationCodes()" class="material-button px-6 py-3 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
-                    <span class="button-text">Generate Codes</span>
-                </button>
-            </div>
-            <div id="generatedCodes" class="mt-4 hidden">
-                <p class="subtitle-2 text-neutral-800 dark:text-white mb-2">Generated Codes:</p>
-                <div id="codesList" class="bg-white dark:bg-neutral-900 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700 max-h-60 overflow-y-auto font-mono text-sm"></div>
-            </div>
-        </div>
+<!-- Generate Activation Code -->
+<div class="material-card bg-accent/10 border border-accent/30 rounded-xl p-6 mb-8">
+<h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Generate Activation Codes</h3>
+<div class="flex flex-col sm:flex-row gap-4">
+<input type="number" id="codeCount" min="1" max="100" value="1" class="flex-1 px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Number of codes" style="font-size: 16px;">
+<button onclick="generateActivationCodes()" class="material-button px-6 py-3 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
+<span class="button-text">Generate Codes</span>
+</button>
+</div>
+<div id="generatedCodes" class="mt-4 hidden">
+<p class="subtitle-2 text-neutral-800 dark:text-white mb-2">Generated Codes:</p>
+<div id="codesList" class="bg-white dark:bg-neutral-900 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700 max-h-60 overflow-y-auto font-mono text-sm"></div>
+</div>
+</div>
 
-        <!-- Users Table -->
-        <div class="overflow-x-auto">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">All Users</h3>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Institute</th>
-                        <th>Status</th>
-                        <th>Registered</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody" class="text-neutral-700 dark:text-neutral-300">
-                    <!-- Users will be populated here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
+<!-- Users Table -->
+<div class="overflow-x-auto">
+<h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">All Users</h3>
+<table class="admin-table">
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Institute</th>
+<th>Status</th>
+<th>Registered</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="usersTableBody" class="text-neutral-700 dark:text-neutral-300">
+<!-- Users will be populated here -->
+</tbody>
+</table>
+</div>
+</div>
 </section>
 
 </main>
 
 <!-- Settings Modal -->
 <div id="settingsModal" class="hidden modal-backdrop">
-    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-material-5 modal-content">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="headline-5 text-neutral-800 dark:text-white">Account Settings</h2>
-            <button onclick="closeSettingsModal()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                <span class="material-icons">close</span>
-            </button>
-        </div>
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-material-5 modal-content">
+<div class="flex items-center justify-between mb-6">
+<h2 class="headline-5 text-neutral-800 dark:text-white">Account Settings</h2>
+<button onclick="closeSettingsModal()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+<span class="material-icons">close</span>
+</button>
+</div>
 
-        <form id="settingsForm" class="space-y-4">
-            <div>
-                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
-                <input type="text" id="settingsName" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
-            </div>
+<form id="settingsForm" class="space-y-4">
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
+<input type="text" id="settingsName" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+</div>
 
-            <div>
-                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
-                <input type="email" id="settingsEmail" disabled class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-neutral-100 dark:bg-neutral-900 text-neutral-500 cursor-not-allowed" style="font-size: 16px;">
-                <p class="caption text-neutral-500 mt-1">Email cannot be changed</p>
-            </div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
+<input type="email" id="settingsEmail" disabled class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-neutral-100 dark:bg-neutral-900 text-neutral-500 cursor-not-allowed" style="font-size: 16px;">
+<p class="caption text-neutral-500 mt-1">Email cannot be changed</p>
+</div>
 
-            <div>
-                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
-                <select id="settingsInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
-                    <option value="">Select your target institution</option>
-                    <option value="UNILAG">University of Lagos (UNILAG)</option>
-                    <option value="UI">University of Ibadan (UI)</option>
-                    <option value="OAU">Obafemi Awolowo University (OAU)</option>
-                    <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
-                    <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
-                    <option value="UNIBEN">University of Benin (UNIBEN)</option>
-                    <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
-                    <option value="COVENANT">Covenant University</option>
-                    <option value="OTHER">Other</option>
-                </select>
-            </div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
+<select id="settingsInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+<option value="">Select your target institution</option>
+<option value="UNILAG">University of Lagos (UNILAG)</option>
+<option value="UI">University of Ibadan (UI)</option>
+<option value="OAU">Obafemi Awolowo University (OAU)</option>
+<option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+<option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+<option value="UNIBEN">University of Benin (UNIBEN)</option>
+<option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+<option value="COVENANT">Covenant University</option>
+<option value="OTHER">Other</option>
+</select>
+</div>
 
-            <div>
-                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
-                <input type="number" id="settingsTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
-            </div>
+<div>
+<label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
+<input type="number" id="settingsTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+</div>
 
-            <div class="flex gap-3 pt-4">
-                <button type="submit" class="material-button flex-1 px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
-                    <span class="button-text">Save Changes</span>
-                </button>
-                <button type="button" onclick="closeSettingsModal()" class="material-button px-6 py-3 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                    <span class="button-text">Cancel</span>
-                </button>
-            </div>
-        </form>
-    </div>
+<div class="flex gap-3 pt-4">
+<button type="submit" class="material-button flex-1 px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+<span class="button-text">Save Changes</span>
+</button>
+<button type="button" onclick="closeSettingsModal()" class="material-button px-6 py-3 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-700">
+<span class="button-text">Cancel</span>
+</button>
+</div>
+</form>
+</div>
 </div>
 
 <!-- Material Design Floating Action Button -->
@@ -1025,827 +1021,631 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    checkExistingSession();
+checkExistingSession();
 });
 
 // Check if user is already logged in
 function checkExistingSession() {
-    const userEmail = localStorage.getItem('currentUserEmail');
-    if (userEmail) {
-        const user = allUsers.find(u => u.email === userEmail);
-        if (user) {
-            currentUser = user;
+const userEmail = localStorage.getItem('currentUserEmail');
+if (userEmail) {
+const user = allUsers.find(u => u.email === userEmail);
+if (user) {
+currentUser = user;
 
-            // Update study streak
-            updateStudyStreak(user);
+// Update study streak
+updateStudyStreak(user);
 
-            if (user.hasPaid) {
-                updateUserDisplay(user);
-                renderDashboard();
-                showSection(dashboardSection);
-            } else {
-                showSection(paymentSection);
-            }
-        } else {
-            showSection(landingSection);
-        }
-    } else {
-        showSection(landingSection);
-    }
+if (user.hasPaid) {
+updateUserDisplay(user);
+renderDashboard();
+showSection(dashboardSection);
+} else {
+showSection(paymentSection);
+}
+} else {
+showSection(landingSection);
+}
+} else {
+showSection(landingSection);
+}
 }
 
 // Show/Hide Sections
 function showSection(section) {
-    // Hide all sections
-    landingSection.classList.add('hidden-content');
-    loginSection.classList.add('hidden-content');
-    registerSection.classList.add('hidden-content');
-    paymentSection.classList.add('hidden-content');
-    dashboardSection.classList.add('hidden-content');
-    if (adminSection) adminSection.classList.add('hidden-content');
+// Hide all sections
+landingSection.classList.add('hidden-content');
+loginSection.classList.add('hidden-content');
+registerSection.classList.add('hidden-content');
+paymentSection.classList.add('hidden-content');
+dashboardSection.classList.add('hidden-content');
+if (adminSection) adminSection.classList.add('hidden-content');
 
-    // Show the selected section
-    section.classList.remove('hidden-content');
+// Show the selected section
+section.classList.remove('hidden-content');
 
-    // Show/hide header and FAB based on section
-    if (section === landingSection || section === loginSection || section === registerSection || section === paymentSection) {
-        mainHeader.style.display = 'none';
-        fabButton.classList.add('hidden');
-    } else {
-        mainHeader.style.display = 'block';
-        if (section === dashboardSection) {
-            fabButton.classList.remove('hidden');
-        } else {
-            fabButton.classList.add('hidden');
-        }
-    }
+// Show/hide header and FAB based on section
+if (section === landingSection || section === loginSection || section === registerSection || section === paymentSection) {
+mainHeader.style.display = 'none';
+fabButton.classList.add('hidden');
+} else {
+mainHeader.style.display = 'block';
+if (section === dashboardSection) {
+fabButton.classList.remove('hidden');
+} else {
+fabButton.classList.add('hidden');
+}
+}
 
-    // Scroll to top
-    window.scrollTo(0, 0);
+// Scroll to top
+window.scrollTo(0, 0);
 }
 
 // Login Form Handler
 document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+e.preventDefault();
+const email = document.getElementById('loginEmail').value;
+const password = document.getElementById('loginPassword').value;
 
-    // Check for admin login
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        currentUser = {
-            name: 'Admin',
-            email: ADMIN_EMAIL,
-            isAdmin: true,
-            hasPaid: true
-        };
-        localStorage.setItem('currentUserEmail', ADMIN_EMAIL);
-        updateUserDisplay(currentUser);
-        loadAdminData();
-        showSection(adminSection);
-        showMaterialToast('Admin login successful! 👨‍💼', 'success');
-        return;
-    }
+// Check for admin login
+if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+currentUser = {
+name: 'Admin',
+email: ADMIN_EMAIL,
+isAdmin: true,
+hasPaid: true
+};
+localStorage.setItem('currentUserEmail', ADMIN_EMAIL);
+updateUserDisplay(currentUser);
+loadAdminData();
+showSection(adminSection);
+showMaterialToast('Admin login successful! 👨‍💼', 'success');
+return;
+}
 
-    const user = allUsers.find(u => u.email === email && u.password === password);
+const user = allUsers.find(u => u.email === email && u.password === password);
 
-    if (user) {
-        // Update study streak
-        updateStudyStreak(user);
+if (user) {
+// Update study streak
+updateStudyStreak(user);
 
-        // Update last login
-        user.lastLogin = new Date().toISOString();
-        localStorage.setItem('raven_users', JSON.stringify(allUsers));
+// Update last login
+user.lastLogin = new Date().toISOString();
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
 
-        // Set current user
-        localStorage.setItem('currentUserEmail', email);
-        currentUser = user;
+// Set current user
+localStorage.setItem('currentUserEmail', email);
+currentUser = user;
 
-        if (user.hasPaid) {
-            updateUserDisplay(user);
-            renderDashboard();
-            showSection(dashboardSection);
-            showMaterialToast('Welcome back! 🎓', 'success');
-        } else {
-            showSection(paymentSection);
-        }
-    } else {
-        showMaterialToast('Invalid email or password!', 'error');
-    }
+if (user.hasPaid) {
+updateUserDisplay(user);
+renderDashboard();
+showSection(dashboardSection);
+showMaterialToast('Welcome back! 🎓', 'success');
+} else {
+showSection(paymentSection);
+}
+} else {
+showMaterialToast('Invalid email or password!', 'error');
+}
 });
 
 // Register Form Handler
 document.getElementById('registerForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('registerName').value;
-    const email = document.getElementById('registerEmail').value;
-    const institute = document.getElementById('registerInstitute').value;
-    const targetScore = document.getElementById('registerTargetScore').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+e.preventDefault();
+const name = document.getElementById('registerName').value;
+const email = document.getElementById('registerEmail').value;
+const institute = document.getElementById('registerInstitute').value;
+const targetScore = document.getElementById('registerTargetScore').value;
+const password = document.getElementById('registerPassword').value;
+const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
-    if (password !== confirmPassword) {
-        showMaterialToast('Passwords do not match!', 'error');
-        return;
-    }
+if (password !== confirmPassword) {
+showMaterialToast('Passwords do not match!', 'error');
+return;
+}
 
-    // Check if user already exists
-    if (allUsers.find(user => user.email === email)) {
-        showMaterialToast('User with this email already exists!', 'error');
-        return;
-    }
+// Check if user already exists
+if (allUsers.find(user => user.email === email)) {
+showMaterialToast('User with this email already exists!', 'error');
+return;
+}
 
-    // Create user object
-    const newUser = {
-        id: allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id || 0)) + 1 : 1,
-        name: name,
-        email: email,
-        password: password,
-        institute: institute,
-        targetScore: parseInt(targetScore),
-        registrationDate: new Date().toISOString(),
-        hasPaid: false,
-        lastLogin: null,
-        studyStreak: 0,
-        lastStudyDate: null,
-        totalCorrectAnswers: 0,
-        totalQuestions: 0,
-        sessions: [],
-        subjects: {
-            'Mathematics': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
-            'English': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
-            'Physics': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
-            'Chemistry': { progress: 0, questionsAnswered: 0, correctAnswers: 0 }
-        }
-    };
+// Create user object
+const newUser = {
+id: allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id || 0)) + 1 : 1,
+name: name,
+email: email,
+password: password,
+institute: institute,
+targetScore: parseInt(targetScore),
+registrationDate: new Date().toISOString(),
+hasPaid: false,
+lastLogin: null,
+studyStreak: 0,
+lastStudyDate: null,
+totalCorrectAnswers: 0,
+totalQuestions: 0,
+sessions: [],
+subjects: {
+'Mathematics': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
+'English': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
+'Physics': { progress: 0, questionsAnswered: 0, correctAnswers: 0 },
+'Chemistry': { progress: 0, questionsAnswered: 0, correctAnswers: 0 }
+}
+};
 
-    // Add to users array
-    allUsers.push(newUser);
-    localStorage.setItem('raven_users', JSON.stringify(allUsers));
+// Add to users array
+allUsers.push(newUser);
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
 
-    // Set as current user
-    localStorage.setItem('currentUserEmail', email);
-    currentUser = newUser;
+// Set as current user
+localStorage.setItem('currentUserEmail', email);
+currentUser = newUser;
 
-    // Show payment section after registration
-    showSection(paymentSection);
-    showMaterialToast('Account created successfully! 🎉', 'success');
+// Show payment section after registration
+showSection(paymentSection);
+showMaterialToast('Account created successfully! 🎉', 'success');
 });
 
 // Activation Form Handler
 document.getElementById('activationForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = document.getElementById('activationCode').value.trim().toUpperCase();
+e.preventDefault();
+const code = document.getElementById('activationCode').value.trim().toUpperCase();
 
-    const codeObj = activationCodes.find(c => c.code === code && !c.used);
+const codeObj = activationCodes.find(c => c.code === code && !c.used);
 
-    if (codeObj) {
-        // Mark code as used
-        codeObj.used = true;
-        codeObj.usedBy = currentUser.email;
-        codeObj.usedDate = new Date().toISOString();
-        localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
+if (codeObj) {
+// Mark code as used
+codeObj.used = true;
+codeObj.usedBy = currentUser.email;
+codeObj.usedDate = new Date().toISOString();
+localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
 
-        // Activate user
-        const userEmail = localStorage.getItem('currentUserEmail');
-        const user = allUsers.find(u => u.email === userEmail);
+// Activate user
+const userEmail = localStorage.getItem('currentUserEmail');
+const user = allUsers.find(u => u.email === userEmail);
 
-        if (user) {
-            user.hasPaid = true;
-            user.activationCode = code;
-            localStorage.setItem('raven_users', JSON.stringify(allUsers));
-            currentUser = user;
-        }
+if (user) {
+user.hasPaid = true;
+user.activationCode = code;
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
+currentUser = user;
+}
 
-        updateUserDisplay(user);
-        renderDashboard();
-        showSection(dashboardSection);
-        showMaterialToast('Account activated successfully! Welcome to Raven Premium 🎓', 'success');
-    } else {
-        showMaterialToast('Invalid or already used activation code!', 'error');
-    }
+updateUserDisplay(user);
+renderDashboard();
+showSection(dashboardSection);
+showMaterialToast('Account activated successfully! Welcome to Raven Premium 🎓', 'success');
+} else {
+showMaterialToast('Invalid or already used activation code!', 'error');
+}
 });
 
 // Handle Payment (simulated)
 function handlePayment(plan) {
-    showMaterialToast('Opening payment gateway...', 'info');
+showMaterialToast('Opening payment gateway...', 'info');
 
-    // Simulate payment processing
-    setTimeout(() => {
-        const userEmail = localStorage.getItem('currentUserEmail');
-        const user = allUsers.find(u => u.email === userEmail);
+// Simulate payment processing
+setTimeout(() => {
+const userEmail = localStorage.getItem('currentUserEmail');
+const user = allUsers.find(u => u.email === userEmail);
 
-        if (user) {
-            user.hasPaid = true;
-            user.subscriptionPlan = plan;
-            user.subscriptionDate = new Date().toISOString();
-            localStorage.setItem('raven_users', JSON.stringify(allUsers));
-            currentUser = user;
-        }
+if (user) {
+user.hasPaid = true;
+user.subscriptionPlan = plan;
+user.subscriptionDate = new Date().toISOString();
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
+currentUser = user;
+}
 
-        updateUserDisplay(user);
-        renderDashboard();
-        showSection(dashboardSection);
-        showMaterialToast('Payment successful! Welcome to Raven Premium 🎓', 'success');
-    }, 1500);
+updateUserDisplay(user);
+renderDashboard();
+showSection(dashboardSection);
+showMaterialToast('Payment successful! Welcome to Raven Premium 🎓', 'success');
+}, 1500);
 }
 
 // Update study streak
 function updateStudyStreak(user) {
-    const today = new Date().toDateString();
-    const lastStudy = user.lastStudyDate ? new Date(user.lastStudyDate).toDateString() : null;
+const today = new Date().toDateString();
+const lastStudy = user.lastStudyDate ? new Date(user.lastStudyDate).toDateString() : null;
 
-    if (lastStudy !== today) {
-        if (lastStudy) {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayStr = yesterday.toDateString();
+if (lastStudy !== today) {
+if (lastStudy) {
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+const yesterdayStr = yesterday.toDateString();
 
-            if (lastStudy === yesterdayStr) {
-                // Consecutive day
-                user.studyStreak = (user.studyStreak || 0) + 1;
-            } else {
-                // Streak broken
-                user.studyStreak = 1;
-            }
-        } else {
-            // First study day
-            user.studyStreak = 1;
-        }
+if (lastStudy === yesterdayStr) {
+// Consecutive day
+user.studyStreak = (user.studyStreak || 0) + 1;
+} else {
+// Streak broken
+user.studyStreak = 1;
+}
+} else {
+// First study day
+user.studyStreak = 1;
+}
 
-        user.lastStudyDate = new Date().toISOString();
+user.lastStudyDate = new Date().toISOString();
 
-        // Update in storage
-        const userIndex = allUsers.findIndex(u => u.email === user.email);
-        if (userIndex !== -1) {
-            allUsers[userIndex] = user;
-            localStorage.setItem('raven_users', JSON.stringify(allUsers));
-        }
-    }
+// Update in storage
+const userIndex = allUsers.findIndex(u => u.email === user.email);
+if (userIndex !== -1) {
+allUsers[userIndex] = user;
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
+}
+}
 }
 
 // Render Dashboard
 function renderDashboard() {
-    if (!currentUser) return;
+if (!currentUser) return;
 
-    // Update stats
-    document.getElementById('instituteDisplay').textContent = currentUser.institute || '-';
-    document.getElementById('targetScoreDisplay').textContent = currentUser.targetScore || '-';
-    document.getElementById('studyStreakCount').textContent = `${currentUser.studyStreak || 0} days`;
-    document.getElementById('correctAnswersCount').textContent = currentUser.totalCorrectAnswers || 0;
+// Update stats
+document.getElementById('instituteDisplay').textContent = currentUser.institute || '-';
+document.getElementById('targetScoreDisplay').textContent = currentUser.targetScore || '-';
+document.getElementById('studyStreakCount').textContent = `${currentUser.studyStreak || 0} days`;
+document.getElementById('correctAnswersCount').textContent = currentUser.totalCorrectAnswers || 0;
 
-    const accuracy = currentUser.totalQuestions > 0
-        ? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
-        : 0;
-    document.getElementById('accuracyPercentage').textContent = `${accuracy}% accuracy`;
+const accuracy = currentUser.totalQuestions > 0
+? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
+: 0;
+document.getElementById('accuracyPercentage').textContent = `${accuracy}% accuracy`;
 
-    // Render subject progress
-    renderSubjectProgress();
+// Render subject progress
+renderSubjectProgress();
 
-    // Render recent sessions
-    renderRecentSessions();
+// Render recent sessions
+renderRecentSessions();
 }
 
 // Render Subject Progress
 function renderSubjectProgress() {
-    const container = document.getElementById('subjectProgressList');
-    if (!currentUser || !currentUser.subjects) {
-        container.innerHTML = '<p class="body-2 text-neutral-600 dark:text-neutral-400">No progress data available</p>';
-        return;
-    }
+const container = document.getElementById('subjectProgressList');
+if (!currentUser || !currentUser.subjects) {
+container.innerHTML = '<p class="body-2 text-neutral-600 dark:text-neutral-400">No progress data available</p>';
+return;
+}
 
-    const subjects = currentUser.subjects;
-    const colors = {
-        'Mathematics': 'primary',
-        'English': 'accent',
-        'Physics': 'data',
-        'Chemistry': 'success'
-    };
+const subjects = currentUser.subjects;
+const colors = {
+'Mathematics': 'primary',
+'English': 'accent',
+'Physics': 'data',
+'Chemistry': 'success'
+};
 
-    container.innerHTML = Object.keys(subjects).map(subject => {
-        const data = subjects[subject];
-        const progress = data.questionsAnswered > 0
-            ? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
-            : 0;
-        const color = colors[subject] || 'primary';
+container.innerHTML = Object.keys(subjects).map(subject => {
+const data = subjects[subject];
+const progress = data.questionsAnswered > 0
+? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
+: 0;
+const color = colors[subject] || 'primary';
 
-        return `
-            <div class="material-card bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="subtitle-2 text-neutral-800 dark:text-white">${subject}</h4>
-                    <span class="caption text-${color} font-semibold">${progress}%</span>
-                </div>
-                <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mb-2">
-                    <div class="bg-${color} h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
-                </div>
-                <p class="caption text-neutral-600 dark:text-neutral-400">${data.questionsAnswered} questions answered</p>
-            </div>
-        `;
-    }).join('');
+return `
+<div class="material-card bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4">
+<div class="flex items-center justify-between mb-3">
+<h4 class="subtitle-2 text-neutral-800 dark:text-white">${subject}</h4>
+<span class="caption text-${color} font-semibold">${progress}%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2 mb-2">
+<div class="bg-${color} h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+</div>
+<p class="caption text-neutral-600 dark:text-neutral-400">${data.questionsAnswered} questions answered</p>
+</div>
+`;
+}).join('');
 }
 
 // Render Recent Sessions
 function renderRecentSessions() {
-    const tbody = document.getElementById('sessions-table');
-    if (!currentUser || !currentUser.sessions || currentUser.sessions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="pt-4 text-neutral-600 dark:text-neutral-400 text-center">No sessions yet</td></tr>';
-        return;
-    }
+const tbody = document.getElementById('sessions-table');
+if (!currentUser || !currentUser.sessions || currentUser.sessions.length === 0) {
+tbody.innerHTML = '<tr><td colspan="3" class="pt-4 text-neutral-600 dark:text-neutral-400 text-center">No sessions yet</td></tr>';
+return;
+}
 
-    const recentSessions = currentUser.sessions.slice(-5).reverse();
-    tbody.innerHTML = recentSessions.map(session => {
-        const date = new Date(session.date).toLocaleDateString();
-        return `
-            <tr class="border-b border-neutral-200 dark:border-neutral-700">
-                <td class="py-3 text-neutral-800 dark:text-white">${session.subject}</td>
-                <td class="py-3 text-neutral-800 dark:text-white">${session.score}%</td>
-                <td class="py-3 text-neutral-600 dark:text-neutral-400">${date}</td>
-            </tr>
-        `;
-    }).join('');
+const recentSessions = currentUser.sessions.slice(-5).reverse();
+tbody.innerHTML = recentSessions.map(session => {
+const date = new Date(session.date).toLocaleDateString();
+return `
+<tr class="border-b border-neutral-200 dark:border-neutral-700">
+<td class="py-3 text-neutral-800 dark:text-white">${session.subject}</td>
+<td class="py-3 text-neutral-800 dark:text-white">${session.score}%</td>
+<td class="py-3 text-neutral-600 dark:text-neutral-400">${date}</td>
+</tr>
+`;
+}).join('');
 }
 
 // Update user display
 function updateUserDisplay(user) {
-    const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-    document.getElementById('userInitials').textContent = initials;
-    document.getElementById('mobileUserInitials').textContent = initials;
-    document.getElementById('mobileUserName').textContent = user.name;
-    document.getElementById('dashboardUserName').textContent = user.name.split(' ')[0];
+const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+document.getElementById('userInitials').textContent = initials;
+document.getElementById('mobileUserInitials').textContent = initials;
+document.getElementById('mobileUserName').textContent = user.name;
+document.getElementById('dashboardUserName').textContent = user.name.split(' ')[0];
 
-    // Show logout button
-    logoutBtn.classList.remove('hidden');
+// Show logout button
+logoutBtn.classList.remove('hidden');
 
-    // Show admin button for admin users
-    if (user.isAdmin) {
-        adminBtn.classList.remove('hidden');
-    }
+// Show admin button for admin users
+if (user.isAdmin) {
+adminBtn.classList.remove('hidden');
+}
 }
 
 // Settings Modal Functions
 function openSettingsModal() {
-    if (!currentUser) return;
+if (!currentUser) return;
 
-    document.getElementById('settingsName').value = currentUser.name;
-    document.getElementById('settingsEmail').value = currentUser.email;
-    document.getElementById('settingsInstitute').value = currentUser.institute || '';
-    document.getElementById('settingsTargetScore').value = currentUser.targetScore || '';
+document.getElementById('settingsName').value = currentUser.name;
+document.getElementById('settingsEmail').value = currentUser.email;
+document.getElementById('settingsInstitute').value = currentUser.institute || '';
+document.getElementById('settingsTargetScore').value = currentUser.targetScore || '';
 
-    document.getElementById('settingsModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
+document.getElementById('settingsModal').classList.remove('hidden');
+document.body.classList.add('overflow-hidden');
 }
 
 function closeSettingsModal() {
-    document.getElementById('settingsModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
+document.getElementById('settingsModal').classList.add('hidden');
+document.body.classList.remove('overflow-hidden');
 }
 
 // Settings Form Handler
 document.getElementById('settingsForm').addEventListener('submit', (e) => {
-    e.preventDefault();
+e.preventDefault();
 
-    const name = document.getElementById('settingsName').value;
-    const institute = document.getElementById('settingsInstitute').value;
-    const targetScore = document.getElementById('settingsTargetScore').value;
+const name = document.getElementById('settingsName').value;
+const institute = document.getElementById('settingsInstitute').value;
+const targetScore = document.getElementById('settingsTargetScore').value;
 
-    // Update current user
-    currentUser.name = name;
-    currentUser.institute = institute;
-    currentUser.targetScore = parseInt(targetScore);
+// Update current user
+currentUser.name = name;
+currentUser.institute = institute;
+currentUser.targetScore = parseInt(targetScore);
 
-    // Update in storage
-    const userIndex = allUsers.findIndex(u => u.email === currentUser.email);
-    if (userIndex !== -1) {
-        allUsers[userIndex] = currentUser;
-        localStorage.setItem('raven_users', JSON.stringify(allUsers));
-    }
+// Update in storage
+const userIndex = allUsers.findIndex(u => u.email === currentUser.email);
+if (userIndex !== -1) {
+allUsers[userIndex] = currentUser;
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
+}
 
-    // Update display
-    updateUserDisplay(currentUser);
-    renderDashboard();
+// Update display
+updateUserDisplay(currentUser);
+renderDashboard();
 
-    closeSettingsModal();
-    showMaterialToast('Settings updated successfully!', 'success');
+closeSettingsModal();
+showMaterialToast('Settings updated successfully!', 'success');
 });
 
 // Admin Functions
 function requestAdminAccess() {
-    if (currentUser && currentUser.isAdmin) {
-        loadAdminData();
-        showSection(adminSection);
-    }
+if (currentUser && currentUser.isAdmin) {
+loadAdminData();
+showSection(adminSection);
+}
 }
 
 function loadAdminData() {
-    // Update stats
-    document.getElementById('totalUsersCount').textContent = allUsers.length;
-    document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.hasPaid).length;
-    document.getElementById('activeCodesCount').textContent = activationCodes.filter(c => !c.used).length;
+// Update stats
+document.getElementById('totalUsersCount').textContent = allUsers.length;
+document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.hasPaid).length;
+document.getElementById('activeCodesCount').textContent = activationCodes.filter(c => !c.used).length;
 
-    // Populate users table
-    const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = allUsers.map(user => `
-        <tr>
-            <td class="py-3">${user.name}</td>
-            <td class="py-3">${user.email}</td>
-            <td class="py-3">${user.institute || '-'}</td>
-            <td class="py-3">
-                <span class="status-badge ${user.hasPaid ? 'status-paid' : 'status-pending'}">
-                    ${user.hasPaid ? 'Active' : 'Pending'}
-                </span>
-            </td>
-            <td class="py-3">${new Date(user.registrationDate).toLocaleDateString()}</td>
-            <td class="py-3">
-                <button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger rounded">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
+// Populate users table
+const tbody = document.getElementById('usersTableBody');
+tbody.innerHTML = allUsers.map(user => `
+<tr>
+<td class="py-3">${user.name}</td>
+<td class="py-3">${user.email}</td>
+<td class="py-3">${user.institute || '-'}</td>
+<td class="py-3">
+<span class="status-badge ${user.hasPaid ? 'status-paid' : 'status-pending'}">
+${user.hasPaid ? 'Active' : 'Pending'}
+</span>
+</td>
+<td class="py-3">${new Date(user.registrationDate).toLocaleDateString()}</td>
+<td class="py-3">
+<button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger rounded">
+Delete
+</button>
+</td>
+</tr>
+`).join('');
 }
 
 function generateActivationCodes() {
-    const count = parseInt(document.getElementById('codeCount').value);
+const count = parseInt(document.getElementById('codeCount').value);
 
-    if (count < 1 || count > 100) {
-        showMaterialToast('Please enter a number between 1 and 100', 'warning');
-        return;
-    }
+if (count < 1 || count > 100) {
+showMaterialToast('Please enter a number between 1 and 100', 'warning');
+return;
+}
 
-    const newCodes = [];
-    for (let i = 0; i < count; i++) {
-        const code = generateRandomCode();
-        newCodes.push({
-            code: code,
-            generated: new Date().toISOString(),
-            used: false,
-            usedBy: null,
-            usedDate: null
-        });
-    }
+const newCodes = [];
+for (let i = 0; i < count; i++) {
+const code = generateRandomCode();
+newCodes.push({
+code: code,
+generated: new Date().toISOString(),
+used: false,
+usedBy: null,
+usedDate: null
+});
+}
 
-    activationCodes.push(...newCodes);
-    localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
+activationCodes.push(...newCodes);
+localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
 
-    // Display codes
-    const codesDiv = document.getElementById('generatedCodes');
-    const codesList = document.getElementById('codesList');
-    codesList.innerHTML = newCodes.map(c => `<div class="mb-1">${c.code}</div>`).join('');
-    codesDiv.classList.remove('hidden');
+// Display codes
+const codesDiv = document.getElementById('generatedCodes');
+const codesList = document.getElementById('codesList');
+codesList.innerHTML = newCodes.map(c => `<div class="mb-1">${c.code}</div>`).join('');
+codesDiv.classList.remove('hidden');
 
-    loadAdminData();
-    showMaterialToast(`${count} activation code(s) generated successfully!`, 'success');
+loadAdminData();
+showMaterialToast(`${count} activation code(s) generated successfully!`, 'success');
 }
 
 function generateRandomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 12; i++) {
-        if (i > 0 && i % 4 === 0) code += '-';
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+let code = '';
+for (let i = 0; i < 12; i++) {
+if (i > 0 && i % 4 === 0) code += '-';
+code += chars.charAt(Math.floor(Math.random() * chars.length));
+}
+return code;
 }
 
 function deleteUser(email) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-backdrop';
-    modal.innerHTML = `
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full shadow-material-5">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Confirm Deletion</h3>
-            <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div class="flex gap-3">
-                <button onclick="confirmDeleteUser('${email}'); this.closest('.modal-backdrop').remove();" class="material-button flex-1 px-4 py-2 bg-error text-white rounded-lg">
-                    <span class="button-text">Delete</span>
-                </button>
-                <button onclick="this.closest('.modal-backdrop').remove()" class="material-button flex-1 px-4 py-2 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg">
-                    <span class="button-text">Cancel</span>
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
+const modal = document.createElement('div');
+modal.className = 'modal-backdrop';
+modal.innerHTML = `
+<div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full shadow-material-5">
+<h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Confirm Deletion</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
+<div class="flex gap-3">
+<button onclick="confirmDeleteUser('${email}'); this.closest('.modal-backdrop').remove();" class="material-button flex-1 px-4 py-2 bg-error text-white rounded-lg">
+<span class="button-text">Delete</span>
+</button>
+<button onclick="this.closest('.modal-backdrop').remove()" class="material-button flex-1 px-4 py-2 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg">
+<span class="button-text">Cancel</span>
+</button>
+</div>
+</div>
+`;
+document.body.appendChild(modal);
 }
 
 function confirmDeleteUser(email) {
-    allUsers = allUsers.filter(u => u.email !== email);
-    localStorage.setItem('raven_users', JSON.stringify(allUsers));
-    loadAdminData();
-    showMaterialToast('User deleted successfully', 'info');
+allUsers = allUsers.filter(u => u.email !== email);
+localStorage.setItem('raven_users', JSON.stringify(allUsers));
+loadAdminData();
+showMaterialToast('User deleted successfully', 'info');
 }
 
 // Logout functionality
 function logout() {
-    localStorage.removeItem('currentUserEmail');
-    currentUser = null;
-    logoutBtn.classList.add('hidden');
-    adminBtn.classList.add('hidden');
-    showSection(landingSection);
-    showMaterialToast('Logged out successfully', 'info');
+localStorage.removeItem('currentUserEmail');
+currentUser = null;
+logoutBtn.classList.add('hidden');
+adminBtn.classList.add('hidden');
+showSection(landingSection);
+showMaterialToast('Logged out successfully', 'info');
 }
 
 // Dark mode detection with Material Design transitions
 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.classList.add('dark');
+document.documentElement.classList.add('dark');
 }
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-    if (event.matches) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+if (event.matches) {
+document.documentElement.classList.add('dark');
+} else {
+document.documentElement.classList.remove('dark');
+}
 });
 
 // Mobile menu functionality
 function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const overlay = document.getElementById('mobileMenuOverlay');
-    const isOpen = !mobileMenu.classList.contains('-translate-x-full');
+const mobileMenu = document.getElementById('mobileMenu');
+const overlay = document.getElementById('mobileMenuOverlay');
+const isOpen = !mobileMenu.classList.contains('-translate-x-full');
 
-    if (isOpen) {
-        // Close menu
-        mobileMenu.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    } else {
-        // Open menu
-        mobileMenu.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-    }
+if (isOpen) {
+// Close menu
+mobileMenu.classList.add('-translate-x-full');
+overlay.classList.add('hidden');
+document.body.classList.remove('overflow-hidden');
+} else {
+// Open menu
+mobileMenu.classList.remove('-translate-x-full');
+overlay.classList.remove('hidden');
+document.body.classList.add('overflow-hidden');
+}
 }
 
 // Close mobile menu when clicking outside
 document.addEventListener('click', function(event) {
-    const mobileMenu = document.getElementById('mobileMenu');
-    const menuButton = event.target.closest('[onclick="toggleMobileMenu()"]');
+const mobileMenu = document.getElementById('mobileMenu');
+const menuButton = event.target.closest('[onclick="toggleMobileMenu()"]');
 
-    if (!mobileMenu.contains(event.target) && !menuButton && !mobileMenu.classList.contains('-translate-x-full')) {
-        toggleMobileMenu();
-    }
+if (!mobileMenu.contains(event.target) && !menuButton && !mobileMenu.classList.contains('-translate-x-full')) {
+toggleMobileMenu();
+}
 });
 
 // Handle window resize
 window.addEventListener('resize', function() {
-    if (window.innerWidth >= 768) {
-        const mobileMenu = document.getElementById('mobileMenu');
-        const overlay = document.getElementById('mobileMenuOverlay');
-        mobileMenu.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
+if (window.innerWidth >= 768) {
+const mobileMenu = document.getElementById('mobileMenu');
+const overlay = document.getElementById('mobileMenuOverlay');
+mobileMenu.classList.add('-translate-x-full');
+overlay.classList.add('hidden');
+document.body.classList.remove('overflow-hidden');
+}
 });
 
 // Enhanced quick practice function
 function startQuickPractice() {
-    window.location.href = 'practice/index.html';
+window.location.href = 'practice/index.html';
 }
 
 // Material Design Toast System
 function showMaterialToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+const toastContainer = document.getElementById('toast-container') || createToastContainer();
 
-    const toast = document.createElement('div');
-    const iconMap = {
-        success: 'check_circle',
-        error: 'error',
-        warning: 'warning',
-        info: 'info'
-    };
+const toast = document.createElement('div');
+const iconMap = {
+success: 'check_circle',
+error: 'error',
+warning: 'warning',
+info: 'info'
+};
 
-    const colorMap = {
-        success: 'bg-success text-white',
-        error: 'bg-error text-white',
-        warning: 'bg-warning text-white',
-        info: 'bg-accent text-white'
-    };
+const colorMap = {
+success: 'bg-success text-white',
+error: 'bg-error text-white',
+warning: 'bg-warning text-white',
+info: 'bg-accent text-white'
+};
 
-    toast.className = `material-card flex items-center space-x-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-material-3 ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
+toast.className = `material-card flex items-center space-x-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-material-3 ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
 
-    toast.innerHTML = `
-        <span class="material-icons">${iconMap[type]}</span>
-        <span class="subtitle-2 flex-1">${message}</span>
-        <button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1 touch-target">close</button>
-    `;
+toast.innerHTML = `
+<span class="material-icons">${iconMap[type]}</span>
+<span class="subtitle-2 flex-1">${message}</span>
+<button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1 touch-target">close</button>
+`;
 
-    toastContainer.appendChild(toast);
+toastContainer.appendChild(toast);
 
-    // Animate in
-    setTimeout(() => {
-        toast.classList.remove('translate-y-2', 'opacity-0');
-    }, 100);
+// Animate in
+setTimeout(() => {
+toast.classList.remove('translate-y-2', 'opacity-0');
+}, 100);
 
-    // Auto remove after 3 seconds
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.classList.add('translate-y-2', 'opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        }
-    }, 3000);
+// Auto remove after 3 seconds
+setTimeout(() => {
+if (toast.parentElement) {
+toast.classList.add('translate-y-2', 'opacity-0');
+setTimeout(() => toast.remove(), 300);
+}
+}, 3000);
 }
 
 function createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toast-container';
-    container.className = 'fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 max-w-xs sm:max-w-sm';
-    document.body.appendChild(container);
-    return container;
+const container = document.createElement('div');
+container.id = 'toast-container';
+container.className = 'fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 max-w-xs sm:max-w-sm';
+document.body.appendChild(container);
+return container;
 }
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-=====================
-
-
-function loadAdminData() {
-    // Update stats
-    document.getElementById('totalUsersCount').textContent = allUsers.length;
-    document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.hasPaid).length;
-    document.getElementById('activeCodesCount').textContent = activationCodes.filter(c => !c.used).length;
-
-    // Populate users table
-    const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = allUsers.map(user => `
-        <tr>
-            <td class="py-3">${user.name}</td>
-            <td class="py-3">${user.email}</td>
-            <td class="py-3">${user.institute || '-'}</td>
-            <td class="py-3">
-                <span class="status-badge ${user.hasPaid ? 'status-paid' : 'status-pending'}">
-                    ${user.hasPaid ? 'Active' : 'Pending'}
-                </span>
-            </td>
-            <td class="py-3">${new Date(user.registrationDate).toLocaleDateString()}</td>
-            <td class="py-3">
-                <button onclick="deleteUser('${user.email}')" class="material-button btn-sm btn-danger rounded">
-                    Delete
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function generateActivationCodes() {
-    const count = parseInt(document.getElementById('codeCount').value);
-
-    if (count < 1 || count > 100) {
-        showMaterialToast('Please enter a number between 1 and 100', 'warning');
-        return;
-    }
-
-    const newCodes = [];
-    for (let i = 0; i < count; i++) {
-        const code = generateRandomCode();
-        newCodes.push({
-            code: code,
-            generated: new Date().toISOString(),
-            used: false,
-            usedBy: null,
-            usedDate: null
-        });
-    }
-
-    activationCodes.push(...newCodes);
-    localStorage.setItem('raven_activation_codes', JSON.stringify(activationCodes));
-
-    // Display codes
-    const codesDiv = document.getElementById('generatedCodes');
-    const codesList = document.getElementById('codesList');
-    codesList.innerHTML = newCodes.map(c => `<div class="mb-1">${c.code}</div>`).join('');
-    codesDiv.classList.remove('hidden');
-
-    loadAdminData();
-    showMaterialToast(`${count} activation code(s) generated successfully!`, 'success');
-}
-
-function generateRandomCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 12; i++) {
-        if (i > 0 && i % 4 === 0) code += '-';
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
-function deleteUser(email) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-backdrop';
-    modal.innerHTML = `
-        <div class="material-card bg-white dark:bg-neutral-800 rounded-xl p-6 max-w-md w-full shadow-material-5">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Confirm Deletion</h3>
-            <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div class="flex gap-3">
-                <button onclick="confirmDeleteUser('${email}'); this.closest('.modal-backdrop').remove();" class="material-button flex-1 px-4 py-2 bg-error text-white rounded-lg">
-                    <span class="button-text">Delete</span>
-                </button>
-                <button onclick="this.closest('.modal-backdrop').remove()" class="material-button flex-1 px-4 py-2 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg">
-                    <span class="button-text">Cancel</span>
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
-
-function confirmDeleteUser(email) {
-    allUsers = allUsers.filter(u => u.email !== email);
-    localStorage.setItem('raven_users', JSON.stringify(allUsers));
-    loadAdminData();
-    showMaterialToast('User deleted successfully', 'info');
-}
-
-
-
-=============
-<section id="adminSection" class="hidden-content">
-    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 shadow-material-3">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Admin Dashboard</h2>
-                <p class="body-1 text-neutral-600 dark:text-neutral-400">Manage users and activation codes</p>
-            </div>
-            <button onclick="showSection(dashboardSection)" class="material-button px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-white rounded-lg">
-                <span class="button-text">Back to Dashboard</span>
-            </button>
-        </div>
-
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="material-card bg-primary/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-primary text-2xl">people</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Total Users</p>
-                        <p class="headline-5 text-primary" id="totalUsersCount">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="material-card bg-success/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-success text-2xl">verified_user</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Users</p>
-                        <p class="headline-5 text-success" id="activeUsersCount">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="material-card bg-warning/10 rounded-xl p-4">
-                <div class="flex items-center space-x-3">
-                    <span class="material-icons text-warning text-2xl">vpn_key</span>
-                    <div>
-                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Codes</p>
-                        <p class="headline-5 text-warning" id="activeCodesCount">0</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Generate Activation Code -->
-        <div class="material-card bg-accent/10 border border-accent/30 rounded-xl p-6 mb-8">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Generate Activation Codes</h3>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <input type="number" id="codeCount" min="1" max="100" value="1" class="flex-1 px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Number of codes" style="font-size: 16px;">
-                <button onclick="generateActivationCodes()" class="material-button px-6 py-3 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
-                    <span class="button-text">Generate Codes</span>
-                </button>
-            </div>
-            <div id="generatedCodes" class="mt-4 hidden">
-                <p class="subtitle-2 text-neutral-800 dark:text-white mb-2">Generated Codes:</p>
-                <div id="codesList" class="bg-white dark:bg-neutral-900 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700 max-h-60 overflow-y-auto font-mono text-sm"></div>
-            </div>
-        </div>
-
-        <!-- Users Table -->
-        <div class="overflow-x-auto">
-            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">All Users</h3>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Institute</th>
-                        <th>Course</th>
-                        <th>Status</th>
-                        <th>Registered</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody" class="text-neutral-700 dark:text-neutral-300">
-                    <!-- Users will be populated here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
