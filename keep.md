@@ -1765,3 +1765,87 @@ function confirmDeleteUser(email) {
     loadAdminData();
     showMaterialToast('User deleted successfully', 'info');
 }
+
+
+
+=============
+<section id="adminSection" class="hidden-content">
+    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 shadow-material-3">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Admin Dashboard</h2>
+                <p class="body-1 text-neutral-600 dark:text-neutral-400">Manage users and activation codes</p>
+            </div>
+            <button onclick="showSection(dashboardSection)" class="material-button px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-white rounded-lg">
+                <span class="button-text">Back to Dashboard</span>
+            </button>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="material-card bg-primary/10 rounded-xl p-4">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-primary text-2xl">people</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Total Users</p>
+                        <p class="headline-5 text-primary" id="totalUsersCount">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="material-card bg-success/10 rounded-xl p-4">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-success text-2xl">verified_user</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Users</p>
+                        <p class="headline-5 text-success" id="activeUsersCount">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="material-card bg-warning/10 rounded-xl p-4">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-warning text-2xl">vpn_key</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Active Codes</p>
+                        <p class="headline-5 text-warning" id="activeCodesCount">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Activation Code -->
+        <div class="material-card bg-accent/10 border border-accent/30 rounded-xl p-6 mb-8">
+            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">Generate Activation Codes</h3>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="number" id="codeCount" min="1" max="100" value="1" class="flex-1 px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Number of codes" style="font-size: 16px;">
+                <button onclick="generateActivationCodes()" class="material-button px-6 py-3 bg-accent text-white rounded-lg shadow-material-1 hover:shadow-material-2">
+                    <span class="button-text">Generate Codes</span>
+                </button>
+            </div>
+            <div id="generatedCodes" class="mt-4 hidden">
+                <p class="subtitle-2 text-neutral-800 dark:text-white mb-2">Generated Codes:</p>
+                <div id="codesList" class="bg-white dark:bg-neutral-900 p-4 rounded-lg border border-neutral-200 dark:border-neutral-700 max-h-60 overflow-y-auto font-mono text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="overflow-x-auto">
+            <h3 class="subtitle-1 text-neutral-800 dark:text-white mb-4">All Users</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Institute</th>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Registered</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody" class="text-neutral-700 dark:text-neutral-300">
+                    <!-- Users will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
