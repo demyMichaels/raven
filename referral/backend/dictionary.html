@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary/Object Internals Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hash-slot {
+            transition: all 0.3s ease;
+        }
+        .hash-slot.active {
+            background-color: rgba(93, 92, 222, 0.2);
+            border-color: #5D5CDE;
+        }
+        .key-value-pair {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .code-output {
+            font-family: 'Courier New', monospace;
+        }
+        .pointer-line {
+            stroke: #5D5CDE;
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        .memory-block {
+            transition: all 0.3s ease;
+        }
+        .memory-block.highlight {
+            box-shadow: 0 0 20px rgba(93, 92, 222, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#181818] text-gray-900 dark:text-gray-100 transition-colors min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold mb-2 text-primary">Object/Dictionary Internals</h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400">Explore how `{}` datatypes work behind the scenes with visual representations</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Left Column: Interactive Operations -->
+            <div class="space-y-6">
+                <!-- Object Editor -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Interactive Object Editor</h2>
+
+                    <!-- Add Key-Value -->
+                    <div class="space-y-4 mb-6">
+                        <div class="flex gap-2">
+                            <input type="text" id="keyInput" placeholder="Key"
+                                   class="flex-1 px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                            <input type="text" id="valueInput" placeholder="Value"
+                                   class="flex-1 px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                            <button onclick="addProperty()"
+                                    class="px-6 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition">
+                                Add
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="deleteKeyInput" placeholder="Key to delete"
+                                   class="flex-1 px-4 py-2 text-base border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:outline-none">
+                            <button onclick="deleteProperty()"
+                                    class="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Current Object Display -->
+                    <div class="bg-white dark:bg-gray-800 rounded p-4 border-2 border-gray-200 dark:border-gray-700">
+                        <h3 class="font-semibold mb-2 text-sm text-gray-600 dark:text-gray-400">Current Object:</h3>
+                        <pre id="objectDisplay" class="code-output text-sm overflow-x-auto">{}</pre>
+                    </div>
+                </div>
+
+                <!-- Common Operations -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Common Operations</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="demonstrateOperation('keys')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            Object.keys()
+                        </button>
+                        <button onclick="demonstrateOperation('values')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            Object.values()
+                        </button>
+                        <button onclick="demonstrateOperation('entries')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            Object.entries()
+                        </button>
+                        <button onclick="demonstrateOperation('hasOwnProperty')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            hasOwnProperty()
+                        </button>
+                        <button onclick="demonstrateOperation('spread')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            Spread {...obj}
+                        </button>
+                        <button onclick="demonstrateOperation('assign')"
+                                class="px-4 py-3 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm">
+                            Object.assign()
+                        </button>
+                    </div>
+
+                    <!-- Operation Output -->
+                    <div class="mt-4 bg-white dark:bg-gray-800 rounded p-4 border-2 border-gray-200 dark:border-gray-700">
+                        <h3 class="font-semibold mb-2 text-sm text-gray-600 dark:text-gray-400">Output:</h3>
+                        <pre id="operationOutput" class="code-output text-sm overflow-x-auto text-green-600 dark:text-green-400">// Click an operation to see results</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Visualizations -->
+            <div class="space-y-6">
+                <!-- Hash Table Visualization -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Hash Table Internals</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Objects use hash tables for O(1) average lookup time</p>
+
+                    <div id="hashTableViz" class="space-y-2">
+                        <!-- Hash slots will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Memory Layout -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Memory Layout</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">How properties are stored in memory</p>
+
+                    <div class="relative">
+                        <svg width="100%" height="300" id="memoryViz">
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                                    <polygon points="0 0, 10 3, 0 6" fill="#5D5CDE" />
+                                </marker>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Time Complexity Chart -->
+                <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 shadow-lg">
+                    <h2 class="text-2xl font-semibold mb-4">Performance Characteristics</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b-2 border-gray-300 dark:border-gray-600">
+                                    <th class="text-left py-2 px-3">Operation</th>
+                                    <th class="text-left py-2 px-3">Average</th>
+                                    <th class="text-left py-2 px-3">Worst</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700 dark:text-gray-300">
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <td class="py-2 px-3">Access (obj[key])</td>
+                                    <td class="py-2 px-3 text-green-600 dark:text-green-400">O(1)</td>
+                                    <td class="py-2 px-3 text-orange-600 dark:text-orange-400">O(n)</td>
+                                </tr>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <td class="py-2 px-3">Insert (obj[key] = val)</td>
+                                    <td class="py-2 px-3 text-green-600 dark:text-green-400">O(1)</td>
+                                    <td class="py-2 px-3 text-orange-600 dark:text-orange-400">O(n)</td>
+                                </tr>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <td class="py-2 px-3">Delete (delete obj[key])</td>
+                                    <td class="py-2 px-3 text-green-600 dark:text-green-400">O(1)</td>
+                                    <td class="py-2 px-3 text-orange-600 dark:text-orange-400">O(n)</td>
+                                </tr>
+                                <tr class="border-b border-gray-200 dark:border-gray-700">
+                                    <td class="py-2 px-3">Search (key in obj)</td>
+                                    <td class="py-2 px-3 text-green-600 dark:text-green-400">O(1)</td>
+                                    <td class="py-2 px-3 text-orange-600 dark:text-orange-400">O(n)</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2 px-3">Iteration (for...in)</td>
+                                    <td class="py-2 px-3 text-yellow-600 dark:text-yellow-400">O(n)</td>
+                                    <td class="py-2 px-3 text-yellow-600 dark:text-yellow-400">O(n)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Content -->
+        <div class="mt-8 grid md:grid-cols-2 gap-6">
+            <div class="bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 rounded-lg p-6">
+                <h3 class="text-xl font-semibold mb-3 text-blue-800 dark:text-blue-300">🔑 How Hashing Works</h3>
+                <ol class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li><strong>1. Hash Function:</strong> The key is passed through a hash function that converts it to a number</li>
+                    <li><strong>2. Index Calculation:</strong> The hash is used to calculate an array index: <code class="bg-white dark:bg-gray-800 px-2 py-1 rounded">hash % tableSize</code></li>
+                    <li><strong>3. Collision Handling:</strong> If multiple keys hash to the same index, a linked list or probing is used</li>
+                    <li><strong>4. Storage:</strong> The key-value pair is stored at the calculated position</li>
+                </ol>
+            </div>
+
+            <div class="bg-green-50 dark:bg-green-900 dark:bg-opacity-20 rounded-lg p-6">
+                <h3 class="text-xl font-semibold mb-3 text-green-800 dark:text-green-300">💡 Key Concepts</h3>
+                <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li><strong>Hash Collisions:</strong> When different keys produce the same hash value</li>
+                    <li><strong>Load Factor:</strong> Ratio of entries to table size; affects performance</li>
+                    <li><strong>Rehashing:</strong> When table gets too full, it's resized and all entries are rehashed</li>
+                    <li><strong>Property Descriptors:</strong> Objects store metadata about each property (writable, enumerable, configurable)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Main object we're working with
+        let mainObject = { name: "Alice", age: 30, city: "NYC" };
+
+        // Simple hash function for demonstration
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash);
+        }
+
+        function updateDisplay() {
+            // Update object display
+            document.getElementById('objectDisplay').textContent = JSON.stringify(mainObject, null, 2);
+
+            // Update hash table visualization
+            renderHashTable();
+
+            // Update memory visualization
+            renderMemoryLayout();
+        }
+
+        function renderHashTable() {
+            const container = document.getElementById('hashTableViz');
+            const tableSize = 8; // Simple hash table with 8 slots
+
+            // Create hash table structure
+            const hashTable = Array(tableSize).fill(null).map(() => []);
+
+            // Populate hash table
+            Object.keys(mainObject).forEach(key => {
+                const hash = simpleHash(key);
+                const index = hash % tableSize;
+                hashTable[index].push({ key, value: mainObject[key], hash });
+            });
+
+            // Render
+            container.innerHTML = hashTable.map((slot, index) => {
+                const isActive = slot.length > 0;
+                return `
+                    <div class="hash-slot ${isActive ? 'active' : ''} border-2 rounded p-3 ${isActive ? 'border-primary' : 'border-gray-300 dark:border-gray-600'}">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-mono text-gray-500 dark:text-gray-400">Slot ${index}</span>
+                            ${slot.length > 1 ? `<span class="text-xs bg-red-500 text-white px-2 py-0.5 rounded">Collision</span>` : ''}
+                        </div>
+                        ${slot.length > 0 ? `
+                            <div class="space-y-1">
+                                ${slot.map(item => `
+                                    <div class="key-value-pair bg-white dark:bg-gray-800 rounded px-2 py-1 text-sm">
+                                        <span class="font-semibold text-primary">${item.key}</span>:
+                                        <span class="text-gray-700 dark:text-gray-300">${JSON.stringify(item.value)}</span>
+                                        <div class="text-xs text-gray-400 mt-1">hash: ${item.hash}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<div class="text-xs text-gray-400 dark:text-gray-500 italic">empty</div>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMemoryLayout() {
+            const svg = document.getElementById('memoryViz');
+            const width = svg.clientWidth;
+            const height = 300;
+
+            const keys = Object.keys(mainObject);
+            const blockWidth = 120;
+            const blockHeight = 60;
+            const startX = 50;
+            const startY = 50;
+
+            let svgContent = '';
+
+            // Draw object reference
+            svgContent += `
+                <rect x="20" y="20" width="100" height="50" fill="#5D5CDE" rx="5" class="memory-block highlight"/>
+                <text x="70" y="50" text-anchor="middle" fill="white" font-size="14" font-weight="bold">Object Ref</text>
+            `;
+
+            // Draw properties
+            keys.forEach((key, i) => {
+                const x = startX + (i % 2) * (blockWidth + 40);
+                const y = startY + 70 + Math.floor(i / 2) * (blockHeight + 20);
+
+                svgContent += `
+                    <g class="memory-block">
+                        <rect x="${x}" y="${y}" width="${blockWidth}" height="${blockHeight}"
+                              fill="white" stroke="#5D5CDE" stroke-width="2" rx="5"
+                              class="dark:fill-gray-800"/>
+                        <text x="${x + 10}" y="${y + 25}" font-size="12" font-weight="bold"
+                              class="fill-gray-900 dark:fill-gray-100">
+                            ${key}
+                        </text>
+                        <text x="${x + 10}" y="${y + 45}" font-size="11"
+                              class="fill-gray-600 dark:fill-gray-400">
+                            ${JSON.stringify(mainObject[key])}
+                        </text>
+                    </g>
+                `;
+
+                // Draw pointer from object to property
+                const lineStartX = 70;
+                const lineStartY = 70;
+                const lineEndX = x + blockWidth / 2;
+                const lineEndY = y;
+
+                svgContent += `
+                    <path d="M ${lineStartX} ${lineStartY} Q ${lineStartX} ${(lineStartY + lineEndY) / 2} ${lineEndX} ${lineEndY}"
+                          class="pointer-line"/>
+                `;
+            });
+
+            svg.innerHTML = svgContent;
+        }
+
+        function addProperty() {
+            const key = document.getElementById('keyInput').value.trim();
+            const value = document.getElementById('valueInput').value.trim();
+
+            if (!key) {
+                showNotification('Please enter a key name', 'error');
+                return;
+            }
+
+            // Try to parse value as JSON, otherwise use as string
+            let parsedValue;
+            try {
+                parsedValue = JSON.parse(value);
+            } catch (e) {
+                parsedValue = value;
+            }
+
+            mainObject[key] = parsedValue;
+            document.getElementById('keyInput').value = '';
+            document.getElementById('valueInput').value = '';
+
+            updateDisplay();
+            showNotification(`Added property "${key}"`, 'success');
+        }
+
+        function deleteProperty() {
+            const key = document.getElementById('deleteKeyInput').value.trim();
+
+            if (!key) {
+                showNotification('Please enter a key name', 'error');
+                return;
+            }
+
+            if (key in mainObject) {
+                delete mainObject[key];
+                document.getElementById('deleteKeyInput').value = '';
+                updateDisplay();
+                showNotification(`Deleted property "${key}"`, 'success');
+            } else {
+                showNotification(`Property "${key}" not found`, 'error');
+            }
+        }
+
+        function demonstrateOperation(op) {
+            const output = document.getElementById('operationOutput');
+            let result;
+
+            switch(op) {
+                case 'keys':
+                    result = `Object.keys(obj)\n// Returns: ${JSON.stringify(Object.keys(mainObject))}`;
+                    break;
+                case 'values':
+                    result = `Object.values(obj)\n// Returns: ${JSON.stringify(Object.values(mainObject))}`;
+                    break;
+                case 'entries':
+                    result = `Object.entries(obj)\n// Returns: ${JSON.stringify(Object.entries(mainObject))}`;
+                    break;
+                case 'hasOwnProperty':
+                    const testKey = Object.keys(mainObject)[0] || 'name';
+                    result = `obj.hasOwnProperty('${testKey}')\n// Returns: ${mainObject.hasOwnProperty(testKey)}`;
+                    break;
+                case 'spread':
+                    const spread = {...mainObject, newProp: 'value'};
+                    result = `{...obj, newProp: 'value'}\n// Returns: ${JSON.stringify(spread, null, 2)}`;
+                    break;
+                case 'assign':
+                    const assigned = Object.assign({}, mainObject, {extra: 'data'});
+                    result = `Object.assign({}, obj, {extra: 'data'})\n// Returns: ${JSON.stringify(assigned, null, 2)}`;
+                    break;
+            }
+
+            output.textContent = result;
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            notification.style.animation = 'slideIn 0.3s ease';
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Allow Enter key to add properties
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('keyInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addProperty();
+            });
+            document.getElementById('valueInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addProperty();
+            });
+            document.getElementById('deleteKeyInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') deleteProperty();
+            });
+
+            // Initial render
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
