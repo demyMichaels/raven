@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Data Structure Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Unbounded:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141825;
+            --bg-tertiary: #1e2333;
+            --accent-1: #00f0ff;
+            --accent-2: #ff00ea;
+            --accent-3: #ffea00;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --code-bg: #0d1117;
+            --code-border: #30363d;
+            --success: #00ff88;
+            --warning: #ffaa00;
+        }
+
+        .light {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e9ecef;
+            --accent-1: #0088ff;
+            --accent-2: #dd00cc;
+            --accent-3: #ff9900;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6c757d;
+            --code-bg: #f6f8fa;
+            --code-border: #d0d7de;
+            --success: #00aa66;
+            --warning: #ff8800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(255, 234, 0, 0.05) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        h1 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            animation: titlePulse 3s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 2px solid var(--code-border);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: 2px solid var(--accent-1);
+            background: transparent;
+            color: var(--accent-1);
+            font-family: 'Unbounded', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-1);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 0;
+        }
+
+        .btn:hover {
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-secondary {
+            border-color: var(--accent-2);
+            color: var(--accent-2);
+        }
+
+        .btn-secondary::before {
+            background: var(--accent-2);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 20px rgba(255, 0, 234, 0.3);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 2px solid var(--code-border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-1);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .code-container {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .code-line {
+            padding: 4px 8px;
+            margin: 2px 0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .code-line.active {
+            background: rgba(0, 240, 255, 0.15);
+            border-left: 4px solid var(--accent-1);
+            padding-left: 12px;
+            transform: translateX(4px);
+            animation: codeHighlight 1s ease;
+        }
+
+        @keyframes codeHighlight {
+            0%, 100% { background: rgba(0, 240, 255, 0.15); }
+            50% { background: rgba(0, 240, 255, 0.3); }
+        }
+
+        .keyword { color: #ff79c6; font-weight: 600; }
+        .function { color: #50fa7b; }
+        .variable { color: #8be9fd; }
+        .string { color: #f1fa8c; }
+        .comment { color: #6272a4; font-style: italic; }
+        .number { color: #bd93f9; }
+        .operator { color: #ff79c6; }
+
+        .visualization {
+            min-height: 400px;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-2);
+        }
+
+        .step-number {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--accent-2);
+            min-width: 60px;
+        }
+
+        .step-description {
+            flex: 1;
+        }
+
+        .step-description h3 {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .step-description p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .data-structure {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--code-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-structure-title {
+            font-family: 'Unbounded', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-3);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 4px 0;
+            background: var(--code-bg);
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .data-field.new {
+            animation: fieldPulse 1s ease;
+            border-left-color: var(--success);
+        }
+
+        @keyframes fieldPulse {
+            0%, 100% { background: var(--code-bg); }
+            50% { background: rgba(0, 255, 136, 0.1); }
+        }
+
+        .data-field.updated {
+            animation: fieldUpdate 1s ease;
+            border-left-color: var(--warning);
+        }
+
+        @keyframes fieldUpdate {
+            0%, 100% { background: var(--code-bg); }
+            50% { background: rgba(255, 170, 0, 0.1); }
+        }
+
+        .field-name {
+            color: var(--accent-1);
+            font-weight: 600;
+        }
+
+        .field-value {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: var(--accent-2);
+            font-size: 2rem;
+            margin: 1rem 0;
+            animation: bounce 2s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .data-flow-container {
+            position: relative;
+            padding: 2rem;
+        }
+
+        .calculation-box {
+            background: var(--code-bg);
+            border: 2px dashed var(--accent-3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            animation: calculationGlow 2s ease infinite;
+        }
+
+        @keyframes calculationGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 234, 0, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 234, 0, 0.4); }
+        }
+
+        .calculation-step {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border-left: 3px solid var(--accent-3);
+            padding-left: 1rem;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-1);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-2);
+        }
+
+        .legend {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-box.new { background: var(--success); }
+        .legend-box.updated { background: var(--warning); }
+        .legend-box.active { background: var(--accent-1); }
+
+        /* Dark mode toggle */
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quiz Data Structure Visualizer</h1>
+            <p class="subtitle">Interactive step-by-step breakdown of saveQuizResult() function</p>
+        </header>
+
+        <div class="controls">
+            <button class="btn" id="startBtn">▶ Start Visualization</button>
+            <button class="btn btn-secondary" id="nextBtn" disabled>Next Step →</button>
+            <button class="btn btn-secondary" id="prevBtn" disabled>← Previous Step</button>
+            <button class="btn" id="resetBtn">⟲ Reset</button>
+            <button class="btn btn-secondary" id="autoPlayBtn">⏯ Auto Play</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-title">📝 Function Code</div>
+                <div class="code-container" id="codeContainer"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🔍 Live Visualization</div>
+                <div class="visualization" id="visualization">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🎯</div>
+                        <p>Click "Start Visualization" to begin the step-by-step breakdown</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box new"></div>
+                <span>New Data</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box updated"></div>
+                <span>Updated Data</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box active"></div>
+                <span>Active Code</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const codeLines = [
+            { code: 'function saveQuizResult(score) {', type: 'normal' },
+            { code: '    const result = {', type: 'create', step: 0 },
+            { code: '        id: Date.now(),', type: 'normal' },
+            { code: '        subject: currentSubject.id,', type: 'normal' },
+            { code: '        subjectName: currentSubject.name,', type: 'normal' },
+            { code: '        topic: currentTopic.name,', type: 'normal' },
+            { code: '        score: score.percentage,', type: 'normal' },
+            { code: '        correct: score.correct,', type: 'normal' },
+            { code: '        total: score.total,', type: 'normal' },
+            { code: '        timeSpent: score.timeSpent,', type: 'normal' },
+            { code: '        date: new Date().toISOString(),', type: 'normal' },
+            { code: '        questions: currentQuestions.length', type: 'normal' },
+            { code: '    };', type: 'normal' },
+            { code: '', type: 'normal' },
+            { code: '    analyticsData.quizResults.push(result);', type: 'push', step: 1 },
+            { code: '', type: 'normal' },
+            { code: '    // Update topic progress - Fixed averaging calculation', type: 'comment' },
+            { code: '    const topicKey = `${currentSubject.id}_${currentTopic.name}`;', type: 'topic-key', step: 2 },
+            { code: '    if (!analyticsData.topicProgress[topicKey]) {', type: 'check', step: 3 },
+            { code: '        analyticsData.topicProgress[topicKey] = {', type: 'init' },
+            { code: '            bestScore: 0,', type: 'normal' },
+            { code: '            attempts: 0,', type: 'normal' },
+            { code: '            averageScore: 0,', type: 'normal' },
+            { code: '            totalScore: 0,', type: 'normal' },
+            { code: '            averageTime: 0,', type: 'normal' },
+            { code: '            totalTime: 0', type: 'normal' },
+            { code: '        };', type: 'normal' },
+            { code: '    }', type: 'normal' },
+            { code: '', type: 'normal' },
+            { code: '    const topicProgress = analyticsData.topicProgress[topicKey];', type: 'ref', step: 4 },
+            { code: '    topicProgress.attempts++;', type: 'update', step: 5 },
+            { code: '    topicProgress.totalScore += score.percentage;', type: 'update', step: 6 },
+            { code: '    topicProgress.averageScore = Math.round(topicProgress.totalScore / topicProgress.attempts * 100) / 100;', type: 'calc', step: 7 },
+            { code: '    topicProgress.bestScore = Math.max(topicProgress.bestScore, score.percentage);', type: 'update', step: 8 },
+            { code: '    topicProgress.totalTime += score.timeSpent;', type: 'update', step: 9 },
+            { code: '    topicProgress.averageTime = topicProgress.totalTime / topicProgress.attempts;', type: 'calc', step: 10 },
+            { code: '', type: 'normal' },
+            { code: '    // Update subject progress - Fixed averaging calculation', type: 'comment' },
+            { code: '    if (!analyticsData.subjectProgress[currentSubject.id]) {', type: 'check', step: 11 },
+            { code: '        analyticsData.subjectProgress[currentSubject.id] = {', type: 'init' },
+            { code: '            bestScore: 0,', type: 'normal' },
+            { code: '            attempts: 0,', type: 'normal' },
+            { code: '            averageScore: 0,', type: 'normal' },
+            { code: '            totalScore: 0', type: 'normal' },
+            { code: '        };', type: 'normal' },
+            { code: '    }', type: 'normal' },
+            { code: '', type: 'normal' },
+            { code: '    const subjectProgress = analyticsData.subjectProgress[currentSubject.id];', type: 'ref', step: 12 },
+            { code: '    subjectProgress.attempts++;', type: 'update', step: 13 },
+            { code: '    subjectProgress.totalScore += score.percentage;', type: 'update', step: 14 },
+            { code: '    subjectProgress.averageScore = Math.round(subjectProgress.totalScore / subjectProgress.attempts * 100) / 100;', type: 'calc', step: 15 },
+            { code: '    subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);', type: 'update', step: 16 },
+            { code: '', type: 'normal' },
+            { code: '    // Save data with improved method', type: 'comment' },
+            { code: '    const saveSuccess = saveAnalyticsData();', type: 'save', step: 17 },
+            { code: '    if (saveSuccess) {', type: 'normal' },
+            { code: '        console.log(\'✅ Quiz result saved and persisted\');', type: 'normal' },
+            { code: '    } else {', type: 'normal' },
+            { code: '        console.warn(\'⚠️ Quiz result saved but persistence may have failed\');', type: 'normal' },
+            { code: '    }', type: 'normal' },
+            { code: '', type: 'normal' },
+            { code: '    // Always refresh all views that might show progress data', type: 'comment' },
+            { code: '    refreshAllProgressViews();', type: 'refresh', step: 18 },
+            { code: '', type: 'normal' },
+            { code: '    // Debug logging', type: 'comment' },
+            { code: '    console.log(`🎯 Quiz completed: ${score.percentage}%`);', type: 'normal' },
+            { code: '    console.log(`📚 Topic progress for ${topicKey}:`, topicProgress);', type: 'normal' },
+            { code: '}', type: 'normal' }
+        ];
+
+        const steps = [
+            {
+                step: 0,
+                title: 'Create Quiz Result Object',
+                description: 'A new result object is created with all quiz data including score, timing, and metadata',
+                lines: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                visualization: () => {
+                    const exampleScore = { percentage: 85, correct: 17, total: 20, timeSpent: 145 };
+                    const result = {
+                        id: 1704067200000,
+                        subject: 'math',
+                        subjectName: 'Mathematics',
+                        topic: 'Algebra',
+                        score: 85,
+                        correct: 17,
+                        total: 20,
+                        timeSpent: 145,
+                        date: '2024-01-01T00:00:00.000Z',
+                        questions: 20
+                    };
+                    return renderDataStructure('result', result, true);
+                }
+            },
+            {
+                step: 1,
+                title: 'Push to Quiz Results Array',
+                description: 'The result object is added to the analyticsData.quizResults array for historical tracking',
+                lines: [14],
+                visualization: () => {
+                    return `
+                        <div class="data-structure">
+                            <div class="data-structure-title">📊 analyticsData.quizResults</div>
+                            <div class="code-container" style="max-height: 200px;">
+                                <div class="data-field">
+                                    <span class="field-name">[0]</span>
+                                    <span class="field-value">{ id: 1704000000000, subject: 'science', score: 90, ... }</span>
+                                </div>
+                                <div class="data-field">
+                                    <span class="field-name">[1]</span>
+                                    <span class="field-value">{ id: 1704020000000, subject: 'history', score: 78, ... }</span>
+                                </div>
+                                <div class="data-field new">
+                                    <span class="field-name">[2]</span>
+                                    <span class="field-value">{ id: 1704067200000, subject: 'math', score: 85, ... } ← NEW</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            Array now contains <strong style="color: var(--success);">3 quiz results</strong>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 2,
+                title: 'Generate Topic Key',
+                description: 'A unique key is created by combining subject ID and topic name to track progress per topic',
+                lines: [17],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>currentSubject.id:</strong> <span class="string">"math"</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>currentTopic.name:</strong> <span class="string">"Algebra"</span>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>topicKey:</strong> <span class="string">"math_Algebra"</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                            This key uniquely identifies the Math → Algebra topic
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 3,
+                title: 'Initialize Topic Progress (if needed)',
+                description: 'If this topic hasn\'t been attempted before, initialize its progress tracking object',
+                lines: [18, 19, 20, 21, 22, 23, 24, 25, 26, 27],
+                visualization: () => {
+                    const topicProgress = {
+                        bestScore: 0,
+                        attempts: 0,
+                        averageScore: 0,
+                        totalScore: 0,
+                        averageTime: 0,
+                        totalTime: 0
+                    };
+                    return `
+                        <div class="data-structure">
+                            <div class="data-structure-title">📈 analyticsData.topicProgress["math_Algebra"]</div>
+                            ${Object.entries(topicProgress).map(([key, value]) => `
+                                <div class="data-field new">
+                                    <span class="field-name">${key}</span>
+                                    <span class="field-value">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                            Fresh tracking object created for this topic
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 4,
+                title: 'Get Reference to Topic Progress',
+                description: 'Store a reference to the topic progress object for easier updates',
+                lines: [29],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Looking up:</strong> analyticsData.topicProgress["math_Algebra"]
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>topicProgress</strong> → Reference to the object
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                            Now we can update the object through this reference
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 5,
+                title: 'Increment Attempts Counter',
+                description: 'Track how many times this topic has been attempted',
+                lines: [30],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Before:</strong> attempts = <span class="number">2</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> attempts<span class="operator">++</span>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>After:</strong> attempts = <span class="number">3</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 6,
+                title: 'Update Total Score',
+                description: 'Add the current quiz score to the running total for averaging',
+                lines: [31],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Previous totalScore:</strong> <span class="number">160</span> (from 2 attempts)
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Current score.percentage:</strong> <span class="number">85</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> totalScore <span class="operator">+=</span> score.percentage
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>New totalScore:</strong> <span class="number">245</span> (160 + 85)
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 7,
+                title: 'Calculate Average Score',
+                description: 'Compute the average score across all attempts with proper rounding',
+                lines: [32],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>totalScore:</strong> <span class="number">245</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>attempts:</strong> <span class="number">3</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 1:</strong> 245 / 3 = <span class="number">81.666...</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 2:</strong> 81.666... × 100 = <span class="number">8166.666...</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 3:</strong> Math.round(8166.666...) = <span class="number">8167</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 4:</strong> 8167 / 100 = <span class="number">81.67</span>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>averageScore:</strong> <span class="number">81.67</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--warning); font-size: 0.9rem;">
+                            ⚠️ Rounding to 2 decimal places for precision
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 8,
+                title: 'Update Best Score',
+                description: 'Track the highest score achieved on this topic using Math.max()',
+                lines: [33],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Current bestScore:</strong> <span class="number">90</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>New score.percentage:</strong> <span class="number">85</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> Math.max(<span class="number">90</span>, <span class="number">85</span>)
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--warning);">
+                                <strong>bestScore:</strong> <span class="number">90</span> (unchanged - previous was better)
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            If current score was 95, bestScore would update to 95
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 9,
+                title: 'Update Total Time',
+                description: 'Add the time spent on this quiz to the total time for this topic',
+                lines: [34],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Previous totalTime:</strong> <span class="number">280</span> seconds
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Current timeSpent:</strong> <span class="number">145</span> seconds
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> totalTime <span class="operator">+=</span> score.timeSpent
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>New totalTime:</strong> <span class="number">425</span> seconds
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 10,
+                title: 'Calculate Average Time',
+                description: 'Compute average time spent per attempt on this topic',
+                lines: [35],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>totalTime:</strong> <span class="number">425</span> seconds
+                            </div>
+                            <div class="calculation-step">
+                                <strong>attempts:</strong> <span class="number">3</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> 425 / 3
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>averageTime:</strong> <span class="number">141.67</span> seconds (~2.4 minutes)
+                            </div>
+                        </div>
+                        <div class="data-structure" style="margin-top: 1rem;">
+                            <div class="data-structure-title">📈 Final Topic Progress for "math_Algebra"</div>
+                            <div class="data-field"><span class="field-name">attempts</span><span class="field-value">3</span></div>
+                            <div class="data-field"><span class="field-name">totalScore</span><span class="field-value">245</span></div>
+                            <div class="data-field"><span class="field-name">averageScore</span><span class="field-value">81.67</span></div>
+                            <div class="data-field"><span class="field-name">bestScore</span><span class="field-value">90</span></div>
+                            <div class="data-field"><span class="field-name">totalTime</span><span class="field-value">425</span></div>
+                            <div class="data-field"><span class="field-name">averageTime</span><span class="field-value">141.67</span></div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 11,
+                title: 'Initialize Subject Progress (if needed)',
+                description: 'If this subject hasn\'t been attempted, initialize its tracking object',
+                lines: [38, 39, 40, 41, 42, 43, 44, 45],
+                visualization: () => {
+                    const subjectProgress = {
+                        bestScore: 0,
+                        attempts: 0,
+                        averageScore: 0,
+                        totalScore: 0
+                    };
+                    return `
+                        <div class="data-structure">
+                            <div class="data-structure-title">📚 analyticsData.subjectProgress["math"]</div>
+                            ${Object.entries(subjectProgress).map(([key, value]) => `
+                                <div class="data-field new">
+                                    <span class="field-name">${key}</span>
+                                    <span class="field-value">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                            Note: Subject progress tracks ALL topics within the subject
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 12,
+                title: 'Get Reference to Subject Progress',
+                description: 'Store a reference to the subject progress object for easier updates',
+                lines: [47],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Looking up:</strong> analyticsData.subjectProgress["math"]
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>subjectProgress</strong> → Reference to the object
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                            Subject-level tracking aggregates all Math topics (Algebra, Geometry, etc.)
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 13,
+                title: 'Increment Subject Attempts',
+                description: 'Track total attempts across all topics in this subject',
+                lines: [48],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Before:</strong> attempts = <span class="number">7</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> attempts<span class="operator">++</span>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>After:</strong> attempts = <span class="number">8</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                            8 total quizzes taken across all Math topics
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 14,
+                title: 'Update Subject Total Score',
+                description: 'Add current score to subject\'s running total',
+                lines: [49],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Previous totalScore:</strong> <span class="number">595</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Current score.percentage:</strong> <span class="number">85</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> totalScore <span class="operator">+=</span> score.percentage
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>New totalScore:</strong> <span class="number">680</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 15,
+                title: 'Calculate Subject Average Score',
+                description: 'Compute average score across all attempts in this subject',
+                lines: [50],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>totalScore:</strong> <span class="number">680</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>attempts:</strong> <span class="number">8</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 1:</strong> 680 / 8 = <span class="number">85</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 2:</strong> 85 × 100 = <span class="number">8500</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 3:</strong> Math.round(8500) = <span class="number">8500</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Step 4:</strong> 8500 / 100 = <span class="number">85</span>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>averageScore:</strong> <span class="number">85.00</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 16,
+                title: 'Update Subject Best Score',
+                description: 'Track the highest score achieved across all topics in this subject',
+                lines: [51],
+                visualization: () => {
+                    return `
+                        <div class="calculation-box">
+                            <div class="calculation-step">
+                                <strong>Current bestScore:</strong> <span class="number">92</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>New score.percentage:</strong> <span class="number">85</span>
+                            </div>
+                            <div class="calculation-step">
+                                <strong>Operation:</strong> Math.max(<span class="number">92</span>, <span class="number">85</span>)
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="calculation-step" style="border-color: var(--warning);">
+                                <strong>bestScore:</strong> <span class="number">92</span> (unchanged)
+                            </div>
+                        </div>
+                        <div class="data-structure" style="margin-top: 1rem;">
+                            <div class="data-structure-title">📚 Final Subject Progress for "math"</div>
+                            <div class="data-field"><span class="field-name">attempts</span><span class="field-value">8</span></div>
+                            <div class="data-field"><span class="field-name">totalScore</span><span class="field-value">680</span></div>
+                            <div class="data-field"><span class="field-name">averageScore</span><span class="field-value">85.00</span></div>
+                            <div class="data-field"><span class="field-name">bestScore</span><span class="field-value">92</span></div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 17,
+                title: 'Persist Data to Storage',
+                description: 'Save all analytics data to localStorage or backend',
+                lines: [53, 54, 55, 56, 57, 58],
+                visualization: () => {
+                    return `
+                        <div class="data-structure">
+                            <div class="data-structure-title">💾 Saving to Persistent Storage</div>
+                            <div class="data-field new">
+                                <span class="field-name">analyticsData.quizResults</span>
+                                <span class="field-value">3 results</span>
+                            </div>
+                            <div class="data-field new">
+                                <span class="field-name">analyticsData.topicProgress</span>
+                                <span class="field-value">Updated "math_Algebra"</span>
+                            </div>
+                            <div class="data-field new">
+                                <span class="field-name">analyticsData.subjectProgress</span>
+                                <span class="field-value">Updated "math"</span>
+                            </div>
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="calculation-box">
+                            <div class="calculation-step" style="border-color: var(--success);">
+                                <strong>✅ saveSuccess:</strong> <span class="keyword">true</span>
+                            </div>
+                            <div class="calculation-step">
+                                Console: "✅ Quiz result saved and persisted"
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+            {
+                step: 18,
+                title: 'Refresh UI Views',
+                description: 'Update all UI components to display the new progress data',
+                lines: [61],
+                visualization: () => {
+                    return `
+                        <div class="data-structure">
+                            <div class="data-structure-title">🔄 Refreshing UI Components</div>
+                            <div class="data-field new">
+                                <span class="field-name">Dashboard</span>
+                                <span class="field-value">Updated with new stats</span>
+                            </div>
+                            <div class="data-field new">
+                                <span class="field-name">Progress Charts</span>
+                                <span class="field-value">Redrawn with latest data</span>
+                            </div>
+                            <div class="data-field new">
+                                <span class="field-name">Topic List</span>
+                                <span class="field-value">Shows updated attempts & scores</span>
+                            </div>
+                            <div class="data-field new">
+                                <span class="field-name">Subject Overview</span>
+                                <span class="field-value">Reflects new averages</span>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 2rem; padding: 2rem; background: var(--bg-tertiary); border-radius: 12px;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--success); margin-bottom: 0.5rem;">
+                                Process Complete!
+                            </div>
+                            <div style="color: var(--text-secondary);">
+                                Quiz result saved, analytics updated, and UI refreshed
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        ];
+
+        let currentStep = -1;
+        let autoPlayInterval = null;
+
+        function renderDataStructure(name, obj, isNew = false) {
+            return `
+                <div class="data-structure">
+                    <div class="data-structure-title">📦 ${name}</div>
+                    ${Object.entries(obj).map(([key, value]) => `
+                        <div class="data-field ${isNew ? 'new' : ''}">
+                            <span class="field-name">${key}</span>
+                            <span class="field-value">${typeof value === 'string' ? `"${value}"` : value}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderCode() {
+            const container = document.getElementById('codeContainer');
+            container.innerHTML = codeLines.map((line, index) => {
+                let coloredCode = line.code
+                    .replace(/\b(function|const|if|else|return|new|Date|Math)\b/g, '<span class="keyword">$1</span>')
+                    .replace(/\b(saveQuizResult|push|round|max|toISOString|log|warn)\b/g, '<span class="function">$1</span>')
+                    .replace(/\b(result|score|analyticsData|topicProgress|subjectProgress|topicKey|saveSuccess|currentSubject|currentTopic|currentQuestions)\b/g, '<span class="variable">$1</span>')
+                    .replace(/('[^']*'|`[^`]*`)/g, '<span class="string">$1</span>')
+                    .replace(/\b(\d+)\b/g, '<span class="number">$1</span>')
+                    .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
+                    .replace(/([+\-*/%=<>!&|])/g, '<span class="operator">$1</span>');
+
+                return `<div class="code-line" data-line="${index}">${coloredCode || '&nbsp;'}</div>`;
+            }).join('');
+        }
+
+        function highlightLines(lines) {
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('active');
+            });
+            lines.forEach(lineNum => {
+                const line = document.querySelector(`.code-line[data-line="${lineNum}"]`);
+                if (line) {
+                    line.classList.add('active');
+                    line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        function renderStep(stepIndex) {
+            if (stepIndex < 0 || stepIndex >= steps.length) return;
+
+            const step = steps[stepIndex];
+            const visualization = document.getElementById('visualization');
+
+            visualization.innerHTML = `
+                <div class="step-indicator">
+                    <div class="step-number">${stepIndex + 1}</div>
+                    <div class="step-description">
+                        <h3>${step.title}</h3>
+                        <p>${step.description}</p>
+                    </div>
+                </div>
+                <div class="data-flow-container">
+                    ${step.visualization()}
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${((stepIndex + 1) / steps.length) * 100}%"></div>
+                </div>
+            `;
+
+            highlightLines(step.lines);
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                renderStep(currentStep);
+                updateButtons();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderStep(currentStep);
+                updateButtons();
+            }
+        }
+
+        function resetVisualization() {
+            currentStep = -1;
+            stopAutoPlay();
+            document.getElementById('visualization').innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🎯</div>
+                    <p>Click "Start Visualization" to begin the step-by-step breakdown</p>
+                </div>
+            `;
+            document.querySelectorAll('.code-line').forEach(line => {
+                line.classList.remove('active');
+            });
+            updateButtons();
+        }
+
+        function startVisualization() {
+            currentStep = 0;
+            renderStep(currentStep);
+            updateButtons();
+        }
+
+        function updateButtons() {
+            document.getElementById('nextBtn').disabled = currentStep >= steps.length - 1 || currentStep < 0;
+            document.getElementById('prevBtn').disabled = currentStep <= 0;
+            document.getElementById('startBtn').disabled = currentStep >= 0;
+        }
+
+        function toggleAutoPlay() {
+            if (autoPlayInterval) {
+                stopAutoPlay();
+            } else {
+                if (currentStep < 0) {
+                    startVisualization();
+                }
+                autoPlayInterval = setInterval(() => {
+                    if (currentStep < steps.length - 1) {
+                        nextStep();
+                    } else {
+                        stopAutoPlay();
+                    }
+                }, 3000);
+                document.getElementById('autoPlayBtn').textContent = '⏸ Pause';
+            }
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                document.getElementById('autoPlayBtn').textContent = '⏯ Auto Play';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', startVisualization);
+        document.getElementById('nextBtn').addEventListener('click', nextStep);
+        document.getElementById('prevBtn').addEventListener('click', prevStep);
+        document.getElementById('resetBtn').addEventListener('click', resetVisualization);
+        document.getElementById('autoPlayBtn').addEventListener('click', toggleAutoPlay);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextStep();
+            if (e.key === 'ArrowLeft') prevStep();
+            if (e.key === ' ') {
+                e.preventDefault();
+                toggleAutoPlay();
+            }
+        });
+
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Initialize
+        renderCode();
+        updateButtons();
+    </script>
+</body>
+</html>
