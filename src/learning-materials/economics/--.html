@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounting</title>
+    <title>Economics</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -168,18 +168,18 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="fade-in">
-            <!-- Accounting Header -->
+            <!-- Economics Header -->
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h3 class="headline-4 text-neutral-800 dark:text-white mb-2">Accounting</h3>
+                        <h3 class="headline-4 text-neutral-800 dark:text-white mb-2">Economics</h3>
                         <p class="subtitle-1 text-neutral-600 dark:text-neutral-400">Comprehensive JAMB Curriculum</p>
                     </div>
                     <div class="flex items-center space-x-4">
                         <div class="text-right">
                             <p class="overline text-neutral-600 dark:text-neutral-400">Topics Available</p>
                             <div class="flex items-center space-x-2">
-                                <span class="headline-6 text-accent">18</span>
+                                <span class="headline-6 text-accent">23</span>
                                 <span class="body-2 text-neutral-600 dark:text-neutral-400">Total Topics</span>
                             </div>
                         </div>
@@ -192,7 +192,7 @@
                         <input 
                             type="search" 
                             id="searchInput" 
-                            placeholder="Search accounting topics, concepts, or formulas..."
+                            placeholder="Search Economics topics, concepts, or formulas..."
                             class="w-full text-base px-4 py-3 pl-12 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-2xl focus:ring-2 focus:ring-accent focus:border-transparent outline-none text-neutral-900 dark:text-neutral-100 shadow-material-1"
                         >
                         <span class="material-icons absolute left-4 top-3.5 text-neutral-400">search</span>
@@ -260,8 +260,8 @@
     <footer class="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="text-center">
-                <p class="body-2 text-neutral-600 dark:text-neutral-400">&copy; Accounting Study Portal. Designed by Raven.</p>
-                <p class="caption text-neutral-500 dark:text-neutral-500 mt-2">Empowering the next generation of Accounting</p>
+                <p class="body-2 text-neutral-600 dark:text-neutral-400">&copy; Economics Study Portal. Designed by Raven.</p>
+                <p class="caption text-neutral-500 dark:text-neutral-500 mt-2">Empowering the next generation of Economics</p>
             </div>
         </div>
     </footer>
@@ -281,7 +281,7 @@
         });
 
         // Economics topics data
-        const mathTopics = [
+        const econTopics = [
             {
                 id: 1,
                 title: "Economics as a science",
@@ -456,6 +456,7 @@
             }
             
         ];
+
         // Function to get color classes based on color name
         function getColorClasses(colorName) {
             const colorMap = {
@@ -525,7 +526,7 @@
 
         // Search functionality
         function performSearch(searchTerm) {
-            const filtered = mathTopics.filter(topic => {
+            const filtered = econTopics.filter(topic => {
                 return topic.title.toLowerCase().includes(searchTerm.toLowerCase());
             });
 
@@ -538,14 +539,49 @@
             renderTopics(highlightedTopics);
         }
 
-        // Function to handle topic opening
-        function openTopic(folderName, title) {
-            showMaterialToast(`Opening ${title}...`, 'info');
-            setTimeout(() => {
-                // Navigate to actual GitHub Pages directory structure
-                window.location.href = `https://demymichaels.github.io/raven/src/learning-materials/accounting/${folderName}/`;
-            }, 300);
-        }
+// Function to handle topic opening - SPA style
+async function openTopic(folderName, title) {
+    showMaterialToast(`Loading ${title}...`, 'info');
+    
+    try {
+        // Load content dynamically
+        const content = await loadTopicContent(folderName);
+        displayTopicContent(content, title);
+    } catch (error) {
+        showMaterialToast(`Error loading ${title}`, 'error');
+        console.error('Error loading topic:', error);
+    }
+}
+
+
+async function loadTopicContent(folderName) {
+    // Fetch content from local JSON or HTML files
+    const response = await fetch(`/src/learning-materials/economics/${folderName}/`);
+    if (!response.ok) 
+        throw new Error('Failed to load content');
+    return await response.json();
+}
+
+
+function displayTopicContent(content, title) {
+    // Update page content without refreshing
+    document.getElementById('content-area').innerHTML = `
+        <div class="topic-content">
+            <h2>${title}</h2>
+            <div>${content.html || content.text}</div>
+        </div>
+    `;
+    
+    // Update browser URL without reloading (SPA navigation)
+    history.pushState({}, title, `?topic=${encodeURIComponent(title)}`);
+}
+
+
+
+
+
+
+
 
         // Material Design Toast System
         function showMaterialToast(message, type = 'info') {
@@ -600,11 +636,11 @@
 
         // Quick action functions
         function openCalculator() {
-            showMaterialToast('Opening Accounting Calculator...', 'info');
+            showMaterialToast('Opening Economics Calculator...', 'info');
         }
 
         function startQuiz() {
-            showMaterialToast('Starting Accounting Quiz...', 'info');
+            showMaterialToast('Starting Economics Quiz...', 'info');
         }
 
         function openPracticeProblems() {
@@ -615,14 +651,14 @@
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const searchTerm = e.target.value.trim();
             if (searchTerm === '') {
-                renderTopics(mathTopics);
+                renderTopics(econTopics);
             } else {
                 performSearch(searchTerm);
             }
         });
 
         // Initial render
-        renderTopics(mathTopics);
+        renderTopics(econTopics);
 
         // Make functions globally available
         window.openTopic = openTopic;
@@ -630,7 +666,7 @@
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
-                showMaterialToast('Welcome to Accounting Study Portal! 🧮', 'success');
+                showMaterialToast('Welcome to Economics Study Portal! 🧮', 'success');
             }, 1000);
         });
     </script>
