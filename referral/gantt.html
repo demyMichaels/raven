@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Progress Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #faf9f6;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+            --today-line: #ff6b6b;
+
+            --math: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gov: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --econ: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --crs: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+
+            --math-light: rgba(102, 126, 234, 0.1);
+            --gov-light: rgba(245, 87, 108, 0.1);
+            --econ-light: rgba(79, 172, 254, 0.1);
+            --crs-light: rgba(67, 233, 123, 0.1);
+        }
+
+        .dark {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --border: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .header {
+            padding: 1.25rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.625rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        .theme-toggle {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.9);
+        }
+
+        .stats {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            margin: 1rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .gantt-container {
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .gantt-wrapper {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            overflow: hidden;
+        }
+
+        .timeline-header {
+            display: flex;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .subject-column {
+            min-width: 140px;
+            width: 140px;
+            padding: 1rem;
+            font-weight: 600;
+            border-right: 2px solid var(--border);
+            background: var(--bg-secondary);
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+
+        .dates-row {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .date-cell {
+            min-width: 50px;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            border-right: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+
+        .date-day {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .date-month {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+        }
+
+        .date-cell.today {
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--today-line);
+            font-weight: 700;
+        }
+
+        .gantt-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        .task-row {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            min-height: 70px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-info {
+            min-width: 140px;
+            width: 140px;
+            padding: 0.75rem;
+            border-right: 2px solid var(--border);
+            background: var(--bg-secondary);
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .task-subject {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .task-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-type {
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .timeline-row {
+            display: flex;
+            flex: 1;
+            position: relative;
+            padding: 0.75rem 0;
+        }
+
+        .task-bar-wrapper {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .task-bar {
+            position: absolute;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-bar:active {
+            transform: scale(0.98);
+        }
+
+        .task-bar.completed {
+            opacity: 0.6;
+        }
+
+        .task-bar.completed::after {
+            content: '✓';
+            position: absolute;
+            right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: width 0.3s ease;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .task-bar-content {
+            position: relative;
+            z-index: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .today-marker {
+            position: absolute;
+            width: 3px;
+            background: var(--today-line);
+            top: 0;
+            bottom: 0;
+            z-index: 8;
+            pointer-events: none;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .today-marker::before {
+            content: 'Today';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--today-line);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 1000;
+            padding: 0;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px 20px 0 0;
+            padding: 1.5rem;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            border: 2px solid var(--border);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:active {
+            background: var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-block {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .modal {
+                align-items: center;
+            }
+
+            .modal-content {
+                border-radius: 16px;
+            }
+
+            .date-cell {
+                min-width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>Study Tracker</h1>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Task</button>
+                <div class="theme-toggle" onclick="toggleTheme()">🌙</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-item">
+            <div class="stat-value" id="totalTasks">0</div>
+            <div class="stat-label">Total Tasks</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="completedTasks">0</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="progressPercent">0%</div>
+            <div class="stat-label">Progress</div>
+        </div>
+    </div>
+
+    <div class="gantt-container">
+        <div class="gantt-wrapper">
+            <div class="timeline-header">
+                <div class="subject-column">Subject</div>
+                <div class="dates-row" id="dateHeader"></div>
+            </div>
+            <div class="gantt-body" id="ganttBody"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Add New Task</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="taskForm" onsubmit="saveTask(event)">
+                <div class="form-group">
+                    <label class="form-label">Task Name</label>
+                    <input type="text" class="form-input" id="taskName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <select class="form-select" id="taskSubject" required>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Government">Government</option>
+                        <option value="Economics">Economics</option>
+                        <option value="CRS">CRS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Task Type</label>
+                    <select class="form-select" id="taskType" required>
+                        <option value="Homework">Homework</option>
+                        <option value="Project">Project</option>
+                        <option value="Exam">Exam</option>
+                        <option value="Revision">Revision</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-input" id="taskStart" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-input" id="taskEnd" required>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="taskCompleted">
+                        <span>Mark as completed</span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary btn-block" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-block">Save Task</button>
+                </div>
+                <button type="button" class="btn btn-danger btn-block" id="deleteBtn" style="display: none; margin-top: 0.75rem;" onclick="deleteTask()">Delete Task</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+            document.querySelector('.theme-toggle').textContent = '☀️';
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+                document.querySelector('.theme-toggle').textContent = '☀️';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.querySelector('.theme-toggle').textContent = '🌙';
+            }
+        });
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelector('.theme-toggle').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // Subject colors
+        const subjectColors = {
+            'Mathematics': 'var(--math)',
+            'Government': 'var(--gov)',
+            'Economics': 'var(--econ)',
+            'CRS': 'var(--crs)'
+        };
+
+        const subjectLightColors = {
+            'Mathematics': 'var(--math-light)',
+            'Government': 'var(--gov-light)',
+            'Economics': 'var(--econ-light)',
+            'CRS': 'var(--crs-light)'
+        };
+
+        // Pre-loaded tasks
+        let tasks = [
+            {
+                id: 1,
+                name: 'Algebra Practice',
+                subject: 'Mathematics',
+                type: 'Homework',
+                start: '2025-01-20',
+                end: '2025-01-24',
+                completed: true
+            },
+            {
+                id: 2,
+                name: 'Calculus Project',
+                subject: 'Mathematics',
+                type: 'Project',
+                start: '2025-01-22',
+                end: '2025-02-05',
+                completed: false
+            },
+            {
+                id: 3,
+                name: 'Mid-term Exam',
+                subject: 'Mathematics',
+                type: 'Exam',
+                start: '2025-02-10',
+                end: '2025-02-10',
+                completed: false
+            },
+            {
+                id: 4,
+                name: 'Constitution Study',
+                subject: 'Government',
+                type: 'Revision',
+                start: '2025-01-21',
+                end: '2025-01-28',
+                completed: false
+            },
+            {
+                id: 5,
+                name: 'Political Systems Essay',
+                subject: 'Government',
+                type: 'Project',
+                start: '2025-01-25',
+                end: '2025-02-08',
+                completed: false
+            },
+            {
+                id: 6,
+                name: 'Democracy Quiz',
+                subject: 'Government',
+                type: 'Exam',
+                start: '2025-02-03',
+                end: '2025-02-03',
+                completed: false
+            },
+            {
+                id: 7,
+                name: 'Supply & Demand',
+                subject: 'Economics',
+                type: 'Homework',
+                start: '2025-01-19',
+                end: '2025-01-26',
+                completed: true
+            },
+            {
+                id: 8,
+                name: 'Market Analysis',
+                subject: 'Economics',
+                type: 'Project',
+                start: '2025-01-28',
+                end: '2025-02-12',
+                completed: false
+            },
+            {
+                id: 9,
+                name: 'Macroeconomics Test',
+                subject: 'Economics',
+                type: 'Exam',
+                start: '2025-02-07',
+                end: '2025-02-07',
+                completed: false
+            },
+            {
+                id: 10,
+                name: 'Gospel of John',
+                subject: 'CRS',
+                type: 'Revision',
+                start: '2025-01-20',
+                end: '2025-01-27',
+                completed: false
+            },
+            {
+                id: 11,
+                name: 'Biblical History Paper',
+                subject: 'CRS',
+                type: 'Project',
+                start: '2025-01-29',
+                end: '2025-02-10',
+                completed: false
+            },
+            {
+                id: 12,
+                name: 'Scripture Quiz',
+                subject: 'CRS',
+                type: 'Exam',
+                start: '2025-02-05',
+                end: '2025-02-05',
+                completed: false
+            }
+        ];
+
+        let currentEditId = null;
+
+        // Generate dates (30 days from today)
+        function generateDates(startOffset = -5, days = 35) {
+            const dates = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let i = startOffset; i < startOffset + days; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                dates.push(date);
+            }
+            return dates;
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function formatDisplayDate(date) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return {
+                day: date.getDate(),
+                month: months[date.getMonth()]
+            };
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const compareDate = new Date(date);
+            compareDate.setHours(0, 0, 0, 0);
+            return today.getTime() === compareDate.getTime();
+        }
+
+        function renderTimeline() {
+            const dates = generateDates();
+            const dateHeader = document.getElementById('dateHeader');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            dateHeader.innerHTML = dates.map(date => {
+                const formatted = formatDisplayDate(date);
+                const isTodayDate = isToday(date);
+                return `
+                    <div class="date-cell ${isTodayDate ? 'today' : ''}" data-date="${formatDate(date)}">
+                        <div class="date-day">${formatted.day}</div>
+                        <div class="date-month">${formatted.month}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculatePosition(startDate, endDate, dates) {
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setHours(0, 0, 0, 0);
+
+            const firstDate = dates[0];
+            const dayWidth = 50; // matches min-width of date-cell
+
+            let startIndex = -1;
+            let endIndex = -1;
+
+            for (let i = 0; i < dates.length; i++) {
+                const currentDate = new Date(dates[i]);
+                currentDate.setHours(0, 0, 0, 0);
+
+                if (currentDate.getTime() === start.getTime()) {
+                    startIndex = i;
+                }
+                if (currentDate.getTime() === end.getTime()) {
+                    endIndex = i;
+                }
+            }
+
+            if (startIndex === -1 || endIndex === -1) {
+                return null;
+            }
+
+            const left = startIndex * dayWidth;
+            const width = (endIndex - startIndex + 1) * dayWidth;
+
+            return { left, width };
+        }
+
+        function renderGantt() {
+            const dates = generateDates();
+            const ganttBody = document.getElementById('ganttBody');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Calculate today marker position
+            let todayIndex = -1;
+            for (let i = 0; i < dates.length; i++) {
+                const currentDate = new Date(dates[i]);
+                currentDate.setHours(0, 0, 0, 0);
+                if (currentDate.getTime() === today.getTime()) {
+                    todayIndex = i;
+                    break;
+                }
+            }
+
+            const todayPosition = todayIndex !== -1 ? (todayIndex * 50) + 25 : -1;
+
+            ganttBody.innerHTML = tasks.map(task => {
+                const position = calculatePosition(task.start, task.end, dates);
+
+                if (!position) return '';
+
+                const bgColor = subjectColors[task.subject];
+                const typeColor = subjectLightColors[task.subject];
+
+                return `
+                    <div class="task-row">
+                        <div class="task-info">
+                            <div class="task-subject" style="color: ${bgColor.replace('linear-gradient', '').match(/#[0-9a-f]+/i)?.[0] || '#667eea'}">${task.subject}</div>
+                            <div class="task-name">${task.name}</div>
+                            <span class="task-type" style="background: ${typeColor}; color: ${bgColor.replace('linear-gradient', '').match(/#[0-9a-f]+/i)?.[0] || '#667eea'}">${task.type}</span>
+                        </div>
+                        <div class="timeline-row">
+                            ${todayPosition !== -1 ? `<div class="today-marker" style="left: ${todayPosition}px;"></div>` : ''}
+                            <div class="task-bar-wrapper">
+                                <div class="task-bar ${task.completed ? 'completed' : ''}"
+                                     style="left: ${position.left}px; width: ${position.width}px; background: ${bgColor};"
+                                     onclick="editTask(${task.id})">
+                                    <div class="progress-fill" style="width: ${task.completed ? '100' : '0'}%;"></div>
+                                    <div class="task-bar-content">${task.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('progressPercent').textContent = progress + '%';
+        }
+
+        function openAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Task';
+            document.getElementById('taskForm').reset();
+            document.getElementById('deleteBtn').style.display = 'none';
+
+            // Set default dates
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+
+            document.getElementById('taskStart').value = formatDate(today);
+            document.getElementById('taskEnd').value = formatDate(tomorrow);
+
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function editTask(id) {
+            currentEditId = id;
+            const task = tasks.find(t => t.id === id);
+
+            if (!task) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Task';
+            document.getElementById('taskName').value = task.name;
+            document.getElementById('taskSubject').value = task.subject;
+            document.getElementById('taskType').value = task.type;
+            document.getElementById('taskStart').value = task.start;
+            document.getElementById('taskEnd').value = task.end;
+            document.getElementById('taskCompleted').checked = task.completed;
+            document.getElementById('deleteBtn').style.display = 'block';
+
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.remove('active');
+            currentEditId = null;
+        }
+
+        function saveTask(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('taskName').value;
+            const subject = document.getElementById('taskSubject').value;
+            const type = document.getElementById('taskType').value;
+            const start = document.getElementById('taskStart').value;
+            const end = document.getElementById('taskEnd').value;
+            const completed = document.getElementById('taskCompleted').checked;
+
+            if (new Date(start) > new Date(end)) {
+                showCustomAlert('End date must be after start date');
+                return;
+            }
+
+            if (currentEditId) {
+                // Edit existing
+                const taskIndex = tasks.findIndex(t => t.id === currentEditId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex] = {
+                        ...tasks[taskIndex],
+                        name,
+                        subject,
+                        type,
+                        start,
+                        end,
+                        completed
+                    };
+                }
+            } else {
+                // Add new
+                const newTask = {
+                    id: Date.now(),
+                    name,
+                    subject,
+                    type,
+                    start,
+                    end,
+                    completed
+                };
+                tasks.push(newTask);
+            }
+
+            renderGantt();
+            closeModal();
+        }
+
+        function deleteTask() {
+            if (!currentEditId) return;
+
+            showCustomConfirm('Are you sure you want to delete this task?', () => {
+                tasks = tasks.filter(t => t.id !== currentEditId);
+                renderGantt();
+                closeModal();
+            });
+        }
+
+        function showCustomAlert(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'modal active';
+            alertDiv.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; margin: auto; border-radius: 16px;">
+                    <div style="padding: 1rem 0;">
+                        <p style="margin-bottom: 1.5rem; text-align: center; font-size: 1rem;">${message}</p>
+                        <button class="btn btn-primary btn-block" onclick="this.closest('.modal').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(alertDiv);
+        }
+
+        function showCustomConfirm(message, onConfirm) {
+            const confirmDiv = document.createElement('div');
+            confirmDiv.className = 'modal active';
+            confirmDiv.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; margin: auto; border-radius: 16px;">
+                    <div style="padding: 1rem 0;">
+                        <p style="margin-bottom: 1.5rem; text-align: center; font-size: 1rem;">${message}</p>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button class="btn btn-secondary btn-block" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button class="btn btn-danger btn-block" onclick="this.closest('.modal').remove(); (${onConfirm})()">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmDiv);
+        }
+
+        // Close modal on outside click
+        document.getElementById('taskModal').addEventListener('click', (e) => {
+            if (e.target.id === 'taskModal') {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        renderTimeline();
+        renderGantt();
+    </script>
+</body>
+</html>
