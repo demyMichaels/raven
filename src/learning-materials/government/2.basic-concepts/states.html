@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.8 The State - Political Science</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Crimson+Text:wght@400;600&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2d5a8c;
+            --accent: #c9a961;
+            --accent-dark: #a68942;
+            --text-dark: #2c2c2c;
+            --bg-light: #f8f6f1;
+        }
+
+        .dark {
+            --primary: #4a7bad;
+            --primary-light: #5d8fc4;
+            --accent: #d4b978;
+            --accent-dark: #c9a961;
+            --text-dark: #e5e5e5;
+            --bg-light: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: var(--bg-light);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+        }
+
+        .section-number {
+            font-family: 'Crimson Text', serif;
+            font-size: 4rem;
+            opacity: 0.1;
+            position: absolute;
+            top: -20px;
+            left: 20px;
+            font-weight: 700;
+        }
+
+        .feature-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .progress-indicator {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .dark .progress-indicator {
+            background: rgba(26, 26, 26, 0.95);
+        }
+
+        .content-section {
+            scroll-margin-top: 100px;
+            position: relative;
+        }
+
+        .hero-pattern {
+            background-image:
+                linear-gradient(30deg, rgba(201, 169, 97, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(201, 169, 97, 0.05) 87.5%, rgba(201, 169, 97, 0.05)),
+                linear-gradient(150deg, rgba(201, 169, 97, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(201, 169, 97, 0.05) 87.5%, rgba(201, 169, 97, 0.05)),
+                linear-gradient(30deg, rgba(201, 169, 97, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(201, 169, 97, 0.05) 87.5%, rgba(201, 169, 97, 0.05)),
+                linear-gradient(150deg, rgba(201, 169, 97, 0.05) 12%, transparent 12.5%, transparent 87%, rgba(201, 169, 97, 0.05) 87.5%, rgba(201, 169, 97, 0.05));
+            background-size: 80px 140px;
+            background-position: 0 0, 0 0, 40px 70px, 40px 70px;
+        }
+
+        .quiz-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .quiz-option:hover:not(.correct):not(.incorrect) {
+            background-color: rgba(201, 169, 97, 0.1);
+            border-color: var(--accent);
+            transform: translateX(8px);
+        }
+
+        .quiz-option.correct {
+            background-color: #059669 !important;
+            color: white !important;
+            border-color: #059669 !important;
+        }
+
+        .quiz-option.incorrect {
+            background-color: #dc2626 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+
+        .decorative-line {
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            margin: 2rem 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .stat-number {
+            font-family: 'Crimson Text', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="progress-indicator border-b-2 border-gray-200 dark:border-gray-700">
+        <div class="container mx-auto px-4 py-4 max-w-5xl">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold tracking-wide uppercase" style="color: var(--accent);">Political Science</span>
+                <span class="text-sm font-medium" style="color: var(--text-dark);">Progress: <span id="progressPercent">0%</span></span>
+            </div>
+            <div class="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div id="progressBar" class="h-2 rounded-full transition-all duration-500" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-dark));"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-12 max-w-5xl">
+        <!-- Hero Section -->
+        <div class="hero-pattern rounded-2xl shadow-2xl p-8 md:p-12 mb-12 relative overflow-hidden" style="background-color: var(--primary);">
+            <div class="relative z-10">
+                <div class="inline-block px-4 py-2 rounded-full mb-4" style="background-color: var(--accent); color: var(--primary);">
+                    <span class="font-bold text-sm tracking-wider">CHAPTER 1.8</span>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+                    The State
+                </h1>
+                <p class="text-xl text-white opacity-90 max-w-3xl leading-relaxed">
+                    Understanding the foundations of political organization, sovereignty, and the relationship between state, government, and society
+                </p>
+            </div>
+            <div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full opacity-10" style="background: var(--accent);"></div>
+        </div>
+
+        <!-- Definition Section -->
+        <section class="content-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-10 mb-8 relative" data-section="1">
+            <span class="section-number">01</span>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6" style="color: var(--primary);">Definition of the State</h2>
+            <div class="decorative-line"></div>
+            <div class="prose prose-lg max-w-none">
+                <p class="text-lg leading-relaxed mb-6" style="color: var(--text-dark);">
+                    A <strong>state</strong> may be defined as a <em>politically organised body of people inhabiting a defined geographical entity with an organised legitimate government</em>. The state in this respect is entirely free from external control. The power of a state is also guaranteed with coercive power to secure obedience from the citizens.
+                </p>
+                <div class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-l-4 p-6 rounded-r-lg mb-6" style="border-color: var(--accent);">
+                    <p class="font-semibold mb-2" style="color: var(--accent-dark);">Important Distinction:</p>
+                    <p class="text-base" style="color: var(--text-dark);">
+                        A state is different from empires, kingdoms, and chieftains. The modern state is characterized by defined boundaries, sovereign authority, and organized government.
+                    </p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4 mt-8">
+                    <div class="text-center p-6 rounded-lg" style="background: linear-gradient(135deg, rgba(30, 58, 95, 0.05), rgba(201, 169, 97, 0.05));">
+                        <div class="text-3xl mb-2">🇳🇬</div>
+                        <p class="font-semibold" style="color: var(--primary);">Nigeria</p>
+                    </div>
+                    <div class="text-center p-6 rounded-lg" style="background: linear-gradient(135deg, rgba(30, 58, 95, 0.05), rgba(201, 169, 97, 0.05));">
+                        <div class="text-3xl mb-2">🇺🇸</div>
+                        <p class="font-semibold" style="color: var(--primary);">United States</p>
+                    </div>
+                    <div class="text-center p-6 rounded-lg" style="background: linear-gradient(135deg, rgba(30, 58, 95, 0.05), rgba(201, 169, 97, 0.05));">
+                        <div class="text-3xl mb-2">🇨🇦</div>
+                        <p class="font-semibold" style="color: var(--primary);">Canada</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features of State -->
+        <section class="content-section mb-8" data-section="2">
+            <h2 class="text-3xl md:text-4xl font-bold mb-8 text-center" style="color: var(--primary);">Six Essential Features of a State</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Feature 1: Permanence -->
+                <div class="feature-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #3b82f6;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">🏛️</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">1. Permanence</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        The state remains a permanent feature. Governments can change many times but a state remains permanent. This continuity ensures stability and ongoing national identity despite political transitions.
+                    </p>
+                </div>
+
+                <!-- Feature 2: Defined Territory -->
+                <div class="feature-card bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #10b981;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">🗺️</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">2. Defined Territory</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        A state has a defined territory with a limit to its size. It must have clearly defined boundaries, separating it from others. Waters, mountains, forests, and air space all constitute the state's territory.
+                    </p>
+                </div>
+
+                <!-- Feature 3: Government -->
+                <div class="feature-card bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950 dark:to-violet-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #8b5cf6;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">⚖️</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">3. Government</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        Though government is not permanent, it remains a significant feature as a machinery set up by the state to pilot the affairs of the people. The sustenance and prestige of a state are maintained by the government.
+                    </p>
+                </div>
+
+                <!-- Feature 4: Sovereignty -->
+                <div class="feature-card bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950 dark:to-rose-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #ef4444;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">👑</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">4. Sovereignty</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        The supreme power to make decisions and enforce them on the people is with the state. The sovereignty of a state is not negotiable and must be free from external interference and control.
+                    </p>
+                </div>
+
+                <!-- Feature 5: Population -->
+                <div class="feature-card bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #f59e0b;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">👥</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">5. Population</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        This is an important attribute of a state. For a state to be called a state, there must be a given number of people making up the entity. However, with time, such number is bound to increase.
+                    </p>
+                </div>
+
+                <!-- Feature 6: Recognition -->
+                <div class="feature-card bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-950 dark:to-cyan-900 rounded-xl p-8 shadow-lg border-t-4" style="border-color: #14b8a6;">
+                    <div class="flex items-start mb-4">
+                        <div class="text-5xl mr-4">🤝</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2" style="color: var(--primary);">6. Recognition</h3>
+                            <div class="h-1 w-16 rounded" style="background: var(--accent);"></div>
+                        </div>
+                    </div>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        A state must be recognised both internally and externally. Internal recognition comes from its citizens, while external recognition comes from other states and international organizations.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Relationship between State and Government -->
+        <section class="content-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-10 mb-8 relative" data-section="3">
+            <span class="section-number">02</span>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6" style="color: var(--primary);">Relationship between State and Government</h2>
+            <div class="decorative-line"></div>
+            <p class="text-lg leading-relaxed mb-6" style="color: var(--text-dark);">
+                The state and government are inseparable in the scheme of things. The state is a politically organised body of people occupying a defined geographical area with an organised legitimate or constitutional government. Government, on the other hand, is a feature of a state—a machinery set up by the state to organise and realise its set objectives and goals.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="p-6 rounded-lg" style="background: linear-gradient(135deg, rgba(30, 58, 95, 0.1), rgba(30, 58, 95, 0.05));">
+                    <h4 class="font-bold text-xl mb-3" style="color: var(--primary);">The State</h4>
+                    <ul class="space-y-2 text-base" style="color: var(--text-dark);">
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--accent);">●</span> Permanent entity</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--accent);">●</span> Corporate body</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--accent);">●</span> Holds sovereignty</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--accent);">●</span> Comprises people and territory</li>
+                    </ul>
+                </div>
+                <div class="p-6 rounded-lg" style="background: linear-gradient(135deg, rgba(201, 169, 97, 0.1), rgba(201, 169, 97, 0.05));">
+                    <h4 class="font-bold text-xl mb-3" style="color: var(--accent-dark);">The Government</h4>
+                    <ul class="space-y-2 text-base" style="color: var(--text-dark);">
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--primary);">●</span> Changeable institution</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--primary);">●</span> Administrative machinery</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--primary);">●</span> Exercises sovereignty in trust</li>
+                        <li class="flex items-start"><span class="mr-2" style="color: var(--primary);">●</span> Has three organs (Executive, Legislative, Judicial)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-l-4 p-6 rounded-r-lg" style="border-color: var(--primary);">
+                <p class="font-semibold mb-2" style="color: var(--primary);">Key Point:</p>
+                <p class="text-base" style="color: var(--text-dark);">
+                    No state exists without a government, otherwise anarchy would reign. Government can change as many times as possible but the state remains a permanent feature. The sovereignty of the state is rested with the government, which exercises it in trust for the state.
+                </p>
+            </div>
+        </section>
+
+        <!-- State and Nation -->
+        <section class="content-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-10 mb-8 relative" data-section="4">
+            <span class="section-number">03</span>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6" style="color: var(--primary);">State and Nation</h2>
+            <div class="decorative-line"></div>
+            <div class="grid md:grid-cols-2 gap-8 mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4" style="color: var(--accent);">State</h3>
+                    <p class="text-base leading-relaxed mb-4" style="color: var(--text-dark);">
+                        A state exists where a territory, a people, a government, and sovereignty exist. It may lack the feeling of nationality or oneness among the people and yet remain a state.
+                    </p>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        The state may accommodate people of different historical backgrounds, languages, cultures, and religious beliefs, as well as people of homogeneous identity.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold mb-4" style="color: var(--accent);">Nation</h3>
+                    <p class="text-base leading-relaxed mb-4" style="color: var(--text-dark);">
+                        A nation is a body of people who feel themselves to be naturally linked together, share common ties, and believe they can live happily together. They are not satisfied when disunited and cannot tolerate subjection to people who do not share these ties.
+                    </p>
+                    <p class="text-base leading-relaxed" style="color: var(--text-dark);">
+                        These people share the same language, culture, and have the feeling of nationality.
+                    </p>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-l-4 p-6 rounded-r-lg" style="border-color: var(--accent);">
+                <p class="font-semibold mb-2" style="color: var(--accent-dark);">Lord Acton's Perspective:</p>
+                <p class="text-base italic" style="color: var(--text-dark);">
+                    "The combination of different nations in one state is as necessary a condition of civilised life as the combination of individuals to form society."
+                </p>
+            </div>
+        </section>
+
+        <!-- State and Society -->
+        <section class="content-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 md:p-10 mb-8 relative" data-section="5">
+            <span class="section-number">04</span>
+            <h2 class="text-3xl md:text-4xl font-bold mb-6" style="color: var(--primary);">State and Society</h2>
+            <div class="decorative-line"></div>
+            <p class="text-lg leading-relaxed mb-6" style="color: var(--text-dark);">
+                <strong>Society</strong> is referred to as the association of human beings. This suggests the whole complex of relations of man to his fellows. Society can equally be referred to as a group of people who share similar values, laws, traditions, and live in organised communities for mutual benefits.
+            </p>
+            <p class="text-base leading-relaxed mb-6" style="color: var(--text-dark);">
+                There may be many different groups in society like the church, family, and trade unions which influence social life but do not owe their origin to the state. The state is a way of regulating human conduct; it orders us not to commit murder, not to steal, and there is punishment for their violation.
+            </p>
+
+            <!-- Features of Society -->
+            <h3 class="text-2xl font-bold mb-6 mt-8" style="color: var(--accent);">Features of a Society</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Controlled by rules, regulations, norms, conventions, and customs</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Applies sanctions to ensure discipline</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Uses coercive means to ensure compliance</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Rules are binding on all residents</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Membership is voluntary</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Permanent in nature</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Members depend on one another for survival</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Roles are dynamic</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Characterised by cooperation, competition, and conflicts</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Characterised by unique culture</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Common political, social, and economic interests</p>
+                </div>
+                <div class="p-4 rounded-lg border-l-4" style="background: rgba(30, 58, 95, 0.05); border-color: var(--primary);">
+                    <p class="text-sm font-medium" style="color: var(--text-dark);">Common history, tradition, language, religion, and sense of value</p>
+                </div>
+            </div>
+
+            <!-- Differences -->
+            <h3 class="text-2xl font-bold mb-6 mt-8" style="color: var(--accent);">Differences between State and Society</h3>
+            <div class="space-y-4">
+                <div class="flex items-start p-5 rounded-lg" style="background: linear-gradient(90deg, rgba(201, 169, 97, 0.1), transparent);">
+                    <div class="stat-number mr-4" style="font-size: 2rem;">1</div>
+                    <p class="text-base leading-relaxed pt-2" style="color: var(--text-dark);">
+                        Society is a wider term than the state. It suggests many social relationships which cannot be expressed through the state (e.g., education, religion, agricultural and industrial activities, domestic institutions). The state is only concerned with those social relationships that express themselves through government.
+                    </p>
+                </div>
+                <div class="flex items-start p-5 rounded-lg" style="background: linear-gradient(90deg, rgba(201, 169, 97, 0.1), transparent);">
+                    <div class="stat-number mr-4" style="font-size: 2rem;">2</div>
+                    <p class="text-base leading-relaxed pt-2" style="color: var(--text-dark);">
+                        The term 'society' applies to all human communities whether organised or unorganised, but organisation for law is essential to a state.
+                    </p>
+                </div>
+                <div class="flex items-start p-5 rounded-lg" style="background: linear-gradient(90deg, rgba(201, 169, 97, 0.1), transparent);">
+                    <div class="stat-number mr-4" style="font-size: 2rem;">3</div>
+                    <p class="text-base leading-relaxed pt-2" style="color: var(--text-dark);">
+                        State is not identical with society. The state provides the framework of the social order, holds society together, and binds individuals to certain uniform rules of behaviour which are essential for a harmonious and orderly social life.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section class="content-section rounded-xl shadow-lg p-8 md:p-10 relative overflow-hidden" data-section="6" style="background: linear-gradient(135deg, rgba(30, 58, 95, 0.05), rgba(201, 169, 97, 0.05));">
+            <div class="absolute top-0 right-0 w-64 h-64 rounded-full opacity-5" style="background: var(--accent); transform: translate(30%, -30%);"></div>
+            <h2 class="text-3xl md:text-4xl font-bold mb-4" style="color: var(--primary);">📝 Knowledge Assessment</h2>
+            <p class="text-lg mb-8" style="color: var(--text-dark);">Test your understanding of the state and its features</p>
+            <div id="quizContainer" class="space-y-6 relative z-10"></div>
+            <div id="quizResults" class="hidden mt-8 relative z-10">
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-8 text-center shadow-xl">
+                    <h3 class="text-3xl font-bold mb-4" id="scoreTitle"></h3>
+                    <div class="stat-number mb-4" id="scoreDisplay"></div>
+                    <p class="text-lg mb-6" id="scoreFeedback" style="color: var(--text-dark);"></p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="retakeQuiz()" class="px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105" style="background: var(--primary); color: white;">
+                            Retake Quiz
+                        </button>
+                        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105" style="background: var(--accent); color: white;">
+                            Review Content
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button id="submitQuiz" onclick="submitQuiz()" class="w-full mt-8 px-8 py-4 rounded-lg font-bold text-lg transition transform hover:scale-105 relative z-10" style="background: var(--primary); color: white;">
+                Submit Quiz
+            </button>
+        </section>
+    </div>
+
+    <footer class="py-8 mt-16 border-t-2" style="border-color: var(--accent);">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm" style="color: var(--text-dark);">Political Science • Chapter 1.8: The State</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode handling
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Storage Manager
+        class StorageManager {
+            constructor() {
+                this.storage = {};
+                this.storageKey = 'politicalScienceProgress';
+                this.loadFromCookie();
+            }
+            loadFromCookie() {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === this.storageKey) {
+                        try {
+                            this.storage = JSON.parse(decodeURIComponent(value));
+                        } catch (e) {
+                            this.storage = {};
+                        }
+                        break;
+                    }
+                }
+            }
+            saveToCookie() {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1);
+                document.cookie = `${this.storageKey}=${encodeURIComponent(JSON.stringify(this.storage))}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+            }
+            getItem(key) {
+                return this.storage[key] || null;
+            }
+            setItem(key, value) {
+                this.storage[key] = value;
+                this.saveToCookie();
+            }
+        }
+
+        const storage = new StorageManager();
+        const moduleId = 'state-chapter';
+
+        // Quiz Data
+        const quizData = [
+            {
+                question: "Which of the following is NOT one of the six essential features of a state?",
+                options: ["Sovereignty", "Population", "Currency", "Defined Territory"],
+                correct: 2
+            },
+            {
+                question: "What distinguishes a state from empires, kingdoms, and chieftains?",
+                options: [
+                    "Larger population size",
+                    "Defined boundaries, sovereign authority, and organized government",
+                    "Military strength",
+                    "Economic prosperity"
+                ],
+                correct: 1
+            },
+            {
+                question: "According to the content, which statement about government is correct?",
+                options: [
+                    "Government is a permanent feature of a state",
+                    "Government can change many times but the state remains permanent",
+                    "Government is more important than the state",
+                    "Government exists independently of the state"
+                ],
+                correct: 1
+            },
+            {
+                question: "What is the key difference between a nation and a state?",
+                options: [
+                    "A nation requires a government while a state does not",
+                    "A state has defined territory while a nation does not",
+                    "A nation emphasizes shared cultural ties and feelings of oneness, while a state may lack this",
+                    "There is no difference between a nation and a state"
+                ],
+                correct: 2
+            },
+            {
+                question: "According to the content, which statement about society and state is TRUE?",
+                options: [
+                    "Society and state are identical terms",
+                    "Society is a wider term than the state and includes relationships not expressed through government",
+                    "The state is broader than society",
+                    "Society only exists within organized states"
+                ],
+                correct: 1
+            },
+            {
+                question: "Which feature of a state refers to the supreme power to make and enforce decisions?",
+                options: ["Permanence", "Recognition", "Sovereignty", "Government"],
+                correct: 2
+            },
+            {
+                question: "What did Lord Acton say about the combination of different nations in one state?",
+                options: [
+                    "It should be avoided at all costs",
+                    "It is as necessary a condition of civilised life as the combination of individuals to form society",
+                    "It always leads to conflict",
+                    "It is only possible in small states"
+                ],
+                correct: 1
+            },
+            {
+                question: "Which of the following is a feature of society?",
+                options: [
+                    "Membership is compulsory",
+                    "It is temporary in nature",
+                    "Members depend on one another for survival",
+                    "It has no rules or regulations"
+                ],
+                correct: 2
+            }
+        ];
+
+        let userAnswers = {};
+
+        // Progress tracking
+        function updateProgress() {
+            const sections = document.querySelectorAll('.content-section');
+            const scrollPosition = window.scrollY + window.innerHeight / 2;
+            let currentSection = 0;
+
+            sections.forEach((section, index) => {
+                const rect = section.getBoundingClientRect();
+                if (scrollPosition >= window.scrollY + rect.top) {
+                    currentSection = index + 1;
+                }
+            });
+
+            const progress = Math.min(100, Math.round((currentSection / sections.length) * 100));
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressPercent').textContent = progress + '%';
+
+            const progressData = getProgressData();
+            progressData.lastVisited = new Date().toISOString();
+            saveProgressData(progressData);
+        }
+
+        function getProgressData() {
+            const data = storage.getItem(`progress_${moduleId}`);
+            return data ? JSON.parse(data) : {
+                completed: false,
+                score: 0,
+                quizTaken: false,
+                lastVisited: null
+            };
+        }
+
+        function saveProgressData(data) {
+            storage.setItem(`progress_${moduleId}`, JSON.stringify(data));
+        }
+
+        // Quiz functions
+        function renderQuiz() {
+            document.getElementById('quizContainer').innerHTML = quizData.map((q, qIndex) => `
+                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-md">
+                    <h3 class="font-semibold text-lg mb-4" style="color: var(--primary);">${qIndex + 1}. ${q.question}</h3>
+                    <div class="space-y-3">
+                        ${q.options.map((option, oIndex) => `
+                            <label class="quiz-option flex items-center p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg">
+                                <input type="radio" name="q${qIndex}" value="${oIndex}" class="mr-4 w-5 h-5" onchange="saveAnswer(${qIndex}, ${oIndex})" style="accent-color: var(--accent);">
+                                <span style="color: var(--text-dark);">${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function saveAnswer(questionIndex, answerIndex) {
+            userAnswers[questionIndex] = answerIndex;
+        }
+
+        function submitQuiz() {
+            if (Object.keys(userAnswers).length < quizData.length) {
+                showCustomAlert('Please answer all questions before submitting.');
+                return;
+            }
+
+            let correct = 0;
+            quizData.forEach((q, index) => {
+                const selected = userAnswers[index];
+                document.querySelectorAll(`input[name="q${index}"]`).forEach((option, oIndex) => {
+                    const label = option.closest('label');
+                    if (oIndex === q.correct) {
+                        label.classList.add('correct');
+                    } else if (oIndex === selected) {
+                        label.classList.add('incorrect');
+                    }
+                    option.disabled = true;
+                });
+                if (selected === q.correct) correct++;
+            });
+
+            const score = Math.round((correct / quizData.length) * 100);
+            const progressData = getProgressData();
+            progressData.quizTaken = true;
+            progressData.score = score;
+            progressData.completed = score >= 60;
+            saveProgressData(progressData);
+
+            displayResults(score, correct);
+        }
+
+        function displayResults(score, correct) {
+            document.getElementById('submitQuiz').classList.add('hidden');
+            document.getElementById('quizResults').classList.remove('hidden');
+            document.getElementById('scoreDisplay').textContent = `${score}%`;
+
+            const scoreTitle = document.getElementById('scoreTitle');
+            const scoreFeedback = document.getElementById('scoreFeedback');
+
+            if (score >= 80) {
+                scoreTitle.textContent = '🎉 Outstanding Performance!';
+                scoreTitle.style.color = '#059669';
+                scoreFeedback.textContent = `Excellent! You answered ${correct} out of ${quizData.length} questions correctly. You have a strong grasp of the concepts about the state.`;
+            } else if (score >= 60) {
+                scoreTitle.textContent = '✅ Well Done!';
+                scoreTitle.style.color = '#3b82f6';
+                scoreFeedback.textContent = `Good work! You answered ${correct} out of ${quizData.length} questions correctly. Review the material to strengthen your understanding further.`;
+            } else {
+                scoreTitle.textContent = '📚 Keep Learning!';
+                scoreTitle.style.color = '#f59e0b';
+                scoreFeedback.textContent = `You answered ${correct} out of ${quizData.length} questions correctly. Review the lesson content carefully and try again. You're on your way to mastery!`;
+            }
+
+            document.getElementById('quizResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function retakeQuiz() {
+            userAnswers = {};
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('submitQuiz').classList.remove('hidden');
+            renderQuiz();
+            document.getElementById('quizContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showCustomAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl max-w-md w-full">
+                    <p class="text-lg mb-6" style="color: var(--text-dark);">${message}</p>
+                    <button class="w-full px-6 py-3 rounded-lg font-semibold transition" style="background: var(--primary); color: white;" onclick="this.closest('.fixed').remove()">
+                        OK
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Initialize
+        renderQuiz();
+        window.addEventListener('scroll', updateProgress);
+        updateProgress();
+
+        // Add fade-in animation to sections
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in-up');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.content-section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>
+

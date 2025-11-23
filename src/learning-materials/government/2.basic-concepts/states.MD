@@ -1,0 +1,67 @@
+ 1.8 THE STATE
+**Definition:** A state may be defined as a politically organised body of people inhabiting a defined geographical entity with an organised legitimate government. The state in this respect is entirely free from external control. The power of a state is also guaranteed with coercive power to secure obedience from the citizens. A state is different from empires, kingdoms, chieftains, etc. Nigeria, Ghana, Benin Republic, USA, Canada, etc. are good examples of states.
+
+#### Features of State
+A state possesses the following features or characteristics:
+
+### 1. Permanence: The state remains a permanent feature. Governments can change many times but a state remains permanent.
+
+
+### 2. A defined territory: A state has a defined territory with a limit to its size. It must have clearly defined boundaries, separating it from others. Things like waters, mountains, forest, air space, etc. make up the state.
+
+### 3. Government: Though government is not a permanent feature of a state, it remains a significant feature because it is a machinery set up by the state to pilot the affairs of the people making up that state. The sustenance and prestige of a state are maintained by the government.
+
+### 4. Sovereignty: The supreme power to make decisions and enforce same on the people is with the state. The sovereignty of a state is not negotiable and must be free from external interference and control.
+
+### 5. Population: This is an important attribute of a state. For a state to be called a state, there must be a given number of people making up the entity. However, with time, such number is bound to increase.
+
+
+## 6. Recognition: A state must be recognised both internally and externally.
+
+
+### Relationship between the State and the Government
+The state and government are inseparable in the scheme of things. The state is a politically organised body of people occupying a defined geographical area with an organised legitimate or constitutional government. Government on the other hand is a feature of a state. It is a machinery set up by the state to organise and realise the set objectives and goals of the state.
+
+No state exists without a government, otherwise anarchy would reign. The people making up the state have a government to administer the area and this involves the three organs of government in place. These organs of government have distinct functions to perform in the affairs of the state. The state is therefore a corporate entity while government is an institution set up by the state. Government can change as many times as possible but the state remains a permanent feature. Again, the sovereignty of the state is rested with the government and the government exercises it in trust for the state.
+
+
+State and Nation
+A state exists where a territory, a people, a government and sovereignty exist. It may lack the feeling of nationality or oneness among the people and yet remain a state. A nation could be seen as a body of people who feel themselves to be naturally linked together, share common ties, believe that they can live happily together, and are not satisfied when they are disunited and cannot tolerate subjection to people who do not share these ties. Similarly, these people share the same language, culture and have the feeling of nationality.
+
+However, over time, there has been the to equate statehood with nationhood and to associate nation with a united people organised in a state. The state may accommodate people of different historical background, language, culture, religious beliefs and people of homogeneous identity. Lord Acton, in his writing, maintained that the combination of different nations in one state is as necessary a condition of civilised life as the combination of individuals to form society.
+
+
+State and Society
+Society is referred to as the association of human beings. This suggests the whole complex of relations of man to his fellows. Society can equally be referred to as a group of people who share similar values, laws, traditions and living in organised communities for mutual benefits.
+
+There may be many different groups in the society like the church, family and the trade unions which do influence social life but do not owe their origin or whatever to the state.
+
+The state is a way of regulating human conduct; it orders us not to commit murder, not to steal and there is punishment for their violation.
+
+
+### Features of a Society
+1. It is controlled by rules/regulations, norms, conventions and customs.
+2. It applies sanctions on its members as a means of ensuring or effecting discipline.
+3. It also applies the use of coercive means to ensure compliance with norms, rules and customs.
+4. The rules and regulations of a society are binding on all residents.
+5. Membership of a society is voluntary.
+6. It is permanent in nature.
+
+7. Its members depend on one another for survival.
+8. Its roles in the society are dynamic.
+9. It is characterised by co-operation, competition and conflicts.
+10. It is characterised by a unique culture.
+11. It is characterised by common political, social and economic interests.
+12. It has common history, tradition, language, religion and sense of value.
+
+
+Differences between the State and Society
+
+1. Society is a wider term than the state. It suggests many social relationships which cannot be expressed through the state, e.g. education, religion, agricultural and industrial activities, domestic institutions, etc. The state is only concerned with those social relationships that express themselves through government.
+2. The term ‘society’ applies to all human communities whether organised or unorganised, but organisation for law is essential to a state.
+3. State is not identical with society. The state provides the framework of the social order, holds society together and binds individuals to certain uniform rules or behaviour which are essential for a harmonious and orderly social life.
+
+
+
+
+
