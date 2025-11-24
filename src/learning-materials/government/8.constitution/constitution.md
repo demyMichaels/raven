@@ -1,4 +1,4 @@
-CONSTITUTION
+**CONSTITUTION**
 Definition:
 
 A constitution is defined 
@@ -8,7 +8,6 @@ as a body of agreed rules and principles
  are given and 
 how these powers are to be exercised.
 
-
  It also establishes a basic framework or fundamental law of the land. 
 
 By so doing, it checks and sets limits not only to the actions of government but also to the actions of ordinary citizens. 
@@ -16,7 +15,7 @@ The constitution also states the rights, duties and obligations of the citizens.
 
 
 
-SOURCES OF CONSTITUTION**
+**SOURCES OF CONSTITUTION**
 1. History of the people:
  It is necessary that the history of the people should be considered in preparing the basic rules that govern them. Past political developments do form a part of their history.
 
@@ -93,8 +92,8 @@ Rigid
 Flexible
 
 
-**Written Constitution**
 
+**Written Constitution**
 **Definition:** 
 A written constitution is defined as a document or set of documents establishing the selection of rules embodied in a document in which the fundamental principles concerning the organisation of a political system and powers of its various agencies are written down and codified. 
 Thus, the constitution of the USA (1789) outlines the composition of the legislature, the executive and the judiciary and their powers, as well as the fundamental rights of citizens. It also mentions a method for its amendment.
@@ -143,6 +142,8 @@ Since it is a single document, it can easily be obtained and
 5. Tendency to cause political tension: This may result if it does not favour a disaffection and bad blood within the political system.
 6. Frequent conflict: Written constitution can cause frequent conflict among the three arms of government, especially if their functions are not properly defined.
 7. A reference point: It is written and can easily be referred to, resulting in litigation as often as possible between individuals, individuals against the government, etc., especially when their rights are trampled upon.
+
+
 
 **Unwritten Constitution**
 Definition: It is defined as one in which the fundamental principles of the organisation and powers of a government are not codified in one document. It is usually a combination of statutes, judicial principles, customs and conventions which guide the operation of government. The constitution of Great Britain is a good example.
@@ -233,8 +234,12 @@ There are two different methods of amending a constitution and these are:
 (1) Rigid constitution
 (2) Flexible constitution.
 
+
+
+
 ### Rigid constitution
 Rigid constitution is defined as one that is very difficult to amend or change. It requires a special process or a complicated method before it can be amended or changed. Most written constitutions are rigid. USA, Ghana, Nigeria, Australia, etc. have rigid constitutions.
+
 
 
 ### Rigid constitutions are of four types:
@@ -245,6 +250,7 @@ Rigid constitution is defined as one that is very difficult to amend or change. 
 3. Final decision is undertaken by the majority of the component units or regions in a federal set-up. For example, 3/4 of the majority of states in the USA are needed for such amendment.
 
 4. The development of new customs in the course of time or final decisions in the hands of an outside authority, e.g. leaving such decisions to the sovereign in parliament in Britain.
+
 
 
 
@@ -260,12 +266,15 @@ Rigid constitution is defined as one that is very difficult to amend or change. 
 5. It serves as a restraint: A rigid constitution restrains or prevents unscrupulous politicians from manipulating the constitution to achieve selfish or sectional ends.
 
 
+
 ## Disadvantages of a Rigid Constitution
 1. **Delay to rapid growth:** It is a delay to rapid growth and development. A cross-section of the citizens are consulted before amendments are made or introduced.
 2. **Abuse of rights:** The democratic rights of the people may be abused or trampled upon.
 3. **Complicated method of amendment:** The method of amendment is complicated and so cannot be reasonably adopted in times of emergencies.
 4. **Innovations:** Rigid constitutions are resistant to change and innovations.
 5. **Slow economic growth:** The amendment of a rigid constitution may lead to slow economic growth and development.
+
+
 
 ## Flexible Constitution
 **Definition:** It is defined as the type of constitution that is easy to amend. If the method of amending the constitution is the same as that of the passing of ordinary law, the constitution is said to be flexible. Again, the amendment can easily be done by a simple majority in the legislature.
@@ -279,12 +288,14 @@ Britain, Italy, etc. have flexible constitutions. However, a flexible constituti
 3. **Introduction of new laws:** Obsolete laws can easily be replaced with new ones.
 4. **It can easily meet with people's needs:** The needs and aspirations of the people can easily be met because of the ease in amending the constitution.
 
+
 ## Demerits of a Flexible constitution
 1. **Manipulation:** The provisions of the constitution can easily be manipulated by a powerful leader.
 2. **Unsuitable for a federal set-up:** This is because the rights of autonomy of some states may be jeopardised by some radical reforms.
 3. **Rights of individuals:** Fundamental rights of individuals may be infringed upon and may increase the fears of the minority and inter-ethnic disharmony.
 4. **Different interests and opinions:** Different interests and opinions may not be promoted but could be suppressed.
 5. **Sectional interest:** A section of the country can use its influence or position to amend the constitution to achieve sectional interest.
+
 
 ## Differences between rigid and flexible constitutions
 
