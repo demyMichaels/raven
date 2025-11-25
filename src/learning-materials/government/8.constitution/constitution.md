@@ -226,7 +226,6 @@ Powers and functions are not clearly defined and stated.
 The interests of the minority are not adequately protected.
 
 
-
 ## Methods of Amendment of Constitution
 Constitutions should have the ability to change with time and circumstances. Classification of constitutions, therefore, is dependent on the method of amendment.
 
@@ -235,11 +234,8 @@ There are two different methods of amending a constitution and these are:
 (2) Flexible constitution.
 
 
-
-
 ### Rigid constitution
 Rigid constitution is defined as one that is very difficult to amend or change. It requires a special process or a complicated method before it can be amended or changed. Most written constitutions are rigid. USA, Ghana, Nigeria, Australia, etc. have rigid constitutions.
-
 
 
 ### Rigid constitutions are of four types:
@@ -250,7 +246,6 @@ Rigid constitution is defined as one that is very difficult to amend or change. 
 3. Final decision is undertaken by the majority of the component units or regions in a federal set-up. For example, 3/4 of the majority of states in the USA are needed for such amendment.
 
 4. The development of new customs in the course of time or final decisions in the hands of an outside authority, e.g. leaving such decisions to the sovereign in parliament in Britain.
-
 
 
 
