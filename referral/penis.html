@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wellness Tracker</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f8faf9;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8f3f0;
+            --text-primary: #1a3d35;
+            --text-secondary: #4a6b63;
+            --text-tertiary: #7a9a92;
+            --accent-primary: #2d7a64;
+            --accent-secondary: #3da17f;
+            --accent-light: #e0f2ed;
+            --border-color: #d1e4dd;
+            --shadow-sm: 0 2px 8px rgba(29, 61, 53, 0.08);
+            --shadow-md: 0 4px 16px rgba(29, 61, 53, 0.12);
+            --shadow-lg: 0 8px 32px rgba(29, 61, 53, 0.16);
+            --warning: #d97706;
+            --danger: #dc2626;
+            --success: #10b981;
+        }
+
+        .dark {
+            --bg-primary: #0f1713;
+            --bg-secondary: #1a2720;
+            --bg-tertiary: #243329;
+            --text-primary: #e8f3f0;
+            --text-secondary: #b8d4cb;
+            --text-tertiary: #7a9a92;
+            --accent-primary: #3da17f;
+            --accent-secondary: #2d7a64;
+            --accent-light: #243f36;
+            --border-color: #2d4038;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 0;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+        }
+
+        .nav-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            gap: 4px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 10px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-tertiary);
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.active {
+            background: var(--accent-light);
+            color: var(--accent-primary);
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Sections */
+        .section {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        /* Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Exercise List */
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .exercise-item {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .exercise-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .exercise-info p {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Timer Display */
+        .timer-display {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .timer-value {
+            font-size: 4rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-primary);
+            margin: 20px 0;
+        }
+
+        .timer-label {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            transition: width 0.3s;
+        }
+
+        /* Calendar */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .calendar-day.has-workout {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--accent-primary);
+        }
+
+        .calendar-header {
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.75rem;
+        }
+
+        /* History */
+        .history-item {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .history-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .history-date {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+        }
+
+        .history-details {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Routine Cards */
+        .routine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .routine-card {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .routine-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .routine-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+        }
+
+        .routine-card p {
+            font-size: 0.9rem;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+        }
+
+        .routine-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Measurement Form */
+        .measurement-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .timer-value {
+                font-size: 3rem;
+            }
+
+            .routine-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>💪 Wellness Tracker</h1>
+            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="currentStreak">0</div>
+                    <div class="stat-label">Day Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="thisWeek">0</div>
+                    <div class="stat-label">This Week</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTime">0</div>
+                    <div class="stat-label">Total Minutes</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Quick Actions</div>
+                <div class="button-group">
+                    <button class="btn btn-block" onclick="showWorkoutModal()">
+                        <span>▶️</span> Start Workout
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="showSection('measurements')">
+                        <span>📊</span> Log Measurement
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Activity Calendar</div>
+                <div id="calendar"></div>
+            </div>
+        </div>
+
+        <!-- Workout Section -->
+        <div id="workout" class="section">
+            <div class="card">
+                <div class="card-title">Choose a Routine</div>
+                <div class="routine-grid" id="routineGrid"></div>
+            </div>
+        </div>
+
+        <!-- Measurements Section -->
+        <div id="measurements" class="section">
+            <div class="card">
+                <div class="card-title">Log New Measurement</div>
+                <form onsubmit="saveMeasurement(event)">
+                    <div class="measurement-inputs">
+                        <div class="form-group">
+                            <label>Length (cm)</label>
+                            <input type="number" step="0.1" id="measureLength" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Girth (cm)</label>
+                            <input type="number" step="0.1" id="measureGirth" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="measureNotes" placeholder="Optional notes about this measurement..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-block">Save Measurement</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Progress Charts</div>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history" class="section">
+            <div class="card">
+                <div class="card-title">Recent Activity</div>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings" class="section">
+            <div class="card">
+                <div class="card-title">Custom Routines</div>
+                <button class="btn btn-block" onclick="showCreateRoutineModal()">+ Create New Routine</button>
+                <div id="customRoutinesList" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Data Management</div>
+                <div class="button-group">
+                    <button class="btn btn-secondary btn-block" onclick="exportData()">
+                        ���� Export Data
+                    </button>
+                    <button class="btn btn-secondary btn-block" onclick="showImportModal()">
+                        📥 Import Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Modal -->
+    <div id="workoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="workoutModalTitle">Select Routine</h2>
+                <button class="close-btn" onclick="closeWorkoutModal()">×</button>
+            </div>
+            <div id="workoutModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Create Routine Modal -->
+    <div id="createRoutineModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Custom Routine</h2>
+                <button class="close-btn" onclick="closeCreateRoutineModal()">×</button>
+            </div>
+            <form onsubmit="saveCustomRoutine(event)">
+                <div class="form-group">
+                    <label>Routine Name</label>
+                    <input type="text" id="routineName" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="routineDescription" required></textarea>
+                </div>
+                <div id="exerciseBuilder">
+                    <label>Exercises</label>
+                    <div id="exerciseList"></div>
+                    <button type="button" class="btn btn-secondary btn-block" onclick="addExerciseToBuilder()">+ Add Exercise</button>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateRoutineModal()">Cancel</button>
+                    <button type="submit" class="btn">Save Routine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Import Data</h2>
+                <button class="close-btn" onclick="closeImportModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Paste JSON Data</label>
+                <textarea id="importData" placeholder='{"sessions": [], "measurements": []}'></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+                <button class="btn" onclick="importData()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-content">
+            <button class="nav-btn active" onclick="showSection('dashboard')">
+                <div class="nav-icon">🏠</div>
+                <div>Home</div>
+            </button>
+            <button class="nav-btn" onclick="showSection('workout')">
+                <div class="nav-icon">💪</div>
+                <div>Workout</div>
+            </button>
+            <button class="nav-btn" onclick="showSection('measurements')">
+                <div class="nav-icon">📏</div>
+                <div>Measure</div>
+            </button>
+            <button class="nav-btn" onclick="showSection('history')">
+                <div class="nav-icon">📋</div>
+                <div>History</div>
+            </button>
+            <button class="nav-btn" onclick="showSection('settings')">
+                <div class="nav-icon">⚙️</div>
+                <div>Settings</div>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Initialize theme
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Data Storage
+        let sessions = JSON.parse(localStorage.getItem('wellnessSessions') || '[]');
+        let measurements = JSON.parse(localStorage.getItem('wellnessMeasurements') || '[]');
+        let customRoutines = JSON.parse(localStorage.getItem('customRoutines') || '[]');
+
+        // Pre-built Routines
+        const prebuiltRoutines = [
+            {
+                id: 'beginner',
+                name: 'Beginner Routine',
+                description: 'Perfect for starting your journey',
+                exercises: [
+                    { name: 'Warm-up Stretch', duration: 120, rest: 30 },
+                    { name: 'Kegel Exercise', duration: 180, rest: 60 },
+                    { name: 'Jelqing', duration: 300, rest: 60 },
+                    { name: 'Cool-down Stretch', duration: 120, rest: 0 }
+                ]
+            },
+            {
+                id: 'intermediate',
+                name: 'Intermediate Routine',
+                description: 'For continued progress',
+                exercises: [
+                    { name: 'Warm-up Stretch', duration: 180, rest: 30 },
+                    { name: 'Advanced Kegels', duration: 240, rest: 60 },
+                    { name: 'Jelqing', duration: 480, rest: 90 },
+                    { name: 'Stretching Exercise', duration: 300, rest: 60 },
+                    { name: 'Cool-down', duration: 180, rest: 0 }
+                ]
+            },
+            {
+                id: 'quick',
+                name: 'Quick Session',
+                description: '10-minute express routine',
+                exercises: [
+                    { name: 'Quick Warm-up', duration: 60, rest: 20 },
+                    { name: 'Kegels', duration: 180, rest: 30 },
+                    { name: 'Basic Jelqing', duration: 240, rest: 30 },
+                    { name: 'Stretch', duration: 120, rest: 0 }
+                ]
+            }
+        ];
+
+        let currentWorkout = null;
+        let currentExerciseIndex = 0;
+        let timerInterval = null;
+        let currentTime = 0;
+        let isResting = false;
+        let chartInstance = null;
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            document.getElementById(sectionId).classList.add('active');
+            event.target.closest('.nav-btn').classList.add('active');
+
+            if (sectionId === 'dashboard') {
+                updateDashboard();
+                renderCalendar();
+            } else if (sectionId === 'workout') {
+                renderRoutines();
+            } else if (sectionId === 'measurements') {
+                renderProgressChart();
+            } else if (sectionId === 'history') {
+                renderHistory();
+            } else if (sectionId === 'settings') {
+                renderCustomRoutines();
+            }
+        }
+
+        // Dashboard Functions
+        function updateDashboard() {
+            const stats = calculateStats();
+            document.getElementById('currentStreak').textContent = stats.currentStreak;
+            document.getElementById('totalSessions').textContent = stats.totalSessions;
+            document.getElementById('thisWeek').textContent = stats.thisWeek;
+            document.getElementById('totalTime').textContent = stats.totalTime;
+        }
+
+        function calculateStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Calculate streak
+            let streak = 0;
+            let checkDate = new Date(today);
+
+            while (true) {
+                const dateStr = checkDate.toISOString().split('T')[0];
+                if (sessions.some(s => s.date.startsWith(dateStr))) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            }
+
+            // This week
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            const thisWeek = sessions.filter(s => new Date(s.date) >= weekStart).length;
+
+            // Total time
+            const totalTime = Math.round(sessions.reduce((sum, s) => sum + (s.duration || 0), 0) / 60);
+
+            return {
+                currentStreak: streak,
+                totalSessions: sessions.length,
+                thisWeek: thisWeek,
+                totalTime: totalTime
+            };
+        }
+
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            let html = days.map(d => `<div class="calendar-header">${d}</div>`).join('');
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+
+            // Days of month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const date = new Date(today.getFullYear(), today.getMonth(), day);
+                const dateStr = date.toISOString().split('T')[0];
+                const hasWorkout = sessions.some(s => s.date.startsWith(dateStr));
+                const isToday = day === today.getDate();
+
+                html += `<div class="calendar-day ${hasWorkout ? 'has-workout' : ''} ${isToday ? 'today' : ''}">${day}</div>`;
+            }
+
+            calendar.innerHTML = html;
+        }
+
+        // Workout Functions
+        function renderRoutines() {
+            const allRoutines = [...prebuiltRoutines, ...customRoutines];
+            const grid = document.getElementById('routineGrid');
+
+            if (allRoutines.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💪</div><p>No routines available</p></div>';
+                return;
+            }
+
+            grid.innerHTML = allRoutines.map(routine => {
+                const totalTime = routine.exercises.reduce((sum, ex) => sum + ex.duration + ex.rest, 0);
+                return `
+                    <div class="routine-card" onclick='startRoutine(${JSON.stringify(routine)})'>
+                        <h3>${routine.name}</h3>
+                        <p>${routine.description}</p>
+                        <div class="routine-meta">
+                            <span>⏱️ ${Math.round(totalTime / 60)} min</span>
+                            <span>📋 ${routine.exercises.length} exercises</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showWorkoutModal() {
+            const modal = document.getElementById('workoutModal');
+            const modalBody = document.getElementById('workoutModalBody');
+
+            const allRoutines = [...prebuiltRoutines, ...customRoutines];
+
+            modalBody.innerHTML = `
+                <div class="routine-grid">
+                    ${allRoutines.map(routine => {
+                        const totalTime = routine.exercises.reduce((sum, ex) => sum + ex.duration + ex.rest, 0);
+                        return `
+                            <div class="routine-card" onclick='startRoutine(${JSON.stringify(routine)})'>
+                                <h3>${routine.name}</h3>
+                                <p>${routine.description}</p>
+                                <div class="routine-meta">
+                                    <span>⏱️ ${Math.round(totalTime / 60)} min</span>
+                                    <span>📋 ${routine.exercises.length} exercises</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function closeWorkoutModal() {
+            document.getElementById('workoutModal').classList.remove('active');
+        }
+
+        function startRoutine(routine) {
+            currentWorkout = routine;
+            currentExerciseIndex = 0;
+            closeWorkoutModal();
+            showExercise();
+        }
+
+        function showExercise() {
+            if (currentExerciseIndex >= currentWorkout.exercises.length) {
+                completeWorkout();
+                return;
+            }
+
+            const exercise = currentWorkout.exercises[currentExerciseIndex];
+            const modal = document.getElementById('workoutModal');
+            const modalTitle = document.getElementById('workoutModalTitle');
+            const modalBody = document.getElementById('workoutModalBody');
+
+            modalTitle.textContent = `Exercise ${currentExerciseIndex + 1}/${currentWorkout.exercises.length}`;
+
+            currentTime = exercise.duration;
+            isResting = false;
+
+            modalBody.innerHTML = `
+                <div class="timer-display">
+                    <div class="timer-label">${exercise.name}</div>
+                    <div class="timer-value" id="timerValue">${formatTime(currentTime)}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 100%"></div>
+                    </div>
+                    <button class="btn btn-block" id="timerBtn" onclick="startTimer()">Start</button>
+                    <button class="btn btn-secondary btn-block" onclick="skipExercise()" style="margin-top: 12px;">Skip</button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+        }
+
+        function startTimer() {
+            const exercise = currentWorkout.exercises[currentExerciseIndex];
+            const btn = document.getElementById('timerBtn');
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.textContent = 'Resume';
+                return;
+            }
+
+            btn.textContent = 'Pause';
+
+            timerInterval = setInterval(() => {
+                currentTime--;
+                updateTimerDisplay();
+
+                if (currentTime <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+
+                    if (!isResting && exercise.rest > 0) {
+                        // Start rest period
+                        isResting = true;
+                        currentTime = exercise.rest;
+                        document.querySelector('.timer-label').textContent = 'Rest';
+                        btn.textContent = 'Start Rest';
+                    } else {
+                        // Move to next exercise
+                        currentExerciseIndex++;
+                        showExercise();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const exercise = currentWorkout.exercises[currentExerciseIndex];
+            const totalTime = isResting ? exercise.rest : exercise.duration;
+            const progress = (currentTime / totalTime) * 100;
+
+            document.getElementById('timerValue').textContent = formatTime(currentTime);
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function skipExercise() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            currentExerciseIndex++;
+            showExercise();
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function completeWorkout() {
+            const totalDuration = currentWorkout.exercises.reduce((sum, ex) => sum + ex.duration, 0);
+
+            const session = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                routine: currentWorkout.name,
+                duration: totalDuration,
+                exercises: currentWorkout.exercises.length
+            };
+
+            sessions.unshift(session);
+            localStorage.setItem('wellnessSessions', JSON.stringify(sessions));
+
+            const modal = document.getElementById('workoutModal');
+            const modalTitle = document.getElementById('workoutModalTitle');
+            const modalBody = document.getElementById('workoutModalBody');
+
+            modalTitle.textContent = '🎉 Workout Complete!';
+            modalBody.innerHTML = `
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="font-size: 4rem; margin-bottom: 20px;">✅</div>
+                    <h2 style="margin-bottom: 12px;">Great Job!</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        You completed ${currentWorkout.name} in ${Math.round(totalDuration / 60)} minutes
+                    </p>
+                    <button class="btn btn-block" onclick="closeWorkoutModal(); showSection('dashboard')">Done</button>
+                </div>
+            `;
+
+            currentWorkout = null;
+            updateDashboard();
+        }
+
+        // Measurement Functions
+        function saveMeasurement(event) {
+            event.preventDefault();
+
+            const measurement = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                length: parseFloat(document.getElementById('measureLength').value),
+                girth: parseFloat(document.getElementById('measureGirth').value),
+                notes: document.getElementById('measureNotes').value
+            };
+
+            measurements.unshift(measurement);
+            localStorage.setItem('wellnessMeasurements', JSON.stringify(measurements));
+
+            event.target.reset();
+            renderProgressChart();
+
+            showCustomAlert('✅ Measurement saved successfully!');
+        }
+
+        function renderProgressChart() {
+            const canvas = document.getElementById('progressChart');
+            const ctx = canvas.getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if (measurements.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-tertiary');
+                ctx.font = '16px Outfit';
+                ctx.textAlign = 'center';
+                ctx.fillText('No measurements yet', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const sortedData = [...measurements].reverse();
+            const labels = sortedData.map(m => new Date(m.date).toLocaleDateString());
+            const lengthData = sortedData.map(m => m.length);
+            const girthData = sortedData.map(m => m.girth);
+
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#b8d4cb' : '#4a6b63';
+            const gridColor = isDark ? '#2d4038' : '#d1e4dd';
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Length (cm)',
+                            data: lengthData,
+                            borderColor: '#3da17f',
+                            backgroundColor: 'rgba(61, 161, 127, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Girth (cm)',
+                            data: girthData,
+                            borderColor: '#2d7a64',
+                            backgroundColor: 'rgba(45, 122, 100, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: textColor,
+                                font: { family: 'Outfit' }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        // History Functions
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+
+            const allItems = [
+                ...sessions.map(s => ({ ...s, type: 'session' })),
+                ...measurements.map(m => ({ ...m, type: 'measurement' }))
+            ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (allItems.length === 0) {
+                historyList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><p>No activity yet</p></div>';
+                return;
+            }
+
+            historyList.innerHTML = allItems.map(item => {
+                const date = new Date(item.date);
+                const dateStr = date.toLocaleDateString();
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                if (item.type === 'session') {
+                    return `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <div class="history-title">💪 ${item.routine}</div>
+                                <div class="history-date">${dateStr}</div>
+                            </div>
+                            <div class="history-details">
+                                ${Math.round(item.duration / 60)} minutes • ${item.exercises} exercises • ${timeStr}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <div class="history-title">📏 Measurement Logged</div>
+                                <div class="history-date">${dateStr}</div>
+                            </div>
+                            <div class="history-details">
+                                Length: ${item.length} cm • Girth: ${item.girth} cm • ${timeStr}
+                                ${item.notes ? `<br><em>${item.notes}</em>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+        }
+
+        // Custom Routines
+        let exerciseBuilderCount = 0;
+
+        function showCreateRoutineModal() {
+            exerciseBuilderCount = 0;
+            document.getElementById('exerciseList').innerHTML = '';
+            document.getElementById('createRoutineModal').classList.add('active');
+            addExerciseToBuilder();
+        }
+
+        function closeCreateRoutineModal() {
+            document.getElementById('createRoutineModal').classList.remove('active');
+            document.getElementById('routineName').value = '';
+            document.getElementById('routineDescription').value = '';
+        }
+
+        function addExerciseToBuilder() {
+            const list = document.getElementById('exerciseList');
+            const id = exerciseBuilderCount++;
+
+            const html = `
+                <div class="exercise-item" id="exercise-${id}" style="margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <input type="text" placeholder="Exercise name" id="exName-${id}" required style="margin-bottom: 8px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <input type="number" placeholder="Duration (sec)" id="exDuration-${id}" required>
+                            <input type="number" placeholder="Rest (sec)" id="exRest-${id}" value="0">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="removeExercise(${id})" style="margin-left: 12px;">×</button>
+                </div>
+            `;
+
+            list.insertAdjacentHTML('beforeend', html);
+        }
+
+        function removeExercise(id) {
+            document.getElementById(`exercise-${id}`).remove();
+        }
+
+        function saveCustomRoutine(event) {
+            event.preventDefault();
+
+            const exercises = [];
+            for (let i = 0; i < exerciseBuilderCount; i++) {
+                const nameInput = document.getElementById(`exName-${i}`);
+                if (!nameInput) continue;
+
+                exercises.push({
+                    name: nameInput.value,
+                    duration: parseInt(document.getElementById(`exDuration-${i}`).value),
+                    rest: parseInt(document.getElementById(`exRest-${i}`).value) || 0
+                });
+            }
+
+            const routine = {
+                id: 'custom-' + Date.now(),
+                name: document.getElementById('routineName').value,
+                description: document.getElementById('routineDescription').value,
+                exercises: exercises,
+                custom: true
+            };
+
+            customRoutines.push(routine);
+            localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
+
+            closeCreateRoutineModal();
+            renderCustomRoutines();
+            showCustomAlert('✅ Routine created successfully!');
+        }
+
+        function renderCustomRoutines() {
+            const list = document.getElementById('customRoutinesList');
+
+            if (customRoutines.length === 0) {
+                list.innerHTML = '<div class="empty-state" style="padding: 40px 20px;"><p>No custom routines yet</p></div>';
+                return;
+            }
+
+            list.innerHTML = customRoutines.map((routine, index) => `
+                <div class="history-item">
+                    <div class="history-header">
+                        <div class="history-title">${routine.name}</div>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteRoutine(${index})">Delete</button>
+                    </div>
+                    <div class="history-details">
+                        ${routine.description} • ${routine.exercises.length} exercises
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteRoutine(index) {
+            showCustomConfirm('Delete this routine?', () => {
+                customRoutines.splice(index, 1);
+                localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
+                renderCustomRoutines();
+            });
+        }
+
+        // Import/Export
+        function exportData() {
+            const data = {
+                sessions: sessions,
+                measurements: measurements,
+                customRoutines: customRoutines,
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `wellness-tracker-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importData').value = '';
+        }
+
+        function importData() {
+            try {
+                const data = JSON.parse(document.getElementById('importData').value);
+
+                if (data.sessions) {
+                    sessions = data.sessions;
+                    localStorage.setItem('wellnessSessions', JSON.stringify(sessions));
+                }
+
+                if (data.measurements) {
+                    measurements = data.measurements;
+                    localStorage.setItem('wellnessMeasurements', JSON.stringify(measurements));
+                }
+
+                if (data.customRoutines) {
+                    customRoutines = data.customRoutines;
+                    localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
+                }
+
+                closeImportModal();
+                updateDashboard();
+                showCustomAlert('✅ Data imported successfully!');
+            } catch (e) {
+                showCustomAlert('❌ Invalid data format. Please check your JSON.');
+            }
+        }
+
+        // Custom Alert/Confirm
+        function showCustomAlert(message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div style="text-align: center; padding: 20px;">
+                        <p style="font-size: 1.1rem; margin-bottom: 20px;">${message}</p>
+                        <button class="btn btn-block" onclick="this.closest('.modal').remove()">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            setTimeout(() => modal.remove(), 3000);
+        }
+
+        function showCustomConfirm(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div style="padding: 20px;">
+                        <p style="font-size: 1.1rem; margin-bottom: 20px; text-align: center;">${message}</p>
+                        <div class="button-group">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button class="btn" onclick="this.closest('.modal').remove(); (${onConfirm})()">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Initialize
+        updateDashboard();
+        renderCalendar();
+    </script>
+</body>
+</html>
+
