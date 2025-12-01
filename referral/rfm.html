@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFM Customer Analysis Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4A49C7'
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-primary mb-2">RFM Customer Analysis</h1>
+            <p class="text-gray-600 dark:text-gray-400">Analyze customer behavior with Recency, Frequency, and Monetary metrics</p>
+        </div>
+
+        <!-- Data Input Section -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Customer Data</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Upload CSV File</label>
+                    <input type="file" id="csvFile" accept=".csv" class="w-full text-base p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <p class="text-sm text-gray-500 mt-1">CSV should have columns: customer_id, purchase_date, amount</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Analysis Date</label>
+                    <input type="date" id="analysisDate" class="w-full text-base p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+            </div>
+            <div class="mt-4 flex gap-4">
+                <button onclick="loadSampleData()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    Load Sample Data
+                </button>
+                <button onclick="processData()" class="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition-colors">
+                    Analyze Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-300">Total Customers</h3>
+                    <p id="totalCustomers" class="text-3xl font-bold text-blue-900 dark:text-blue-200">0</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800 dark:text-green-300">Avg Recency</h3>
+                    <p id="avgRecency" class="text-3xl font-bold text-green-900 dark:text-green-200">0 days</p>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-300">Avg Frequency</h3>
+                    <p id="avgFrequency" class="text-3xl font-bold text-yellow-900 dark:text-yellow-200">0</p>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-800 dark:text-purple-300">Avg Monetary</h3>
+                    <p id="avgMonetary" class="text-3xl font-bold text-purple-900 dark:text-purple-200">$0</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">Customer Segments</h3>
+                    <canvas id="segmentChart" width="400" height="300"></canvas>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-semibold mb-4">RFM Score Distribution</h3>
+                    <canvas id="rfmChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Customer Segments Table -->
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-8">
+                <h3 class="text-xl font-semibold mb-4">Customer Segments Analysis</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-600">
+                                <th class="text-left py-3 px-4">Segment</th>
+                                <th class="text-left py-3 px-4">Count</th>
+                                <th class="text-left py-3 px-4">% of Total</th>
+                                <th class="text-left py-3 px-4">Avg Recency</th>
+                                <th class="text-left py-3 px-4">Avg Frequency</th>
+                                <th class="text-left py-3 px-4">Avg Monetary</th>
+                                <th class="text-left py-3 px-4">Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody id="segmentTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Details -->
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Customer Details</h3>
+                <div class="mb-4">
+                    <input type="text" id="searchCustomer" placeholder="Search by customer ID..." class="w-full text-base p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-600">
+                                <th class="text-left py-3 px-4">Customer ID</th>
+                                <th class="text-left py-3 px-4">Recency</th>
+                                <th class="text-left py-3 px-4">Frequency</th>
+                                <th class="text-left py-3 px-4">Monetary</th>
+                                <th class="text-left py-3 px-4">RFM Score</th>
+                                <th class="text-left py-3 px-4">Segment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode setup
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        let customerData = [];
+        let rfmResults = [];
+
+        // Set default analysis date to today
+        document.getElementById('analysisDate').value = new Date().toISOString().split('T')[0];
+
+        function loadSampleData() {
+            const sampleData = [
+                'customer_id,purchase_date,amount',
+                'C001,2024-01-15,120.50',
+                'C001,2024-02-20,85.00',
+                'C001,2024-03-10,200.00',
+                'C002,2024-01-05,50.00',
+                'C002,2024-01-25,75.00',
+                'C003,2024-03-01,300.00',
+                'C003,2024-03-15,150.00',
+                'C003,2024-03-20,180.00',
+                'C003,2024-03-25,220.00',
+                'C004,2023-12-10,45.00',
+                'C005,2024-02-14,95.00',
+                'C005,2024-03-14,110.00',
+                'C006,2024-01-30,250.00',
+                'C007,2023-11-15,30.00',
+                'C008,2024-03-22,175.00',
+                'C008,2024-03-28,190.00',
+                'C009,2024-02-28,80.00',
+                'C010,2024-01-20,160.00',
+                'C010,2024-02-15,140.00',
+                'C010,2024-03-05,180.00'
+            ].join('\n');
+
+            parseCSVData(sampleData);
+            alert('Sample data loaded successfully!');
+        }
+
+        document.getElementById('csvFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    parseCSVData(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function parseCSVData(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',');
+            
+            customerData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                customerData.push({
+                    customer_id: values[0],
+                    purchase_date: values[1],
+                    amount: parseFloat(values[2])
+                });
+            }
+        }
+
+        function processData() {
+            if (customerData.length === 0) {
+                alert('Please load customer data first.');
+                return;
+            }
+
+            const analysisDate = new Date(document.getElementById('analysisDate').value);
+            rfmResults = calculateRFM(customerData, analysisDate);
+            
+            displayResults(rfmResults);
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        function calculateRFM(data, analysisDate) {
+            const customerMetrics = {};
+
+            // Calculate metrics for each customer
+            data.forEach(transaction => {
+                const customerId = transaction.customer_id;
+                const purchaseDate = new Date(transaction.purchase_date);
+                const amount = transaction.amount;
+
+                if (!customerMetrics[customerId]) {
+                    customerMetrics[customerId] = {
+                        customer_id: customerId,
+                        transactions: [],
+                        totalAmount: 0,
+                        lastPurchaseDate: null
+                    };
+                }
+
+                customerMetrics[customerId].transactions.push(transaction);
+                customerMetrics[customerId].totalAmount += amount;
+                
+                if (!customerMetrics[customerId].lastPurchaseDate || purchaseDate > customerMetrics[customerId].lastPurchaseDate) {
+                    customerMetrics[customerId].lastPurchaseDate = purchaseDate;
+                }
+            });
+
+            // Calculate RFM values
+            const results = Object.values(customerMetrics).map(customer => {
+                const recency = Math.floor((analysisDate - customer.lastPurchaseDate) / (1000 * 60 * 60 * 24));
+                const frequency = customer.transactions.length;
+                const monetary = customer.totalAmount;
+
+                return {
+                    customer_id: customer.customer_id,
+                    recency: recency,
+                    frequency: frequency,
+                    monetary: monetary
+                };
+            });
+
+            // Calculate quintiles for scoring
+            const recencyValues = results.map(r => r.recency).sort((a, b) => a - b);
+            const frequencyValues = results.map(r => r.frequency).sort((a, b) => b - a);
+            const monetaryValues = results.map(r => r.monetary).sort((a, b) => b - a);
+
+            const getQuintile = (value, values, reverse = false) => {
+                const index = values.indexOf(value);
+                const quintile = Math.ceil(((index + 1) / values.length) * 5);
+                return reverse ? quintile : 6 - quintile;
+            };
+
+            // Add RFM scores and segments
+            return results.map(customer => {
+                const rScore = getQuintile(customer.recency, recencyValues, true);
+                const fScore = getQuintile(customer.frequency, frequencyValues);
+                const mScore = getQuintile(customer.monetary, monetaryValues);
+                
+                const rfmScore = `${rScore}${fScore}${mScore}`;
+                const segment = getCustomerSegment(rScore, fScore, mScore);
+
+                return {
+                    ...customer,
+                    r_score: rScore,
+                    f_score: fScore,
+                    m_score: mScore,
+                    rfm_score: rfmScore,
+                    segment: segment
+                };
+            });
+        }
+
+        function getCustomerSegment(r, f, m) {
+            if (r >= 4 && f >= 4 && m >= 4) return 'Champions';
+            if (r >= 3 && f >= 3 && m >= 3) return 'Loyal Customers';
+            if (r >= 4 && f <= 2) return 'New Customers';
+            if (r >= 3 && f >= 3 && m <= 2) return 'Potential Loyalists';
+            if (r >= 4 && f <= 2 && m >= 3) return 'Big Spenders';
+            if (r <= 2 && f >= 3 && m >= 3) return 'At Risk';
+            if (r <= 2 && f >= 2 && m <= 2) return "Can't Lose Them";
+            if (r <= 1) return 'Lost Customers';
+            return 'Others';
+        }
+
+        function displayResults(results) {
+            // Update summary cards
+            const totalCustomers = results.length;
+            const avgRecency = Math.round(results.reduce((sum, r) => sum + r.recency, 0) / totalCustomers);
+            const avgFrequency = Math.round(results.reduce((sum, r) => sum + r.frequency, 0) / totalCustomers * 10) / 10;
+            const avgMonetary = Math.round(results.reduce((sum, r) => sum + r.monetary, 0) / totalCustomers);
+
+            document.getElementById('totalCustomers').textContent = totalCustomers;
+            document.getElementById('avgRecency').textContent = `${avgRecency} days`;
+            document.getElementById('avgFrequency').textContent = avgFrequency;
+            document.getElementById('avgMonetary').textContent = `$${avgMonetary}`;
+
+            // Create charts
+            createSegmentChart(results);
+            createRFMChart(results);
+
+            // Create segment analysis table
+            createSegmentTable(results);
+
+            // Create customer details table
+            createCustomerTable(results);
+
+            // Add search functionality
+            document.getElementById('searchCustomer').addEventListener('input', function(e) {
+                filterCustomerTable(e.target.value, results);
+            });
+        }
+
+        function createSegmentChart(results) {
+            const segmentCounts = {};
+            results.forEach(customer => {
+                segmentCounts[customer.segment] = (segmentCounts[customer.segment] || 0) + 1;
+            });
+
+            const ctx = document.getElementById('segmentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(segmentCounts),
+                    datasets: [{
+                        data: Object.values(segmentCounts),
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRFMChart(results) {
+            const scoreCounts = {};
+            results.forEach(customer => {
+                const score = customer.r_score + customer.f_score + customer.m_score;
+                scoreCounts[score] = (scoreCounts[score] || 0) + 1;
+            });
+
+            const ctx = document.getElementById('rfmChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(scoreCounts).sort((a, b) => a - b),
+                    datasets: [{
+                        label: 'Number of Customers',
+                        data: Object.values(scoreCounts),
+                        backgroundColor: '#5D5CDE',
+                        borderColor: '#4A49C7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createSegmentTable(results) {
+            const segments = {};
+            const total = results.length;
+
+            results.forEach(customer => {
+                const segment = customer.segment;
+                if (!segments[segment]) {
+                    segments[segment] = {
+                        count: 0,
+                        recency: 0,
+                        frequency: 0,
+                        monetary: 0
+                    };
+                }
+                segments[segment].count++;
+                segments[segment].recency += customer.recency;
+                segments[segment].frequency += customer.frequency;
+                segments[segment].monetary += customer.monetary;
+            });
+
+            const strategies = {
+                'Champions': 'Reward them. Can be early adopters for new products.',
+                'Loyal Customers': 'Upsell higher value products. Ask for reviews.',
+                'New Customers': 'Provide on-boarding support, give them early success.',
+                'Potential Loyalists': 'Offer membership / loyalty program, recommend products.',
+                'Big Spenders': 'Market your most expensive products, target with high-value offers.',
+                'At Risk': 'Send personalized emails, offer discounts, provide helpful resources.',
+                "Can't Lose Them": 'Win them back via renewals or newer products, don\'t lose them to competition.',
+                'Lost Customers': 'Revive interest with reach out campaign, ignore otherwise.',
+                'Others': 'Analyze further to determine specific strategies.'
+            };
+
+            const tbody = document.getElementById('segmentTableBody');
+            tbody.innerHTML = '';
+
+            Object.entries(segments).forEach(([segment, data]) => {
+                const row = tbody.insertRow();
+                const avgRecency = Math.round(data.recency / data.count);
+                const avgFrequency = Math.round(data.frequency / data.count * 10) / 10;
+                const avgMonetary = Math.round(data.monetary / data.count);
+                const percentage = Math.round((data.count / total) * 100);
+
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-medium">${segment}</td>
+                    <td class="py-3 px-4">${data.count}</td>
+                    <td class="py-3 px-4">${percentage}%</td>
+                    <td class="py-3 px-4">${avgRecency} days</td>
+                    <td class="py-3 px-4">${avgFrequency}</td>
+                    <td class="py-3 px-4">$${avgMonetary}</td>
+                    <td class="py-3 px-4 text-sm">${strategies[segment] || 'Analyze further'}</td>
+                `;
+            });
+        }
+
+        function createCustomerTable(results) {
+            const tbody = document.getElementById('customerTableBody');
+            tbody.innerHTML = '';
+
+            results.forEach(customer => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-medium">${customer.customer_id}</td>
+                    <td class="py-3 px-4">${customer.recency} days</td>
+                    <td class="py-3 px-4">${customer.frequency}</td>
+                    <td class="py-3 px-4">$${customer.monetary.toFixed(2)}</td>
+                    <td class="py-3 px-4">${customer.rfm_score}</td>
+                    <td class="py-3 px-4">${customer.segment}</td>
+                `;
+            });
+        }
+
+        function filterCustomerTable(searchTerm, results) {
+            const filteredResults = results.filter(customer => 
+                customer.customer_id.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            createCustomerTable(filteredResults);
+        }
+    </script>
+</body>
+</html>
