@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Flight Path Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        background: {
+                            light: '#FFFFFF',
+                            dark: '#181818'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .trajectory-canvas {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: crosshair;
+            background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
+        }
+        .dark .trajectory-canvas {
+            border-color: #374151;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+        .parameter-slider {
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            outline: none;
+        }
+        .parameter-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #5D5CDE;
+            cursor: pointer;
+        }
+        .dark .parameter-slider {
+            background: #374151;
+        }
+        .drone {
+            position: absolute;
+            transition: none;
+            z-index: 10;
+        }
+        .drone-svg {
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+        }
+        .propeller {
+            animation: spin 0.1s linear infinite;
+        }
+        .led-light {
+            animation: blink 1s ease-in-out infinite alternate;
+        }
+        .direction-indicator {
+            filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.8));
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes blink {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        .animate-pulse-fast {
+            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .flying .propeller {
+            animation: spin 0.05s linear infinite;
+        }
+        .flying .drone-svg {
+            animation: hover 2s ease-in-out infinite;
+        }
+        @keyframes hover {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                🚁 Drone Flight Path Designer
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 text-lg">
+                Learn how polynomial functions control drone movements in real time!
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            <!-- Control Panel -->
+            <div class="xl:col-span-1 space-y-6">
+                <!-- Flight Mode Selection -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">🎯 Flight Mode</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="radio" name="algorithm" value="minimum_snap" checked class="text-primary focus:ring-primary">
+                            <span class="ml-2">Smooth Flight (Min Snap)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="algorithm" value="bezier" class="text-primary focus:ring-primary">
+                            <span class="ml-2">Curved Path (Bézier)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="algorithm" value="bspline" class="text-primary focus:ring-primary">
+                            <span class="ml-2">Flexible Route (B-Spline)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Polynomial Parameters -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">📐 Polynomial Controls</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Flight Time (seconds)</label>
+                            <input type="range" id="totalTime" min="3" max="15" step="0.5" value="8" class="parameter-slider w-full">
+                            <span id="totalTimeValue" class="text-sm text-gray-600 dark:text-gray-400">8.0s</span>
+                            <p class="text-xs text-gray-500 mt-1">How long the drone takes to complete the path</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Polynomial Degree</label>
+                            <input type="range" id="polyOrder" min="3" max="11" step="2" value="7" class="parameter-slider w-full">
+                            <span id="polyOrderValue" class="text-sm text-gray-600 dark:text-gray-400">7</span>
+                            <p class="text-xs text-gray-500 mt-1">Higher degrees = more complex curves</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Path Smoothness</label>
+                            <input type="range" id="resolution" min="50" max="300" step="25" value="150" class="parameter-slider w-full">
+                            <span id="resolutionValue" class="text-sm text-gray-600 dark:text-gray-400">150</span>
+                            <p class="text-xs text-gray-500 mt-1">Controls how smooth the path appears</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animation Controls -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">🎮 Animation Controls</h3>
+                    <div class="space-y-3">
+                        <button id="playPause" class="w-full px-4 py-2 bg-primary text-white rounded hover:bg-purple-600 transition-colors">
+                            ▶️ Start Flight
+                        </button>
+                        <button id="resetAnimation" class="w-full px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+                            🔄 Reset Drone
+                        </button>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Animation Speed</label>
+                            <input type="range" id="animSpeed" min="0.1" max="3" step="0.1" value="1" class="parameter-slider w-full">
+                            <span id="animSpeedValue" class="text-sm text-gray-600 dark:text-gray-400">1.0x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Data -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">📊 Flight Data</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm">Distance:</span>
+                            <span id="flightDistance" class="text-sm font-bold text-primary">0.0 m</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm">Max Speed:</span>
+                            <span id="maxSpeed" class="text-sm font-bold text-blue-500">0.0 m/s</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm">Waypoints:</span>
+                            <span id="waypointCount" class="text-sm font-bold text-green-500">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">🛠️ Actions</h3>
+                    <div class="space-y-3">
+                        <button id="clearWaypoints" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                            🗑️ Clear Path
+                        </button>
+                        <button id="randomPath" class="w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
+                            🎲 Random Path
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Visualization Area -->
+            <div class="xl:col-span-3 space-y-6">
+                <!-- Drone Flight Canvas -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">🚁 Drone Flight Simulator</h3>
+                        <div class="flex items-center space-x-4">
+                            <span id="droneStatus" class="text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700">Ready to Fly</span>
+                            <span id="currentTime" class="text-sm text-gray-600 dark:text-gray-400">0.0s</span>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <canvas id="trajectoryCanvas" class="trajectory-canvas w-full" width="800" height="400"></canvas>
+                        <!-- SVG Drone Element -->
+                        <div id="drone" class="drone absolute hidden">
+                            <svg width="40" height="40" viewBox="0 0 40 40" class="drone-svg">
+                                <defs>
+                                    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                        <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+                                    </filter>
+                                </defs>
+                                <!-- Drone body -->
+                                <ellipse cx="20" cy="20" rx="12" ry="8" fill="#2563eb" stroke="#1d4ed8" stroke-width="1" filter="url(#shadow)"/>
+                                <ellipse cx="20" cy="20" rx="8" ry="5" fill="#3b82f6"/>
+                                
+                                <!-- Propellers -->
+                                <g class="propeller" transform-origin="10 10">
+                                    <circle cx="10" cy="10" r="6" fill="none" stroke="#64748b" stroke-width="1" opacity="0.7"/>
+                                    <line x1="10" y1="4" x2="10" y2="16" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                    <line x1="4" y1="10" x2="16" y2="10" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                </g>
+                                <g class="propeller" transform-origin="30 10">
+                                    <circle cx="30" cy="10" r="6" fill="none" stroke="#64748b" stroke-width="1" opacity="0.7"/>
+                                    <line x1="30" y1="4" x2="30" y2="16" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                    <line x1="24" y1="10" x2="36" y2="10" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                </g>
+                                <g class="propeller" transform-origin="10 30">
+                                    <circle cx="10" cy="30" r="6" fill="none" stroke="#64748b" stroke-width="1" opacity="0.7"/>
+                                    <line x1="10" y1="24" x2="10" y2="36" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                    <line x1="4" y1="30" x2="16" y2="30" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                </g>
+                                <g class="propeller" transform-origin="30 30">
+                                    <circle cx="30" cy="30" r="6" fill="none" stroke="#64748b" stroke-width="1" opacity="0.7"/>
+                                    <line x1="30" y1="24" x2="30" y2="36" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                    <line x1="24" y1="30" x2="36" y2="30" stroke="#64748b" stroke-width="2" opacity="0.8"/>
+                                </g>
+                                
+                                <!-- Drone arms -->
+                                <line x1="20" y1="20" x2="10" y2="10" stroke="#1f2937" stroke-width="2"/>
+                                <line x1="20" y1="20" x2="30" y2="10" stroke="#1f2937" stroke-width="2"/>
+                                <line x1="20" y1="20" x2="10" y2="30" stroke="#1f2937" stroke-width="2"/>
+                                <line x1="20" y1="20" x2="30" y2="30" stroke="#1f2937" stroke-width="2"/>
+                                
+                                <!-- LED lights -->
+                                <circle cx="15" cy="15" r="1.5" fill="#ef4444" class="led-light"/>
+                                <circle cx="25" cy="15" r="1.5" fill="#10b981" class="led-light"/>
+                                
+                                <!-- Direction indicator -->
+                                <polygon points="20,12 24,18 16,18" fill="#fbbf24" class="direction-indicator"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        Click to add waypoints for your drone to visit. The polynomial function will calculate the smoothest path!
+                    </p>
+                </div>
+
+                <!-- Speed and Direction Display -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">📈 Real-time Flight Data</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <div id="currentSpeed" class="text-2xl font-bold text-blue-600">0.0</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Speed (m/s)</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <div id="currentPosition" class="text-lg font-bold text-green-600">0.0, 0.0</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Position (x, y)</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <div id="currentDirection" class="text-2xl font-bold text-purple-600">→</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">Direction</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simplified Trajectory Analysis -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+                    <h3 class="text-lg font-semibold mb-4">📊 How Polynomials Affect Flight</h3>
+                    <div id="simplifiedPlots" style="height: 300px;"></div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        This graph shows how the polynomial degree affects the drone's speed over time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let waypoints = [];
+        let currentTrajectory = null;
+        let canvas, ctx;
+        let isDarkMode = false;
+        let animationId = null;
+        let isPlaying = false;
+        let animationTime = 0;
+        let droneElement;
+
+        // Simplified Trajectory Planner for Students
+        class DronePathPlanner {
+            constructor() {
+                this.waypoints = [];
+                this.totalTime = 8;
+                this.polyOrder = 7;
+                this.resolution = 150;
+            }
+
+            setWaypoints(waypoints) {
+                this.waypoints = waypoints;
+            }
+
+            setParameters(totalTime, polyOrder, resolution) {
+                this.totalTime = totalTime;
+                this.polyOrder = polyOrder;
+                this.resolution = resolution;
+            }
+
+            // Simplified Minimum Snap for educational purposes
+            generateSmoothPath() {
+                if (this.waypoints.length < 2) return null;
+
+                const points = [];
+                const n = this.waypoints.length;
+                
+                // Create a smooth path through waypoints using simple interpolation
+                for (let i = 0; i <= this.resolution; i++) {
+                    const t = i / this.resolution;
+                    const globalT = t * this.totalTime;
+                    
+                    // Use polynomial interpolation between waypoints
+                    const point = this.interpolateWaypoints(t);
+                    points.push({
+                        t: globalT,
+                        x: point.x,
+                        y: point.y
+                    });
+                }
+
+                return this.calculateMotionData(points);
+            }
+
+            // Bezier curve implementation
+            generateCurvedPath() {
+                if (this.waypoints.length < 2) return null;
+
+                const points = [];
+                const controlPoints = this.generateBezierControlPoints();
+
+                for (let i = 0; i <= this.resolution; i++) {
+                    const t = i / this.resolution;
+                    const point = this.evaluateBezier(controlPoints, t);
+                    points.push({
+                        t: t * this.totalTime,
+                        x: point.x,
+                        y: point.y
+                    });
+                }
+
+                return this.calculateMotionData(points);
+            }
+
+            // B-Spline implementation
+            generateFlexiblePath() {
+                if (this.waypoints.length < 3) return this.generateCurvedPath();
+
+                const points = [];
+                const degree = 3;
+                const controlPoints = [...this.waypoints];
+
+                for (let i = 0; i <= this.resolution; i++) {
+                    const t = i / this.resolution;
+                    const point = this.evaluateBSpline(controlPoints, t, degree);
+                    points.push({
+                        t: t * this.totalTime,
+                        x: point.x,
+                        y: point.y
+                    });
+                }
+
+                return this.calculateMotionData(points);
+            }
+
+            interpolateWaypoints(t) {
+                const n = this.waypoints.length;
+                if (n === 2) {
+                    // Simple linear interpolation for 2 points
+                    return {
+                        x: this.waypoints[0].x + t * (this.waypoints[1].x - this.waypoints[0].x),
+                        y: this.waypoints[0].y + t * (this.waypoints[1].y - this.waypoints[0].y)
+                    };
+                }
+
+                // Polynomial interpolation for multiple points
+                let x = 0, y = 0;
+                for (let i = 0; i < n; i++) {
+                    let basis = 1;
+                    for (let j = 0; j < n; j++) {
+                        if (i !== j) {
+                            basis *= (t - j / (n - 1)) / (i / (n - 1) - j / (n - 1));
+                        }
+                    }
+                    x += basis * this.waypoints[i].x;
+                    y += basis * this.waypoints[i].y;
+                }
+                return { x, y };
+            }
+
+            generateBezierControlPoints() {
+                const n = this.waypoints.length;
+                if (n === 2) return [...this.waypoints];
+
+                const controlPoints = [this.waypoints[0]];
+                
+                for (let i = 1; i < n - 1; i++) {
+                    const prev = this.waypoints[i - 1];
+                    const curr = this.waypoints[i];
+                    const next = this.waypoints[i + 1];
+                    
+                    const tension = 0.3;
+                    const cp1 = {
+                        x: curr.x - tension * (next.x - prev.x),
+                        y: curr.y - tension * (next.y - prev.y)
+                    };
+                    const cp2 = {
+                        x: curr.x + tension * (next.x - prev.x),
+                        y: curr.y + tension * (next.y - prev.y)
+                    };
+                    
+                    controlPoints.push(cp1, curr, cp2);
+                }
+                
+                controlPoints.push(this.waypoints[n - 1]);
+                return controlPoints;
+            }
+
+            evaluateBezier(controlPoints, t) {
+                const n = controlPoints.length - 1;
+                let x = 0, y = 0;
+
+                for (let i = 0; i <= n; i++) {
+                    const binomCoeff = this.binomialCoefficient(n, i);
+                    const basis = binomCoeff * Math.pow(1 - t, n - i) * Math.pow(t, i);
+                    x += basis * controlPoints[i].x;
+                    y += basis * controlPoints[i].y;
+                }
+
+                return { x, y };
+            }
+
+            evaluateBSpline(controlPoints, t, degree) {
+                const n = controlPoints.length;
+                let x = 0, y = 0;
+                
+                // Simple uniform B-spline evaluation
+                for (let i = 0; i < n; i++) {
+                    const basis = this.bSplineBasis(i, degree, t, n);
+                    x += basis * controlPoints[i].x;
+                    y += basis * controlPoints[i].y;
+                }
+
+                return { x, y };
+            }
+
+            bSplineBasis(i, degree, t, n) {
+                // Simplified B-spline basis function
+                const segment = Math.floor(t * (n - degree));
+                const localT = (t * (n - degree)) - segment;
+                
+                if (i >= segment && i <= segment + degree) {
+                    return Math.pow(1 - Math.abs(i - segment - localT) / (degree + 1), degree);
+                }
+                return 0;
+            }
+
+            binomialCoefficient(n, k) {
+                if (k > n) return 0;
+                if (k === 0 || k === n) return 1;
+                
+                let result = 1;
+                for (let i = 0; i < k; i++) {
+                    result *= (n - i) / (i + 1);
+                }
+                return result;
+            }
+
+            calculateMotionData(points) {
+                const trajectory = { 
+                    points, 
+                    velocity: [],
+                    speed: []
+                };
+                
+                for (let i = 0; i < points.length; i++) {
+                    const dt = this.totalTime / this.resolution;
+                    
+                    // Calculate velocity
+                    let vx = 0, vy = 0;
+                    if (i > 0 && i < points.length - 1) {
+                        vx = (points[i + 1].x - points[i - 1].x) / (2 * dt);
+                        vy = (points[i + 1].y - points[i - 1].y) / (2 * dt);
+                    } else if (i === 0 && points.length > 1) {
+                        vx = (points[i + 1].x - points[i].x) / dt;
+                        vy = (points[i + 1].y - points[i].y) / dt;
+                    } else if (i === points.length - 1 && points.length > 1) {
+                        vx = (points[i].x - points[i - 1].x) / dt;
+                        vy = (points[i].y - points[i - 1].y) / dt;
+                    }
+                    
+                    const speed = Math.sqrt(vx * vx + vy * vy);
+                    
+                    trajectory.velocity.push({ t: points[i].t, x: vx, y: vy });
+                    trajectory.speed.push({ t: points[i].t, value: speed });
+                }
+                
+                return trajectory;
+            }
+        }
+
+        // Initialize the application
+        function initApp() {
+            // Dark mode detection
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                isDarkMode = true;
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                    isDarkMode = true;
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    isDarkMode = false;
+                }
+                redrawCanvas();
+                updatePath();
+            });
+
+            // Initialize canvas and drone
+            canvas = document.getElementById('trajectoryCanvas');
+            ctx = canvas.getContext('2d');
+            droneElement = document.getElementById('drone');
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Initial setup
+            updatePath();
+            updateWaypointCount();
+        }
+
+        function setupEventListeners() {
+            // Canvas events
+            canvas.addEventListener('click', handleCanvasClick);
+            canvas.addEventListener('contextmenu', handleCanvasRightClick);
+            
+            // Parameter sliders
+            const sliders = ['totalTime', 'polyOrder', 'resolution', 'animSpeed'];
+            sliders.forEach(id => {
+                const slider = document.getElementById(id);
+                const valueSpan = document.getElementById(id + 'Value');
+                
+                slider.addEventListener('input', (e) => {
+                    let value = parseFloat(e.target.value);
+                    if (id === 'totalTime') valueSpan.textContent = value.toFixed(1) + 's';
+                    else if (id === 'polyOrder' || id === 'resolution') valueSpan.textContent = value.toString();
+                    else if (id === 'animSpeed') valueSpan.textContent = value.toFixed(1) + 'x';
+                    
+                    if (id !== 'animSpeed') {
+                        updatePath();
+                    }
+                });
+            });
+            
+            // Algorithm selection
+            document.querySelectorAll('input[name="algorithm"]').forEach(radio => {
+                radio.addEventListener('change', updatePath);
+            });
+            
+            // Animation controls
+            document.getElementById('playPause').addEventListener('click', toggleAnimation);
+            document.getElementById('resetAnimation').addEventListener('click', resetAnimation);
+            
+            // Action buttons
+            document.getElementById('clearWaypoints').addEventListener('click', clearWaypoints);
+            document.getElementById('randomPath').addEventListener('click', generateRandomPath);
+        }
+
+        function handleCanvasClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / canvas.offsetWidth) * 10;
+            const y = ((e.clientY - rect.top) / canvas.offsetHeight) * 5;
+            
+            waypoints.push({ x: x, y: 5 - y });
+            updateWaypointCount();
+            updatePath();
+            resetAnimation();
+        }
+
+        function handleCanvasRightClick(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const clickX = ((e.clientX - rect.left) / canvas.offsetWidth) * 10;
+            const clickY = ((e.clientY - rect.top) / canvas.offsetHeight) * 5;
+            
+            let closestIdx = -1;
+            let minDist = Infinity;
+            
+            waypoints.forEach((wp, idx) => {
+                const dist = Math.sqrt(Math.pow(wp.x - clickX, 2) + Math.pow((5 - wp.y) - clickY, 2));
+                if (dist < minDist && dist < 0.3) {
+                    minDist = dist;
+                    closestIdx = idx;
+                }
+            });
+            
+            if (closestIdx !== -1) {
+                waypoints.splice(closestIdx, 1);
+                updateWaypointCount();
+                updatePath();
+                resetAnimation();
+            }
+        }
+
+        function clearWaypoints() {
+            waypoints = [];
+            currentTrajectory = null;
+            updateWaypointCount();
+            redrawCanvas();
+            clearPlots();
+            resetAnimation();
+        }
+
+        function generateRandomPath() {
+            waypoints = [];
+            const numWaypoints = 3 + Math.floor(Math.random() * 4); // 3-6 waypoints
+            
+            for (let i = 0; i < numWaypoints; i++) {
+                waypoints.push({
+                    x: 1 + Math.random() * 8, // Random x between 1-9
+                    y: 1 + Math.random() * 3  // Random y between 1-4
+                });
+            }
+            
+            updateWaypointCount();
+            updatePath();
+            resetAnimation();
+        }
+
+        function toggleAnimation() {
+            const button = document.getElementById('playPause');
+            const status = document.getElementById('droneStatus');
+            
+            if (!currentTrajectory || waypoints.length < 2) {
+                showNotification("Add at least 2 waypoints to start the flight!");
+                return;
+            }
+            
+            if (isPlaying) {
+                // Pause animation
+                isPlaying = false;
+                if (animationId) cancelAnimationFrame(animationId);
+                button.textContent = '▶️ Resume Flight';
+                button.className = 'w-full px-4 py-2 bg-primary text-white rounded hover:bg-purple-600 transition-colors';
+                status.textContent = 'Paused';
+                status.className = 'text-sm px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200';
+                droneElement.classList.remove('flying');
+            } else {
+                // Start animation
+                isPlaying = true;
+                button.textContent = '⏸️ Pause Flight';
+                button.className = 'w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors';
+                status.textContent = 'Flying';
+                status.className = 'text-sm px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 animate-pulse-fast';
+                droneElement.classList.remove('hidden');
+                droneElement.classList.add('flying');
+                animateDrone();
+            }
+        }
+
+        function resetAnimation() {
+            isPlaying = false;
+            animationTime = 0;
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            const button = document.getElementById('playPause');
+            const status = document.getElementById('droneStatus');
+            
+            button.textContent = '▶️ Start Flight';
+            button.className = 'w-full px-4 py-2 bg-primary text-white rounded hover:bg-purple-600 transition-colors';
+            status.textContent = 'Ready to Fly';
+            status.className = 'text-sm px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200';
+            
+            droneElement.classList.add('hidden');
+            droneElement.classList.remove('flying');
+            
+            // Reset real-time displays
+            document.getElementById('currentSpeed').textContent = '0.0';
+            document.getElementById('currentPosition').textContent = '0.0, 0.0';
+            document.getElementById('currentDirection').textContent = '→';
+            document.getElementById('currentTime').textContent = '0.0s';
+        }
+
+        function animateDrone() {
+            if (!isPlaying || !currentTrajectory) return;
+            
+            const speed = parseFloat(document.getElementById('animSpeed').value);
+            const totalTime = currentTrajectory.points[currentTrajectory.points.length - 1].t;
+            const dt = 16 / 1000 * speed; // 16ms frame time * speed multiplier
+            
+            animationTime += dt;
+            
+            if (animationTime >= totalTime) {
+                // Animation complete
+                animationTime = totalTime;
+                isPlaying = false;
+                document.getElementById('playPause').textContent = '🔄 Restart Flight';
+                document.getElementById('droneStatus').textContent = 'Mission Complete!';
+                document.getElementById('droneStatus').className = 'text-sm px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200';
+                droneElement.classList.remove('flying');
+            }
+            
+            // Find current position on trajectory
+            const currentPoint = getCurrentTrajectoryPoint(animationTime);
+            const currentVelocity = getCurrentVelocity(animationTime);
+            
+            // Update drone position and orientation
+            updateDronePosition(currentPoint, currentVelocity);
+            
+            // Update real-time displays
+            updateRealTimeDisplays(currentPoint, currentVelocity, animationTime);
+            
+            if (isPlaying) {
+                animationId = requestAnimationFrame(animateDrone);
+            }
+        }
+
+        function getCurrentTrajectoryPoint(time) {
+            if (!currentTrajectory || currentTrajectory.points.length === 0) return { x: 0, y: 0 };
+            
+            const points = currentTrajectory.points;
+            
+            // Find the closest point or interpolate
+            for (let i = 0; i < points.length - 1; i++) {
+                if (time >= points[i].t && time <= points[i + 1].t) {
+                    const t = (time - points[i].t) / (points[i + 1].t - points[i].t);
+                    return {
+                        x: points[i].x + t * (points[i + 1].x - points[i].x),
+                        y: points[i].y + t * (points[i + 1].y - points[i].y)
+                    };
+                }
+            }
+            
+            // Return last point if time exceeds trajectory
+            return points[points.length - 1];
+        }
+
+        function getCurrentVelocity(time) {
+            if (!currentTrajectory || currentTrajectory.velocity.length === 0) return { x: 0, y: 0 };
+            
+            const velocities = currentTrajectory.velocity;
+            
+            for (let i = 0; i < velocities.length - 1; i++) {
+                if (time >= velocities[i].t && time <= velocities[i + 1].t) {
+                    const t = (time - velocities[i].t) / (velocities[i + 1].t - velocities[i].t);
+                    return {
+                        x: velocities[i].x + t * (velocities[i + 1].x - velocities[i].x),
+                        y: velocities[i].y + t * (velocities[i + 1].y - velocities[i].y)
+                    };
+                }
+            }
+            
+            return velocities[velocities.length - 1];
+        }
+
+        function updateDronePosition(point, velocity) {
+            const rect = canvas.getBoundingClientRect();
+            const canvasX = (point.x / 10) * rect.width;
+            const canvasY = ((5 - point.y) / 5) * rect.height;
+            
+            // Center the drone properly (40px width and height)
+            droneElement.style.left = (rect.left + canvasX - 20) + 'px';
+            droneElement.style.top = (rect.top + canvasY - 20) + 'px';
+            
+            // Rotate drone based on velocity direction
+            if (velocity && (velocity.x !== 0 || velocity.y !== 0)) {
+                const angle = Math.atan2(-velocity.y, velocity.x) * (180 / Math.PI); // Flip y for canvas coordinates
+                const droneSvg = droneElement.querySelector('.drone-svg');
+                droneSvg.style.transform = `rotate(${angle}deg)`;
+            }
+        }
+
+        function updateRealTimeDisplays(point, velocity, time) {
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            
+            document.getElementById('currentSpeed').textContent = speed.toFixed(1);
+            document.getElementById('currentPosition').textContent = `${point.x.toFixed(1)}, ${point.y.toFixed(1)}`;
+            document.getElementById('currentTime').textContent = time.toFixed(1) + 's';
+            
+            // Update direction arrow
+            const angle = Math.atan2(velocity.y, velocity.x);
+            const arrows = ['→', '↗', '↑', '↖', '←', '↙', '↓', '↘'];
+            const arrowIndex = Math.round(((angle + Math.PI) / (2 * Math.PI)) * 8) % 8;
+            document.getElementById('currentDirection').textContent = arrows[arrowIndex];
+        }
+
+        function updatePath() {
+            if (waypoints.length < 2) {
+                currentTrajectory = null;
+                redrawCanvas();
+                clearPlots();
+                clearMetrics();
+                return;
+            }
+            
+            const planner = new DronePathPlanner();
+            planner.setWaypoints(waypoints);
+            planner.setParameters(
+                parseFloat(document.getElementById('totalTime').value),
+                parseInt(document.getElementById('polyOrder').value),
+                parseInt(document.getElementById('resolution').value)
+            );
+            
+            const algorithm = document.querySelector('input[name="algorithm"]:checked').value;
+            
+            try {
+                switch (algorithm) {
+                    case 'minimum_snap':
+                        currentTrajectory = planner.generateSmoothPath();
+                        break;
+                    case 'bezier':
+                        currentTrajectory = planner.generateCurvedPath();
+                        break;
+                    case 'bspline':
+                        currentTrajectory = planner.generateFlexiblePath();
+                        break;
+                    default:
+                        currentTrajectory = planner.generateSmoothPath();
+                }
+                
+                redrawCanvas();
+                updateSimplifiedPlots();
+                updateMetrics();
+            } catch (error) {
+                console.error('Path generation failed:', error);
+                showNotification('Failed to generate path. Try adjusting parameters.');
+            }
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            drawGrid();
+            
+            // Draw trajectory
+            if (currentTrajectory) {
+                drawTrajectory();
+            }
+            
+            // Draw waypoints
+            drawWaypoints();
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = isDarkMode ? '#374151' : '#e5e7eb';
+            ctx.lineWidth = 1;
+            
+            // Grid lines
+            for (let i = 0; i <= 10; i++) {
+                const x = (i / 10) * canvas.width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = (i / 5) * canvas.height;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Labels
+            ctx.fillStyle = isDarkMode ? '#9ca3af' : '#6b7280';
+            ctx.font = '12px Arial';
+            ctx.fillText('0m', 5, canvas.height - 5);
+            ctx.fillText('10m', canvas.width - 25, canvas.height - 5);
+            ctx.fillText('5m', 5, 15);
+        }
+
+        function drawTrajectory() {
+            if (!currentTrajectory || !currentTrajectory.points) return;
+            
+            const points = currentTrajectory.points;
+            
+            // Main trajectory path
+            ctx.strokeStyle = '#5D5CDE';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            
+            points.forEach((point, idx) => {
+                const x = (point.x / 10) * canvas.width;
+                const y = ((5 - point.y) / 5) * canvas.height;
+                
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Draw path direction indicators
+            drawDirectionIndicators(points);
+        }
+
+        function drawDirectionIndicators(points) {
+            ctx.fillStyle = '#8b5cf6';
+            const step = Math.max(1, Math.floor(points.length / 15));
+            
+            for (let i = 0; i < points.length - step; i += step) {
+                const curr = points[i];
+                const next = points[i + step];
+                
+                const x = (curr.x / 10) * canvas.width;
+                const y = ((5 - curr.y) / 5) * canvas.height;
+                
+                const dx = next.x - curr.x;
+                const dy = next.y - curr.y;
+                const angle = Math.atan2(-dy, dx); // Flip y for canvas coordinates
+                
+                // Draw small arrow
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(8, -3);
+                ctx.lineTo(8, 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function drawWaypoints() {
+            waypoints.forEach((wp, idx) => {
+                const x = (wp.x / 10) * canvas.width;
+                const y = ((5 - wp.y) / 5) * canvas.height;
+                
+                // Outer circle
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(x, y, 12, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Inner circle
+                ctx.fillStyle = isDarkMode ? '#1f2937' : '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Number
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText((idx + 1).toString(), x, y);
+            });
+        }
+
+        function updateSimplifiedPlots() {
+            if (!currentTrajectory || !currentTrajectory.speed) {
+                clearPlots();
+                return;
+            }
+            
+            const timeData = currentTrajectory.speed.map(s => s.t);
+            const speedData = currentTrajectory.speed.map(s => s.value);
+            
+            const trace = {
+                x: timeData,
+                y: speedData,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Drone Speed',
+                line: { color: '#5D5CDE', width: 3 }
+            };
+            
+            const layout = {
+                title: 'How Speed Changes Over Time',
+                xaxis: { title: 'Time (seconds)' },
+                yaxis: { title: 'Speed (m/s)' },
+                plot_bgcolor: isDarkMode ? '#1f2937' : '#ffffff',
+                paper_bgcolor: isDarkMode ? '#111827' : '#ffffff',
+                font: { color: isDarkMode ? '#ffffff' : '#000000', size: 12 },
+                showlegend: false,
+                margin: { t: 40, b: 40, l: 40, r: 20 }
+            };
+            
+            Plotly.newPlot('simplifiedPlots', [trace], layout, { responsive: true, displayModeBar: false });
+        }
+
+        function updateMetrics() {
+            if (!currentTrajectory) {
+                clearMetrics();
+                return;
+            }
+            
+            const points = currentTrajectory.points;
+            const speeds = currentTrajectory.speed;
+            
+            // Calculate flight distance
+            let distance = 0;
+            for (let i = 1; i < points.length; i++) {
+                const dx = points[i].x - points[i-1].x;
+                const dy = points[i].y - points[i-1].y;
+                distance += Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            // Find max speed
+            const maxSpeed = Math.max(...speeds.map(s => s.value));
+            
+            document.getElementById('flightDistance').textContent = distance.toFixed(1) + ' m';
+            document.getElementById('maxSpeed').textContent = maxSpeed.toFixed(1) + ' m/s';
+        }
+
+        function clearPlots() {
+            Plotly.newPlot('simplifiedPlots', [], {
+                title: 'How Speed Changes Over Time',
+                plot_bgcolor: isDarkMode ? '#1f2937' : '#ffffff',
+                paper_bgcolor: isDarkMode ? '#111827' : '#ffffff',
+                font: { color: isDarkMode ? '#ffffff' : '#000000' }
+            }, { responsive: true, displayModeBar: false });
+        }
+
+        function clearMetrics() {
+            document.getElementById('flightDistance').textContent = '0.0 m';
+            document.getElementById('maxSpeed').textContent = '0.0 m/s';
+        }
+
+        function updateWaypointCount() {
+            document.getElementById('waypointCount').textContent = waypoints.length.toString();
+        }
+
+        function showNotification(message) {
+            // Create a simple notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
