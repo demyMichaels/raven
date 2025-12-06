@@ -43,6 +43,22 @@
 0904-747-1008 - omolola
 0815-206-8470 - smallbutmight
 0814-186-5117 - bint gozal
+0812 386 6899 - seraphoi15
+0916 579 7498 - misa joseph
+0904 947 7711 - praise
+0814 890 6983 - qjoy
+0707 258 2198 - christabel
+0702 522 5242 - miracle chinedu
+0816 820 4936 - chinedu blessing
+0805 598 8361 - sofiyah
+0811 972 9554 - ololade
+0811 666 2850 - wisetrade
+0705 135 0794 - big richie
+0904 338 5846 - henrysco
+0707 571 8468 - debby
+0901 566 6998 - adun
+0704 115 4467 - sunday precious
+
 
 
 # GOVERNMENT 
