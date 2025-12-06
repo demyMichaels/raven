@@ -2,6 +2,26 @@
 
 Beyond user authentication, authorization, payment integration, and analytics, here are some other common and crucial features for web applications:
 
+Domain and hosting: My project is currently hosted using Github Pages and namespace domain provider (I think)
+
+
+Analytics: This is currently provided by Google Analytics
+
+
+User authentication
+
+User authorization
+
+Payment Integration
+
+
+
+Database: I am considering Supabase and Firebase to manage my data, set up authentication, and create backend functions. 
+
+
+
+
+
 User Interface (UI) and User Experience (UX): Designing and implementing an intuitive, visually appealing, and easy-to-use interface for users to interact with the application.
 
 
