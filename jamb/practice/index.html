@@ -1951,27 +1951,59 @@ duration-200">
             container.innerHTML = '';
 
             if (Object.keys(analyticsData.topicProgress).length === 0) {
-                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No quiz data available. Complete some quizzes to see your heatmap!</p>';
+                container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400">No quiz data available. Complete some quizzes to see your topic performance!</p>';
                 return;
             }
 
             const heatmapGrid = document.createElement('div');
             heatmapGrid.className = 'heatmap-grid';
 
+            // Group topics by subject for better organization
+            const topicsBySubject = {};
             Object.entries(analyticsData.topicProgress).forEach(([topicKey, progress]) => {
                 const [subjectId, topicName] = topicKey.split('_');
                 const subject = availableSubjects.find(s => s.id === subjectId);
                 
-                const cell = document.createElement('div');
-                cell.className = `heatmap-cell ${getStatusClass(progress.bestScore, progress.attempts)} material-1`;
+                if (!topicsBySubject[subjectId]) {
+                    topicsBySubject[subjectId] = [];
+                }
                 
-                cell.innerHTML = `
-                    <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${topicName}</div>
-                    <div class="text-lg font-bold text-white">${progress.attempts > 0 ? Math.round(progress.bestScore) + '%' : 'Not Started'}</div>
-                    <div class="text-xs text-white opacity-75">${progress.attempts} attempts</div>
-                `;
+                topicsBySubject[subjectId].push({
+                    topicKey,
+                    topicName,
+                    subjectName: subject ? subject.name : subjectId,
+                    progress
+                });
+            });
+
+            // Create section headers and topic cells organized by subject
+            Object.entries(topicsBySubject).forEach(([subjectId, topics]) => {
+                const subject = availableSubjects.find(s => s.id === subjectId);
                 
-                heatmapGrid.appendChild(cell);
+                // Add subject header
+                const subjectHeader = document.createElement('div');
+                subjectHeader.className = 'col-span-full mb-2 mt-4 first:mt-0';
+                subjectHeader.innerHTML = `<h4 class="text-lg font-semibold text-primary dark:text-primary-400">${subject ? subject.name : subjectId}</h4>`;
+                heatmapGrid.appendChild(subjectHeader);
+                
+                // Add topic cells for this subject
+                topics.forEach(({ topicKey, topicName, progress }) => {
+                    const cell = document.createElement('div');
+                    cell.className = `heatmap-cell ${getStatusClass(progress.bestScore, progress.attempts)} shadow-material-1`;
+                    
+                    cell.innerHTML = `
+                        <div class="text-xs font-medium text-white mb-1 text-center leading-tight">${topicName}</div>
+                        <div class="text-lg font-bold text-white">${progress.attempts > 0 ? Math.round(progress.bestScore) + '%' : 'Not Started'}</div>
+                        <div class="text-xs text-white opacity-75">${progress.attempts} ${progress.attempts === 1 ? 'attempt' : 'attempts'}</div>
+                        ${progress.attempts > 0 ? `<div class="text-xs text-white opacity-75 mt-1">Avg: ${Math.round(progress.averageScore)}%</div>` : ''}
+                    `;
+                    
+                    cell.addEventListener('click', () => {
+                        showTopicDetails(topicKey, progress);
+                    });
+                    
+                    heatmapGrid.appendChild(cell);
+                });
             });
 
             container.appendChild(heatmapGrid);
