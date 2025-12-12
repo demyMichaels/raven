@@ -386,7 +386,7 @@ font-size: 14px;
 /* Chart Container */
 .chart-container {
     position: relative;
-    height: 0.75rem;
+    height: 300px;
     width: 100%;
 }
 
@@ -425,7 +425,7 @@ font-size: 14px;
     <a href="index.html" class="nav-btn px-4 py-2 text-primary font-medium button-text rounded-lg bg-primary/10">Dashboard</a>
     <a href="/practice/index.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Practice</a>
     <a href="mock-exam.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Mock Exams</a>
-    <a href="/analytics/analytics.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Analytics</a>
+    <a href="#" id="analyticsNavBtn" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Analytics</a>
     <a href="subjects.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Study</a>
     <a href="referral/index.html" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Refer & Earn</a>
 </nav>
@@ -500,10 +500,10 @@ font-size: 14px;
                     <span class="subtitle-1">Study</span>
                 </a>
 
-                <a href="practice/index.html#analytics" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="toggleMobileMenu()">
+                <button id="mobileAnalyticsBtn" class="w-full flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="showAnalyticsFromMobile()">
                     <span class="material-icons">analytics</span>
                     <span class="subtitle-1">Analytics</span>
-                </a>
+                </button>
 
                 <a href="#" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="toggleMobileMenu()">
                     <span class="material-icons">person_add</span>
@@ -1145,6 +1145,116 @@ BEST VALUE
                 </div>
                 <!-- End of Stats Cards -->
 
+                <!-- Progress Section (from Code B) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 sm:mb-8">
+                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <span class="material-icons text-data">trending_up</span>
+                            <h3 class="headline-6 text-neutral-800 dark:text-white">Overall Performance</h3>
+                        </div>
+                        <div id="overallStats"></div>
+                    </div>
+                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <span class="material-icons text-accent">subject</span>
+                            <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Breakdown</h3>
+                        </div>
+                        <div id="subjectStats"></div>
+                    </div>
+                </div>
+
+        </section>
+
+        <!-- Analytics Interface (from Code B) -->
+        <section id="analyticsSection" class="hidden-content">
+            <div class="text-center mb-8 sm:mb-12 fade-in">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-material-3">
+                    <span class="material-icons text-white text-2xl sm:text-3xl">analytics</span>
+                </div>
+
+                <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">Performance Analytics</h2>
+
+                <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+                    Deep insights into your learning patterns and performance metrics.
+                </p>
+            </div>
+
+
+
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Overall Score</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-accent" id="analyticsOverallScore">--%</p>
+                        </div>
+                        <div class="relative w-12 h-12 sm:w-16 sm:h-16">
+                            <svg class="progress-ring w-12 h-12 sm:w-16 sm:h-16" viewBox="0 0 84 84">
+                                <circle cx="42" cy="42" r="40" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                                <circle cx="42" cy="42" r="40" stroke="#009F9D" stroke-width="4" fill="none"
+                                        class="progress-ring-circle" id="analyticsProgressCircle" style="stroke-dasharray: 251.2; stroke-dashoffset: 251.2;"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs sm:text-sm font-semibold" id="analyticsProgressText">--%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Topics Mastered</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-data" id="analyticsMasteredCount">--/--</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                            <span class="material-icons text-green-600 dark:text-green-400 text-lg sm:text-xl">check_circle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Weak Areas</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-error" id="analyticsWeakCount">--</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                            <span class="material-icons text-red-600 dark:text-red-400 text-lg sm:text-xl">warning</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400 text-xs sm:text-sm">Avg Time</p>
+                            <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary" id="analyticsAvgTime">--min</p>
+                        </div>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                            <span class="material-icons text-orange-600 dark:text-orange-400 text-lg sm:text-xl">schedule</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">📈 Progress Trend</h3>
+                    <div class="chart-container">
+                        <canvas id="analyticsTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">🎯 Subject Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="analyticsSubjectChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </section>
 
 
@@ -1238,6 +1348,7 @@ const loginSection = document.getElementById('loginSection');
 const registerSection = document.getElementById('registerSection');
 const paymentSection = document.getElementById('paymentSection');
 const dashboardSection = document.getElementById('dashboardSection');
+const analyticsSection = document.getElementById('analyticsSection');
 const mainHeader = document.getElementById('mainHeader');
 const fabButton = document.getElementById('fabButton');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -1246,7 +1357,95 @@ const logoutBtn = document.getElementById('logoutBtn');
 document.addEventListener('DOMContentLoaded', () => {
     initializeSubjectSelection();
     checkExistingSession();
+    setupAnalyticsListeners();
 });
+
+// Setup analytics navigation listeners
+function setupAnalyticsListeners() {
+    // Desktop analytics button
+    const analyticsNavBtn = document.getElementById('analyticsNavBtn');
+    if (analyticsNavBtn) {
+        analyticsNavBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            showAnalyticsSection();
+        });
+    }
+}
+
+// Show analytics from mobile menu
+function showAnalyticsFromMobile() {
+    toggleMobileMenu();
+    showAnalyticsSection();
+}
+
+// Show analytics section
+function showAnalyticsSection() {
+    showSection(analyticsSection);
+    renderAnalytics();
+}
+
+// Analytics rendering function
+function renderAnalytics() {
+    // Placeholder - will be populated with actual data
+    document.getElementById('analyticsOverallScore').textContent = '--';
+    document.getElementById('analyticsProgressText').textContent = '--';
+    document.getElementById('analyticsMasteredCount').textContent = '--/--';
+    document.getElementById('analyticsWeakCount').textContent = '--';
+    document.getElementById('analyticsAvgTime').textContent = '--min';
+
+    // Initialize charts if data exists
+    renderAnalyticsCharts();
+}
+
+// Render analytics charts
+function renderAnalyticsCharts() {
+    // Placeholder charts
+    const trendCtx = document.getElementById('analyticsTrendChart');
+    const subjectCtx = document.getElementById('analyticsSubjectChart');
+
+    if (trendCtx && window.Chart) {
+        new Chart(trendCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Quiz 1', 'Quiz 2', 'Quiz 3', 'Quiz 4', 'Quiz 5'],
+                datasets: [{
+                    label: 'Score (%)',
+                    data: [0, 0, 0, 0, 0],
+                    borderColor: '#009F9D',
+                    backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    if (subjectCtx && window.Chart) {
+        new Chart(subjectCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['No Data'],
+                datasets: [{
+                    data: [100],
+                    backgroundColor: ['#E8EAED']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+}
 
 // Subject Selection Management
 function initializeSubjectSelection() {
@@ -1345,6 +1544,7 @@ loginSection.classList.add('hidden-content');
 registerSection.classList.add('hidden-content');
 paymentSection.classList.add('hidden-content');
 dashboardSection.classList.add('hidden-content');
+analyticsSection.classList.add('hidden-content');
 
 // Show the selected section
 section.classList.remove('hidden-content');
@@ -1549,6 +1749,59 @@ const accuracy = currentUser.totalQuestions > 0
 ? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
 : 0;
 document.getElementById('accuracyPercentage').textContent = `${accuracy}% accuracy`;
+
+// Render progress
+renderProgress();
+}
+
+// Render progress
+function renderProgress() {
+    const overallStats = document.getElementById('overallStats');
+    const subjectStats = document.getElementById('subjectStats');
+
+    if (!currentUser || currentUser.totalQuestions === 0) {
+        overallStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
+        subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+        return;
+    }
+
+    // Basic progress stats
+    const totalQuizzes = currentUser.sessions ? currentUser.sessions.length : 0;
+    const averageScore = currentUser.totalQuestions > 0
+        ? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
+        : 0;
+
+    overallStats.innerHTML = `
+        <div class="space-y-2">
+            <div class="flex justify-between dark:text-white">
+                <span>Total Questions:</span>
+                <span class="font-medium">${currentUser.totalQuestions}</span>
+            </div>
+            <div class="flex justify-between dark:text-white">
+                <span>Average Score:</span>
+                <span class="font-medium">${averageScore}%</span>
+            </div>
+        </div>
+    `;
+
+    // Subject breakdown
+    if (currentUser.subjects && Object.keys(currentUser.subjects).length > 0) {
+        const subjectStatsHTML = Object.entries(currentUser.subjects).map(([subject, data]) => {
+            const avg = data.questionsAnswered > 0
+                ? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
+                : 0;
+            return `
+                <div class="flex justify-between py-1 dark:text-white">
+                    <span>${subject}:</span>
+                    <span class="font-medium">${avg}%</span>
+                </div>
+            `;
+        }).join('');
+
+        subjectStats.innerHTML = `<div class="space-y-2">${subjectStatsHTML}</div>`;
+    } else {
+        subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject data not available</p>';
+    }
 }
 
 // Update user display
