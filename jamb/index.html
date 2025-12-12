@@ -1181,24 +1181,6 @@ BEST VALUE
                 </div>
                 <!-- End of Stats Cards -->
 
-                <!-- Progress Section (from Code B) -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 sm:mb-8">
-                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <span class="material-icons text-data">trending_up</span>
-                            <h3 class="headline-6 text-neutral-800 dark:text-white">Overall Performance</h3>
-                        </div>
-                        <div id="overallStats"></div>
-                    </div>
-                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
-                        <div class="flex items-center space-x-3 mb-4">
-                            <span class="material-icons text-accent">subject</span>
-                            <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Breakdown</h3>
-                        </div>
-                        <div id="subjectStats"></div>
-                    </div>
-                </div>
-
                 <!-- Subject Progress Bars -->
                 <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2 mb-6 sm:mb-8">
                     <div class="flex items-center space-x-3 mb-4">
@@ -2263,19 +2245,16 @@ renderProgress();
 
 // Render progress
 function renderProgress() {
-    const overallStats = document.getElementById('overallStats');
-    const subjectStats = document.getElementById('subjectStats');
     const subjectProgressBars = document.getElementById('subjectProgressBars');
     const studyInsights = document.getElementById('studyInsights');
     const recentActivity = document.getElementById('recentActivity');
 
-    // Check for data availability
-    const hasUserData = currentUser && currentUser.totalQuestions > 0;
+    // Check for data availability from localStorage
     const hasAnalyticsData = analyticsData.quizResults && analyticsData.quizResults.length > 0;
+    const subjectProgress = analyticsData.subjectProgress || {};
+    const hasSubjectData = Object.keys(subjectProgress).length > 0;
 
-    if (!hasUserData && !hasAnalyticsData) {
-        overallStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
-        subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+    if (!hasAnalyticsData && !hasSubjectData) {
         subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
         studyInsights.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Study insights will appear here after completing quizzes.</p>';
         recentActivity.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Recent quiz attempts will appear here.</p>';
@@ -2283,57 +2262,20 @@ function renderProgress() {
         return;
     }
 
-    // Overall Stats
-    const totalQuizzes = currentUser.sessions ? currentUser.sessions.length : 0;
-    const averageScore = currentUser.totalQuestions > 0
-        ? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
-        : 0;
-
-    overallStats.innerHTML = `
-        <div class="space-y-2">
-            <div class="flex justify-between dark:text-white">
-                <span>Total Questions:</span>
-                <span class="font-medium">${currentUser.totalQuestions}</span>
-            </div>
-            <div class="flex justify-between dark:text-white">
-                <span>Average Score:</span>
-                <span class="font-medium">${averageScore}%</span>
-            </div>
-            <div class="flex justify-between dark:text-white">
-                <span>Total Quizzes:</span>
-                <span class="font-medium">${totalQuizzes}</span>
-            </div>
-        </div>
-    `;
-
-    // Subject Breakdown
-    if (currentUser.subjects && Object.keys(currentUser.subjects).length > 0) {
-        const subjectStatsHTML = Object.entries(currentUser.subjects).map(([subject, data]) => {
-            const avg = data.questionsAnswered > 0
-                ? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
-                : 0;
-            return `
-                <div class="flex justify-between py-1 dark:text-white">
-                    <span>${subject}:</span>
-                    <span class="font-medium">${avg}%</span>
-                </div>
-            `;
-        }).join('');
-
-        subjectStats.innerHTML = `<div class="space-y-2">${subjectStatsHTML}</div>`;
-
-        // Subject Progress Bars
-        const progressBarsHTML = Object.entries(currentUser.subjects).map(([subject, data]) => {
-            const avg = data.questionsAnswered > 0
-                ? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
+    // Subject Progress Bars - Fetch from localStorage (analyticsData.subjectProgress)
+    if (hasSubjectData) {
+        const progressBarsHTML = Object.entries(subjectProgress).map(([subject, data]) => {
+            const avg = data.attempts > 0
+                ? Math.round((data.totalScore / data.attempts))
                 : 0;
             const color = getProgressBarColor(avg);
+            const attempts = data.attempts || 0;
 
             return `
                 <div class="mb-4">
                     <div class="flex justify-between items-center mb-2">
                         <span class="subtitle-2 text-neutral-800 dark:text-white">${subject}</span>
-                        <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${data.questionsAnswered} questions)</span>
+                        <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${attempts} ${attempts === 1 ? 'attempt' : 'attempts'})</span>
                     </div>
                     <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3">
                         <div class="h-3 rounded-full transition-all duration-500" style="width: ${avg}%; background-color: ${color}"></div>
@@ -2344,7 +2286,6 @@ function renderProgress() {
 
         subjectProgressBars.innerHTML = progressBarsHTML;
     } else {
-        subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject data not available</p>';
         subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
     }
 
