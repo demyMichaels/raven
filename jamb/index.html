@@ -1199,6 +1199,45 @@ BEST VALUE
                     </div>
                 </div>
 
+                <!-- Subject Progress Bars -->
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2 mb-6 sm:mb-8">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="material-icons text-primary">equalizer</span>
+                        <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+                    </div>
+                    <div id="subjectProgressBars"></div>
+                </div>
+
+                <!-- Progress Over Time & Study Insights -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 sm:mb-8">
+                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <span class="material-icons text-accent">show_chart</span>
+                            <h3 class="headline-6 text-neutral-800 dark:text-white">Progress Over Time</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="dashboardProgressChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <span class="material-icons text-data">insights</span>
+                            <h3 class="headline-6 text-neutral-800 dark:text-white">Study Insights</h3>
+                        </div>
+                        <div id="studyInsights"></div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="material-icons text-warning">history</span>
+                        <h3 class="headline-6 text-neutral-800 dark:text-white">Recent Activity</h3>
+                    </div>
+                    <div id="recentActivity"></div>
+                </div>
+
         </section>
 
         <!-- Analytics Interface (from Code B) -->
@@ -2224,14 +2263,25 @@ renderProgress();
 function renderProgress() {
     const overallStats = document.getElementById('overallStats');
     const subjectStats = document.getElementById('subjectStats');
+    const subjectProgressBars = document.getElementById('subjectProgressBars');
+    const studyInsights = document.getElementById('studyInsights');
+    const recentActivity = document.getElementById('recentActivity');
 
-    if (!currentUser || currentUser.totalQuestions === 0) {
+    // Check for data availability
+    const hasUserData = currentUser && currentUser.totalQuestions > 0;
+    const hasAnalyticsData = analyticsData.quizResults && analyticsData.quizResults.length > 0;
+
+    if (!hasUserData && !hasAnalyticsData) {
         overallStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">No quiz data available yet. Complete some quizzes to see your progress!</p>';
         subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject breakdown will appear here after completing quizzes.</p>';
+        subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
+        studyInsights.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Study insights will appear here after completing quizzes.</p>';
+        recentActivity.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Recent quiz attempts will appear here.</p>';
+        renderDashboardProgressChart();
         return;
     }
 
-    // Basic progress stats
+    // Overall Stats
     const totalQuizzes = currentUser.sessions ? currentUser.sessions.length : 0;
     const averageScore = currentUser.totalQuestions > 0
         ? Math.round((currentUser.totalCorrectAnswers / currentUser.totalQuestions) * 100)
@@ -2247,10 +2297,14 @@ function renderProgress() {
                 <span>Average Score:</span>
                 <span class="font-medium">${averageScore}%</span>
             </div>
+            <div class="flex justify-between dark:text-white">
+                <span>Total Quizzes:</span>
+                <span class="font-medium">${totalQuizzes}</span>
+            </div>
         </div>
     `;
 
-    // Subject breakdown
+    // Subject Breakdown
     if (currentUser.subjects && Object.keys(currentUser.subjects).length > 0) {
         const subjectStatsHTML = Object.entries(currentUser.subjects).map(([subject, data]) => {
             const avg = data.questionsAnswered > 0
@@ -2265,8 +2319,236 @@ function renderProgress() {
         }).join('');
 
         subjectStats.innerHTML = `<div class="space-y-2">${subjectStatsHTML}</div>`;
+
+        // Subject Progress Bars
+        const progressBarsHTML = Object.entries(currentUser.subjects).map(([subject, data]) => {
+            const avg = data.questionsAnswered > 0
+                ? Math.round((data.correctAnswers / data.questionsAnswered) * 100)
+                : 0;
+            const color = getProgressBarColor(avg);
+
+            return `
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="subtitle-2 text-neutral-800 dark:text-white">${subject}</span>
+                        <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${data.questionsAnswered} questions)</span>
+                    </div>
+                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3">
+                        <div class="h-3 rounded-full transition-all duration-500" style="width: ${avg}%; background-color: ${color}"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        subjectProgressBars.innerHTML = progressBarsHTML;
     } else {
         subjectStats.innerHTML = '<p class="text-gray-600 dark:text-gray-400">Subject data not available</p>';
+        subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
+    }
+
+    // Study Insights
+    const quizResults = analyticsData.quizResults || [];
+    const topicProgress = analyticsData.topicProgress || {};
+    const totalTopics = Object.keys(topicProgress).length;
+    const masteredTopics = Object.values(topicProgress).filter(t => {
+        const avg = t.attempts > 0 ? t.totalScore / t.attempts : 0;
+        return avg >= 80;
+    }).length;
+
+    let streak = currentUser.studyStreak || 0;
+    let bestScore = quizResults.length > 0 ? Math.max(...quizResults.map(r => r.score)) : 0;
+
+    studyInsights.innerHTML = `
+        <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-green-600 dark:text-green-400">emoji_events</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Best Score</p>
+                        <p class="subtitle-1 font-semibold text-green-700 dark:text-green-400">${bestScore}%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-blue-600 dark:text-blue-400">verified</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Topics Mastered</p>
+                        <p class="subtitle-1 font-semibold text-blue-700 dark:text-blue-400">${masteredTopics}/${totalTopics}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-orange-600 dark:text-orange-400">local_fire_department</span>
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">Study Streak</p>
+                        <p class="subtitle-1 font-semibold text-orange-700 dark:text-orange-400">${streak} days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Recent Activity
+    if (quizResults.length > 0) {
+        const recentQuizzes = quizResults.slice(-5).reverse();
+        const activityHTML = recentQuizzes.map((quiz, index) => {
+            const date = new Date(quiz.date);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const scoreColor = quiz.score >= 80 ? 'text-green-600 dark:text-green-400' :
+                              quiz.score >= 60 ? 'text-blue-600 dark:text-blue-400' :
+                              quiz.score >= 40 ? 'text-orange-600 dark:text-orange-400' :
+                              'text-red-600 dark:text-red-400';
+
+            return `
+                <div class="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
+                            <span class="material-icons text-neutral-600 dark:text-neutral-400 text-sm">quiz</span>
+                        </div>
+                        <div>
+                            <p class="subtitle-2 text-neutral-800 dark:text-white">Quiz Completed</p>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">${dateStr} at ${timeStr}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="subtitle-1 font-bold ${scoreColor}">${quiz.score}%</p>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        recentActivity.innerHTML = activityHTML;
+    } else {
+        recentActivity.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Recent quiz attempts will appear here.</p>';
+    }
+
+    // Render progress chart
+    renderDashboardProgressChart();
+}
+
+// Render Dashboard Progress Chart
+function renderDashboardProgressChart() {
+    const chartCanvas = document.getElementById('dashboardProgressChart');
+
+    // Destroy existing chart if it exists
+    if (window.dashboardChart) {
+        window.dashboardChart.destroy();
+    }
+
+    const quizResults = analyticsData.quizResults || [];
+
+    if (chartCanvas && window.Chart) {
+        if (quizResults.length > 0) {
+            const last15 = quizResults.slice(-15);
+            const labels = last15.map((_, i) => `Quiz ${i + 1}`);
+            const scores = last15.map(r => r.score);
+
+            window.dashboardChart = new Chart(chartCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score',
+                        data: scores,
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#009F9D',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: '#009F9D',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                            },
+                            grid: {
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Empty state chart
+            window.dashboardChart = new Chart(chartCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['No Data'],
+                    datasets: [{
+                        label: 'Score',
+                        data: [0],
+                        borderColor: '#E8EAED',
+                        backgroundColor: 'rgba(232, 234, 237, 0.1)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                            },
+                            grid: {
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                            },
+                            grid: {
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 
