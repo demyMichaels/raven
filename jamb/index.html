@@ -2327,10 +2327,23 @@ function renderProgress() {
         if (examMode === 'jamb' && jambSubjects.length > 0) {
             // In JAMB mode, only show the 4 registered subjects
             filteredSubjects = filteredSubjects.filter(([subject]) => {
-                // Case-insensitive comparison
-                return jambSubjects.some(jambSubject =>
-                    jambSubject.toLowerCase() === subject.toLowerCase()
-                );
+                // Normalize subject names for comparison
+                const normalizeSubject = (subj) => {
+                    const lower = subj.toLowerCase();
+                    // Treat "english" and "use of english" as the same
+                    if (lower === 'english' || lower.includes('use of english')) {
+                        return 'english';
+                    }
+                    return lower;
+                };
+
+                const normalizedSubject = normalizeSubject(subject);
+
+                // Case-insensitive comparison with normalization
+                return jambSubjects.some(jambSubject => {
+                    const normalizedJambSubject = normalizeSubject(jambSubject);
+                    return normalizedJambSubject === normalizedSubject;
+                });
             });
         }
         // In WAEC/NECO mode, show all subjects (no filtering)
