@@ -526,7 +526,7 @@ font-size: 14px;
                     <span class="subtitle-1">Dashboard</span>
                 </a>
 
-                <a href="/free-trial/index.html" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="toggleMobileMenu()">
+                <a href="/free-trial/practice/index.html" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="toggleMobileMenu()">
                     <span class="material-icons">quiz</span>
                     <span class="subtitle-1">Practice</span>
                 </a>
@@ -548,8 +548,8 @@ font-size: 14px;
                 </a>
 
                 <a href="#" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="toggleMobileMenu()">
-                    <span class="material-icons">psychology</span>
-                    <span class="subtitle-1">Brain & Memory Games</span>
+                    <span class="material-icons">psychology </span>
+                    <span class="subtitle-1">Brain & Memory Games </span>
                 </a>
 
                 <button onclick="openSettingsModal(); toggleMobileMenu();" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg w-full text-left">
@@ -1301,22 +1301,7 @@ BEST VALUE
                 </div>
             </div>
 
-            <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
-                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">📈 Progress Trend</h3>
-                    <div class="chart-container">
-                        <canvas id="analyticsTrendChart"></canvas>
-                    </div>
-                </div>
 
-                <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
-                    <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">🎯 Subject Performance</h3>
-                    <div class="chart-container">
-                        <canvas id="analyticsSubjectChart"></canvas>
-                    </div>
-                </div>
-            </div>
 
             <!-- Performance Heatmap -->
             <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2 mb-6 sm:mb-8">
@@ -1351,6 +1336,31 @@ BEST VALUE
             </div>
         </section>
 
+        <!-- Topic Detail Modal -->
+<div id="topicDetailModal" class="hidden modal-backdrop">
+    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-3xl w-full shadow-material-5 modal-content">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="headline-5 text-neutral-800 dark:text-white" id="topicDetailTitle">Topic Details</h2>
+            <button onclick="closeTopicDetail()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <!-- Last 5 Attempts -->
+        <div class="mb-6">
+            <h3 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">📊 Last 5 Attempts</h3>
+            <div id="topicAttempts" class="space-y-2"></div>
+        </div>
+
+        <!-- Time Trend Chart -->
+        <div>
+            <h3 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">⏱️ Time Trend</h3>
+            <div class="chart-container">
+                <canvas id="topicTimeTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
 </main>
 
@@ -1638,7 +1648,6 @@ function renderAnalytics() {
         document.getElementById('analyticsHeatmap').innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-8">No quiz data available yet. Complete some quizzes to see your performance heatmap!</p>';
         document.getElementById('analyticsRecommendations').innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-4">Recommendations will appear here after completing quizzes.</p>';
 
-        renderAnalyticsCharts();
         return;
     }
 
@@ -1669,11 +1678,13 @@ function renderAnalytics() {
     document.getElementById('analyticsMasteredCount').textContent = `${masteredCount}/${topics.length}`;
     document.getElementById('analyticsWeakCount').textContent = `${weakCount}`;
 
-    // Calculate average time (placeholder)
-    const avgTime = analyticsData.timeSpent && Object.keys(analyticsData.timeSpent).length > 0
-        ? Math.round(Object.values(analyticsData.timeSpent).reduce((a, b) => a + b, 0) / Object.keys(analyticsData.timeSpent).length)
-        : 0;
-    document.getElementById('analyticsAvgTime').textContent = avgTime > 0 ? `${avgTime}min` : '--min';
+// Calculate average time from quiz results with timeSpent field
+const quizzesWithTime = quizResults.filter(r => r.timeSpent && r.timeSpent > 0);
+const avgTime = quizzesWithTime.length > 0
+    ? Math.round(quizzesWithTime.reduce((sum, r) => sum + (r.timeSpent / 60000), 0) / quizzesWithTime.length)
+    : 0;
+document.getElementById('analyticsAvgTime').textContent = avgTime > 0 ? `${avgTime}min` : '--min';
+
 
     // Render charts, heatmap, and recommendations
     renderAnalyticsCharts();
@@ -2855,6 +2866,139 @@ container.id = 'toast-container';
 container.className = 'fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 max-w-xs sm:max-w-sm';
 document.body.appendChild(container);
 return container;
+}
+
+
+// Show topic detail modal
+function showTopicDetail(subjectId, topicName) {
+    const key = `${subjectId}_${topicName}`;
+    const quizResults = analyticsData.quizResults || [];
+
+    // Filter quizzes for this specific topic
+    const topicQuizzes = quizResults.filter(r => {
+        const normalizedSubject = (r.subject || '').toLowerCase();
+        const normalizedSubjectId = subjectId.toLowerCase();
+        const normalizedTopic = (r.topic || '').toLowerCase();
+        const normalizedTopicName = topicName.toLowerCase();
+
+        return (normalizedSubject === normalizedSubjectId || normalizedSubject.includes(normalizedSubjectId)) &&
+               (normalizedTopic === normalizedTopicName || normalizedTopic.includes(normalizedTopicName));
+    });
+
+    const last5 = topicQuizzes.slice(-5).reverse();
+
+    let displaySubject = subjectId;
+    if (subjectId.toLowerCase() === 'english') {
+        displaySubject = 'Use Of English';
+    }
+
+    document.getElementById('topicDetailTitle').textContent = `${capitalizeWords(displaySubject)} - ${capitalizeWords(topicName)}`;
+
+    const attemptsContainer = document.getElementById('topicAttempts');
+    if (last5.length > 0) {
+        attemptsContainer.innerHTML = last5.map((quiz, index) => {
+            const date = new Date(quiz.date);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const score = Math.round(quiz.score);
+            const scoreColor = score >= 80 ? 'text-green-600 dark:text-green-400' :
+                              score >= 60 ? 'text-blue-600 dark:text-blue-400' :
+                              score >= 40 ? 'text-orange-600 dark:text-orange-400' :
+                              'text-red-600 dark:text-red-400';
+
+            const timeSpent = quiz.timeSpent ? Math.round(quiz.timeSpent / 60000) : 0;
+
+            return `
+                <div class="flex items-center justify-between p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900">
+                    <div>
+                        <p class="subtitle-2 text-neutral-800 dark:text-white">Attempt ${last5.length - index}</p>
+                        <p class="caption text-neutral-600 dark:text-neutral-400">${dateStr} at ${timeStr}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="subtitle-1 font-bold ${scoreColor}">${score}%</p>
+                        ${timeSpent > 0 ? `<p class="caption text-neutral-600 dark:text-neutral-400">${timeSpent} min</p>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        attemptsContainer.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-4">No attempts yet for this topic.</p>';
+    }
+
+    renderTopicTimeTrend(topicQuizzes);
+    document.getElementById('topicDetailModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeTopicDetail() {
+    document.getElementById('topicDetailModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    if (window.topicTimeTrendChart) {
+        window.topicTimeTrendChart.destroy();
+    }
+}
+
+function renderTopicTimeTrend(quizzes) {
+    const chartCanvas = document.getElementById('topicTimeTrendChart');
+    if (window.topicTimeTrendChart) {
+        window.topicTimeTrendChart.destroy();
+    }
+
+    if (chartCanvas && window.Chart && quizzes.length > 0) {
+        const labels = quizzes.map((_, i) => `Attempt ${i + 1}`);
+        const times = quizzes.map(q => q.timeSpent ? Math.round(q.timeSpent / 60000) : 0);
+
+        window.topicTimeTrendChart = new Chart(chartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Time (minutes)',
+                    data: times,
+                    borderColor: '#F59E0B',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: document.documentElement.classList.contains('dark') ? '#E8EAED' : '#5F6368'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Time (minutes)',
+                            color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                        },
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                        },
+                        grid: {
+                            color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                        },
+                        grid: {
+                            color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 /* eslint-enable no-restricted-globals */
 </script>
