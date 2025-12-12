@@ -1821,6 +1821,7 @@ function renderAnalyticsCharts() {
 }
 
 // Render Analytics Heatmap
+// Render Analytics Heatmap
 function renderAnalyticsHeatmap() {
     const heatmapContainer = document.getElementById('analyticsHeatmap');
     const topicProgress = analyticsData.topicProgress || {};
@@ -1831,6 +1832,7 @@ function renderAnalyticsHeatmap() {
         return;
     }
 
+    
     // Group topics by subject
     const subjectGroups = {};
     topics.forEach(([key, data]) => {
@@ -1846,20 +1848,30 @@ function renderAnalyticsHeatmap() {
             name: topicName,
             score: avgScore,
             attempts: data.attempts,
-            statusClass: getStatusClass(avgScore, data.attempts)
+            statusClass: getStatusClass(avgScore, data.attempts),
+            subjectId: subjectId
         });
     });
 
     // Build heatmap HTML
     let heatmapHTML = '';
     Object.entries(subjectGroups).forEach(([subject, topicList]) => {
+        // Capitalize subject name
+        let displaySubject = subject;
+        if (subject.toLowerCase() === 'english') {
+            displaySubject = 'Use Of English';
+        }
+        const capitalizedSubject = capitalizeWords(displaySubject);
+
         heatmapHTML += `
             <div class="mb-6">
-                <h4 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">${subject}</h4>
+                <h4 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">${capitalizedSubject}</h4>
                 <div class="heatmap-grid">
                     ${topicList.map(topic => `
-                        <div class="heatmap-cell ${topic.statusClass} text-white" title="${topic.name}: ${topic.score}% (${topic.attempts} attempts)">
-                            <div class="text-xs sm:text-sm font-medium mb-1 truncate w-full px-1">${topic.name}</div>
+                        <div class="heatmap-cell ${topic.statusClass} text-white"
+                             onclick="showTopicDetail('${topic.subjectId}', '${topic.name}')"
+                             title="Click to see details">
+                            <div class="text-xs sm:text-sm font-medium mb-1 truncate w-full px-1">${capitalizeWords(topic.name)}</div>
                             <div class="text-lg sm:text-xl font-bold">${topic.attempts > 0 ? topic.score + '%' : 'New'}</div>
                             <div class="text-xs opacity-90">${topic.attempts} ${topic.attempts === 1 ? 'attempt' : 'attempts'}</div>
                         </div>
@@ -1870,6 +1882,12 @@ function renderAnalyticsHeatmap() {
     });
 
     heatmapContainer.innerHTML = heatmapHTML;
+}
+
+
+// Capitalize first letter of each word
+function capitalizeWords(str) {
+    return str.replace(/\b\w/g, char => char.toUpperCase());
 }
 
 // Render Analytics Recommendations
