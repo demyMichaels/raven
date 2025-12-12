@@ -1186,9 +1186,20 @@ BEST VALUE
 
                 <!-- Subject Progress Bars -->
                 <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2 mb-6 sm:mb-8">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <span class="material-icons text-primary">equalizer</span>
-                        <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <span class="material-icons text-primary">equalizer</span>
+                            <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+                        </div>
+                        <!-- Exam Mode Toggle -->
+                        <div class="flex items-center space-x-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+                            <button id="jambModeBtn" class="px-3 py-1 rounded-md text-xs font-medium transition-all bg-primary text-white" onclick="toggleExamMode('jamb')">
+                                JAMB
+                            </button>
+                            <button id="waecModeBtn" class="px-3 py-1 rounded-md text-xs font-medium transition-all text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600" onclick="toggleExamMode('waec')">
+                                WAEC/NECO
+                            </button>
+                        </div>
                     </div>
                     <div id="subjectProgressBars"></div>
                 </div>
@@ -1432,6 +1443,9 @@ let analyticsData = {
     timeSpent: {}
 };
 
+// Exam mode for subject progress (default: JAMB)
+let examMode = 'jamb';
+
 // DOM Elements
 const landingSection = document.getElementById('landingSection');
 const loginSection = document.getElementById('loginSection');
@@ -1555,6 +1569,31 @@ function getStatusClass(score, attempts) {
     if (score >= 60) return 'status-good';
     if (score >= 40) return 'status-average';
     return 'status-weak';
+}
+
+// Capitalize first letter of each word
+function capitalizeWords(str) {
+    return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+// Toggle exam mode for subject progress
+function toggleExamMode(mode) {
+    examMode = mode;
+
+    // Update button styles
+    const jambBtn = document.getElementById('jambModeBtn');
+    const waecBtn = document.getElementById('waecModeBtn');
+
+    if (mode === 'jamb') {
+        jambBtn.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all bg-primary text-white';
+        waecBtn.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600';
+    } else {
+        waecBtn.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all bg-primary text-white';
+        jambBtn.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600';
+    }
+
+    // Re-render progress to apply filter
+    renderProgress();
 }
 
 // Setup analytics navigation listeners
@@ -2279,27 +2318,54 @@ function renderProgress() {
 
     // Subject Progress Bars - Fetch from localStorage (analyticsData.subjectProgress)
     if (hasSubjectData) {
-        const progressBarsHTML = Object.entries(subjectProgress).map(([subject, data]) => {
-            const avg = data.attempts > 0
-                ? Math.round((data.totalScore / data.attempts))
-                : 0;
-            const color = getProgressBarColor(avg);
-            const attempts = data.attempts || 0;
+        // Get user's JAMB subjects
+        const jambSubjects = currentUser && currentUser.jambSubjects ? currentUser.jambSubjects : [];
 
-            return `
-                <div class="mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="subtitle-2 text-neutral-800 dark:text-white">${subject}</span>
-                        <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${attempts} ${attempts === 1 ? 'attempt' : 'attempts'})</span>
-                    </div>
-                    <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3">
-                        <div class="h-3 rounded-full transition-all duration-500" style="width: ${avg}%; background-color: ${color}"></div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+        // Filter subjects based on exam mode
+        let filteredSubjects = Object.entries(subjectProgress);
 
-        subjectProgressBars.innerHTML = progressBarsHTML;
+        if (examMode === 'jamb' && jambSubjects.length > 0) {
+            // In JAMB mode, only show the 4 registered subjects
+            filteredSubjects = filteredSubjects.filter(([subject]) => {
+                // Case-insensitive comparison
+                return jambSubjects.some(jambSubject =>
+                    jambSubject.toLowerCase() === subject.toLowerCase()
+                );
+            });
+        }
+        // In WAEC/NECO mode, show all subjects (no filtering)
+
+        if (filteredSubjects.length > 0) {
+            const progressBarsHTML = filteredSubjects.map(([subject, data]) => {
+                const avg = data.attempts > 0
+                    ? Math.round((data.totalScore / data.attempts))
+                    : 0;
+                const color = getProgressBarColor(avg);
+                const attempts = data.attempts || 0;
+                const capitalizedSubject = capitalizeWords(subject);
+
+                return `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="subtitle-2 text-neutral-800 dark:text-white">${capitalizedSubject}</span>
+                            <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${attempts} ${attempts === 1 ? 'attempt' : 'attempts'})</span>
+                        </div>
+                        <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3">
+                            <div class="h-3 rounded-full transition-all duration-500" style="width: ${avg}%; background-color: ${color}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            subjectProgressBars.innerHTML = progressBarsHTML;
+        } else {
+            // No subjects in current mode
+            if (examMode === 'jamb') {
+                subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Complete quizzes in your JAMB subjects to see progress.</p>';
+            } else {
+                subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
+            }
+        }
     } else {
         subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
     }
@@ -2321,6 +2387,8 @@ function renderProgress() {
             // Use topic and subject from quiz data, or fallback to defaults
             const topic = quiz.topic || 'General Quiz';
             const subject = quiz.subject || 'Mixed';
+            const capitalizedTopic = capitalizeWords(topic);
+            const capitalizedSubject = capitalizeWords(subject);
 
             return `
                 <div class="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
@@ -2329,8 +2397,8 @@ function renderProgress() {
                             <span class="material-icons text-neutral-600 dark:text-neutral-400 text-sm">quiz</span>
                         </div>
                         <div>
-                            <p class="subtitle-2 text-neutral-800 dark:text-white">${topic}</p>
-                            <p class="caption text-neutral-600 dark:text-neutral-400">${subject} • ${dateStr} at ${timeStr}</p>
+                            <p class="subtitle-2 text-neutral-800 dark:text-white">${capitalizedTopic}</p>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">${capitalizedSubject} • ${dateStr} at ${timeStr}</p>
                         </div>
                     </div>
                     <div class="text-right">
