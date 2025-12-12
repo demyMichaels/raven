@@ -2335,13 +2335,13 @@ function renderProgress() {
         }
         // In WAEC/NECO mode, show all subjects (no filtering)
 
-        // Sort subjects to ensure "Use of English" is always first
+        // Sort subjects to ensure "Use of English" or "English" is always first
         filteredSubjects.sort(([subjectA], [subjectB]) => {
-            const isUseOfEnglishA = subjectA.toLowerCase().includes('use of english');
-            const isUseOfEnglishB = subjectB.toLowerCase().includes('use of english');
+            const isEnglishA = subjectA.toLowerCase() === 'english' || subjectA.toLowerCase().includes('use of english');
+            const isEnglishB = subjectB.toLowerCase() === 'english' || subjectB.toLowerCase().includes('use of english');
 
-            if (isUseOfEnglishA) return -1;
-            if (isUseOfEnglishB) return 1;
+            if (isEnglishA) return -1;
+            if (isEnglishB) return 1;
             return subjectA.localeCompare(subjectB); // Alphabetical for others
         });
 
@@ -2352,7 +2352,13 @@ function renderProgress() {
                     : 0;
                 const color = getProgressBarColor(avg);
                 const attempts = data.attempts || 0;
-                const capitalizedSubject = capitalizeWords(subject);
+
+                // Normalize "English" to "Use Of English" for display
+                let displaySubject = subject;
+                if (subject.toLowerCase() === 'english') {
+                    displaySubject = 'Use Of English';
+                }
+                const capitalizedSubject = capitalizeWords(displaySubject);
 
                 return `
                     <div class="mb-4">
@@ -2396,7 +2402,13 @@ function renderProgress() {
 
             // Use topic and subject from quiz data, or fallback to defaults
             const topic = quiz.topic || 'General Quiz';
-            const subject = quiz.subject || 'Mixed';
+            let subject = quiz.subject || 'Mixed';
+
+            // Normalize "English" to "Use Of English" for display
+            if (subject.toLowerCase() === 'english') {
+                subject = 'Use Of English';
+            }
+
             const capitalizedTopic = capitalizeWords(topic);
             const capitalizedSubject = capitalizeWords(subject);
 
