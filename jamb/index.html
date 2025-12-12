@@ -2449,17 +2449,46 @@ function renderDashboardProgressChart() {
 
     if (chartCanvas && window.Chart) {
         if (quizResults.length > 0) {
-            const last15 = quizResults.slice(-15);
-            const labels = last15.map((_, i) => `Quiz ${i + 1}`);
-            const scores = last15.map(r => r.score);
+            // Group quiz results by date and calculate daily averages
+            const dailyScores = {};
+
+            quizResults.forEach(quiz => {
+                const date = new Date(quiz.date);
+                const dateKey = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                if (!dailyScores[dateKey]) {
+                    dailyScores[dateKey] = {
+                        scores: [],
+                        total: 0,
+                        count: 0
+                    };
+                }
+
+                dailyScores[dateKey].scores.push(Math.round(quiz.score));
+                dailyScores[dateKey].total += quiz.score;
+                dailyScores[dateKey].count++;
+            });
+
+            // Calculate averages and prepare data
+            const dates = Object.keys(dailyScores);
+            const averages = dates.map(date => {
+                const dayData = dailyScores[date];
+                return Math.round(dayData.total / dayData.count);
+            });
+            const quizCounts = dates.map(date => dailyScores[date].count);
+
+            // Take last 15 days
+            const last15Dates = dates.slice(-15);
+            const last15Averages = averages.slice(-15);
+            const last15Counts = quizCounts.slice(-15);
 
             window.dashboardChart = new Chart(chartCanvas.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: last15Dates,
                     datasets: [{
-                        label: 'Score',
-                        data: scores,
+                        label: 'Average Daily Score',
+                        data: last15Averages,
                         borderColor: '#009F9D',
                         backgroundColor: 'rgba(0, 159, 157, 0.1)',
                         tension: 0.4,
@@ -2467,8 +2496,9 @@ function renderDashboardProgressChart() {
                         pointBackgroundColor: '#009F9D',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
@@ -2476,39 +2506,103 @@ function renderDashboardProgressChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: document.documentElement.classList.contains('dark') ? '#E8EAED' : '#5F6368',
+                                font: {
+                                    size: 13,
+                                    weight: 500
+                                },
+                                padding: 15,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
+                            backgroundColor: 'rgba(15, 44, 89, 0.95)',
+                            padding: 16,
                             titleColor: '#fff',
                             bodyColor: '#fff',
                             borderColor: '#009F9D',
-                            borderWidth: 1
+                            borderWidth: 2,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const avgScore = context.parsed.y;
+                                    const quizCount = last15Counts[index];
+                                    return [
+                                        `Average Score: ${avgScore}%`,
+                                        `Quizzes Taken: ${quizCount}`,
+                                        `Performance: ${avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : avgScore >= 40 ? 'Average' : 'Needs Improvement'}`
+                                    ];
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
                             max: 100,
+                            title: {
+                                display: true,
+                                text: 'Average Score (%)',
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368',
+                                font: {
+                                    size: 12,
+                                    weight: 500
+                                }
+                            },
                             ticks: {
                                 color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368',
                                 callback: function(value) {
                                     return value + '%';
-                                }
+                                },
+                                stepSize: 20
                             },
                             grid: {
-                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED',
+                                drawBorder: false
                             }
                         },
                         x: {
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368',
+                                font: {
+                                    size: 12,
+                                    weight: 500
+                                }
+                            },
                             ticks: {
-                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368',
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                }
                             },
                             grid: {
-                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED'
+                                color: document.documentElement.classList.contains('dark') ? '#374151' : '#E8EAED',
+                                drawBorder: false
                             }
                         }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     }
                 }
             });
@@ -2519,7 +2613,7 @@ function renderDashboardProgressChart() {
                 data: {
                     labels: ['No Data'],
                     datasets: [{
-                        label: 'Score',
+                        label: 'Average Daily Score',
                         data: [0],
                         borderColor: '#E8EAED',
                         backgroundColor: 'rgba(232, 234, 237, 0.1)',
@@ -2530,7 +2624,10 @@ function renderDashboardProgressChart() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            labels: {
+                                color: document.documentElement.classList.contains('dark') ? '#9AA0A6' : '#5F6368'
+                            }
                         }
                     },
                     scales: {
