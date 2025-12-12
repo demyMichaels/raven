@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Train Stopping Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --accent-cyan: #00f0ff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #e0e7ff;
+            --text-secondary: #8892b0;
+            --track-bg: #1a2147;
+            --success: #06ffa5;
+            --error: #ff006e;
+        }
+
+        .dark {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --accent-cyan: #00f0ff;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffbe0b;
+            --text-primary: #e0e7ff;
+            --text-secondary: #8892b0;
+            --track-bg: #1a2147;
+            --success: #06ffa5;
+            --error: #ff006e;
+        }
+
+        body.light,
+        body:not(.dark) {
+            --bg-primary: #f0f4ff;
+            --bg-secondary: #ffffff;
+            --accent-cyan: #0088cc;
+            --accent-pink: #d4006e;
+            --accent-yellow: #ff9500;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a5568;
+            --track-bg: #e2e8f0;
+            --success: #00c896;
+            --error: #d4006e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 110, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease;
+        }
+
+        h1 {
+            font-family: 'Audiowide', cursive;
+            font-size: clamp(28px, 8vw, 48px);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            gap: 15px;
+            margin-bottom: 25px;
+            animation: fadeIn 0.8s ease 0.2s backwards;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:nth-child(2) {
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.2);
+        }
+
+        .stat-card:nth-child(3) {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 20px rgba(255, 190, 11, 0.2);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Audiowide', cursive;
+        }
+
+        .game-area {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease 0.4s backwards;
+        }
+
+        .physics-info {
+            background: var(--track-bg);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        .physics-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .physics-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .physics-label {
+            color: var(--text-secondary);
+        }
+
+        .physics-value {
+            color: var(--accent-cyan);
+            font-family: 'Audiowide', cursive;
+            font-size: 22px;
+        }
+
+        .track-container {
+            position: relative;
+            background: var(--track-bg);
+            border-radius: 16px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .track {
+            position: relative;
+            height: 80px;
+            background: linear-gradient(to bottom,
+                rgba(255, 255, 255, 0.05) 0%,
+                rgba(255, 255, 255, 0.02) 50%,
+                rgba(0, 0, 0, 0.1) 100%);
+            border-radius: 40px;
+            cursor: crosshair;
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            overflow: visible;
+        }
+
+        .track-markers {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .track-marker {
+            width: 2px;
+            height: 10px;
+            background: var(--text-secondary);
+            opacity: 0.3;
+        }
+
+        .train {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-pink), var(--accent-yellow));
+            box-shadow:
+                0 0 30px var(--accent-pink),
+                0 0 60px rgba(255, 0, 110, 0.5),
+                inset 0 -10px 20px rgba(0, 0, 0, 0.3);
+            top: 10px;
+            left: 10px;
+            transition: left 0.05s linear;
+            z-index: 10;
+        }
+
+        .train::before {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        .train::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 0 10px white;
+        }
+
+        .prediction-marker {
+            position: absolute;
+            top: -15px;
+            width: 4px;
+            height: 110px;
+            background: var(--accent-cyan);
+            transform: translateX(-2px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .prediction-marker.visible {
+            opacity: 1;
+        }
+
+        .prediction-marker::before {
+            content: '📍';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        .actual-marker {
+            position: absolute;
+            top: -15px;
+            width: 4px;
+            height: 110px;
+            background: var(--success);
+            transform: translateX(-2px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 0 10px var(--success);
+        }
+
+        .actual-marker.visible {
+            opacity: 1;
+        }
+
+        .actual-marker::before {
+            content: '🎯';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 20px;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 15px;
+            min-height: 28px;
+        }
+
+        .instruction.highlight {
+            color: var(--accent-cyan);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px 30px;
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Audiowide', cursive;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 240, 255, 0.6);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--accent-yellow);
+            box-shadow: 0 4px 20px rgba(255, 190, 11, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(255, 190, 11, 0.5);
+        }
+
+        .result-panel {
+            background: var(--track-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            border-left: 4px solid var(--success);
+        }
+
+        .result-panel.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-panel.error {
+            border-left-color: var(--error);
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-family: 'Audiowide', cursive;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .difficulty-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.8s ease 0.6s backwards;
+        }
+
+        .difficulty-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Rajdhani', sans-serif;
+            border: 2px solid var(--text-secondary);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .difficulty-btn.active {
+            border-color: var(--accent-cyan);
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        .formula-hint {
+            background: var(--track-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            border: 1px dashed var(--accent-yellow);
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .formula-hint.visible {
+            opacity: 1;
+            max-height: 100px;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 240, 255, 0.6);
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .stats-bar {
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .game-area {
+                padding: 15px;
+            }
+
+            .btn {
+                padding: 16px 20px;
+                font-size: 18px;
+            }
+
+            .difficulty-btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                margin-bottom: 15px;
+            }
+
+            h1 {
+                font-size: 32px;
+                margin-bottom: 5px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .stats-bar {
+                margin-bottom: 15px;
+            }
+
+            .track {
+                height: 60px;
+            }
+
+            .train {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <header>
+            <h1>TRAIN STOP</h1>
+            <div class="subtitle">Physics Estimation Challenge</div>
+        </header>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Round</div>
+                <div class="stat-value" id="round">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Best</div>
+                <div class="stat-value" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
+        <div class="game-area">
+            <div class="physics-info">
+                <div class="physics-row">
+                    <span class="physics-label">Initial Velocity:</span>
+                    <span class="physics-value" id="velocity">50 m/s</span>
+                </div>
+                <div class="physics-row">
+                    <span class="physics-label">Deceleration:</span>
+                    <span class="physics-value" id="deceleration">5 m/s²</span>
+                </div>
+            </div>
+
+            <div class="formula-hint visible" id="formulaHint">
+                💡 Stopping Distance = v₀² / (2a)
+            </div>
+
+            <div class="instruction" id="instruction">Click START to begin!</div>
+
+            <div class="track-container">
+                <div class="track-markers" id="trackMarkers"></div>
+                <div class="track" id="track">
+                    <div class="train" id="train"></div>
+                    <div class="prediction-marker" id="predictionMarker"></div>
+                    <div class="actual-marker" id="actualMarker"></div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="startBtn">Start</button>
+                <button class="btn btn-secondary" id="nextBtn" style="display: none;">Next Round</button>
+            </div>
+
+            <div class="result-panel" id="resultPanel">
+                <div class="result-title" id="resultTitle">Great job!</div>
+                <div class="result-row">
+                    <span>Your Prediction:</span>
+                    <span id="resultPrediction">0 m</span>
+                </div>
+                <div class="result-row">
+                    <span>Actual Stop:</span>
+                    <span id="resultActual">0 m</span>
+                </div>
+                <div class="result-row">
+                    <span>Error:</span>
+                    <span id="resultError">0 m</span>
+                </div>
+                <div class="result-row">
+                    <span>Points Earned:</span>
+                    <span id="resultPoints">+0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Game state
+        const gameState = {
+            round: 1,
+            score: 0,
+            bestScore: 0,
+            difficulty: 'easy',
+            velocity: 0,
+            deceleration: 0,
+            stoppingDistance: 0,
+            stoppingTime: 0,
+            predictionDistance: null,
+            isPlaying: false,
+            hasPlaced: false,
+            animationId: null,
+            startTime: null
+        };
+
+        // DOM elements
+        const elements = {
+            round: document.getElementById('round'),
+            score: document.getElementById('score'),
+            best: document.getElementById('best'),
+            velocity: document.getElementById('velocity'),
+            deceleration: document.getElementById('deceleration'),
+            instruction: document.getElementById('instruction'),
+            track: document.getElementById('track'),
+            train: document.getElementById('train'),
+            predictionMarker: document.getElementById('predictionMarker'),
+            actualMarker: document.getElementById('actualMarker'),
+            startBtn: document.getElementById('startBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            resultPanel: document.getElementById('resultPanel'),
+            resultTitle: document.getElementById('resultTitle'),
+            resultPrediction: document.getElementById('resultPrediction'),
+            resultActual: document.getElementById('resultActual'),
+            resultError: document.getElementById('resultError'),
+            resultPoints: document.getElementById('resultPoints'),
+            formulaHint: document.getElementById('formulaHint'),
+            trackMarkers: document.getElementById('trackMarkers')
+        };
+
+        // Difficulty settings
+        const difficulties = {
+            easy: {
+                velocityRange: [30, 60],
+                decelerationRange: [3, 6],
+                showFormula: true,
+                speedMultiplier: 0.5
+            },
+            medium: {
+                velocityRange: [40, 80],
+                decelerationRange: [4, 8],
+                showFormula: false,
+                speedMultiplier: 1
+            },
+            hard: {
+                velocityRange: [50, 100],
+                decelerationRange: [5, 12],
+                showFormula: false,
+                speedMultiplier: 1.5
+            }
+        };
+
+        // Initialize track markers
+        function initTrackMarkers() {
+            elements.trackMarkers.innerHTML = '';
+            for (let i = 0; i <= 10; i++) {
+                const marker = document.createElement('div');
+                marker.className = 'track-marker';
+                elements.trackMarkers.appendChild(marker);
+            }
+        }
+
+        // Get random value in range
+        function random(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // Setup new round
+        function setupRound() {
+            const diff = difficulties[gameState.difficulty];
+
+            gameState.velocity = Math.round(random(diff.velocityRange[0], diff.velocityRange[1]));
+            gameState.deceleration = Math.round(random(diff.decelerationRange[0], diff.decelerationRange[1]));
+
+            // Calculate stopping distance: d = v₀² / (2a)
+            gameState.stoppingDistance = (gameState.velocity * gameState.velocity) / (2 * gameState.deceleration);
+
+            // Calculate stopping time: t = v₀ / a
+            gameState.stoppingTime = gameState.velocity / gameState.deceleration;
+
+            // Reset state
+            gameState.predictionDistance = null;
+            gameState.hasPlaced = false;
+            gameState.isPlaying = false;
+
+            // Update UI
+            elements.velocity.textContent = `${gameState.velocity} m/s`;
+            elements.deceleration.textContent = `${gameState.deceleration} m/s²`;
+            elements.instruction.textContent = 'Click START to begin!';
+            elements.instruction.classList.remove('highlight');
+
+            // Reset markers
+            elements.predictionMarker.classList.remove('visible');
+            elements.actualMarker.classList.remove('visible');
+            elements.resultPanel.classList.remove('visible');
+
+            // Reset train position
+            elements.train.style.left = '10px';
+
+            // Show/hide formula
+            if (diff.showFormula) {
+                elements.formulaHint.classList.add('visible');
+            } else {
+                elements.formulaHint.classList.remove('visible');
+            }
+
+            // Button states
+            elements.startBtn.style.display = 'block';
+            elements.nextBtn.style.display = 'none';
+            elements.startBtn.disabled = false;
+        }
+
+        // Start round
+        function startRound() {
+            elements.startBtn.disabled = true;
+            elements.instruction.textContent = 'Click on the track where the train will STOP!';
+            elements.instruction.classList.add('highlight');
+
+            // Enable track clicking
+            elements.track.style.cursor = 'crosshair';
+        }
+
+        // Handle track click
+        function handleTrackClick(event) {
+            if (gameState.isPlaying || gameState.hasPlaced) return;
+
+            const rect = elements.track.getBoundingClientRect();
+            const clickX = event.clientX || (event.touches && event.touches[0].clientX);
+            const relativeX = clickX - rect.left;
+
+            // Calculate prediction distance (in meters, relative to track width)
+            const trackWidth = rect.width;
+            gameState.predictionDistance = (relativeX / trackWidth) * 500; // Max 500m track
+
+            // Show prediction marker
+            elements.predictionMarker.style.left = `${relativeX}px`;
+            elements.predictionMarker.classList.add('visible');
+
+            gameState.hasPlaced = true;
+            elements.instruction.textContent = 'Prediction placed! Click START to see the result!';
+            elements.instruction.classList.remove('highlight');
+            elements.startBtn.disabled = false;
+            elements.startBtn.textContent = 'Launch Train';
+            elements.track.style.cursor = 'default';
+        }
+
+        // Animate train
+        function animateTrain() {
+            if (!gameState.isPlaying) return;
+
+            const currentTime = (Date.now() - gameState.startTime) / 1000; // seconds
+            const diff = difficulties[gameState.difficulty];
+            const adjustedTime = currentTime * diff.speedMultiplier;
+
+            if (adjustedTime >= gameState.stoppingTime) {
+                // Train has stopped
+                finishRound();
+                return;
+            }
+
+            // Calculate position: x(t) = v₀*t - 0.5*a*t²
+            const position = gameState.velocity * adjustedTime - 0.5 * gameState.deceleration * adjustedTime * adjustedTime;
+
+            // Convert to pixels (500m = track width)
+            const trackWidth = elements.track.getBoundingClientRect().width;
+            const pixelPosition = (position / 500) * trackWidth;
+
+            elements.train.style.left = `${Math.min(pixelPosition, trackWidth - 60)}px`;
+
+            gameState.animationId = requestAnimationFrame(animateTrain);
+        }
+
+        // Finish round
+        function finishRound() {
+            gameState.isPlaying = false;
+            if (gameState.animationId) {
+                cancelAnimationFrame(gameState.animationId);
+            }
+
+            // Show actual stopping position
+            const trackWidth = elements.track.getBoundingClientRect().width;
+            const actualPixels = (gameState.stoppingDistance / 500) * trackWidth;
+            elements.actualMarker.style.left = `${actualPixels}px`;
+            elements.actualMarker.classList.add('visible');
+
+            // Calculate error and score
+            const error = Math.abs(gameState.predictionDistance - gameState.stoppingDistance);
+            const errorPercentage = (error / gameState.stoppingDistance) * 100;
+
+            // Scoring: More points for closer predictions
+            let points = 0;
+            if (errorPercentage < 5) {
+                points = 100;
+            } else if (errorPercentage < 10) {
+                points = 80;
+            } else if (errorPercentage < 15) {
+                points = 60;
+            } else if (errorPercentage < 25) {
+                points = 40;
+            } else if (errorPercentage < 35) {
+                points = 20;
+            } else {
+                points = 10;
+            }
+
+            // Difficulty multiplier
+            const diffMultiplier = {easy: 1, medium: 1.5, hard: 2};
+            points = Math.round(points * diffMultiplier[gameState.difficulty]);
+
+            gameState.score += points;
+            gameState.bestScore = Math.max(gameState.bestScore, gameState.score);
+
+            // Update UI
+            elements.score.textContent = gameState.score;
+            elements.best.textContent = gameState.bestScore;
+
+            // Show results
+            elements.resultPrediction.textContent = `${gameState.predictionDistance.toFixed(1)} m`;
+            elements.resultActual.textContent = `${gameState.stoppingDistance.toFixed(1)} m`;
+            elements.resultError.textContent = `${error.toFixed(1)} m (${errorPercentage.toFixed(1)}%)`;
+            elements.resultPoints.textContent = `+${points}`;
+
+            if (errorPercentage < 10) {
+                elements.resultTitle.textContent = '🎯 Excellent!';
+                elements.resultPanel.classList.remove('error');
+            } else if (errorPercentage < 25) {
+                elements.resultTitle.textContent = '👍 Good!';
+                elements.resultPanel.classList.remove('error');
+            } else {
+                elements.resultTitle.textContent = '📊 Keep Practicing!';
+                elements.resultPanel.classList.add('error');
+            }
+
+            elements.resultPanel.classList.add('visible');
+            elements.instruction.textContent = 'Round complete! Ready for the next challenge?';
+            elements.startBtn.style.display = 'none';
+            elements.nextBtn.style.display = 'block';
+        }
+
+        // Event listeners
+        elements.startBtn.addEventListener('click', () => {
+            if (!gameState.hasPlaced) {
+                startRound();
+            } else {
+                // Launch train
+                gameState.isPlaying = true;
+                gameState.startTime = Date.now();
+                elements.instruction.textContent = 'Train is moving...';
+                elements.startBtn.disabled = true;
+                animateTrain();
+            }
+        });
+
+        elements.nextBtn.addEventListener('click', () => {
+            gameState.round++;
+            elements.round.textContent = gameState.round;
+            setupRound();
+        });
+
+        elements.track.addEventListener('click', handleTrackClick);
+        elements.track.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleTrackClick(e);
+        });
+
+        // Difficulty selector
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (gameState.isPlaying) return;
+
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.difficulty;
+                setupRound();
+            });
+        });
+
+        // Initialize
+        initTrackMarkers();
+        setupRound();
+    </script>
+</body>
+</html>
+
