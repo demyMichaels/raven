@@ -1,1079 +1,544 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arduino Binary Counter - 4 LED Simulation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'arduino-green': '#00979C',
-                        'arduino-blue': '#005C98',
-                        'led-on': '#00FF00',
-                        'led-off': '#1F2937'
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        .led-glow {
-            box-shadow: 0 0 20px #00FF00;
-        }
-        .arduino-board {
-            background: linear-gradient(145deg, #00979C, #005C98);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        .prediction-mode {
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raven</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+tailwind.config = {
+darkMode: 'class',
+theme: {
+extend: {
+
+colors: {
+// Raven Professional Brand Colors
+primary: {
+DEFAULT: "#0F2C59", // Deep Navy - Trust, Authority, Stability
+50: "#f0f3f8",
+100: "#d6e1ee",
+500: "#0F2C59",
+600: "#0a2549",
+700: "#081e39",
+},
+
+accent: {
+DEFAULT: "#009F9D", // Consultancy Teal - Innovation, Precision
+50: "#e6f7f7",
+100: "#b3ebea",
+500: "#009F9D",
+600: "#008280",
+700: "#006663",
+},
+
+neutral: {
+25: "#FEFEFE",
+50: "#F8F9FA", // Warm Light Gray - Cleanliness, Clarity
+100: "#F1F3F4",
+200: "#E8EAED",
+300: "#DADCE0",
+400: "#BDC1C6",
+500: "#9AA0A6",
+600: "#80868B",
+700: "#5F6368",
+800: "#2D3748", // Charcoal - Sophistication, Legibility
+900: "#1F2937",
+},
+
+premium: {
+DEFAULT: "#D2C1A7", // Pale Sand - Warmth, Approachability
+50: "#fbf9f6",
+100: "#f4efe6",
+500: "#D2C1A7",
+600: "#c4b095",
+700: "#b69f83",
+},
+
+data: {
+DEFAULT: "#5A7B9E", // Steel Blue - Logic, Intelligence
+50: "#f2f5f9",
+100: "#e1e9f2",
+500: "#5A7B9E",
+600: "#4d6a87",
+700: "#405970",
+},
+
+success: "#22c55e",
+warning: "#f59e0b",
+error: "#ef4444",
+},
+
+boxShadow: {
+'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+'material-4': '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
+'material-5': '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
+},
+
+fontFamily: {
+'sans': ['Roboto', 'system-ui', 'sans-serif'],
+},
+borderRadius: {
+'material': '4px',
+}
+}
+}
+}
+</script>
+
+<style>
+.fade-in {
+animation: fadeIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(16px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.material-card {
+transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.material-card:hover {
+box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.material-button {
+transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+position: relative;
+overflow: hidden;
+}
+
+.material-button:active {
+transform: scale(0.98);
+}
+
+
+/* Learning Module Specific Styles */
+.learning-progress {
+background: linear-gradient(90deg, #009F9D 0%, #4ade80 100%);
+}
+
+.topic-completion {
+transition: all 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.concept-card {
+background: linear-gradient(135deg, rgba(15, 44, 89, 0.05) 0%, rgba(0, 159, 157, 0.05) 100%);
+border: 1px solid rgba(0, 159, 157, 0.2);
+}
+
+.interactive-element {
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+.interactive-element:hover {
+transform: translateY(-2px);
+box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+
+
+/* Consumer Behavior Specific Styles */
+.utility-card {
+background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);
+border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.indifference-curve {
+stroke-width: 3;
+fill: none;
+transition: all 0.3s ease;
+}
+
+.budget-line {
+stroke-width: 2;
+stroke-dasharray: 5,5;
+transition: all 0.3s ease;
+}
+
+.draggable-item {
+cursor: grab;
+transition: all 0.2s ease;
+}
+
+.draggable-item:active {
+cursor: grabbing;
+transform: scale(1.05);
+}
+
+.drop-zone {
+transition: all 0.2s ease;
+border: 2px dashed transparent;
+}
+
+.drop-zone.highlight {
+border-color: #009F9D;
+background-color: rgba(0, 159, 157, 0.1);
+}
+
+/* Material Design Typography Scale */
+.headline-1 { font-size: 6rem; font-weight: 300; line-height: 1.167; letter-spacing: -1.5px; }
+.headline-2 { font-size: 3.75rem; font-weight: 300; line-height: 1.2; letter-spacing: -0.5px; }
+.headline-3 { font-size: 3rem; font-weight: 400; line-height: 1.167; letter-spacing: 0; }
+.headline-4 { font-size: 2.125rem; font-weight: 400; line-height: 1.235; letter-spacing: 0.25px; }
+.headline-5 { font-size: 1.5rem; font-weight: 400; line-height: 1.334; letter-spacing: 0; }
+.headline-6 { font-size: 1.25rem; font-weight: 500; line-height: 1.6; letter-spacing: 0.15px; }
+.subtitle-1 { font-size: 1rem; font-weight: 400; line-height: 1.75; letter-spacing: 0.15px; }
+.subtitle-2 { font-size: 0.875rem; font-weight: 500; line-height: 1.57; letter-spacing: 0.1px; }
+.body-1 { font-size: 1rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.5px; }
+.body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.43; letter-spacing: 0.25px; }
+.button-text { font-size: 0.875rem; font-weight: 500; line-height: 1.75; letter-spacing: 1.25px; text-transform: uppercase; }
+.caption { font-size: 0.75rem; font-weight: 400; line-height: 1.66; letter-spacing: 0.4px; }
+.overline { font-size: 0.75rem; font-weight: 400; line-height: 2.66; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Dark mode enhancements */
+.dark .material-card {
+background-color: #1F2937;
+border-color: #374151;
+}
+
+.dark .material-card:hover {
+box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+</style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-6 max-w-4xl">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold mb-2 text-arduino-blue dark:text-arduino-green">
-                Arduino Binary Counter
-            </h1>
-            <p class="text-lg text-gray-600 dark:text-gray-400">
-                Learn Binary Numbers with 4 LED Simulation (0-15)
-            </p>
-        </div>
-
-        <!-- Arduino Board Simulation -->
-        <div class="arduino-board p-8 mb-8 mx-auto max-w-2xl">
-            <div class="text-center mb-6">
-                <div class="inline-block bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-lg">
-                    <h2 class="text-xl font-bold text-arduino-blue dark:text-arduino-green">Arduino UNO</h2>
-                </div>
-            </div>
-
-            <!-- LED Display -->
-            <div class="bg-black rounded-lg p-6 mb-6">
-                <div class="flex justify-center items-center space-x-8">
-                    <!-- LED 3 (MSB) -->
-                    <div class="text-center">
-                        <div id="led3" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-gray-600 bg-led-off transition-all duration-300 mx-auto mb-2"></div>
-                        <div class="text-white text-sm font-mono">LED 3</div>
-                        <div class="text-white text-xs">2³ = 8</div>
-                    </div>
-                    <!-- LED 2 -->
-                    <div class="text-center">
-                        <div id="led2" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-gray-600 bg-led-off transition-all duration-300 mx-auto mb-2"></div>
-                        <div class="text-white text-sm font-mono">LED 2</div>
-                        <div class="text-white text-xs">2² = 4</div>
-                    </div>
-                    <!-- LED 1 -->
-                    <div class="text-center">
-                        <div id="led1" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-gray-600 bg-led-off transition-all duration-300 mx-auto mb-2"></div>
-                        <div class="text-white text-sm font-mono">LED 1</div>
-                        <div class="text-white text-xs">2¹ = 2</div>
-                    </div>
-                    <!-- LED 0 (LSB) -->
-                    <div class="text-center">
-                        <div id="led0" class="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 border-gray-600 bg-led-off transition-all duration-300 mx-auto mb-2"></div>
-                        <div class="text-white text-sm font-mono">LED 0</div>
-                        <div class="text-white text-xs">2⁰ = 1</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Digital Display -->
-            <div class="bg-black rounded-lg p-4 mb-6">
-                <div class="flex justify-between items-center text-led-on font-mono text-xl md:text-2xl">
-                    <div>
-                        <span class="text-white text-sm">DECIMAL:</span>
-                        <span id="decimal-display" class="ml-2 font-bold">0</span>
-                    </div>
-                    <div>
-                        <span class="text-white text-sm">BINARY:</span>
-                        <span id="binary-display" class="ml-2 font-bold">0000</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Control Panel -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Controls -->
-                <div>
-                    <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">Controls</h3>
-                    <div class="space-y-3">
-                        <button id="start-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            ▶ Start Auto Count
-                        </button>
-                        <button id="stop-btn" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            ⏸ Stop
-                        </button>
-                        <button id="step-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            ⏭ Step (+1)
-                        </button>
-                        <button id="reset-btn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            🔄 Reset to 0
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Settings -->
-                <div>
-                    <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">Settings</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Speed (ms)</label>
-                            <input id="speed-slider" type="range" min="100" max="2000" value="1000" 
-                                   class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer">
-                            <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>Fast (100ms)</span>
-                                <span id="speed-value">1000ms</span>
-                                <span>Slow (2s)</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <input id="prediction-mode" type="checkbox" class="w-4 h-4 text-blue-600 rounded">
-                            <label for="prediction-mode" class="text-sm">Prediction Mode</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Prediction Panel -->
-        <div id="prediction-panel" class="bg-yellow-50 dark:bg-yellow-900 border-2 border-yellow-300 dark:border-yellow-600 rounded-lg p-6 mb-8 hidden">
-            <h3 class="text-xl font-bold mb-4 text-yellow-800 dark:text-yellow-200">🤔 Prediction Challenge</h3>
-            <p class="mb-4 text-yellow-700 dark:text-yellow-300">
-                Current value: <span id="current-prediction-value" class="font-bold">0</span>
-                <br>What will the next binary pattern be?
-            </p>
-            <div class="flex flex-wrap gap-2 mb-4">
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="0">0000</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="1">0001</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="2">0010</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="3">0011</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="4">0100</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="5">0101</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="6">0110</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="7">0111</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="8">1000</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="9">1001</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="10">1010</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="11">1011</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="12">1100</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="13">1101</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="14">1110</button>
-                <button class="prediction-btn bg-white border-2 border-yellow-400 px-3 py-2 rounded text-sm font-mono hover:bg-yellow-100" data-value="15">1111</button>
-            </div>
-            <div id="prediction-result" class="text-center font-bold text-lg hidden"></div>
-        </div>
-
-        <!-- Educational Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Binary Explanation -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">📚 Understanding Binary</h3>
-                <div class="space-y-4 text-sm">
-                    <div>
-                        <h4 class="font-bold mb-2">How Binary Works:</h4>
-                        <p>Binary uses only 0s and 1s. Each LED represents a power of 2:</p>
-                        <ul class="list-disc ml-4 mt-2">
-                            <li>LED 0 (rightmost): 2⁰ = 1</li>
-                            <li>LED 1: 2¹ = 2</li>
-                            <li>LED 2: 2² = 4</li>
-                            <li>LED 3 (leftmost): 2³ = 8</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-bold mb-2">Converting Binary to Decimal:</h4>
-                        <p>Add up the values where LEDs are ON (1).</p>
-                        <p class="italic">Example: 1101 = 8 + 4 + 0 + 1 = 13</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Real-World Applications -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">🔧 Engineering Applications</h3>
-                <div class="space-y-4 text-sm">
-                    <div>
-                        <h4 class="font-bold mb-2">Hardware & Embedded Systems:</h4>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li><strong>Microcontrollers:</strong> Arduino, Raspberry Pi programming</li>
-                            <li><strong>Digital Circuits:</strong> Logic gates, flip-flops</li>
-                            <li><strong>Computer Networks:</strong> IP addresses, subnet masks</li>
-                            <li><strong>Embedded Systems:</strong> Sensor data processing</li>
-                            <li><strong>IoT Devices:</strong> Status indicators, data transmission</li>
-                            <li><strong>Robotics:</strong> Sensor fusion, motor control</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-bold mb-2">Data Encoding & Web:</h4>
-                        <ul class="list-disc ml-4 space-y-1">
-                            <li><strong>Base64 Encoding:</strong> Email attachments, data URLs</li>
-                            <li><strong>Image URLs:</strong> data:image/png;base64,iVBORw0KGgo...</li>
-                            <li><strong>Web APIs:</strong> File uploads, binary data transfer</li>
-                            <li><strong>Database Storage:</strong> Binary data in text fields</li>
-                            <li><strong>JSON APIs:</strong> Embedding images/files in text</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Number Base Systems -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mt-8">
-            <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">🔢 Number Base Systems in Engineering</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div>
-                    <h4 class="font-bold mb-3 text-lg">Common Number Bases:</h4>
-                    <div class="space-y-3">
-                        <div class="border-l-4 border-blue-500 pl-4">
-                            <h5 class="font-bold">Binary (Base 2)</h5>
-                            <p>Uses: 0, 1</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Digital circuits, LEDs, microcontrollers</p>
-                        </div>
-                        <div class="border-l-4 border-green-500 pl-4">
-                            <h5 class="font-bold">Hexadecimal (Base 16)</h5>
-                            <p>Uses: 0-9, A-F</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Memory addresses, color codes (#FF0000)</p>
-                        </div>
-                        <div class="border-l-4 border-purple-500 pl-4">
-                            <h5 class="font-bold">Base64 (Base 64)</h5>
-                            <p>Uses: A-Z, a-z, 0-9, +, /</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">Email attachments, data URLs, web APIs</p>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-3 text-lg">Base64 in Action:</h4>
-                    <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded text-xs font-mono">
-                        <div class="mb-2">
-                            <span class="text-blue-600 dark:text-blue-400">Data URL Example:</span>
-                        </div>
-                        <div class="break-all text-gray-700 dark:text-gray-300">
-                            data:image/png;base64,<br>
-                            iVBORw0KGgoAAAANSUhEUgAA<br>
-                            ABAAAAAQCAYAAAAf8/9hAAAA<br>
-                            BHNCSVQICAgIfAhkiAAAAAlwS<br>
-                            FlzAAAAdgAAAHYBTnsmCAAAA<br>
-                            ...
-                        </div>
-                    </div>
-                    <p class="mt-2 text-xs">This converts binary image data into text characters that can be embedded in HTML, sent via email, or stored in databases.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Manual Calculation Practice -->
-        <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900 dark:to-pink-900 rounded-lg shadow-lg p-6 mt-8">
-            <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">🧮 Manual Calculation Practice</h3>
-            <p class="mb-6 text-gray-700 dark:text-gray-300">
-                Master the step-by-step calculation methods you'll need for exams! Practice converting between different number bases with guided solutions.
-            </p>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Conversion Calculator -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
-                    <h4 class="text-lg font-bold mb-4 text-purple-600 dark:text-purple-400">📚 Step-by-Step Converter</h4>
-                    
-                    <!-- Input Section -->
-                    <div class="space-y-4 mb-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">From Base:</label>
-                                <select id="from-base" class="w-full text-base border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500">
-                                    <option value="2">Binary (2)</option>
-                                    <option value="3">Base 3</option>
-                                    <option value="4">Base 4</option>
-                                    <option value="5">Base 5</option>
-                                    <option value="6">Base 6</option>
-                                    <option value="7">Base 7</option>
-                                    <option value="8">Octal (8)</option>
-                                    <option value="9">Base 9</option>
-                                    <option value="10" selected>Decimal (10)</option>
-                                    <option value="16">Hexadecimal (16)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">To Base:</label>
-                                <select id="to-base" class="w-full text-base border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500">
-                                    <option value="2" selected>Binary (2)</option>
-                                    <option value="3">Base 3</option>
-                                    <option value="4">Base 4</option>
-                                    <option value="5">Base 5</option>
-                                    <option value="6">Base 6</option>
-                                    <option value="7">Base 7</option>
-                                    <option value="8">Octal (8)</option>
-                                    <option value="9">Base 9</option>
-                                    <option value="10">Decimal (10)</option>
-                                    <option value="16">Hexadecimal (16)</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-2">Number to Convert:</label>
-                            <input id="input-number" type="text" placeholder="Enter number (e.g., 101101 for binary)" 
-                                   class="w-full text-base border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500">
-                        </div>
-                        
-                        <button id="calculate-btn" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            🧮 Show Step-by-Step Solution
-                        </button>
-                    </div>
-                    
-                    <!-- Results Section -->
-                    <div id="calculation-results" class="hidden">
-                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
-                            <h5 class="font-bold mb-2">Final Answer:</h5>
-                            <div id="final-answer" class="text-lg font-mono text-purple-600 dark:text-purple-400"></div>
-                        </div>
-                        
-                        <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
-                            <h5 class="font-bold mb-2">Step-by-Step Solution:</h5>
-                            <div id="step-by-step" class="text-sm font-mono space-y-2"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Practice Problems -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6">
-                    <h4 class="text-lg font-bold mb-4 text-green-600 dark:text-green-400">🎯 Practice Problems</h4>
-                    
-                    <div class="space-y-4">
-                        <button id="generate-problem" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                            🎲 Generate Random Problem
-                        </button>
-                        
-                        <div id="practice-problem" class="hidden bg-yellow-50 dark:bg-yellow-900 border-2 border-yellow-300 dark:border-yellow-600 rounded-lg p-4">
-                            <h5 class="font-bold mb-2">Problem:</h5>
-                            <div id="problem-text" class="mb-4 text-sm"></div>
-                            
-                            <div class="space-y-3">
-                                <input id="student-answer" type="text" placeholder="Enter your answer..." 
-                                       class="w-full text-base border border-gray-300 rounded-lg px-3 py-2">
-                                
-                                <div class="flex gap-2">
-                                    <button id="check-answer" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                                        ✓ Check Answer
-                                    </button>
-                                    <button id="show-solution" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                                        💡 Show Solution
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div id="problem-feedback" class="hidden mt-4 p-3 rounded-lg text-sm"></div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Reference -->
-                    <div class="mt-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
-                        <h5 class="font-bold mb-2 text-sm">Quick Reference:</h5>
-                        <div class="text-xs space-y-1">
-                            <div><strong>To Decimal:</strong> Expand using powers (e.g., 101₂ = 1×2² + 0×2¹ + 1×2⁰)</div>
-                            <div><strong>From Decimal:</strong> Divide by base, read remainders bottom-up</div>
-                            <div><strong>Between Bases:</strong> Convert through decimal as intermediate step</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Method Examples -->
-            <div class="mt-6 bg-white dark:bg-gray-800 rounded-lg p-6">
-                <h4 class="text-lg font-bold mb-4 text-indigo-600 dark:text-indigo-400">📖 Calculation Methods</h4>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                    <!-- Expansion Method -->
-                    <div class="border-l-4 border-blue-500 pl-4">
-                        <h5 class="font-bold mb-2">Expansion Method (Base → Decimal)</h5>
-                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded font-mono text-xs">
-                            <div class="mb-2"><strong>Example: 101101₂ → Decimal</strong></div>
-                            <div>= (1×2⁵) + (0×2⁴) + (1×2³) + (1×2²) + (0×2¹) + (1×2⁰)</div>
-                            <div>= (1×32) + (0×16) + (1×8) + (1×4) + (0×2) + (1×1)</div>
-                            <div>= 32 + 0 + 8 + 4 + 0 + 1</div>
-                            <div class="text-blue-600 dark:text-blue-400">= 45₁₀</div>
-                        </div>
-                    </div>
-
-                    <!-- Division Method -->
-                    <div class="border-l-4 border-green-500 pl-4">
-                        <h5 class="font-bold mb-2">Division Method (Decimal → Base)</h5>
-                        <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded font-mono text-xs">
-                            <div class="mb-2"><strong>Example: 39₁₀ → Binary</strong></div>
-                            <div>39 ÷ 2 = 19 remainder 1</div>
-                            <div>19 ÷ 2 = 9 remainder 1</div>
-                            <div>9 ÷ 2 = 4 remainder 1</div>
-                            <div>4 ÷ 2 = 2 remainder 0</div>
-                            <div>2 ÷ 2 = 1 remainder 0</div>
-                            <div>1 ÷ 2 = 0 remainder 1</div>
-                            <div class="text-green-600 dark:text-green-400">Read up: 100111₂</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Learning Without Hardware -->
-        <div class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-lg shadow-lg p-6 mt-8">
-            <h3 class="text-xl font-bold mb-4 text-arduino-blue dark:text-arduino-green">💻 Learn Without Physical Hardware!</h3>
-            <p class="mb-6 text-gray-700 dark:text-gray-300">
-                Yes! You can master these concepts as a software engineer using simulators, online tools, and cloud platforms.
-            </p>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 text-sm">
-                <!-- Hardware Simulation -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-bold mb-3 text-lg text-blue-600 dark:text-blue-400">🔌 Hardware Simulation</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <h5 class="font-semibold">Arduino & Microcontrollers:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>Tinkercad Circuits:</strong> Free Arduino simulator with virtual components</li>
-                                <li><strong>Wokwi:</strong> Online Arduino/ESP32 simulator with real-time debugging</li>
-                                <li><strong>SimulIDE:</strong> Circuit simulator with microcontroller support</li>
-                                <li><strong>Arduino IDE:</strong> Practice coding without uploading to hardware</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold">Digital Circuits & Logic:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>Logisim:</strong> Digital circuit design and simulation</li>
-                                <li><strong>CircuitVerse:</strong> Online logic gate simulator</li>
-                                <li><strong>Digital Works:</strong> Logic circuit simulator</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold">Networking & IoT:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>Packet Tracer:</strong> Cisco network simulator</li>
-                                <li><strong>ContainerLab:</strong> Network topology simulation</li>
-                                <li><strong>Node-RED:</strong> Visual IoT programming</li>
-                                <li><strong>ThingSpeak:</strong> IoT analytics platform</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Software Development -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4">
-                    <h4 class="font-bold mb-3 text-lg text-green-600 dark:text-green-400">⚡ Pure Software Practice</h4>
-                    <div class="space-y-3">
-                        <div>
-                            <h5 class="font-semibold">Data Encoding Projects:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>Build Base64 encoder/decoder</strong> in your favorite language</li>
-                                <li><strong>Create image-to-data-URL</strong> converters</li>
-                                <li><strong>Practice binary operations</strong> with bitwise programming</li>
-                                <li><strong>Implement compression algorithms</strong> using different bases</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold">Web APIs & File Handling:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>File upload APIs</strong> with Base64 encoding</li>
-                                <li><strong>Image processing</strong> with Canvas API</li>
-                                <li><strong>WebRTC</strong> for real-time data transfer</li>
-                                <li><strong>WebSockets</strong> for IoT-like communication</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h5 class="font-semibold">Database & Storage:</h5>
-                            <ul class="list-disc ml-4 text-xs space-y-1">
-                                <li><strong>Store binary data</strong> as Base64 in JSON/SQL</li>
-                                <li><strong>Blob storage</strong> simulation with cloud APIs</li>
-                                <li><strong>Data serialization</strong> projects</li>
-                                <li><strong>Cache optimization</strong> for encoded data</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Start Guide -->
-            <div class="mt-6 bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 p-4 rounded">
-                <h4 class="font-bold mb-2 text-yellow-800 dark:text-yellow-200">🚀 Quick Start for Software Engineers:</h4>
-                <ol class="list-decimal ml-4 text-xs space-y-1 text-yellow-700 dark:text-yellow-300">
-                    <li><strong>Start with Tinkercad:</strong> Create a free account and build virtual Arduino circuits</li>
-                    <li><strong>Learn binary operations:</strong> Practice bitwise AND, OR, XOR in JavaScript/Python</li>
-                    <li><strong>Build a Base64 library:</strong> Implement encoding/decoding from scratch</li>
-                    <li><strong>Create data URL tools:</strong> Convert images to embeddable data URLs</li>
-                    <li><strong>Simulate IoT with WebSockets:</strong> Build sensor dashboards with real-time updates</li>
-                </ol>
-            </div>
-        </div>
-
-
-        <!-- Pattern Table -->
-        <div class="
-        bg-white 
-        dark:bg-gray-800 
-        rounded-lg 
-        shadow-lg 
-        p-6 
-        mt-8">
-            <h3 class="
-            text-xl 
-            font-bold 
-            mb-4 
-            text-arduino-blue 
-            dark:text-arduino-green">📊 Complete Binary Pattern Table</h3>
-            
-            <div class="overflow-x-auto">
-                
-                <table class="
-                w-full 
-                text-sm">
-                    <thead>
-
-                        <tr class="border-b dark:border-gray-600">
-                            <th class="text-left py-2">Decimal</th>
-                            <th class="text-left py-2">Binary</th>
-                            <th class="text-left py-2">LED Pattern</th>
-                            <th class="text-left py-2">Calculation</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="pattern-table" class="
-                    divide-y 
-                    divide-gray-200 
-                    dark:divide-gray-600">
-                        <!-- Table rows will be generated by JavaScript -->
-                    </tbody>
-
-                </table>
-
-            </div>
-        </div>
-
-
-
-
-
-    </div>
-
-
-
-
-
-    <script>
-        // Dark mode support
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            if (event.matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        });
-
-
-        class BinaryCounter {
-            constructor() {
-                this.currentValue = 0;
-                this.isRunning = false;
-                this.intervalId = null;
-                this.speed = 1000;
-                this.predictionMode = false;
-                this.waitingForPrediction = false;
-                
-                this.initializeElements();
-                this.setupEventListeners();
-                this.updateDisplay();
-                this.generatePatternTable();
-            }
-
-            initializeElements() {
-                this.leds = [
-                    document.getElementById('led0'),
-                    document.getElementById('led1'),
-                    document.getElementById('led2'),
-                    document.getElementById('led3')
-                ];
-                this.decimalDisplay = document.getElementById('decimal-display');
-                this.binaryDisplay = document.getElementById('binary-display');
-                this.startBtn = document.getElementById('start-btn');
-                this.stopBtn = document.getElementById('stop-btn');
-                this.stepBtn = document.getElementById('step-btn');
-                this.resetBtn = document.getElementById('reset-btn');
-                this.speedSlider = document.getElementById('speed-slider');
-                this.speedValue = document.getElementById('speed-value');
-                this.predictionModeCheckbox = document.getElementById('prediction-mode');
-                this.predictionPanel = document.getElementById('prediction-panel');
-                this.currentPredictionValue = document.getElementById('current-prediction-value');
-                this.predictionResult = document.getElementById('prediction-result');
-            }
-
-            setupEventListeners() {
-                this.startBtn.addEventListener('click', () => this.start());
-                this.stopBtn.addEventListener('click', () => this.stop());
-                this.stepBtn.addEventListener('click', () => this.step());
-                this.resetBtn.addEventListener('click', () => this.reset());
-                
-                this.speedSlider.addEventListener('input', (e) => {
-                    this.speed = parseInt(e.target.value);
-                    this.speedValue.textContent = this.speed + 'ms';
-                    if (this.isRunning) {
-                        this.stop();
-                        this.start();
-                    }
-                });
-
-                this.predictionModeCheckbox.addEventListener('change', (e) => {
-                    this.predictionMode = e.target.checked;
-                    this.predictionPanel.classList.toggle('hidden', !this.predictionMode);
-                    if (this.predictionMode) {
-                        this.updatePredictionPanel();
-                    }
-                });
-
-                // Prediction buttons
-                document.querySelectorAll('.prediction-btn').forEach(btn => {
-                    btn.addEventListener('click', () => this.handlePrediction(parseInt(btn.dataset.value)));
-                });
-            }
-
-            updateDisplay() {
-                const binaryString = this.currentValue.toString(2).padStart(4, '0');
-                
-                // Update LEDs
-                for (let i = 0; i < 4; i++) {
-                    const bit = parseInt(binaryString[3 - i]);
-                    if (bit === 1) {
-                        this.leds[i].style.backgroundColor = '#00FF00';
-                        this.leds[i].classList.add('led-glow');
-                    } else {
-                        this.leds[i].style.backgroundColor = '#1F2937';
-                        this.leds[i].classList.remove('led-glow');
-                    }
-                }
-
-                // Update displays
-                this.decimalDisplay.textContent = this.currentValue;
-                this.binaryDisplay.textContent = binaryString;
-
-                if (this.predictionMode) {
-                    this.updatePredictionPanel();
-                }
-            }
-
-            updatePredictionPanel() {
-                this.currentPredictionValue.textContent = this.currentValue;
-                this.predictionResult.classList.add('hidden');
-                
-                // Reset prediction button styles
-                document.querySelectorAll('.prediction-btn').forEach(btn => {
-                    btn.classList.remove('bg-green-200', 'bg-red-200', 'border-green-500', 'border-red-500');
-                    btn.classList.add('bg-white', 'border-yellow-400');
-                });
-            }
-
-            handlePrediction(predictedValue) {
-                if (!this.predictionMode) return;
-
-                const nextValue = (this.currentValue + 1) % 16;
-                const isCorrect = predictedValue === nextValue;
-
-                // Show result
-                this.predictionResult.textContent = isCorrect ? '✅ Correct!' : `❌ Wrong! Next is ${nextValue} (${nextValue.toString(2).padStart(4, '0')})`;
-                this.predictionResult.className = `text-center font-bold text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'}`;
-                this.predictionResult.classList.remove('hidden');
-
-                // Highlight the correct answer
-                document.querySelectorAll('.prediction-btn').forEach(btn => {
-                    const value = parseInt(btn.dataset.value);
-                    if (value === nextValue) {
-                        btn.classList.remove('bg-white', 'border-yellow-400');
-                        btn.classList.add('bg-green-200', 'border-green-500');
-                    } else if (value === predictedValue && !isCorrect) {
-                        btn.classList.remove('bg-white', 'border-yellow-400');
-                        btn.classList.add('bg-red-200', 'border-red-500');
-                    }
-                });
-
-                // Auto-advance after a delay
-                setTimeout(() => {
-                    this.step();
-                }, 2000);
-            }
-
-            start() {
-                if (this.isRunning) return;
-                
-                this.isRunning = true;
-                this.startBtn.disabled = true;
-                this.intervalId = setInterval(() => {
-                    if (this.predictionMode && !this.waitingForPrediction) {
-                        // In prediction mode, wait for user input
-                        return;
-                    }
-                    this.step();
-                }, this.speed);
-            }
-
-
-            stop() {
-                this.isRunning = false;
-                this.startBtn.disabled = false;
-                if (this.intervalId) {
-                    clearInterval(this.intervalId);
-                    this.intervalId = null;
-                }
-            }
-
-            step() {
-                this.currentValue = (this.currentValue + 1) % 16;
-                this.updateDisplay();
-            }
-
-
-            reset() {
-                this.stop();
-                this.currentValue = 0;
-                this.updateDisplay();
-            }
-
-            generatePatternTable() {
-                const tableBody = document.getElementById('pattern-table');
-                
-                for (let i = 0; i <= 15; i++)
-                 {
-                    const binary = i.toString(2).padStart(4, '0');
-                    const ledPattern = binary.split('').map(bit => bit === '1' ? '🟢' : '⚫').join(' ');
-                    
-                    // Calculate the breakdown
-                    const calculation = [];
-                    for (let j = 0; j < 4; j++) {
-                        if (binary[j] === '1') {
-                            calculation.push(`${Math.pow(2, 3-j)}`);
-                        }
-                    }
-                    const calcString = calculation.length > 0 ? calculation.join(' + ') + ` = ${i}` : '0';
-
-
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="py-2 font-mono font-bold">${i}</td>
-                        <td class="py-2 font-mono">${binary}</td>
-                        <td class="py-2">${ledPattern}</td>
-                        <td class="py-2 text-xs">${calcString}</td>
-                    `;
-                    tableBody.appendChild(row);
-                }
-            }
-        }
-
-        // Manual Calculation Practice Class
-        class ManualCalculationPractice {
-            constructor() {
-                this.currentProblem = null;
-                this.setupEventListeners();
-            }
-
-            setupEventListeners() {
-                document.getElementById('calculate-btn').addEventListener('click', () => this.showStepByStep());
-                document.getElementById('generate-problem').addEventListener('click', () => this.generateProblem());
-                document.getElementById('check-answer').addEventListener('click', () => this.checkAnswer());
-                document.getElementById('show-solution').addEventListener('click', () => this.showSolution());
-            }
-
-            showStepByStep() {
-                const fromBase = parseInt(document.getElementById('from-base').value);
-                const toBase = parseInt(document.getElementById('to-base').value);
-                const inputNumber = document.getElementById('input-number').value.trim();
-
-                if (!inputNumber) {
-                    this.showAlert('Please enter a number to convert');
-                    return;
-                }
-
-                try {
-                    const result = this.convertWithSteps(inputNumber, fromBase, toBase);
-                    this.displayResults(result);
-                } catch (error) {
-                    this.showAlert('Invalid input. Please check your number and base selection.');
-                }
-            }
-
-            convertWithSteps(inputNumber, fromBase, toBase) {
-                // First convert to decimal if not already
-                let decimalValue;
-                let stepsToDecimal = [];
-
-                if (fromBase === 10) {
-                    decimalValue = parseInt(inputNumber);
-                    stepsToDecimal.push(`Input: ${inputNumber}₁₀ (already in decimal)`);
-                } else {
-                    // Convert from source base to decimal using expansion method
-                    decimalValue = 0;
-                    stepsToDecimal.push(`Converting ${inputNumber}₍${fromBase}₎ to decimal:`);
-                    stepsToDecimal.push(`Using expansion method:`);
-                    
-                    const digits = inputNumber.split('').reverse();
-                    const terms = [];
-                    
-                    for (let i = 0; i < digits.length; i++) {
-                        const digit = this.parseDigit(digits[i]);
-                        const power = Math.pow(fromBase, i);
-                        const value = digit * power;
-                        terms.push(`(${digit} × ${fromBase}^${i})`);
-                        decimalValue += value;
-                        stepsToDecimal.push(`Position ${i}: ${digit} × ${fromBase}^${i} = ${digit} × ${power} = ${value}`);
-                    }
-                    
-                    stepsToDecimal.push(`= ${terms.join(' + ')}`);
-                    stepsToDecimal.push(`= ${decimalValue}₁₀`);
-                }
-
-                // Now convert from decimal to target base
-                let stepsFromDecimal = [];
-                let finalResult;
-
-                if (toBase === 10) {
-                    finalResult = decimalValue.toString();
-                    stepsFromDecimal.push(`Result: ${decimalValue}₁₀`);
-                } else {
-                    // Convert from decimal to target base using division method
-                    stepsFromDecimal.push(`Converting ${decimalValue}₁₀ to base ${toBase}:`);
-                    stepsFromDecimal.push(`Using repeated division method:`);
-                    
-                    const divisions = [];
-                    let quotient = decimalValue;
-                    const remainders = [];
-                    
-                    while (quotient > 0) {
-                        const remainder = quotient % toBase;
-                        quotient = Math.floor(quotient / toBase);
-                        remainders.unshift(this.toDigit(remainder));
-                        divisions.push(`${quotient * toBase + remainder} ÷ ${toBase} = ${quotient} remainder ${remainder}`);
-                    }
-                    
-                    divisions.forEach(div => stepsFromDecimal.push(div));
-                    stepsFromDecimal.push(`Reading remainders from bottom to top: ${remainders.join('')}`);
-                    finalResult = remainders.join('');
-                }
-
-                return {
-                    originalInput: `${inputNumber}₍${fromBase}₎`,
-                    finalAnswer: `${finalResult}₍${toBase}₎`,
-                    stepsToDecimal,
-                    stepsFromDecimal,
-                    decimalValue
-                };
-            }
-
-
-            parseDigit(digit) {
-                if (digit >= '0' && digit <= '9') 
-                return parseInt(digit);
-
-                if (digit >= 'A' && digit <= 'F') 
-                return digit.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
-
-                if (digit >= 'a' && digit <= 'f') 
-                return digit.charCodeAt(0) - 'a'.charCodeAt(0) + 10;
-
-                
-                throw new Error('Invalid digit');
-            }
-
-
-            toDigit(value) {
-                if (value < 10) 
-                return value.toString();
-
-                return String.fromCharCode('A'.charCodeAt(0) + value - 10);
-            }
-
-            displayResults(result) {
-                document.getElementById('final-answer').textContent = result.finalAnswer;
-                
-                const stepByStepDiv = document.getElementById('step-by-step');
-                stepByStepDiv.innerHTML = '';
-                
-                // Add steps to decimal
-                result.stepsToDecimal.forEach(step => {
-                    const div = document.createElement('div');
-                    div.textContent = step;
-                    stepByStepDiv.appendChild(div);
-                });
-                
-                // Add separator if needed
-                if (result.stepsFromDecimal.length > 1) {
-                    const separator = document.createElement('div');
-                    separator.textContent = '---';
-                    separator.className = 'text-gray-500 text-center my-2';
-                    stepByStepDiv.appendChild(separator);
-                    
-                    // Add steps from decimal
-                    result.stepsFromDecimal.forEach(step => {
-                        const div = document.createElement('div');
-                        div.textContent = step;
-                        stepByStepDiv.appendChild(div);
-                    });
-                }
-                
-                document.getElementById('calculation-results').classList.remove('hidden');
-            }
-
-            generateProblem() {
-                const problemTypes = [
-                    { from: 2, to: 10, range: [8, 255] },
-                    { from: 10, to: 2, range: [8, 100] },
-                    { from: 8, to: 10, range: [10, 200] },
-                    { from: 10, to: 8, range: [10, 100] },
-                    { from: 16, to: 10, range: [16, 255] },
-                    { from: 10, to: 16, range: [16, 255] },
-                    { from: 5, to: 10, range: [10, 100] },
-                    { from: 10, to: 5, range: [10, 100] }
-                ];
-
-                const randomType = problemTypes[Math.floor(Math.random() * problemTypes.length)];
-                const randomValue = Math.floor(Math.random() * (randomType.range[1] - randomType.range[0] + 1)) + randomType.range[0];
-                
-
-                let problemNumber;
-                if (randomType.from === 10) {
-                    problemNumber = randomValue.toString();
-                } else {
-                    problemNumber = randomValue.toString(randomType.from);
-                }
-
-                this.currentProblem = {
-                    number: problemNumber,
-                    fromBase: randomType.from,
-                    toBase: randomType.to,
-                    answer: randomType.to === 10 ? 
-                        parseInt(problemNumber, randomType.from).toString() :
-                        parseInt(problemNumber, randomType.from).toString(randomType.to)
-                };
-
-                const baseNames = {
-                    2: 'Binary',
-                    8: 'Octal', 
-                    10: 'Decimal',
-                    16: 'Hexadecimal'
-                };
-
-                document.getElementById('problem-text').innerHTML = `
-                    Convert <strong>${problemNumber}₍${randomType.from}₎</strong> to Base ${randomType.to}<br>
-                    <small class="text-gray-600 dark:text-gray-400">
-                        ${baseNames[randomType.from] || `Base ${randomType.from}`} → ${baseNames[randomType.to] || `Base ${randomType.to}`}
-                    </small>
-                `;
-
-                document.getElementById('practice-problem').classList.remove('hidden');
-                document.getElementById('problem-feedback').classList.add('hidden');
-                document.getElementById('student-answer').value = '';
-            }
-
-            checkAnswer() {
-                if (!this.currentProblem) return;
-
-                const studentAnswer = document.getElementById('student-answer').value.trim().toLowerCase();
-                const correctAnswer = this.currentProblem.answer.toLowerCase();
-
-                const feedbackDiv = document.getElementById('problem-feedback');
-                
-                if (studentAnswer === correctAnswer) {
-                    feedbackDiv.innerHTML = `
-                        <div class="text-green-600 dark:text-green-400">
-                            ✅ <strong>Correct!</strong> Well done!
-                        </div>
-                    `;
-                    feedbackDiv.className = 'mt-4 p-3 rounded-lg text-sm bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-600';
-                } else {
-                    feedbackDiv.innerHTML = `
-                        <div class="text-red-600 dark:text-red-400">
-                            ❌ <strong>Incorrect.</strong> The correct answer is <strong>${this.currentProblem.answer}₍${this.currentProblem.toBase}₎</strong>
-                        </div>
-                    `;
-                    feedbackDiv.className = 'mt-4 p-3 rounded-lg text-sm bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-600';
-                }
-                
-                feedbackDiv.classList.remove('hidden');
-            }
-
-            showSolution() {
-                if (!this.currentProblem) 
-                return;
-
-                try {
-                    const solution = this.convertWithSteps(
-                        this.currentProblem.number,
-                        this.currentProblem.fromBase,
-                        this.currentProblem.toBase
-                    );
-
-                    let solutionHtml = `
-                        <div class="text-blue-600 dark:text-blue-400">
-                            <strong>💡 Step-by-Step Solution:</strong>
-                        </div>
-                        <div class="mt-2 font-mono text-xs space-y-1">
-                    `;
-
-                    solution.stepsToDecimal.forEach(step => {
-                        solutionHtml += `<div>${step}</div>`;
-                    });
-
-                    if (solution.stepsFromDecimal.length > 1) {
-                        solutionHtml += '<div class="text-gray-500 my-1">---</div>';
-                        solution.stepsFromDecimal.forEach(step => {
-                            solutionHtml += `<div>${step}</div>`;
-                        });
-                    }
-
-                    solutionHtml += `
-                        </div>
-                        <div class="mt-2">
-                            <strong>Final Answer: ${solution.finalAnswer}</strong>
-                        </div>
-                    `;
-
-                    const feedbackDiv = document.getElementById('problem-feedback');
-                    feedbackDiv.innerHTML = solutionHtml;
-                    feedbackDiv.className = 'mt-4 p-3 rounded-lg text-sm bg-blue-100 dark:bg-blue-900 border border-blue-300 dark:border-blue-600';
-                    feedbackDiv.classList.remove('hidden');
-                } catch (error) {
-                    this.showAlert('Error generating solution');
-                }
-            }
-
-
-
-
-            showAlert(message) {
-                // Create custom modal since alert() is not allowed
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                modal.innerHTML = `
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-                        <p class="text-gray-700 dark:text-gray-300 mb-4">${message}</p>
-                        <div class="flex justify-end">
-                            <button class="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded" onclick="this.closest('.fixed').remove()">OK</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-        }
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', () => {
-            new BinaryCounter();
-            new ManualCalculationPractice();
-        });
-    </script>
+
+<body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
+
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Learning Module Page -->
+<div class="fade-in">
+
+
+<!-- Learning Header -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-4">
+<div>
+<h3 class="headline-4 text-neutral-800 dark:text-white mb-2">Number and Numeration</h3>
+</div>
+<div class="flex items-center space-x-4">
+<div class="text-right">
+
+    <!-- Currently hardcoded-->
+<p class="overline text-neutral-600 dark:text-neutral-400">Overall Progress</p>
+<div class="flex items-center space-x-2">
+<div class="w-32 bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="learning-progress h-2 rounded-full" style="width: 43%"></div>
+</div>
+<span class="caption font-medium text-neutral-800 dark:text-white">43%</span>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Topic Selection Tabs -->
+<div class="flex items-center space-x-4 mb-6">
+<button onclick="showEconomicsTopic('production')" id="production-tab" class="px-6 py-3 bg-accent text-white rounded-xl shadow-material-1">
+<span class="button-text">Number Bases</span>
+</button>
+</div>
+
+
+<!-- Production Topic Content -->
+<div id="production-content" class="economics-topic-content">
+
+    
+<!-- Learning Objectives -->
+<div class="concept-card rounded-2xl p-6 mb-6">
+<h3 class="subtitle-1 mb-4 text-neutral-800 dark:text-white flex items-center">
+
+<span class="material-icons text-accent mr-2">lightbulb</span>
+Learning Objectives - Number Bases
+
+</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Concept and types of number base</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Binary numbers</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Conversion in number bases</span>
+</div>
+
+    <div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300"> Basic arithmetic operations</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Bicimal numbers: conversion, addtion and subtraction</span>
+</div>
+
+<div class="flex items-start space-x-2">
+<span class="material-icons text-success text-sm mt-0.5">check_circle</span>
+<span class="text-neutral-700 dark:text-neutral-300">Perform operations in modulo arithmetic</span>
+</div>
+
+</div>
+</div>
+</div>
+
+
+<!-- Production Topic Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+<!-- TP, AP, MP Relationships -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('production-relationships')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+
+<span class="material-icons text-white">trending_up</span>
+
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-warning/10 text-warning px-2 py-1 rounded-full">In Progress</span>
+<div class="w-6 h-6 bg-warning rounded-full flex items-center justify-center">
+<span class="text-white text-sm font-bold">60%</span>
+</div>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">TP, AP, MP Relationships</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Total, Average, and Marginal Product with Law of Variable Proportion</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">60%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-warning h-2 rounded-full" style="width: 60%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>25 min read</span>
+<span>•</span>
+<span>8 interactive charts</span>
+</div>
+</div>
+</div>
+
+<!-- Additional Production Topics -->
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('economies-scale')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-premium-600 rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">scale</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-neutral-200 text-neutral-600 px-2 py-1 rounded-full">Not Started</span>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Economies of Scale</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Internal and external economies, diseconomies of scale</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">0%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-neutral-400 h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>30 min read</span>
+<span>•</span>
+<span>10 examples</span>
+</div>
+</div>
+</div>
+
+<div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 shadow-material-1 interactive-element" onclick="openLearningTopic('production-functions')">
+<div class="flex items-center justify-between mb-4">
+<div class="w-12 h-12 bg-error rounded-xl flex items-center justify-center">
+<span class="material-icons text-white">functions</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="caption bg-neutral-200 text-neutral-600 px-2 py-1 rounded-full">Not Started</span>
+</div>
+</div>
+<h3 class="subtitle-1 mb-2 text-neutral-800 dark:text-white">Production Functions</h3>
+<p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Mathematical relationships and returns to scale</p>
+<div class="space-y-2">
+<div class="flex justify-between text-sm">
+<span class="text-neutral-600 dark:text-neutral-400">Progress</span>
+<span class="font-medium text-neutral-800 dark:text-white">0%</span>
+</div>
+<div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-2">
+<div class="bg-neutral-400 h-2 rounded-full" style="width: 0%"></div>
+</div>
+<div class="flex items-center space-x-2 text-xs text-neutral-500">
+<span class="material-icons text-xs">schedule</span>
+<span>35 min read</span>
+<span>•</span>
+<span>12 interactive graphs</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Quick Actions for Learning -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="material-card bg-gradient-to-br from-accent to-accent-600 rounded-2xl p-6 text-white">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-icons text-2xl">quiz</span>
+<h3 class="subtitle-1">Practice Quiz</h3>
+</div>
+<p class="body-2 mb-6 text-accent-100">Test your understanding with topic-specific questions</p>
+<button onclick="startLearningQuiz()" class="material-button w-full px-4 py-3 bg-white text-accent rounded-xl shadow-material-1 hover:shadow-material-2">
+<span class="button-text">Start Quiz</span>
+</button>
+</div>
+
+
+<div class="material-card bg-gradient-to-br from-warning to-orange-500 rounded-2xl p-6 text-white">
+<div class="flex items-center space-x-3 mb-4">
+<span class="material-icons text-2xl">assessment</span>
+<h3 class="subtitle-1">Progress Report</h3>
+</div>
+
+<p class="body-2 mb-6 text-orange-100">View detailed analytics of your learning progress</p>
+<button onclick="showProgressReport()" class="material-button w-full px-4 py-3 bg-white text-orange-600 rounded-xl shadow-material-1 hover:shadow-material-2">
+<span class="button-text">View Report</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+
+
+<script>
+// Dark mode detection
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+if (event.matches) {
+document.documentElement.classList.add('dark');
+} else {
+document.documentElement.classList.remove('dark');
+}
+});
+
+// Economics Topic Switching
+function showEconomicsTopic(topicName) {
+// Hide all economics topic content
+document.querySelectorAll('.economics-topic-content').forEach(content => {
+content.classList.add('hidden');
+});
+
+// Show selected topic content
+const targetContent = document.getElementById(topicName + '-content');
+if (targetContent) {
+targetContent.classList.remove('hidden');
+}
+
+// Update tab styling
+document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+tab.classList.remove('bg-accent', 'text-white');
+tab.classList.add('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300', 'hover:bg-neutral-50', 'dark:hover:bg-neutral-700');
+});
+
+const activeTab = document.getElementById(topicName + '-tab');
+if (activeTab) {
+activeTab.classList.remove('border', 'border-neutral-300', 'dark:border-neutral-600', 'text-neutral-700', 'dark:text-neutral-300', 'hover:bg-neutral-50', 'dark:hover:bg-neutral-700');
+activeTab.classList.add('bg-accent', 'text-white');
+}
+}
+
+
+// Learning Module Functions
+function openLearningTopic(topicId) {
+showMaterialToast(`Opening ${topicId.replace('-', ' ')} learning module...`, 'info');
+// Implementation for opening specific learning topics
+}
+
+function startLearningQuiz() {
+showMaterialToast('Starting topic-specific quiz...', 'info');
+// Implementation for learning quiz
+}
+
+function openInteractiveLab() {
+showMaterialToast('Opening interactive simulation lab...', 'info');
+// Implementation for interactive lab
+}
+
+
+function showProgressReport() {
+showMaterialToast('Generating your detailed progress report...', 'info');
+// Implementation for progress report
+}
+
+
+// Material Design Toast System
+function showMaterialToast(message, type = 'info') {
+const toastContainer = document.getElementById('toast-container') || createToastContainer();
+
+const toast = document.createElement('div');
+const iconMap = {
+success: 'check_circle',
+error: 'error',
+warning: 'warning',
+info: 'info'
+};
+
+const colorMap = {
+success: 'bg-success text-white',
+error: 'bg-error text-white',
+warning: 'bg-warning text-white',
+info: 'bg-accent text-white'
+};
+
+toast.className = `material-card flex items-center space-x-3 px-6 py-4 rounded-2xl shadow-material-3 ${colorMap[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
+
+toast.innerHTML = `
+<span class="material-icons">${iconMap[type]}</span>
+<span class="subtitle-2 flex-1">${message}</span>
+<button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
+`;
+
+toastContainer.appendChild(toast);
+
+// Animate in
+setTimeout(() => {
+toast.classList.remove('translate-y-2', 'opacity-0');
+}, 100);
+
+// Auto remove after 5 seconds
+setTimeout(() => {
+if (toast.parentElement) {toast.classList.add('translate-y-2', 'opacity-0');
+setTimeout(() => toast.remove(), 300);
+}}, 5000);
+}
+
+function createToastContainer() {
+const container = document.createElement('div');
+container.id = 'toast-container';
+container.className = 'fixed bottom-6 left-6 z-50 max-w-sm';
+document.body.appendChild(container);
+return container;
+}
+
+// Initialize the learning page
+document.addEventListener('DOMContentLoaded', function() {setTimeout(() => {showMaterialToast('Welcome to the Mathematics Learning Hub! 📚', 'success');}, 1000);});
+</script>
 </body>
 </html>
