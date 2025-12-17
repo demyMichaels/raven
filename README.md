@@ -34,3 +34,35 @@ In summary:
 *   **"Change of State"** is about **changing phase**.
 
 Mastering when to use `Q = mcΔT` and when to use `Q = mL` is the key to solving 90% of problems in these sections. Would you like me to walk through the detailed solution for one of the combined problems (like Q20 or Q53) to illustrate this step-by-step process?
+
+
+
+
+
+---------------------------------
+Yes, that JSON format will work perfectly! The explanation box will display it correctly.
+
+However, since your current explanation is just one sentence, it will show as a single step. To get the line-by-line breakdown for your students, you can format your explanations with numbered steps like this:
+
+Option 1: Numbered Steps
+json
+"explanation": "1. Dew point is the temperature at which air becomes saturated with water vapour. 2. At this temperature, the air cannot hold any more moisture. 3. Water vapour begins to condense into liquid droplets (dew). 4. This is why we see dew on grass in the early morning when temperatures drop."
+
+Option 2: Line Breaks
+json
+"explanation": "Dew point is the temperature at which air becomes saturated with water vapour.\nAt this point, the air cannot hold any more moisture.\nWater vapour begins to condense into liquid droplets.\nRemember: Lower dew points mean drier air, higher dew points mean more humid air."
+
+Option 3: Sequential Words
+json
+"explanation": "First, understand that air can only hold a certain amount of water vapour. Then, as temperature drops, air's capacity to hold moisture decreases. Finally, at the dew point, saturation occurs and condensation begins."
+
+What each format produces:
+Your Current Format	With Numbered Steps
+Shows as 1 single step	Shows as 4 separate steps with numbered badges
+The parser will automatically detect:
+
+✅ 1. 2. 3. numbered patterns
+✅ Step 1: Step 2: patterns
+✅ First, Then, Finally, words
+✅ Line breaks (\n)
+✅ Remember: or Note: → Key Takeaway box
