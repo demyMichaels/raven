@@ -331,12 +331,56 @@
             <!-- Mobile Mode Selector -->
             <div class="sm:hidden max-w-5xl mx-auto px-4 pt-4">
                 <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Practice Mode</span>
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Select Mode</span>
+                            <button id="modeInfoBtn" class="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-neutral-500 dark:text-neutral-400 active:bg-accent active:text-white transition-colors">
+                                <span class="material-icons text-xs">help</span>
+                            </button>
+                        </div>
                         <span id="mobileSelectedModeName" class="text-xs font-semibold text-accent"></span>
                     </div>
-                    <div id="mobileModeSelector" class="grid grid-cols-4 gap-1">
+                    <p id="mobileSelectedModeDesc" class="text-[11px] text-neutral-500 dark:text-neutral-400 mb-2"></p>
+                    <div id="mobileModeSelector" class="grid grid-cols-4 gap-1.5">
                         <!-- Mobile mode buttons will be rendered here -->
+                    </div>
+
+                    <!-- Expandable Mode Info Panel -->
+                    <div id="modeInfoPanel" class="hidden mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-700">
+                        <p class="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-2">What each mode means:</p>
+                        <div class="space-y-2">
+                            <div class="flex items-start gap-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                <span class="material-icons text-blue-500 text-base mt-0.5">all_inclusive</span>
+                                <div>
+                                    <p class="text-xs font-semibold text-blue-700 dark:text-blue-300">Untimed</p>
+                                    <p class="text-[11px] text-blue-600 dark:text-blue-400">No time limit. Take your time to learn and understand each question.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 rounded-lg bg-orange-50 dark:bg-orange-900/20">
+                                <span class="material-icons text-orange-500 text-base mt-0.5">schedule</span>
+                                <div>
+                                    <p class="text-xs font-semibold text-orange-700 dark:text-orange-300">JAMB Exam</p>
+                                    <p class="text-[11px] text-orange-600 dark:text-orange-400">40 seconds per question. Practice with real JAMB exam timing.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20">
+                                <span class="material-icons text-red-500 text-base mt-0.5">flash_on</span>
+                                <div>
+                                    <p class="text-xs font-semibold text-red-700 dark:text-red-300">Speed Test</p>
+                                    <p class="text-[11px] text-red-600 dark:text-red-400">20 seconds per question. Train your quick thinking skills.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                                <span class="material-icons text-purple-500 text-base mt-0.5">bolt</span>
+                                <div>
+                                    <p class="text-xs font-semibold text-purple-700 dark:text-purple-300">Lightning</p>
+                                    <p class="text-[11px] text-purple-600 dark:text-purple-400">10 seconds per question. Expert mode for mastery.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="closeModeInfoBtn" class="w-full mt-3 py-2 text-xs font-medium text-white bg-accent hover:bg-accent-600 rounded-lg transition-colors">
+                            Got it!
+                        </button>
                     </div>
                 </div>
             </div>
@@ -540,10 +584,10 @@
 
         // Practice modes configuration
         const PRACTICE_MODES = {
-            practice: { name: 'Practice Mode', time: null, description: 'No time limit - Learn at your own pace', icon: 'self_improvement', color: 'from-blue-500 to-blue-600' },
-            jamb: { name: 'JAMB Mode', time: 40, description: '40 seconds per question - Real exam timing', icon: 'schedule', color: 'from-orange-500 to-orange-600' },
-            hard: { name: 'Hard Mode', time: 20, description: '20 seconds per question - Advanced practice', icon: 'flash_on', color: 'from-red-500 to-red-600' },
-            zen: { name: 'Zen Mode', time: 10, description: '10 seconds per question - Master challenge', icon: 'bolt', color: 'from-purple-500 to-purple-600' }
+            practice: { name: 'Untimed', shortName: 'Untimed', time: null, description: 'No time pressure - Take your time to learn', icon: 'all_inclusive', color: 'from-blue-500 to-blue-600' },
+            jamb: { name: 'JAMB Exam', shortName: 'JAMB', time: 40, description: '40 sec/question - Real JAMB timing', icon: 'schedule', color: 'from-orange-500 to-orange-600' },
+            hard: { name: 'Speed Test', shortName: 'Speed', time: 20, description: '20 sec/question - Quick thinking', icon: 'flash_on', color: 'from-red-500 to-red-600' },
+            zen: { name: 'Lightning', shortName: 'Lightning', time: 10, description: '10 sec/question - Expert mode', icon: 'bolt', color: 'from-purple-500 to-purple-600' }
         };
 
         // Analytics data
@@ -719,22 +763,38 @@
             const desktopContainer = document.getElementById('modeSelectorButtons');
             const mobileContainer = document.getElementById('mobileModeSelector');
             const mobileModeName = document.getElementById('mobileSelectedModeName');
+            const mobileDescription = document.getElementById('mobileSelectedModeDesc');
 
-            // Desktop mode buttons
+            // Desktop mode buttons with tooltips
             desktopContainer.innerHTML = '';
             Object.entries(PRACTICE_MODES).forEach(([key, mode]) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative group';
+
                 const btn = document.createElement('button');
                 btn.className = `mode-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     currentMode === key
                         ? 'bg-gradient-to-r ' + mode.color + ' text-white shadow-material-1'
                         : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                 }`;
-                btn.innerHTML = `<span class="material-icons text-sm align-middle mr-1">${mode.icon}</span>${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                btn.innerHTML = `<span class="material-icons text-sm align-middle mr-1">${mode.icon}</span>${mode.shortName}`;
                 btn.addEventListener('click', () => setGlobalMode(key));
-                desktopContainer.appendChild(btn);
+
+                // Tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-800 dark:bg-neutral-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-material-2';
+                tooltip.innerHTML = `
+                    <div class="font-semibold mb-0.5">${mode.name}</div>
+                    <div class="text-neutral-300">${mode.description}</div>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-800 dark:border-t-neutral-700"></div>
+                `;
+
+                wrapper.appendChild(btn);
+                wrapper.appendChild(tooltip);
+                desktopContainer.appendChild(wrapper);
             });
 
-            // Mobile mode buttons
+            // Mobile mode buttons with labels
             mobileContainer.innerHTML = '';
             Object.entries(PRACTICE_MODES).forEach(([key, mode]) => {
                 const btn = document.createElement('button');
@@ -743,14 +803,19 @@
                         ? 'bg-gradient-to-br ' + mode.color + ' text-white shadow-material-1'
                         : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
                 }`;
-                btn.innerHTML = `<span class="material-icons text-lg">${mode.icon}</span>`;
-                btn.title = mode.name;
+                btn.innerHTML = `
+                    <span class="material-icons text-lg">${mode.icon}</span>
+                    <span class="text-[10px] mt-0.5 font-medium">${mode.shortName}</span>
+                `;
                 btn.addEventListener('click', () => setGlobalMode(key));
                 mobileContainer.appendChild(btn);
             });
 
-            // Update mobile mode name display
+            // Update mobile mode name and description display
             mobileModeName.textContent = PRACTICE_MODES[currentMode].name;
+            if (mobileDescription) {
+                mobileDescription.textContent = PRACTICE_MODES[currentMode].description;
+            }
         }
 
         // Set global mode (persists across topics)
@@ -1465,6 +1530,23 @@
                 renderQuestion();
                 showQuizInterface();
             });
+
+            // Mobile mode info panel toggle
+            const modeInfoBtn = document.getElementById('modeInfoBtn');
+            const modeInfoPanel = document.getElementById('modeInfoPanel');
+            const closeModeInfoBtn = document.getElementById('closeModeInfoBtn');
+
+            if (modeInfoBtn && modeInfoPanel) {
+                modeInfoBtn.addEventListener('click', () => {
+                    modeInfoPanel.classList.toggle('hidden');
+                });
+            }
+
+            if (closeModeInfoBtn && modeInfoPanel) {
+                closeModeInfoBtn.addEventListener('click', () => {
+                    modeInfoPanel.classList.add('hidden');
+                });
+            }
         }
 
         // Initialize the app
