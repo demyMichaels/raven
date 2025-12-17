@@ -317,27 +317,26 @@
                             </p>
                         </div>
 
-                        <!-- Stats badges - right aligned -->
-                        <div class="hidden lg:flex items-center gap-3">
-                            <div class="stat-badge px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="material-icons text-accent text-sm">quiz</span>
-                                    <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Unlimited</span>
-                                </div>
-                            </div>
-                            <div class="stat-badge px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="material-icons text-primary text-sm">insights</span>
-                                    <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Instant Feedback</span>
-                                </div>
-                            </div>
-                            <div class="stat-badge px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="material-icons text-accent text-sm">trending_up</span>
-                                    <span class="text-xs font-medium text-neutral-700 dark:text-neutral-300">Track Progress</span>
-                                </div>
+                        <!-- Mode Selector - right aligned -->
+                        <div class="hidden sm:flex items-center gap-2">
+                            <span class="text-xs text-neutral-500 dark:text-neutral-400 mr-1">Mode:</span>
+                            <div id="modeSelectorButtons" class="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl p-1">
+                                <!-- Mode buttons will be rendered here -->
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Mode Selector -->
+            <div class="sm:hidden max-w-5xl mx-auto px-4 pt-4">
+                <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Practice Mode</span>
+                        <span id="mobileSelectedModeName" class="text-xs font-semibold text-accent"></span>
+                    </div>
+                    <div id="mobileModeSelector" class="grid grid-cols-4 gap-1">
+                        <!-- Mobile mode buttons will be rendered here -->
                     </div>
                 </div>
             </div>
@@ -535,7 +534,7 @@
         let currentQuestionIndex = 0;
         let userAnswers = [];
         let quizStartTime = null;
-        let currentMode = null;
+        let currentMode = 'practice'; // Default mode - persists across topics
         let timerInterval = null;
         let timeRemaining = 0;
 
@@ -710,8 +709,54 @@
         // Initialize the app
         async function init() {
             loadAnalyticsData();
+            renderModeSelectors();
             renderSubjects();
             setupEventListeners();
+        }
+
+        // Render persistent mode selectors (desktop and mobile)
+        function renderModeSelectors() {
+            const desktopContainer = document.getElementById('modeSelectorButtons');
+            const mobileContainer = document.getElementById('mobileModeSelector');
+            const mobileModeName = document.getElementById('mobileSelectedModeName');
+
+            // Desktop mode buttons
+            desktopContainer.innerHTML = '';
+            Object.entries(PRACTICE_MODES).forEach(([key, mode]) => {
+                const btn = document.createElement('button');
+                btn.className = `mode-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    currentMode === key
+                        ? 'bg-gradient-to-r ' + mode.color + ' text-white shadow-material-1'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`;
+                btn.innerHTML = `<span class="material-icons text-sm align-middle mr-1">${mode.icon}</span>${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                btn.addEventListener('click', () => setGlobalMode(key));
+                desktopContainer.appendChild(btn);
+            });
+
+            // Mobile mode buttons
+            mobileContainer.innerHTML = '';
+            Object.entries(PRACTICE_MODES).forEach(([key, mode]) => {
+                const btn = document.createElement('button');
+                btn.className = `mobile-mode-btn flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+                    currentMode === key
+                        ? 'bg-gradient-to-br ' + mode.color + ' text-white shadow-material-1'
+                        : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400'
+                }`;
+                btn.innerHTML = `<span class="material-icons text-lg">${mode.icon}</span>`;
+                btn.title = mode.name;
+                btn.addEventListener('click', () => setGlobalMode(key));
+                mobileContainer.appendChild(btn);
+            });
+
+            // Update mobile mode name display
+            mobileModeName.textContent = PRACTICE_MODES[currentMode].name;
+        }
+
+        // Set global mode (persists across topics)
+        function setGlobalMode(modeKey) {
+            currentMode = modeKey;
+            renderModeSelectors(); // Re-render to update active state
         }
 
         // Render subjects
@@ -897,7 +942,7 @@
             });
         }
 
-        // Start quiz for selected topic - show mode selection first
+        // Start quiz for selected topic - uses pre-selected mode
         function startQuiz(topic) {
             if (!topic.questions || topic.questions.length === 0) {
                 showError('No questions available for this topic');
@@ -905,7 +950,15 @@
             }
 
             currentTopic = topic;
-            showModeSelection();
+
+            // Start directly with the pre-selected mode (no modal needed)
+            currentQuestions = shuffleArray([...currentTopic.questions]);
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            quizStartTime = Date.now();
+
+            renderQuestion();
+            showQuizInterface();
         }
 
         // Show mode selection modal
@@ -1404,7 +1457,13 @@
             document.getElementById('explainBtn').addEventListener('click', showExplanation);
             document.getElementById('retakeBtn').addEventListener('click', () => {
                 stopTimer(); // Stop any existing timer
-                showModeSelection(); // Show mode selection again for retake
+                // Restart with same mode - no modal needed
+                currentQuestions = shuffleArray([...currentTopic.questions]);
+                currentQuestionIndex = 0;
+                userAnswers = [];
+                quizStartTime = Date.now();
+                renderQuestion();
+                showQuizInterface();
             });
         }
 
