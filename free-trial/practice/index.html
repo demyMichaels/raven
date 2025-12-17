@@ -393,7 +393,7 @@
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                     <!-- Back button -->
                     <div class="mb-6">
-                        <a href="index.html" class="inline-flex items-center space-x-2 text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-accent transition-colors group">
+                        <a href="/free-trial/index.html" class="inline-flex items-center space-x-2 text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-accent transition-colors group">
                             <span class="material-icons text-xl">arrow_back</span>
                             <span class="text-sm font-medium">Back to Home</span>
                         </a>
@@ -675,6 +675,14 @@
         </div>
     </div>
 
+    <!-- Image Modal for enlarged view -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 hidden p-4" onclick="closeImageModal()">
+        <button class="absolute top-4 right-4 text-white hover:text-neutral-300 transition-colors" onclick="closeImageModal()">
+            <span class="material-icons text-3xl">close</span>
+        </button>
+        <img id="modalImage" src="" alt="Enlarged question image" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()" >
+    </div>
+
     <!-- Submit Confirmation Modal (JAMB Style) -->
     <div id="submitConfirmModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4">
         <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl shadow-material-4 max-w-md w-full overflow-hidden">
@@ -942,6 +950,12 @@
             subjectProgress.bestScore = Math.max(subjectProgress.bestScore, score.percentage);
 
             saveAnalyticsData();
+
+            // Re-render UI to reflect updated analytics
+            renderSubjects();
+            if (subjects[currentSubject.id]) {
+                renderTopics(subjects[currentSubject.id].topics);
+            }
         }
 
         function getTopicProgress(subjectId, topicName) {
@@ -1297,7 +1311,30 @@
             document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
             document.getElementById('totalQuestions').textContent = currentQuestions.length;
             document.getElementById('questionMeta').textContent = `${currentTopic.name}`;
-            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('questionText').innerHTML = question.question;
+
+            // Handle question image
+            let imageContainer = document.getElementById('questionImageContainer');
+            if (!imageContainer) {
+                // Create image container if it doesn't exist
+                imageContainer = document.createElement('div');
+                imageContainer.id = 'questionImageContainer';
+                imageContainer.className = 'mb-4';
+                document.getElementById('questionText').after(imageContainer);
+            }
+
+            if (question.image) {
+                imageContainer.innerHTML = `
+                    <div class="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900">
+                        <img src="${question.image}" alt="Question image" class="w-full h-auto max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.image}')" />
+                    </div>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1 text-center">Tap image to enlarge</p>
+                `;
+                imageContainer.classList.remove('hidden');
+            } else {
+                imageContainer.innerHTML = '';
+                imageContainer.classList.add('hidden');
+            }
 
             // Update mode badge with color
             const mode = PRACTICE_MODES[currentMode];
@@ -1738,12 +1775,22 @@
                         `;
                     }
 
+                    // Generate image HTML if question has an image
+                    const questionImageHtml = question.image ? `
+                        <div class="mt-3 rounded-lg overflow-hidden border border-red-200 dark:border-red-700">
+                            <img src="${question.image}" alt="Question image" class="w-full h-auto max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.image}')" />
+                        </div>
+                    ` : '';
+
                     card.innerHTML = `
                         <!-- Question Header -->
                         <div class="px-5 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
                             <div class="flex items-start space-x-3">
                                 <span class="flex-shrink-0 w-8 h-8 rounded-full bg-error text-white flex items-center justify-center font-bold text-sm">${index + 1}</span>
-                                <p class="text-sm text-neutral-800 dark:text-white leading-relaxed flex-1">${question.question}</p>
+                                <div class="flex-1">
+                                    <p class="text-sm text-neutral-800 dark:text-white leading-relaxed">${question.question}</p>
+                                    ${questionImageHtml}
+                                </div>
                             </div>
                         </div>
 
@@ -1811,6 +1858,21 @@
                 content.classList.add('hidden');
                 icon.textContent = 'expand_more';
             }
+        }
+
+        // Image modal functions
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scroll
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore scroll
         }
 
         // Navigation functions
@@ -1942,7 +2004,7 @@
                 document.getElementById('keyboardHelpToggle').classList.remove('hidden');
             });
 
-            // Global keyboard shortcut
+            // Global keyboard shortcuts
             document.addEventListener('keydown', handleKeyboardShortcuts);
         }
 
