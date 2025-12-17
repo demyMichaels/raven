@@ -157,7 +157,7 @@
             html { font-size: 14px; }
         }
 
-        /* Landscape mode on mobile - ensure scrollability */
+        /* Landscape mode on mobile - ensure scrollability and compact layout */
         @media (max-height: 500px) and (orientation: landscape) {
             body {
                 overflow-y: auto !important;
@@ -165,39 +165,70 @@
             }
             #quizInterface {
                 min-height: auto !important;
-                padding-bottom: 80px;
+                padding-bottom: 60px;
             }
             #quizInterface > div {
-                padding-top: 12px;
-                padding-bottom: 12px;
+                padding-top: 8px !important;
+                padding-bottom: 8px !important;
             }
             /* Compact header in landscape */
-            #quizInterface .mb-6:first-child {
-                margin-bottom: 8px;
+            #quizInterface .flex.items-center.justify-between.mb-6 {
+                margin-bottom: 4px !important;
+            }
+            /* Smaller icons and text in header */
+            #quizInterface .material-icons {
+                font-size: 18px !important;
             }
             /* Compact progress bar */
             .progress-bar {
-                margin-bottom: 12px;
+                margin-bottom: 8px !important;
+                height: 4px !important;
             }
             /* Compact question card */
             #quizInterface .material-card {
-                padding: 16px;
-                margin-bottom: 12px;
+                padding: 12px !important;
+                margin-bottom: 8px !important;
             }
-            #quizInterface .material-card h3 {
-                margin-bottom: 12px;
-                font-size: 1rem;
+            /* Smaller badges */
+            #quizInterface .material-card .flex.items-center.justify-between.mb-5 {
+                margin-bottom: 8px !important;
+            }
+            #quizInterface .material-card .rounded-full {
+                padding: 2px 8px !important;
+                font-size: 10px !important;
+            }
+            /* Compact question text */
+            #quizInterface .material-card h3,
+            #questionText {
+                margin-bottom: 8px !important;
+                font-size: 0.875rem !important;
+                line-height: 1.3 !important;
             }
             /* Compact options */
+            #questionOptions {
+                gap: 6px !important;
+            }
             #questionOptions .option-btn {
-                padding: 10px 14px;
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+            #questionOptions .option-btn .material-icons {
+                font-size: 16px !important;
             }
             /* Compact navigation */
             #quizNavigation {
-                gap: 8px;
+                gap: 6px !important;
             }
             #quizNavigation button {
-                padding: 10px 16px;
+                padding: 8px 14px !important;
+                font-size: 0.8rem !important;
+            }
+            #quizNavigation .material-icons {
+                font-size: 16px !important;
+            }
+            /* Hide explain button text in landscape, show icon only */
+            #explainBtn span:last-child {
+                display: none;
             }
         }
 
@@ -557,15 +588,17 @@
                 </div>
 
                 <!-- Navigation Buttons -->
-                <div id="quizNavigation" class="flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3">
-                    <button id="explainBtn" class="material-button bg-accent hover:bg-accent-600 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-material-1 disabled:opacity-50 disabled:cursor-not-allowed sm:mr-auto" disabled>
-                        <span class="material-icons">psychology</span>
-                        <span>Explain Answer</span>
-                    </button>
-                    <div class="flex space-x-3">
+                <div id="quizNavigation" class="flex flex-col gap-3">
+                    <!-- Previous/Next buttons - always on right -->
+                    <div class="flex justify-end space-x-3">
                         <button id="prevBtn" class="material-button flex-1 sm:flex-initial bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 px-6 py-3 rounded-xl font-medium shadow-material-1 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
                         <button id="nextBtn" class="material-button flex-1 sm:flex-initial bg-primary hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-medium shadow-material-1 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                     </div>
+                    <!-- Explain button - separate row, left aligned -->
+                    <button id="explainBtn" class="material-button bg-accent hover:bg-accent-600 text-white px-6 py-3 rounded-xl font-medium flex items-center justify-center space-x-2 shadow-material-1 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto sm:self-start" disabled>
+                        <span class="material-icons">psychology</span>
+                        <span>Explain Answer</span>
+                    </button>
                 </div>
 
                 <!-- Quiz Results -->
@@ -1672,6 +1705,39 @@
                     const userLetter = userIndex !== undefined ? String.fromCharCode(65 + userIndex) : '—';
                     const correctLetter = String.fromCharCode(65 + correctIndex);
 
+                    const cardId = `wrong-card-${index}`;
+                    const explanationId = `wrong-explanation-${index}`;
+
+                    // Parse explanation for step-by-step display
+                    const parsedExplanation = question.explanation ? parseExplanation(question.explanation) : null;
+
+                    // Generate step-by-step HTML
+                    let stepsHtml = '';
+                    if (parsedExplanation && parsedExplanation.steps.length > 0) {
+                        stepsHtml = parsedExplanation.steps.map(step => `
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent-600 text-white flex items-center justify-center font-bold text-xs shadow-material-1">${step.number}</div>
+                                <p class="flex-1 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed pt-0.5">${step.text}</p>
+                            </div>
+                        `).join('');
+                    }
+
+                    // Generate key takeaway HTML
+                    let takeawayHtml = '';
+                    if (parsedExplanation && parsedExplanation.keyTakeaway) {
+                        takeawayHtml = `
+                            <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 rounded-r-lg">
+                                <div class="flex items-start space-x-2">
+                                    <span class="material-icons text-amber-500 text-base flex-shrink-0">tips_and_updates</span>
+                                    <div>
+                                        <span class="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wide">Key Takeaway</span>
+                                        <p class="text-amber-800 dark:text-amber-200 text-sm mt-1">${parsedExplanation.keyTakeaway}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
                     card.innerHTML = `
                         <!-- Question Header -->
                         <div class="px-5 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
@@ -1701,15 +1767,19 @@
                                 </div>
                             </div>
 
-                            <!-- Explanation -->
+                            <!-- Step-by-Step Solution -->
                             ${question.explanation ? `
-                            <div class="mt-4 p-4 rounded-xl bg-accent-50 dark:bg-accent-900/10 border border-accent-200 dark:border-accent-700">
-                                <div class="flex items-start space-x-3">
-                                    <span class="material-icons text-accent text-lg flex-shrink-0">lightbulb</span>
-                                    <div class="flex-1">
-                                        <span class="text-xs text-accent-700 dark:text-accent-400 font-medium uppercase tracking-wide">Explanation</span>
-                                        <p class="text-sm text-accent-800 dark:text-accent-200 mt-1 leading-relaxed">${question.explanation}</p>
+                            <div class="mt-4">
+                                <button onclick="toggleWrongExplanation('${explanationId}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-700 hover:bg-accent-100 dark:hover:bg-accent-900/30 transition-colors">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="material-icons text-accent text-lg">psychology</span>
+                                        <span class="text-sm font-medium text-accent-700 dark:text-accent-300">Step-by-Step Solution</span>
                                     </div>
+                                    <span class="material-icons text-accent text-lg explanation-toggle-icon" id="icon-${explanationId}">expand_more</span>
+                                </button>
+                                <div id="${explanationId}" class="hidden mt-3 p-4 rounded-xl bg-white dark:bg-neutral-900 border border-accent-200 dark:border-accent-700 space-y-3">
+                                    ${stepsHtml}
+                                    ${takeawayHtml}
                                 </div>
                             </div>
                             ` : ''}
@@ -1727,6 +1797,20 @@
             setTimeout(() => {
                 document.getElementById('wrongAnswersSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 100);
+        }
+
+        // Toggle explanation visibility in wrong answers review
+        function toggleWrongExplanation(explanationId) {
+            const content = document.getElementById(explanationId);
+            const icon = document.getElementById('icon-' + explanationId);
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = 'expand_less';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = 'expand_more';
+            }
         }
 
         // Navigation functions
@@ -1858,7 +1942,7 @@
                 document.getElementById('keyboardHelpToggle').classList.remove('hidden');
             });
 
-            // Global keyboard shortcuts
+            // Global keyboard shortcut
             document.addEventListener('keydown', handleKeyboardShortcuts);
         }
 
