@@ -157,6 +157,50 @@
             html { font-size: 14px; }
         }
 
+        /* Landscape mode on mobile - ensure scrollability */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                overflow-y: auto !important;
+                min-height: auto;
+            }
+            #quizInterface {
+                min-height: auto !important;
+                padding-bottom: 80px;
+            }
+            #quizInterface > div {
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
+            /* Compact header in landscape */
+            #quizInterface .mb-6:first-child {
+                margin-bottom: 8px;
+            }
+            /* Compact progress bar */
+            .progress-bar {
+                margin-bottom: 12px;
+            }
+            /* Compact question card */
+            #quizInterface .material-card {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+            #quizInterface .material-card h3 {
+                margin-bottom: 12px;
+                font-size: 1rem;
+            }
+            /* Compact options */
+            #questionOptions .option-btn {
+                padding: 10px 14px;
+            }
+            /* Compact navigation */
+            #quizNavigation {
+                gap: 8px;
+            }
+            #quizNavigation button {
+                padding: 10px 16px;
+            }
+        }
+
         .touch-target {
             min-height: 44px;
             min-width: 44px;
@@ -677,10 +721,6 @@
                 <div class="flex items-center space-x-2">
                     <kbd class="px-2 py-1 bg-orange-500 text-white rounded font-bold">S</kbd>
                     <span class="text-neutral-600 dark:text-neutral-400">Submit</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <kbd class="px-2 py-1 bg-accent text-white rounded font-bold">E</kbd>
-                    <span class="text-neutral-600 dark:text-neutral-400">Explain</span>
                 </div>
             </div>
         </div>
@@ -1371,7 +1411,14 @@
 
             prevBtn.disabled = currentQuestionIndex === 0;
             nextBtn.disabled = userAnswers[currentQuestionIndex] === undefined;
-            explainBtn.disabled = userAnswers[currentQuestionIndex] === undefined;
+
+            // Only show explain button in unlimited (practice) mode
+            if (currentMode === 'practice') {
+                explainBtn.classList.remove('hidden');
+                explainBtn.disabled = userAnswers[currentQuestionIndex] === undefined;
+            } else {
+                explainBtn.classList.add('hidden');
+            }
 
             if (currentQuestionIndex === currentQuestions.length - 1) {
                 nextBtn.textContent = 'Finish Quiz';
@@ -1881,12 +1928,6 @@
                 case 'S':
                     event.preventDefault();
                     showSubmitModal();
-                    break;
-                case 'E':
-                    event.preventDefault();
-                    if (userAnswers[currentQuestionIndex] !== undefined) {
-                        showExplanation();
-                    }
                     break;
             }
         }
