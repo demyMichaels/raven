@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JAMB Practice - Raven</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8LYQ579PW8"></script>
@@ -71,6 +71,7 @@
                     },
                     fontFamily: {
                         'sans': ['Roboto', 'system-ui', 'sans-serif'],
+                        'mono': ['JetBrains Mono', 'monospace'],
                     },
                 }
             }
@@ -381,6 +382,142 @@
         .timer-low {
             animation: timerPulse 0.5s ease-in-out infinite;
         }
+
+        /* Calculation workspace styles */
+        .calc-workspace {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calc-workspace::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        .dark .calc-workspace {
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            border-color: #1e293b;
+        }
+
+        .calc-line {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.375rem 0;
+        }
+
+        .calc-line-number {
+            color: #64748b;
+            font-size: 0.7rem;
+            min-width: 1.25rem;
+            text-align: right;
+            user-select: none;
+            padding-top: 0.125rem;
+        }
+
+        .calc-content {
+            flex: 1;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .calc-comment {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .calc-keyword {
+            color: #c084fc;
+        }
+
+        .calc-number {
+            color: #fbbf24;
+        }
+
+        .calc-operator {
+            color: #60a5fa;
+        }
+
+        .calc-result {
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        .calc-arrow {
+            color: #f472b6;
+        }
+
+        /* Explanation section styles */
+        .explanation-section {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .explanation-section-header {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .explanation-section-content {
+            padding: 1rem;
+        }
+
+        /* Notes section */
+        .notes-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+        }
+
+        .dark .notes-section {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(2, 132, 199, 0.05) 100%);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .notes-section .explanation-section-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+        }
+
+        /* Key takeaway section */
+        .takeaway-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #fbbf24;
+        }
+
+        .dark .takeaway-section {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+            border-color: rgba(251, 191, 36, 0.4);
+        }
+
+        .takeaway-section .explanation-section-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        /* Calculation section */
+        .calculation-section {
+            border: 1px solid #334155;
+        }
+
+        .calculation-section .explanation-section-header {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+        }
     </style>
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 roboto transition-colors duration-200">
@@ -560,28 +697,37 @@
                     <div id="questionOptions" class="space-y-3"></div>
 
                     <!-- Explanation box - Step by Step Solution -->
-                    <div id="explanationBox" class="mt-6 hidden overflow-hidden rounded-2xl border-2 border-accent-200 dark:border-accent-700 bg-white dark:bg-neutral-800 shadow-material-2">
-                        <!-- Header -->
-                        <div class="bg-gradient-to-r from-accent to-accent-600 px-5 py-3">
-                            <div class="flex items-center space-x-3">
-                                <span class="material-icons text-white text-xl">psychology</span>
-                                <h4 class="font-semibold text-white text-base">Step-by-Step Solution</h4>
+                    <div id="explanationBox" class="mt-6 hidden space-y-4">
+                        <!-- Notes/Context Section -->
+                        <div id="notesSection" class="explanation-section notes-section hidden">
+                            <div class="explanation-section-header">
+                                <span class="material-icons text-lg">lightbulb</span>
+                                <span class="font-semibold text-sm">Understanding the Concept</span>
+                            </div>
+                            <div class="explanation-section-content">
+                                <div id="notesContent" class="text-sm text-sky-800 dark:text-sky-200 leading-relaxed space-y-2"></div>
                             </div>
                         </div>
 
-                        <!-- Solution Steps Container -->
-                        <div class="px-5 py-5">
-                            <div id="explanationContent" class="space-y-4"></div>
+                        <!-- Calculation Section -->
+                        <div id="calculationSection" class="explanation-section calculation-section hidden">
+                            <div class="explanation-section-header">
+                                <span class="material-icons text-lg">calculate</span>
+                                <span class="font-semibold text-sm">Step-by-Step Calculation</span>
+                            </div>
+                            <div class="calc-workspace rounded-b-2xl p-4">
+                                <div id="calculationContent" class="space-y-1 relative z-10"></div>
+                            </div>
                         </div>
 
-                        <!-- Key Takeaway (if present) -->
-                        <div id="keyTakeaway" class="hidden mx-5 mb-5 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 rounded-r-lg">
-                            <div class="flex items-start space-x-3">
-                                <span class="material-icons text-amber-500 text-lg flex-shrink-0">tips_and_updates</span>
-                                <div>
-                                    <span class="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wide">Key Takeaway</span>
-                                    <p class="text-amber-800 dark:text-amber-200 text-sm mt-1" id="keyTakeawayText"></p>
-                                </div>
+                        <!-- Key Takeaway Section -->
+                        <div id="takeawaySection" class="explanation-section takeaway-section hidden">
+                            <div class="explanation-section-header">
+                                <span class="material-icons text-lg">school</span>
+                                <span class="font-semibold text-sm">JAMB/WAEC/NECO Shortcut</span>
+                            </div>
+                            <div class="explanation-section-content">
+                                <div id="takeawayContent" class="text-sm text-amber-800 dark:text-amber-200 leading-relaxed"></div>
                             </div>
                         </div>
                     </div>
@@ -1518,81 +1664,203 @@
             }
         }
 
-
-        // Parse and format explanation text into structured steps
-        function parseExplanation(text) {
+        // Parse explanation into structured sections: notes, calculation, takeaway
+        // Supports both structured object format and legacy string format
+        function parseExplanation(explanation) {
             const result = {
-                steps: [],
-                keyTakeaway: null
+                notes: [],
+                calculation: [],
+                takeaway: null
             };
 
-            // Check for key takeaway patterns
+            // Check if explanation is already in structured object format
+            if (typeof explanation === 'object' && explanation !== null) {
+                // Structured format: { notes: [], calculation: [], takeaway: "" }
+                if (Array.isArray(explanation.notes)) {
+                    result.notes = explanation.notes;
+                } else if (typeof explanation.notes === 'string') {
+                    result.notes = [explanation.notes];
+                }
+
+                if (Array.isArray(explanation.calculation)) {
+                    result.calculation = explanation.calculation;
+                } else if (typeof explanation.calculation === 'string') {
+                    result.calculation = [explanation.calculation];
+                }
+
+                if (explanation.takeaway) {
+                    result.takeaway = explanation.takeaway;
+                }
+
+                return result;
+            }
+
+            // Legacy string format - parse intelligently
+            const text = String(explanation);
+
+            // Detect if this is a calculation-heavy explanation
+            const hasCalculation = /[=→×÷+\-\*\/]/.test(text) &&
+                                   (/\d+\s*[=×÷+\-\*\/]\s*\d+/.test(text) ||
+                                    /let\s+\w+\s*=/i.test(text) ||
+                                    /\([^)]*[+\-\*\/×÷=][^)]*\)/.test(text) ||
+                                    /gives:|this gives|therefore|thus/i.test(text) ||
+                                    /step\s*\d+[:\s]/i.test(text));
+
+            // Extract key takeaway first
             const takeawayPatterns = [
-                /(?:key\s*takeaway|remember|note|tip|important)[:\s]+(.+?)(?=\n\n|$)/i,
-                /(?:therefore|hence|thus)[,:\s]+(.+?)(?=\n\n|$)/i
+                /key\s*takeaway[:\s]+(.+?)$/is,
+                /(?:^|\n)(?:remember|note|tip|shortcut|formula)[:\s]+(.+?)(?=\n\n|$)/is,
+                /when\s+mixing\s+equal\s+masses[,:\s]+(.+?)$/is
             ];
 
             let remainingText = text;
             for (const pattern of takeawayPatterns) {
                 const match = remainingText.match(pattern);
                 if (match) {
-                    result.keyTakeaway = match[1].trim();
+                    result.takeaway = match[1].trim();
                     remainingText = remainingText.replace(match[0], '').trim();
                     break;
                 }
             }
 
-            // Split by common step indicators
-            const stepPatterns = [
-                // Numbered steps: "1.", "1)", "Step 1:", etc.
-                /(?:^|\n)\s*(?:step\s*)?(\d+)[.):\s-]+/gi,
-                // Bullet points: "•", "-", "*"
-                /(?:^|\n)\s*[•\-\*]\s+/g,
-                // Sequential words: "First,", "Second,", "Then,", "Next,", "Finally,"
-                /(?:^|\n)\s*(?:first|second|third|fourth|fifth|then|next|finally|lastly|also|additionally)[,:\s]+/gi
-            ];
-
-            // Try to split by numbered steps first
-            const numberedMatch = remainingText.match(/(?:^|\n)\s*(?:step\s*)?(\d+)[.):\s-]+/gi);
-
-            if (numberedMatch && numberedMatch.length >= 2) {
-                // Split by numbered pattern
-                const parts = remainingText.split(/(?:^|\n)\s*(?:step\s*)?\d+[.):\s-]+/i).filter(p => p.trim());
-                parts.forEach((part, index) => {
-                    const cleanText = part.trim();
-                    if (cleanText) {
-                        result.steps.push({
-                            number: index + 1,
-                            text: cleanText
-                        });
-                    }
-                });
-            } else {
-                // Try splitting by sentences or line breaks
-                const sentences = remainingText
-                    .split(/(?:\.\s+|\n+)/)
-                    .map(s => s.trim())
-                    .filter(s => s.length > 10); // Filter out very short fragments
-
-                if (sentences.length > 1) {
-                    sentences.forEach((sentence, index) => {
-                        // Add period back if it was removed
-                        const text = sentence.endsWith('.') ? sentence : sentence + '.';
-                        result.steps.push({
-                            number: index + 1,
-                            text: text
-                        });
-                    });
-                } else {
-                    // Just one block of text - display as single step
-                    result.steps.push({
-                        number: 1,
-                        text: remainingText.trim()
-                    });
+            // If no explicit takeaway, check for formula patterns at end
+            if (!result.takeaway) {
+                const formulaMatch = remainingText.match(/(?:therefore|hence|thus)[,:\s]+([^.]+\.[^.]*$)/i);
+                if (formulaMatch) {
+                    result.takeaway = formulaMatch[1].trim();
+                    remainingText = remainingText.replace(formulaMatch[0], '').trim();
                 }
             }
 
+            if (hasCalculation) {
+                // Split into notes and calculation sections
+                const calcIndicators = [
+                    /the\s+calculation[:\s]/i,
+                    /step\s*1[:\s]/i,
+                    /let\s+\w+\s*=/i,
+                    /calculating[:\s]/i,
+                    /solving[:\s]/i,
+                    /using\s+the\s+formula/i,
+                    /given[:\s]/i
+                ];
+
+                let calcStartIndex = -1;
+                for (const pattern of calcIndicators) {
+                    const match = remainingText.search(pattern);
+                    if (match !== -1 && (calcStartIndex === -1 || match < calcStartIndex)) {
+                        calcStartIndex = match;
+                    }
+                }
+
+                if (calcStartIndex > 0) {
+                    // Everything before is notes
+                    const notesPart = remainingText.substring(0, calcStartIndex).trim();
+                    const calcPart = remainingText.substring(calcStartIndex).trim();
+
+                    // Parse notes into sentences
+                    result.notes = parseNotesToSentences(notesPart);
+
+                    // Parse calculation into lines
+                    result.calculation = parseCalculationLines(calcPart);
+                } else {
+                    // No clear separation - try to detect calculation lines by pattern
+                    const lines = remainingText.split(/(?:\.\s+|\n+)/).filter(l => l.trim());
+
+                    lines.forEach(line => {
+                        const trimmed = line.trim();
+                        if (isCalculationLine(trimmed)) {
+                            result.calculation.push(trimmed);
+                        } else if (trimmed.length > 0) {
+                            result.notes.push(trimmed + (trimmed.endsWith('.') ? '' : '.'));
+                        }
+                    });
+                }
+            } else {
+                // Non-calculation explanation (like Government, Literature, etc.)
+                result.notes = parseNotesToSentences(remainingText);
+            }
+
             return result;
+        }
+
+        // Check if a line is a calculation line
+        function isCalculationLine(line) {
+            // Check for mathematical patterns
+            const calcPatterns = [
+                /^let\s+\w+\s*=/i,
+                /^heat\s+(gained|lost|absorbed|released)/i,
+                /^[A-Za-z]+\s*=\s*[^=]+$/,
+                /\d+\s*[×÷\+\-\*\/]\s*\d+/,
+                /→|=>/,
+                /this\s+gives[:\s]/i,
+                /^therefore[,:\s]/i,
+                /^solving[,:\s]/i,
+                /^\d+[A-Za-z]*\s*[×÷\+\-\*\/=]/,
+                /^step\s*\d+[:\s]/i,
+                /^given[:\s]/i,
+                /^using\s+Q\s*=/i,
+                /^Q\s*=\s*/i,
+                /^for\s+\d+[°℃]/i,
+                /=\s*\d+\.?\d*\s*(J|kg|m|s|°|℃|K|W|N|Pa)/i
+            ];
+
+            return calcPatterns.some(p => p.test(line));
+        }
+
+        // Parse notes text into sentences
+        function parseNotesToSentences(text) {
+            const sentences = text
+                .split(/(?<=\.)\s+/)
+                .map(s => s.trim())
+                .filter(s => s.length > 5);
+
+            return sentences;
+        }
+
+        // Parse calculation text into formatted lines
+        function parseCalculationLines(text) {
+            const lines = [];
+
+            // Split by sentences or line breaks
+            const parts = text.split(/(?:\.(?=\s+[A-Z])|\n+)/).filter(p => p.trim());
+
+            parts.forEach(part => {
+                const trimmed = part.trim();
+                if (trimmed.length > 0) {
+                    // Further split by common separators within calculation
+                    const subParts = trimmed.split(/(?=This gives|→|Therefore|Hence)/i);
+                    subParts.forEach(sub => {
+                        if (sub.trim()) {
+                            lines.push(sub.trim());
+                        }
+                    });
+                }
+            });
+
+            return lines;
+        }
+
+        // Format calculation line with syntax highlighting
+        function formatCalculationLine(line) {
+            let formatted = sanitizeHTML(line);
+
+            // Highlight numbers
+            formatted = formatted.replace(/(\d+\.?\d*)/g, '<span class="calc-number">$1</span>');
+
+            // Highlight operators
+            formatted = formatted.replace(/([\+\-\*\/×÷])/g, '<span class="calc-operator">$1</span>');
+
+            // Highlight equals and arrows
+            formatted = formatted.replace(/(=|→|=>)/g, '<span class="calc-arrow">$1</span>');
+
+            // Highlight keywords
+            formatted = formatted.replace(/\b(Let|let|Heat|heat|Mass|mass|Temperature|temperature|Final|final)\b/g, '<span class="calc-keyword">$1</span>');
+
+            // Highlight results (patterns like "= 56°C" or "T = 56")
+            formatted = formatted.replace(/(<span class="calc-arrow">=<\/span>\s*)(<span class="calc-number">[\d.]+<\/span>[°℃℉%]*)/g,
+                '$1<span class="calc-result">$2</span>');
+
+            return formatted;
         }
 
         // Sanitize HTML to allow only safe formatting tags
@@ -1634,41 +1902,52 @@
 
         // Render formatted explanation content
         function renderExplanationContent(parsedExplanation) {
-            const container = document.getElementById('explanationContent');
-            container.innerHTML = '';
+            const notesSection = document.getElementById('notesSection');
+            const notesContent = document.getElementById('notesContent');
+            const calculationSection = document.getElementById('calculationSection');
+            const calculationContent = document.getElementById('calculationContent');
+            const takeawaySection = document.getElementById('takeawaySection');
+            const takeawayContent = document.getElementById('takeawayContent');
 
-            parsedExplanation.steps.forEach((step, index) => {
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'flex items-start space-x-4';
+            // Clear previous content
+            notesContent.innerHTML = '';
+            calculationContent.innerHTML = '';
+            takeawayContent.innerHTML = '';
 
-                // Step number badge
-                const numberBadge = document.createElement('div');
-                numberBadge.className = 'flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent-600 text-white flex items-center justify-center font-bold text-sm shadow-material-1';
-                numberBadge.textContent = step.number;
-
-                // Step content
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'flex-1 pt-1';
-
-                const textP = document.createElement('p');
-                textP.className = 'text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed';
-                textP.innerHTML = sanitizeHTML(step.text); // Use innerHTML for formatting
-                contentDiv.appendChild(textP);
-
-                stepDiv.appendChild(numberBadge);
-                stepDiv.appendChild(contentDiv);
-                container.appendChild(stepDiv);
-            });
-
-            // Handle key takeaway
-            const keyTakeawayDiv = document.getElementById('keyTakeaway');
-            const keyTakeawayText = document.getElementById('keyTakeawayText');
-
-            if (parsedExplanation.keyTakeaway) {
-                keyTakeawayText.innerHTML = sanitizeHTML(parsedExplanation.keyTakeaway);
-                keyTakeawayDiv.classList.remove('hidden');
+            // Render notes section
+            if (parsedExplanation.notes && parsedExplanation.notes.length > 0) {
+                parsedExplanation.notes.forEach(note => {
+                    const p = document.createElement('p');
+                    p.innerHTML = sanitizeHTML(note);
+                    notesContent.appendChild(p);
+                });
+                notesSection.classList.remove('hidden');
             } else {
-                keyTakeawayDiv.classList.add('hidden');
+                notesSection.classList.add('hidden');
+            }
+
+            // Render calculation section
+            if (parsedExplanation.calculation && parsedExplanation.calculation.length > 0) {
+                parsedExplanation.calculation.forEach((line, index) => {
+                    const lineDiv = document.createElement('div');
+                    lineDiv.className = 'calc-line';
+                    lineDiv.innerHTML = `
+                        <span class="calc-line-number">${index + 1}</span>
+                        <span class="calc-content">${formatCalculationLine(line)}</span>
+                    `;
+                    calculationContent.appendChild(lineDiv);
+                });
+                calculationSection.classList.remove('hidden');
+            } else {
+                calculationSection.classList.add('hidden');
+            }
+
+            // Render takeaway section
+            if (parsedExplanation.takeaway) {
+                takeawayContent.innerHTML = sanitizeHTML(parsedExplanation.takeaway);
+                takeawaySection.classList.remove('hidden');
+            } else {
+                takeawaySection.classList.add('hidden');
             }
         }
 
@@ -1705,7 +1984,6 @@
             }
         }
 
-        
         // Finish quiz and show results
         function finishQuiz() {
             stopTimer(); // Stop timer when quiz finishes
@@ -1763,6 +2041,68 @@
             }, 100);
         }
 
+        // Generate explanation HTML for wrong answers review
+        function generateExplanationHTML(explanation) {
+            const parsed = parseExplanation(explanation);
+            let html = '';
+
+            // Notes section
+            if (parsed.notes && parsed.notes.length > 0) {
+                html += `
+                    <div class="explanation-section notes-section mb-3">
+                        <div class="explanation-section-header">
+                            <span class="material-icons text-base">lightbulb</span>
+                            <span class="font-semibold text-xs">Understanding</span>
+                        </div>
+                        <div class="explanation-section-content py-3 px-4">
+                            <div class="text-sm text-sky-800 dark:text-sky-200 leading-relaxed space-y-1">
+                                ${parsed.notes.map(n => `<p>${sanitizeHTML(n)}</p>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Calculation section
+            if (parsed.calculation && parsed.calculation.length > 0) {
+                html += `
+                    <div class="explanation-section calculation-section mb-3">
+                        <div class="explanation-section-header">
+                            <span class="material-icons text-base">calculate</span>
+                            <span class="font-semibold text-xs">Calculation</span>
+                        </div>
+                        <div class="calc-workspace rounded-b-xl p-3">
+                            <div class="space-y-1 relative z-10">
+                                ${parsed.calculation.map((line, i) => `
+                                    <div class="calc-line">
+                                        <span class="calc-line-number">${i + 1}</span>
+                                        <span class="calc-content text-xs">${formatCalculationLine(line)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Takeaway section
+            if (parsed.takeaway) {
+                html += `
+                    <div class="explanation-section takeaway-section">
+                        <div class="explanation-section-header">
+                            <span class="material-icons text-base">school</span>
+                            <span class="font-semibold text-xs">Exam Shortcut</span>
+                        </div>
+                        <div class="explanation-section-content py-3 px-4">
+                            <p class="text-sm text-amber-800 dark:text-amber-200">${sanitizeHTML(parsed.takeaway)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
         // Render wrong answers for review
         function renderWrongAnswers() {
             const wrongAnswersList = document.getElementById('wrongAnswersList');
@@ -1781,38 +2121,10 @@
                     const userLetter = userIndex !== undefined ? String.fromCharCode(65 + userIndex) : '—';
                     const correctLetter = String.fromCharCode(65 + correctIndex);
 
-                    const cardId = `wrong-card-${index}`;
                     const explanationId = `wrong-explanation-${index}`;
 
-                    // Parse explanation for step-by-step display
-                    const parsedExplanation = question.explanation ? parseExplanation(question.explanation) : null;
-
-                    // Generate step-by-step HTML with sanitized content
-                    let stepsHtml = '';
-                    if (parsedExplanation && parsedExplanation.steps.length > 0) {
-                        stepsHtml = parsedExplanation.steps.map(step => `
-                            <div class="flex items-start space-x-3">
-                                <div class="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent-600 text-white flex items-center justify-center font-bold text-xs shadow-material-1">${step.number}</div>
-                                <p class="flex-1 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed pt-0.5">${sanitizeHTML(step.text)}</p>
-                            </div>
-                        `).join('');
-                    }
-
-                    // Generate key takeaway HTML with sanitized content
-                    let takeawayHtml = '';
-                    if (parsedExplanation && parsedExplanation.keyTakeaway) {
-                        takeawayHtml = `
-                            <div class="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 rounded-r-lg">
-                                <div class="flex items-start space-x-2">
-                                    <span class="material-icons text-amber-500 text-base flex-shrink-0">tips_and_updates</span>
-                                    <div>
-                                        <span class="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wide">Key Takeaway</span>
-                                        <p class="text-amber-800 dark:text-amber-200 text-sm mt-1">${sanitizeHTML(parsedExplanation.keyTakeaway)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
+                    // Generate explanation HTML
+                    const explanationHTML = question.explanation ? generateExplanationHTML(question.explanation) : '';
 
                     // Generate image HTML if question has an image
                     const questionImageHtml = question.image ? `
@@ -1853,19 +2165,18 @@
                                 </div>
                             </div>
 
-                            <!-- Step-by-Step Solution -->
+                            <!-- Explanation Section -->
                             ${question.explanation ? `
                             <div class="mt-4">
                                 <button onclick="toggleWrongExplanation('${explanationId}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-700 hover:bg-accent-100 dark:hover:bg-accent-900/30 transition-colors">
                                     <div class="flex items-center space-x-2">
                                         <span class="material-icons text-accent text-lg">psychology</span>
-                                        <span class="text-sm font-medium text-accent-700 dark:text-accent-300">Step-by-Step Solution</span>
+                                        <span class="text-sm font-medium text-accent-700 dark:text-accent-300">View Full Solution</span>
                                     </div>
                                     <span class="material-icons text-accent text-lg explanation-toggle-icon" id="icon-${explanationId}">expand_more</span>
                                 </button>
-                                <div id="${explanationId}" class="hidden mt-3 p-4 rounded-xl bg-white dark:bg-neutral-900 border border-accent-200 dark:border-accent-700 space-y-3">
-                                    ${stepsHtml}
-                                    ${takeawayHtml}
+                                <div id="${explanationId}" class="hidden mt-3 space-y-3">
+                                    ${explanationHTML}
                                 </div>
                             </div>
                             ` : ''}
