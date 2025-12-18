@@ -382,7 +382,6 @@
             animation: timerPulse 0.5s ease-in-out infinite;
         }
     </style>
-    
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 roboto transition-colors duration-200">
 
@@ -394,7 +393,7 @@
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                     <!-- Back button -->
                     <div class="mb-6">
-                        <a href="/free-trial/index.html" class="inline-flex items-center space-x-2 text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-accent transition-colors group">
+                        <a href="index.html" class="inline-flex items-center space-x-2 text-neutral-600 dark:text-neutral-400 hover:text-primary dark:hover:text-accent transition-colors group">
                             <span class="material-icons text-xl">arrow_back</span>
                             <span class="text-sm font-medium">Back to Home</span>
                         </a>
@@ -1312,7 +1311,7 @@
             document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
             document.getElementById('totalQuestions').textContent = currentQuestions.length;
             document.getElementById('questionMeta').textContent = `${currentTopic.name}`;
-            document.getElementById('questionText').innerHTML = question.question;
+            document.getElementById('questionText').innerHTML = sanitizeHTML(question.question);
 
             // Handle question image
             let imageContainer = document.getElementById('questionImageContainer');
@@ -1366,7 +1365,7 @@
                 optionBtn.innerHTML = `
                     <div class="flex items-center space-x-3 sm:space-x-4">
                         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-medium text-sm">${String.fromCharCode(65 + index)}</span>
-                        <span class="flex-1 text-sm sm:text-base">${option}</span>
+                        <span class="flex-1 text-sm sm:text-base">${sanitizeHTML(option)}</span>
                     </div>
                 `;
 
@@ -1519,6 +1518,7 @@
             }
         }
 
+
         // Parse and format explanation text into structured steps
         function parseExplanation(text) {
             const result = {
@@ -1595,6 +1595,43 @@
             return result;
         }
 
+        // Sanitize HTML to allow only safe formatting tags
+        function sanitizeHTML(html) {
+            // Allow only specific safe tags for formatting
+            const allowedTags = ['sub', 'sup', 'strong', 'em', 'b', 'i', 'u', 'br', 'span'];
+
+            // Create a temporary element to parse HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+
+            // Function to recursively clean nodes
+            function cleanNode(node) {
+                const childNodes = Array.from(node.childNodes);
+                childNodes.forEach(child => {
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        const tagName = child.tagName.toLowerCase();
+                        if (allowedTags.includes(tagName)) {
+                            // Keep allowed tags but remove all attributes except class
+                            const allowedAttrs = ['class'];
+                            Array.from(child.attributes).forEach(attr => {
+                                if (!allowedAttrs.includes(attr.name)) {
+                                    child.removeAttribute(attr.name);
+                                }
+                            });
+                            cleanNode(child);
+                        } else {
+                            // Replace disallowed tags with their text content
+                            const text = document.createTextNode(child.textContent);
+                            node.replaceChild(text, child);
+                        }
+                    }
+                });
+            }
+
+            cleanNode(temp);
+            return temp.innerHTML;
+        }
+
         // Render formatted explanation content
         function renderExplanationContent(parsedExplanation) {
             const container = document.getElementById('explanationContent');
@@ -1615,7 +1652,7 @@
 
                 const textP = document.createElement('p');
                 textP.className = 'text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed';
-                textP.textContent = step.text;
+                textP.innerHTML = sanitizeHTML(step.text); // Use innerHTML for formatting
                 contentDiv.appendChild(textP);
 
                 stepDiv.appendChild(numberBadge);
@@ -1628,7 +1665,7 @@
             const keyTakeawayText = document.getElementById('keyTakeawayText');
 
             if (parsedExplanation.keyTakeaway) {
-                keyTakeawayText.textContent = parsedExplanation.keyTakeaway;
+                keyTakeawayText.innerHTML = sanitizeHTML(parsedExplanation.keyTakeaway);
                 keyTakeawayDiv.classList.remove('hidden');
             } else {
                 keyTakeawayDiv.classList.add('hidden');
@@ -1668,6 +1705,7 @@
             }
         }
 
+        
         // Finish quiz and show results
         function finishQuiz() {
             stopTimer(); // Stop timer when quiz finishes
@@ -1749,18 +1787,18 @@
                     // Parse explanation for step-by-step display
                     const parsedExplanation = question.explanation ? parseExplanation(question.explanation) : null;
 
-                    // Generate step-by-step HTML
+                    // Generate step-by-step HTML with sanitized content
                     let stepsHtml = '';
                     if (parsedExplanation && parsedExplanation.steps.length > 0) {
                         stepsHtml = parsedExplanation.steps.map(step => `
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0 w-7 h-7 rounded-full bg-gradient-to-br from-accent to-accent-600 text-white flex items-center justify-center font-bold text-xs shadow-material-1">${step.number}</div>
-                                <p class="flex-1 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed pt-0.5">${step.text}</p>
+                                <p class="flex-1 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed pt-0.5">${sanitizeHTML(step.text)}</p>
                             </div>
                         `).join('');
                     }
 
-                    // Generate key takeaway HTML
+                    // Generate key takeaway HTML with sanitized content
                     let takeawayHtml = '';
                     if (parsedExplanation && parsedExplanation.keyTakeaway) {
                         takeawayHtml = `
@@ -1769,7 +1807,7 @@
                                     <span class="material-icons text-amber-500 text-base flex-shrink-0">tips_and_updates</span>
                                     <div>
                                         <span class="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wide">Key Takeaway</span>
-                                        <p class="text-amber-800 dark:text-amber-200 text-sm mt-1">${parsedExplanation.keyTakeaway}</p>
+                                        <p class="text-amber-800 dark:text-amber-200 text-sm mt-1">${sanitizeHTML(parsedExplanation.keyTakeaway)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -1789,7 +1827,7 @@
                             <div class="flex items-start space-x-3">
                                 <span class="flex-shrink-0 w-8 h-8 rounded-full bg-error text-white flex items-center justify-center font-bold text-sm">${index + 1}</span>
                                 <div class="flex-1">
-                                    <p class="text-sm text-neutral-800 dark:text-white leading-relaxed">${question.question}</p>
+                                    <p class="text-sm text-neutral-800 dark:text-white leading-relaxed">${sanitizeHTML(question.question)}</p>
                                     ${questionImageHtml}
                                 </div>
                             </div>
@@ -1802,7 +1840,7 @@
                                 <span class="material-icons text-error text-lg flex-shrink-0">close</span>
                                 <div class="flex-1">
                                     <span class="text-xs text-red-600 dark:text-red-400 font-medium uppercase tracking-wide">Your Answer</span>
-                                    <p class="text-sm text-red-800 dark:text-red-200 mt-0.5"><strong>${userLetter}.</strong> ${userAnswer}</p>
+                                    <p class="text-sm text-red-800 dark:text-red-200 mt-0.5"><strong>${userLetter}.</strong> ${sanitizeHTML(userAnswer)}</p>
                                 </div>
                             </div>
 
@@ -1811,7 +1849,7 @@
                                 <span class="material-icons text-success text-lg flex-shrink-0">check_circle</span>
                                 <div class="flex-1">
                                     <span class="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Correct Answer</span>
-                                    <p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${question.options[correctIndex]}</p>
+                                    <p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${sanitizeHTML(question.options[correctIndex])}</p>
                                 </div>
                             </div>
 
