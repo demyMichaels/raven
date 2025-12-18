@@ -1665,46 +1665,19 @@
         }
 
         // Parse explanation into structured sections: notes, calculation, takeaway
-        // Supports both structured object format and legacy string format
-        function parseExplanation(explanation) {
+        function parseExplanation(text) {
             const result = {
                 notes: [],
                 calculation: [],
                 takeaway: null
             };
 
-            // Check if explanation is already in structured object format
-            if (typeof explanation === 'object' && explanation !== null) {
-                // Structured format: { notes: [], calculation: [], takeaway: "" }
-                if (Array.isArray(explanation.notes)) {
-                    result.notes = explanation.notes;
-                } else if (typeof explanation.notes === 'string') {
-                    result.notes = [explanation.notes];
-                }
-
-                if (Array.isArray(explanation.calculation)) {
-                    result.calculation = explanation.calculation;
-                } else if (typeof explanation.calculation === 'string') {
-                    result.calculation = [explanation.calculation];
-                }
-
-                if (explanation.takeaway) {
-                    result.takeaway = explanation.takeaway;
-                }
-
-                return result;
-            }
-
-            // Legacy string format - parse intelligently
-            const text = String(explanation);
-
             // Detect if this is a calculation-heavy explanation
             const hasCalculation = /[=→×÷+\-\*\/]/.test(text) &&
                                    (/\d+\s*[=×÷+\-\*\/]\s*\d+/.test(text) ||
                                     /let\s+\w+\s*=/i.test(text) ||
                                     /\([^)]*[+\-\*\/×÷=][^)]*\)/.test(text) ||
-                                    /gives:|this gives|therefore|thus/i.test(text) ||
-                                    /step\s*\d+[:\s]/i.test(text));
+                                    /gives:|this gives|therefore|thus/i.test(text));
 
             // Extract key takeaway first
             const takeawayPatterns = [
@@ -1736,12 +1709,10 @@
                 // Split into notes and calculation sections
                 const calcIndicators = [
                     /the\s+calculation[:\s]/i,
-                    /step\s*1[:\s]/i,
                     /let\s+\w+\s*=/i,
                     /calculating[:\s]/i,
                     /solving[:\s]/i,
-                    /using\s+the\s+formula/i,
-                    /given[:\s]/i
+                    /using\s+the\s+formula/i
                 ];
 
                 let calcStartIndex = -1;
@@ -1795,13 +1766,7 @@
                 /this\s+gives[:\s]/i,
                 /^therefore[,:\s]/i,
                 /^solving[,:\s]/i,
-                /^\d+[A-Za-z]*\s*[×÷\+\-\*\/=]/,
-                /^step\s*\d+[:\s]/i,
-                /^given[:\s]/i,
-                /^using\s+Q\s*=/i,
-                /^Q\s*=\s*/i,
-                /^for\s+\d+[°℃]/i,
-                /=\s*\d+\.?\d*\s*(J|kg|m|s|°|℃|K|W|N|Pa)/i
+                /^\d+[A-Za-z]*\s*[×÷\+\-\*\/=]/
             ];
 
             return calcPatterns.some(p => p.test(line));
