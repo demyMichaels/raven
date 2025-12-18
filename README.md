@@ -39,8 +39,12 @@ Mastering when to use `Q = mcΔT` and when to use `Q = mL` is the key to solving
 
 
 
+
 ---------------------------------
-Yes, that JSON format will work perfectly! The explanation box will display it correctly.
+explanation Box Parser
+---------------------------------
+Yes, that JSON format will work perfectly! 
+The explanation box will display it correctly.
 
 However, since your current explanation is just one sentence, it will show as a single step. To get the line-by-line breakdown for your students, you can format your explanations with numbered steps like this:
 
