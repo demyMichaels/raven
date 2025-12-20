@@ -3,48 +3,1060 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>b.molecular-motion-brownian</title>
+    <title>Phase Changes & Brownian Motion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #0a0a12;
+            --bg-secondary: #12121f;
+            --liquid-color: #0066cc;
+            --vapor-color: #ff6b35;
+            --molecule-liquid: #4dabf7;
+            --molecule-vapor: #ffa94d;
+            --tracer-color: #f72585;
+            --tracer-glow: rgba(247, 37, 133, 0.6);
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --accent: #7c3aed;
+            --heat-gradient-1: #1a1a2e;
+            --heat-gradient-2: #16213e;
+            --heat-gradient-3: #0f3460;
+        }
+
+        .dark {
+            --bg-primary: #0a0a12;
+            --bg-secondary: #12121f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #f0f8ff;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
         }
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid rgba(124, 58, 237, 0.3);
+        }
+
         h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #4ecdc4;
-            padding-bottom: 10px;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #4dabf7 0%, #f72585 50%, #ffa94d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
-        .breadcrumb {
-            color: #666;
-            margin-bottom: 20px;
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        @media (min-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr 320px;
+            }
+        }
+
+        .simulation-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 12px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 100%);
+        }
+
+        #simulationCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .pressure-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pressure-arrows {
+            display: flex;
+            gap: 2px;
+        }
+
+        .pressure-arrow {
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 8px solid #888;
+            animation: pressDown 1s ease-in-out infinite;
+        }
+
+        .pressure-arrow:nth-child(2) { animation-delay: 0.2s; }
+        .pressure-arrow:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pressDown {
+            0%, 100% { transform: translateY(0); opacity: 0.5; }
+            50% { transform: translateY(3px); opacity: 1; }
+        }
+
+        .controls-panel {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .control-section {
+            margin-bottom: 24px;
+        }
+
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .control-label span {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .control-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--vapor-color);
+            background: rgba(255, 107, 53, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .temperature-slider {
+            width: 100%;
+            height: 12px;
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #2196F3 0%, #FFC107 50%, #FF5722 100%);
+            outline: none;
+            cursor: pointer;
+        }
+
+        .temperature-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--vapor-color);
+            transition: transform 0.2s;
+        }
+
+        .temperature-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .phase-indicator {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .phase-badge {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .phase-badge.liquid {
+            background: rgba(77, 171, 247, 0.2);
+            border: 1px solid rgba(77, 171, 247, 0.4);
+            color: var(--molecule-liquid);
+        }
+
+        .phase-badge.boiling {
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            color: var(--accent);
+        }
+
+        .phase-badge.vapor {
+            background: rgba(255, 169, 77, 0.2);
+            border: 1px solid rgba(255, 169, 77, 0.4);
+            color: var(--molecule-vapor);
+        }
+
+        .phase-badge.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.liquid-mol { background: var(--molecule-liquid); box-shadow: 0 0 8px var(--molecule-liquid); }
+        .legend-dot.vapor-mol { background: var(--molecule-vapor); box-shadow: 0 0 8px var(--molecule-vapor); }
+        .legend-dot.tracer { background: var(--tracer-color); box-shadow: 0 0 8px var(--tracer-color); }
+        .legend-dot.trail { background: linear-gradient(90deg, var(--tracer-color), transparent); border-radius: 2px; width: 20px; height: 4px; }
+
+        .info-cards {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 10px;
+            padding: 14px;
+            transition: all 0.3s;
+        }
+
+        .info-card.active {
+            background: rgba(124, 58, 237, 0.2);
+            border-color: var(--accent);
+        }
+
+        .info-card h3 {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-card p {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 16px;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .toggle-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .gravity-note {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 37, 133, 0.1) 100%);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 16px;
+        }
+
+        .gravity-note h4 {
+            font-size: 0.8rem;
+            color: var(--vapor-color);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gravity-note p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-box .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--molecule-liquid);
+        }
+
+        .stat-box .label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .stat-box.vapor .value {
+            color: var(--molecule-vapor);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            header { padding: 20px 15px; }
+            .main-content { padding: 10px; }
+            .simulation-container, .controls-panel { padding: 15px; }
+            .legend { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="breadcrumb">
-            <a href="../index.html">Kinetic Theory of Matter and Gas Laws</a> → b.molecular-motion-brownian
+    <header>
+        <h1>Phase Changes & Brownian Motion</h1>
+        <p class="subtitle">Molecular Dance: From Liquid to Vapor</p>
+    </header>
+
+    <div class="main-content container">
+        <div class="simulation-container">
+            <div class="canvas-wrapper">
+                <canvas id="simulationCanvas"></canvas>
+                <div class="pressure-indicator">
+                    <div class="pressure-arrows">
+                        <div class="pressure-arrow"></div>
+                        <div class="pressure-arrow"></div>
+                        <div class="pressure-arrow"></div>
+                    </div>
+                    <span>Atmospheric Pressure (1 atm)</span>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="value" id="liquidSpeed">0</div>
+                    <div class="label">Liquid Mol. Speed (m/s)</div>
+                </div>
+                <div class="stat-box vapor">
+                    <div class="value" id="vaporSpeed">0</div>
+                    <div class="label">Vapor Mol. Speed (m/s)</div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot liquid-mol"></div>
+                    <span>Liquid Molecule</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot vapor-mol"></div>
+                    <span>Vapor Molecule</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot tracer"></div>
+                    <span>Brownian Particle</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot trail"></div>
+                    <span>Brownian Path</span>
+                </div>
+            </div>
         </div>
-        
-        <h1>b.molecular-motion-brownian</h1>
-        
-        <div class="topic-info">
-            <p><strong>📖 Subtopic:</strong> b.molecular-motion-brownian</p>
-            <p><strong>📁 Folder:</strong> b.molecular-motion-brownian</p>
-            <p><strong>📚 Main Topic:</strong> Kinetic Theory of Matter and Gas Laws</p>
-            <p><strong>🕒 Created:</strong> 2025-08-31 19:22:35</p>
+
+        <div class="controls-panel">
+            <div class="control-section">
+                <div class="control-label">
+                    <span>🌡️ Temperature</span>
+                    <span class="control-value" id="tempValue">25°C</span>
+                </div>
+                <input type="range" class="temperature-slider" id="tempSlider" min="20" max="150" value="25">
+
+                <div class="phase-indicator">
+                    <div class="phase-badge liquid active" id="phaseLiquid">LIQUID</div>
+                    <div class="phase-badge boiling" id="phaseBoiling">BOILING</div>
+                    <div class="phase-badge vapor" id="phaseVapor">VAPOR</div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="control-label">
+                    <span>👁️ View Mode</span>
+                </div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="btnBoth">Both Phases</button>
+                    <button class="toggle-btn" id="btnLiquid">Liquid Focus</button>
+                    <button class="toggle-btn" id="btnVapor">Vapor Focus</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="control-label">
+                    <span>🎯 Show Brownian Motion</span>
+                </div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="btnTrailOn">Trails ON</button>
+                    <button class="toggle-btn" id="btnTrailOff">Trails OFF</button>
+                </div>
+            </div>
+
+            <div class="info-cards">
+                <div class="info-card active" id="infoLiquid">
+                    <h3>💧 Liquid Phase</h3>
+                    <p>Molecules are close together but vibrate and move rapidly. The larger pink particle shows <strong>Brownian motion</strong> – random jiggling from countless molecular collisions.</p>
+                </div>
+                <div class="info-card" id="infoBoiling">
+                    <h3>🔥 Boiling Point</h3>
+                    <p>At 100°C, molecules gain enough kinetic energy to <strong>overcome atmospheric pressure</strong>. They break free from the liquid surface and escape as vapor!</p>
+                </div>
+                <div class="info-card" id="infoVapor">
+                    <h3>☁️ Vapor Phase</h3>
+                    <p>Gas molecules move <strong>freely and rapidly</strong> in all directions. Notice how the suspended particle drifts downward – gravity causes settling in gases!</p>
+                </div>
+            </div>
+
+            <div class="gravity-note">
+                <h4>⚠️ Why Brownian Motion is Studied in Liquids</h4>
+                <p>In gases, particles tend to <strong>settle due to gravity</strong> unless extremely small. Liquids provide enough density to keep particles suspended while still showing clear Brownian motion from molecular collisions.</p>
+            </div>
         </div>
-        
-        <p>This section contains materials and resources for: <strong>b.molecular-motion-brownian</strong></p>
     </div>
+
+    <footer>
+        Interactive simulation for understanding molecular kinetics and phase transitions
+    </footer>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Canvas setup
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Simulation state
+        let temperature = 25;
+        let viewMode = 'both';
+        let showTrails = true;
+        let liquidMolecules = [];
+        let vaporMolecules = [];
+        let liquidTracer = null;
+        let vaporTracer = null;
+        let tracerTrailLiquid = [];
+        let tracerTrailVapor = [];
+
+        // Constants
+        const BOILING_POINT = 100;
+        const MOLECULE_RADIUS = 4;
+        const TRACER_RADIUS = 12;
+        const MAX_TRAIL_LENGTH = 100;
+
+        // Initialize molecules
+        function initMolecules() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            const liquidLevel = height * 0.6;
+
+            // Clear arrays
+            liquidMolecules = [];
+            vaporMolecules = [];
+            tracerTrailLiquid = [];
+            tracerTrailVapor = [];
+
+            // Create liquid molecules
+            for (let i = 0; i < 120; i++) {
+                liquidMolecules.push({
+                    x: Math.random() * width,
+                    y: liquidLevel + Math.random() * (height - liquidLevel - 20),
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+
+            // Create vapor molecules
+            for (let i = 0; i < 30; i++) {
+                vaporMolecules.push({
+                    x: Math.random() * width,
+                    y: 40 + Math.random() * (liquidLevel - 80),
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4
+                });
+            }
+
+            // Create tracer particles
+            liquidTracer = {
+                x: width / 2,
+                y: liquidLevel + (height - liquidLevel) / 2,
+                vx: 0,
+                vy: 0
+            };
+
+            vaporTracer = {
+                x: width / 2,
+                y: liquidLevel / 2,
+                vx: 0,
+                vy: 0
+            };
+        }
+
+        initMolecules();
+
+        // Get speed multiplier based on temperature
+        function getSpeedMultiplier() {
+            return 0.5 + (temperature - 20) / 50;
+        }
+
+        // Update molecules
+        function updateMolecules() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            const liquidLevel = height * 0.6;
+            const speedMult = getSpeedMultiplier();
+
+            // Update liquid molecules
+            liquidMolecules.forEach(mol => {
+                mol.x += mol.vx * speedMult;
+                mol.y += mol.vy * speedMult;
+
+                // Boundary collision
+                if (mol.x < MOLECULE_RADIUS || mol.x > width - MOLECULE_RADIUS) {
+                    mol.vx *= -1;
+                    mol.x = Math.max(MOLECULE_RADIUS, Math.min(width - MOLECULE_RADIUS, mol.x));
+                }
+                if (mol.y < liquidLevel || mol.y > height - MOLECULE_RADIUS) {
+                    mol.vy *= -1;
+                    mol.y = Math.max(liquidLevel, Math.min(height - MOLECULE_RADIUS, mol.y));
+                }
+
+                // Random jitter
+                mol.vx += (Math.random() - 0.5) * 0.5 * speedMult;
+                mol.vy += (Math.random() - 0.5) * 0.5 * speedMult;
+
+                // Speed limit
+                const maxSpeed = 3 * speedMult;
+                const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                if (speed > maxSpeed) {
+                    mol.vx = (mol.vx / speed) * maxSpeed;
+                    mol.vy = (mol.vy / speed) * maxSpeed;
+                }
+            });
+
+            // Update vapor molecules
+            const vaporSpeedMult = speedMult * 1.5;
+            vaporMolecules.forEach(mol => {
+                mol.x += mol.vx * vaporSpeedMult;
+                mol.y += mol.vy * vaporSpeedMult;
+
+                // Boundary collision
+                if (mol.x < MOLECULE_RADIUS || mol.x > width - MOLECULE_RADIUS) {
+                    mol.vx *= -1;
+                    mol.x = Math.max(MOLECULE_RADIUS, Math.min(width - MOLECULE_RADIUS, mol.x));
+                }
+                if (mol.y < 40 || mol.y > liquidLevel - 20) {
+                    mol.vy *= -1;
+                    mol.y = Math.max(40, Math.min(liquidLevel - 20, mol.y));
+                }
+
+                // Random jitter
+                mol.vx += (Math.random() - 0.5) * 0.8;
+                mol.vy += (Math.random() - 0.5) * 0.8;
+
+                // Speed limit
+                const maxSpeed = 5 * speedMult;
+                const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                if (speed > maxSpeed) {
+                    mol.vx = (mol.vx / speed) * maxSpeed;
+                    mol.vy = (mol.vy / speed) * maxSpeed;
+                }
+            });
+
+            // Boiling: transfer molecules from liquid to vapor
+            if (temperature >= BOILING_POINT) {
+                const escapeChance = (temperature - BOILING_POINT) / 200;
+                liquidMolecules = liquidMolecules.filter(mol => {
+                    if (mol.y < liquidLevel + 20 && Math.random() < escapeChance) {
+                        vaporMolecules.push({
+                            x: mol.x,
+                            y: liquidLevel - 30,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: -Math.random() * 4 - 2
+                        });
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
+            // Update liquid tracer (Brownian motion)
+            let brownianForceX = 0;
+            let brownianForceY = 0;
+            liquidMolecules.forEach(mol => {
+                const dx = liquidTracer.x - mol.x;
+                const dy = liquidTracer.y - mol.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < TRACER_RADIUS + MOLECULE_RADIUS + 5) {
+                    const force = speedMult * 0.3 / (dist + 1);
+                    brownianForceX += (dx / dist) * force;
+                    brownianForceY += (dy / dist) * force;
+                }
+            });
+
+            liquidTracer.vx += brownianForceX;
+            liquidTracer.vy += brownianForceY;
+            liquidTracer.vx *= 0.95;
+            liquidTracer.vy *= 0.95;
+            liquidTracer.x += liquidTracer.vx;
+            liquidTracer.y += liquidTracer.vy;
+
+            // Keep tracer in bounds
+            liquidTracer.x = Math.max(TRACER_RADIUS, Math.min(width - TRACER_RADIUS, liquidTracer.x));
+            liquidTracer.y = Math.max(liquidLevel + TRACER_RADIUS, Math.min(height - TRACER_RADIUS, liquidTracer.y));
+
+            // Update vapor tracer
+            let vaporForceX = 0;
+            let vaporForceY = 0;
+            vaporMolecules.forEach(mol => {
+                const dx = vaporTracer.x - mol.x;
+                const dy = vaporTracer.y - mol.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < TRACER_RADIUS + MOLECULE_RADIUS + 10) {
+                    const force = speedMult * 0.5 / (dist + 1);
+                    vaporForceX += (dx / dist) * force;
+                    vaporForceY += (dy / dist) * force;
+                }
+            });
+
+            vaporTracer.vx += vaporForceX;
+            vaporTracer.vy += vaporForceY;
+            vaporTracer.vy += 0.02; // Gravity effect!
+            vaporTracer.vx *= 0.98;
+            vaporTracer.vy *= 0.98;
+            vaporTracer.x += vaporTracer.vx;
+            vaporTracer.y += vaporTracer.vy;
+
+            // Keep vapor tracer in bounds (but let it settle toward liquid surface)
+            vaporTracer.x = Math.max(TRACER_RADIUS, Math.min(width - TRACER_RADIUS, vaporTracer.x));
+            vaporTracer.y = Math.max(50 + TRACER_RADIUS, Math.min(liquidLevel - TRACER_RADIUS, vaporTracer.y));
+
+            // Update trails
+            if (showTrails) {
+                tracerTrailLiquid.push({ x: liquidTracer.x, y: liquidTracer.y });
+                if (tracerTrailLiquid.length > MAX_TRAIL_LENGTH) {
+                    tracerTrailLiquid.shift();
+                }
+
+                tracerTrailVapor.push({ x: vaporTracer.x, y: vaporTracer.y });
+                if (tracerTrailVapor.length > MAX_TRAIL_LENGTH) {
+                    tracerTrailVapor.shift();
+                }
+            }
+
+            // Update speed displays
+            const avgLiquidSpeed = Math.round(speedMult * 400 + 100);
+            const avgVaporSpeed = Math.round(speedMult * 600 + 200);
+            document.getElementById('liquidSpeed').textContent = avgLiquidSpeed;
+            document.getElementById('vaporSpeed').textContent = avgVaporSpeed;
+        }
+
+        // Draw function
+        function draw() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            const liquidLevel = height * 0.6;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw background gradient
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+            bgGrad.addColorStop(0, '#0d0d1a');
+            bgGrad.addColorStop(0.4, '#151525');
+            bgGrad.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Heat glow at bottom based on temperature
+            if (temperature > 50) {
+                const heatIntensity = (temperature - 50) / 100;
+                const heatGrad = ctx.createLinearGradient(0, height, 0, height - 100);
+                heatGrad.addColorStop(0, `rgba(255, 87, 34, ${heatIntensity * 0.3})`);
+                heatGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = heatGrad;
+                ctx.fillRect(0, height - 100, width, 100);
+            }
+
+            // Draw liquid region
+            const liquidGrad = ctx.createLinearGradient(0, liquidLevel, 0, height);
+            liquidGrad.addColorStop(0, 'rgba(0, 102, 204, 0.15)');
+            liquidGrad.addColorStop(1, 'rgba(0, 102, 204, 0.25)');
+            ctx.fillStyle = liquidGrad;
+            ctx.fillRect(0, liquidLevel, width, height - liquidLevel);
+
+            // Draw liquid surface
+            ctx.beginPath();
+            ctx.moveTo(0, liquidLevel);
+            for (let x = 0; x <= width; x += 20) {
+                const wave = Math.sin(x * 0.03 + Date.now() * 0.003 * getSpeedMultiplier()) * 2;
+                ctx.lineTo(x, liquidLevel + wave);
+            }
+            ctx.strokeStyle = 'rgba(77, 171, 247, 0.6)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw vapor region label
+            ctx.fillStyle = 'rgba(255, 169, 77, 0.15)';
+            ctx.font = '12px JetBrains Mono';
+            ctx.fillText('VAPOR PHASE', 15, 60);
+
+            // Draw liquid region label
+            ctx.fillStyle = 'rgba(77, 171, 247, 0.3)';
+            ctx.fillText('LIQUID PHASE', 15, liquidLevel + 25);
+
+            // Draw trails
+            if (showTrails) {
+                // Liquid tracer trail
+                if (tracerTrailLiquid.length > 1 && (viewMode === 'both' || viewMode === 'liquid')) {
+                    ctx.beginPath();
+                    ctx.moveTo(tracerTrailLiquid[0].x, tracerTrailLiquid[0].y);
+                    for (let i = 1; i < tracerTrailLiquid.length; i++) {
+                        ctx.lineTo(tracerTrailLiquid[i].x, tracerTrailLiquid[i].y);
+                    }
+                    ctx.strokeStyle = 'rgba(247, 37, 133, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Vapor tracer trail
+                if (tracerTrailVapor.length > 1 && (viewMode === 'both' || viewMode === 'vapor')) {
+                    ctx.beginPath();
+                    ctx.moveTo(tracerTrailVapor[0].x, tracerTrailVapor[0].y);
+                    for (let i = 1; i < tracerTrailVapor.length; i++) {
+                        ctx.lineTo(tracerTrailVapor[i].x, tracerTrailVapor[i].y);
+                    }
+                    ctx.strokeStyle = 'rgba(247, 37, 133, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            // Draw liquid molecules
+            if (viewMode === 'both' || viewMode === 'liquid') {
+                liquidMolecules.forEach(mol => {
+                    ctx.beginPath();
+                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = '#4dabf7';
+                    ctx.fill();
+
+                    // Glow effect
+                    ctx.beginPath();
+                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(77, 171, 247, 0.3)';
+                    ctx.fill();
+                });
+            }
+
+            // Draw vapor molecules
+            if (viewMode === 'both' || viewMode === 'vapor') {
+                vaporMolecules.forEach(mol => {
+                    ctx.beginPath();
+                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffa94d';
+                    ctx.fill();
+
+                    // Glow effect
+                    ctx.beginPath();
+                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS + 3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+                    ctx.fill();
+                });
+            }
+
+            // Draw liquid tracer
+            if (viewMode === 'both' || viewMode === 'liquid') {
+                // Outer glow
+                ctx.beginPath();
+                ctx.arc(liquidTracer.x, liquidTracer.y, TRACER_RADIUS + 8, 0, Math.PI * 2);
+                const glowGrad = ctx.createRadialGradient(
+                    liquidTracer.x, liquidTracer.y, TRACER_RADIUS,
+                    liquidTracer.x, liquidTracer.y, TRACER_RADIUS + 8
+                );
+                glowGrad.addColorStop(0, 'rgba(247, 37, 133, 0.5)');
+                glowGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGrad;
+                ctx.fill();
+
+                // Tracer particle
+                ctx.beginPath();
+                ctx.arc(liquidTracer.x, liquidTracer.y, TRACER_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = '#f72585';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '10px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText('POLLEN', liquidTracer.x, liquidTracer.y + 3);
+                ctx.textAlign = 'left';
+            }
+
+            // Draw vapor tracer
+            if (viewMode === 'both' || viewMode === 'vapor') {
+                // Outer glow
+                ctx.beginPath();
+                ctx.arc(vaporTracer.x, vaporTracer.y, TRACER_RADIUS + 6, 0, Math.PI * 2);
+                const vglowGrad = ctx.createRadialGradient(
+                    vaporTracer.x, vaporTracer.y, TRACER_RADIUS,
+                    vaporTracer.x, vaporTracer.y, TRACER_RADIUS + 6
+                );
+                vglowGrad.addColorStop(0, 'rgba(247, 37, 133, 0.4)');
+                vglowGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = vglowGrad;
+                ctx.fill();
+
+                // Tracer particle
+                ctx.beginPath();
+                ctx.arc(vaporTracer.x, vaporTracer.y, TRACER_RADIUS * 0.8, 0, Math.PI * 2);
+                ctx.fillStyle = '#f72585';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Settling indicator
+                if (vaporTracer.y > liquidLevel * 0.6) {
+                    ctx.fillStyle = 'rgba(255, 107, 53, 0.8)';
+                    ctx.font = '9px JetBrains Mono';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('↓ SETTLING', vaporTracer.x, vaporTracer.y - TRACER_RADIUS - 8);
+                    ctx.textAlign = 'left';
+                }
+            }
+
+            // Draw boiling bubbles
+            if (temperature >= BOILING_POINT) {
+                const bubbleCount = Math.floor((temperature - BOILING_POINT) / 10) + 3;
+                for (let i = 0; i < bubbleCount; i++) {
+                    const bx = (Date.now() * 0.1 + i * 137) % width;
+                    const by = liquidLevel + 20 + Math.sin(Date.now() * 0.005 + i) * 20;
+                    const br = 3 + Math.sin(Date.now() * 0.01 + i * 2) * 2;
+
+                    ctx.beginPath();
+                    ctx.arc(bx, by, br, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fill();
+                }
+
+                // Escape arrows
+                ctx.fillStyle = 'rgba(255, 169, 77, 0.6)';
+                ctx.font = '14px sans-serif';
+                for (let i = 0; i < 3; i++) {
+                    const ax = width * 0.25 + i * width * 0.25;
+                    const ay = liquidLevel - 5 - Math.sin(Date.now() * 0.005 + i) * 5;
+                    ctx.fillText('↑', ax, ay);
+                }
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            updateMolecules();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Temperature slider
+        const tempSlider = document.getElementById('tempSlider');
+        const tempValue = document.getElementById('tempValue');
+        const phaseLiquid = document.getElementById('phaseLiquid');
+        const phaseBoiling = document.getElementById('phaseBoiling');
+        const phaseVapor = document.getElementById('phaseVapor');
+        const infoLiquid = document.getElementById('infoLiquid');
+        const infoBoiling = document.getElementById('infoBoiling');
+        const infoVapor = document.getElementById('infoVapor');
+
+        tempSlider.addEventListener('input', (e) => {
+            temperature = parseInt(e.target.value);
+            tempValue.textContent = temperature + '°C';
+
+            // Update phase indicators
+            phaseLiquid.classList.remove('active');
+            phaseBoiling.classList.remove('active');
+            phaseVapor.classList.remove('active');
+            infoLiquid.classList.remove('active');
+            infoBoiling.classList.remove('active');
+            infoVapor.classList.remove('active');
+
+            if (temperature < BOILING_POINT - 5) {
+                phaseLiquid.classList.add('active');
+                infoLiquid.classList.add('active');
+            } else if (temperature < BOILING_POINT + 10) {
+                phaseBoiling.classList.add('active');
+                infoBoiling.classList.add('active');
+            } else {
+                phaseVapor.classList.add('active');
+                infoVapor.classList.add('active');
+            }
+        });
+
+        // View mode buttons
+        document.getElementById('btnBoth').addEventListener('click', () => {
+            viewMode = 'both';
+            document.querySelectorAll('.toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btnBoth').classList.add('active');
+        });
+
+        document.getElementById('btnLiquid').addEventListener('click', () => {
+            viewMode = 'liquid';
+            document.querySelectorAll('.toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btnLiquid').classList.add('active');
+        });
+
+        document.getElementById('btnVapor').addEventListener('click', () => {
+            viewMode = 'vapor';
+            document.querySelectorAll('.toggle-group .toggle-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btnVapor').classList.add('active');
+        });
+
+        // Trail toggle
+        document.getElementById('btnTrailOn').addEventListener('click', () => {
+            showTrails = true;
+            document.getElementById('btnTrailOn').classList.add('active');
+            document.getElementById('btnTrailOff').classList.remove('active');
+        });
+
+        document.getElementById('btnTrailOff').addEventListener('click', () => {
+            showTrails = false;
+            tracerTrailLiquid = [];
+            tracerTrailVapor = [];
+            document.getElementById('btnTrailOff').classList.add('active');
+            document.getElementById('btnTrailOn').classList.remove('active');
+        });
+    </script>
 </body>
 </html>
+
