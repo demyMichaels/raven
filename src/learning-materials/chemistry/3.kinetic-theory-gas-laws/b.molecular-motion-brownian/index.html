@@ -18,6 +18,7 @@
             --text-primary: #e8e8f0;
             --text-secondary: #8888a0;
             --accent: #7c3aed;
+            --solid-color: #00d4aa;
             --heat-gradient-1: #1a1a2e;
             --heat-gradient-2: #16213e;
             --heat-gradient-3: #0f3460;
@@ -43,7 +44,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -79,10 +80,16 @@
             padding: 20px;
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 1100px) {
             .main-content {
-                grid-template-columns: 1fr 320px;
+                grid-template-columns: 1fr 360px;
             }
+        }
+
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
         .simulation-container {
@@ -96,7 +103,7 @@
         .canvas-wrapper {
             position: relative;
             width: 100%;
-            aspect-ratio: 4/3;
+            aspect-ratio: 16/9;
             border-radius: 12px;
             overflow: hidden;
             background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 100%);
@@ -394,6 +401,125 @@
             color: var(--molecule-vapor);
         }
 
+        /* Heating Curve Chart Styles */
+        .chart-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            min-height: 250px;
+        }
+
+        #heatingCurveCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(18, 18, 31, 0.95);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            padding: 12px 16px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            max-width: 280px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .chart-tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .tooltip-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            background: rgba(124, 58, 237, 0.2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .tooltip-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .chart-legend-color {
+            width: 16px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .maxwell-note {
+            background: linear-gradient(135deg, rgba(77, 171, 247, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+            border: 1px solid rgba(77, 171, 247, 0.3);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 16px;
+        }
+
+        .maxwell-note h4 {
+            font-size: 0.8rem;
+            color: var(--molecule-liquid);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .maxwell-note p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
         footer {
             text-align: center;
             padding: 20px;
@@ -405,9 +531,10 @@
             .container { padding: 10px; }
             header { padding: 20px 15px; }
             .main-content { padding: 10px; }
-            .simulation-container, .controls-panel { padding: 15px; }
+            .simulation-container, .controls-panel, .chart-container { padding: 15px; }
             .legend { grid-template-columns: 1fr; }
             .stats-row { grid-template-columns: 1fr; }
+            .chart-legend { flex-direction: column; gap: 8px; }
         }
     </style>
 </head>
@@ -418,46 +545,87 @@
     </header>
 
     <div class="main-content container">
-        <div class="simulation-container">
-            <div class="canvas-wrapper">
-                <canvas id="simulationCanvas"></canvas>
-                <div class="pressure-indicator">
-                    <div class="pressure-arrows">
-                        <div class="pressure-arrow"></div>
-                        <div class="pressure-arrow"></div>
-                        <div class="pressure-arrow"></div>
+        <div class="left-column">
+            <div class="simulation-container">
+                <div class="canvas-wrapper">
+                    <canvas id="simulationCanvas"></canvas>
+                    <div class="pressure-indicator">
+                        <div class="pressure-arrows">
+                            <div class="pressure-arrow"></div>
+                            <div class="pressure-arrow"></div>
+                            <div class="pressure-arrow"></div>
+                        </div>
+                        <span>Atmospheric Pressure (1 atm)</span>
                     </div>
-                    <span>Atmospheric Pressure (1 atm)</span>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="value" id="liquidSpeed">0</div>
+                        <div class="label">Avg Liquid Speed (m/s)</div>
+                    </div>
+                    <div class="stat-box vapor">
+                        <div class="value" id="vaporSpeed">0</div>
+                        <div class="label">Avg Vapor Speed (m/s)</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-dot liquid-mol"></div>
+                        <span>Liquid Molecule</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot vapor-mol"></div>
+                        <span>Vapor Molecule</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot tracer"></div>
+                        <span>Brownian Particle</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot trail"></div>
+                        <span>Brownian Path</span>
+                    </div>
+                </div>
+
+                <div class="maxwell-note">
+                    <h4>📊 Maxwell-Boltzmann Distribution</h4>
+                    <p>Particle speeds follow the Maxwell-Boltzmann distribution. At any temperature, some molecules move faster and some slower than average. Higher temperatures shift the distribution toward higher speeds with greater spread. Watch the varying particle sizes indicating their relative speeds!</p>
                 </div>
             </div>
 
-            <div class="stats-row">
-                <div class="stat-box">
-                    <div class="value" id="liquidSpeed">0</div>
-                    <div class="label">Liquid Mol. Speed (m/s)</div>
+            <div class="chart-container">
+                <div class="chart-title">📈 Heating Curve (Water at 1 atm)</div>
+                <div class="chart-wrapper">
+                    <canvas id="heatingCurveCanvas"></canvas>
+                    <div class="chart-tooltip" id="chartTooltip">
+                        <div class="tooltip-title"></div>
+                        <div class="tooltip-formula"></div>
+                        <div class="tooltip-desc"></div>
+                    </div>
                 </div>
-                <div class="stat-box vapor">
-                    <div class="value" id="vaporSpeed">0</div>
-                    <div class="label">Vapor Mol. Speed (m/s)</div>
-                </div>
-            </div>
-
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-dot liquid-mol"></div>
-                    <span>Liquid Molecule</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot vapor-mol"></div>
-                    <span>Vapor Molecule</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot tracer"></div>
-                    <span>Brownian Particle</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot trail"></div>
-                    <span>Brownian Path</span>
+                <div class="chart-legend">
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: var(--solid-color);"></div>
+                        <span>Solid (Ice)</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: var(--accent);"></div>
+                        <span>Melting (Fusion)</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: var(--molecule-liquid);"></div>
+                        <span>Liquid (Water)</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: var(--vapor-color);"></div>
+                        <span>Boiling (Vaporization)</span>
+                    </div>
+                    <div class="chart-legend-item">
+                        <div class="chart-legend-color" style="background: var(--molecule-vapor);"></div>
+                        <span>Gas (Steam)</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -468,7 +636,7 @@
                     <span>🌡️ Temperature</span>
                     <span class="control-value" id="tempValue">25°C</span>
                 </div>
-                <input type="range" class="temperature-slider" id="tempSlider" min="20" max="150" value="25">
+                <input type="range" class="temperature-slider" id="tempSlider" min="-20" max="150" value="25">
 
                 <div class="phase-indicator">
                     <div class="phase-badge liquid active" id="phaseLiquid">LIQUID</div>
@@ -537,6 +705,127 @@
             }
         });
 
+        // ========== PHYSICAL CONSTANTS FOR WATER ==========
+        // Thermal properties (per gram)
+        const WATER_PROPERTIES = {
+            // Specific heat capacities (J/g·°C)
+            c_ice: 2.09,
+            c_water: 4.18,
+            c_steam: 2.01,
+            // Latent heats (J/g)
+            L_fusion: 334,
+            L_vaporization: 2260,
+            // Phase transition temperatures (°C)
+            T_melting: 0,
+            T_boiling: 100,
+            // Temperature range for simulation
+            T_min: -20,
+            T_max: 150,
+            // Assume 1 gram of water for calculations
+            mass: 1
+        };
+
+        // Calculate heating curve segments dynamically from physical constants
+        function calculateHeatingCurveSegments() {
+            const props = WATER_PROPERTIES;
+            const m = props.mass;
+
+            // Calculate Q values for each segment
+            // Q1: Heating ice from T_min to T_melting
+            const Q1 = m * props.c_ice * (props.T_melting - props.T_min);
+
+            // Q2: Melting at T_melting
+            const Q2 = m * props.L_fusion;
+
+            // Q3: Heating water from T_melting to T_boiling
+            const Q3 = m * props.c_water * (props.T_boiling - props.T_melting);
+
+            // Q4: Boiling at T_boiling
+            const Q4 = m * props.L_vaporization;
+
+            // Q5: Heating steam from T_boiling to T_max
+            const Q5 = m * props.c_steam * (props.T_max - props.T_boiling);
+
+            // Cumulative Q values
+            const Q_end_ice = Q1;
+            const Q_end_melting = Q_end_ice + Q2;
+            const Q_end_water = Q_end_melting + Q3;
+            const Q_end_boiling = Q_end_water + Q4;
+            const Q_total = Q_end_boiling + Q5;
+
+            return [
+                {
+                    name: 'Heating Ice',
+                    startQ: 0,
+                    endQ: Q_end_ice,
+                    startT: props.T_min,
+                    endT: props.T_melting,
+                    color: '#00d4aa',
+                    formula: 'Q = mcΔT',
+                    formulaExpanded: `Q = m × c_ice × ΔT`,
+                    description: `Ice absorbs heat and temperature rises. Molecules vibrate faster in their fixed positions. c_ice = ${props.c_ice} J/g°C`,
+                    type: 'sensible',
+                    specificHeat: props.c_ice
+                },
+                {
+                    name: 'Melting (Fusion)',
+                    startQ: Q_end_ice,
+                    endQ: Q_end_melting,
+                    startT: props.T_melting,
+                    endT: props.T_melting,
+                    color: '#7c3aed',
+                    formula: 'Q = mL_f',
+                    formulaExpanded: `Q = m × L_fusion`,
+                    description: `Temperature stays at ${props.T_melting}°C while ice melts to water. All energy breaks intermolecular bonds, not increase kinetic energy. L_fusion = ${props.L_fusion} J/g`,
+                    type: 'latent',
+                    latentHeat: props.L_fusion
+                },
+                {
+                    name: 'Heating Water',
+                    startQ: Q_end_melting,
+                    endQ: Q_end_water,
+                    startT: props.T_melting,
+                    endT: props.T_boiling,
+                    color: '#4dabf7',
+                    formula: 'Q = mcΔT',
+                    formulaExpanded: `Q = m × c_water × ΔT`,
+                    description: `Liquid water absorbs heat and temperature rises. Molecules move faster, colliding more energetically. c_water = ${props.c_water} J/g°C`,
+                    type: 'sensible',
+                    specificHeat: props.c_water
+                },
+                {
+                    name: 'Boiling (Vaporization)',
+                    startQ: Q_end_water,
+                    endQ: Q_end_boiling,
+                    startT: props.T_boiling,
+                    endT: props.T_boiling,
+                    color: '#ff6b35',
+                    formula: 'Q = mL_v',
+                    formulaExpanded: `Q = m × L_vaporization`,
+                    description: `Temperature stays at ${props.T_boiling}°C while water boils to steam. All energy overcomes atmospheric pressure and breaks liquid bonds. L_vap = ${props.L_vaporization} J/g`,
+                    type: 'latent',
+                    latentHeat: props.L_vaporization
+                },
+                {
+                    name: 'Heating Steam',
+                    startQ: Q_end_boiling,
+                    endQ: Q_total,
+                    startT: props.T_boiling,
+                    endT: props.T_max,
+                    color: '#ffa94d',
+                    formula: 'Q = mcΔT',
+                    formulaExpanded: `Q = m × c_steam × ΔT`,
+                    description: `Steam absorbs heat and temperature rises. Gas molecules move even faster with greater kinetic energy. c_steam = ${props.c_steam} J/g°C`,
+                    type: 'sensible',
+                    specificHeat: props.c_steam
+                }
+            ];
+        }
+
+        // Generate segments from physical constants
+        const heatingCurveSegments = calculateHeatingCurveSegments();
+        const MAX_Q = heatingCurveSegments[heatingCurveSegments.length - 1].endQ;
+
         // Canvas setup
         const canvas = document.getElementById('simulationCanvas');
         const ctx = canvas.getContext('2d');
@@ -566,16 +855,48 @@
         let tracerTrailVapor = [];
 
         // Constants
-        const BOILING_POINT = 100;
+        const BOILING_POINT = WATER_PROPERTIES.T_boiling;
+        const FREEZING_POINT = WATER_PROPERTIES.T_melting;
         const MOLECULE_RADIUS = 4;
         const TRACER_RADIUS = 12;
         const MAX_TRAIL_LENGTH = 100;
+        const BOLTZMANN_K = 1.38e-23;
+        const WATER_MASS = 2.99e-26; // kg per molecule
 
-        // Initialize molecules
+        // Maxwell-Boltzmann speed sampling using Box-Muller transform
+        function sampleMaxwellBoltzmannSpeed(T_kelvin, massScale = 1) {
+            // v_rms = sqrt(3kT/m)
+            // For 2D simulation, we use sqrt(2kT/m) for each component
+            const sigma = Math.sqrt(BOLTZMANN_K * T_kelvin / (WATER_MASS * massScale));
+
+            // Box-Muller for Gaussian components
+            const u1 = Math.random();
+            const u2 = Math.random();
+            const vx = sigma * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            const vy = sigma * Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+
+            return { vx, vy, speed: Math.sqrt(vx * vx + vy * vy) };
+        }
+
+        // Convert simulation temperature to Kelvin
+        function tempToKelvin(celsius) {
+            return Math.max(celsius + 273.15, 10); // Minimum 10K to avoid issues
+        }
+
+        // Scale factor to make speeds visible in simulation
+        function getVisualSpeedScale(T_kelvin) {
+            const rmsSpeed = Math.sqrt(3 * BOLTZMANN_K * T_kelvin / WATER_MASS);
+            // Map real speeds (hundreds of m/s) to pixel speeds (1-10 px/frame)
+            return 8 / rmsSpeed;
+        }
+
+        // Initialize molecules with Maxwell-Boltzmann distributed speeds
         function initMolecules() {
             const width = canvas.width / window.devicePixelRatio;
             const height = canvas.height / window.devicePixelRatio;
             const liquidLevel = height * 0.6;
+            const T_kelvin = tempToKelvin(temperature);
+            const scale = getVisualSpeedScale(T_kelvin);
 
             // Clear arrays
             liquidMolecules = [];
@@ -583,23 +904,27 @@
             tracerTrailLiquid = [];
             tracerTrailVapor = [];
 
-            // Create liquid molecules
+            // Create liquid molecules with Maxwell-Boltzmann speeds
             for (let i = 0; i < 120; i++) {
+                const vel = sampleMaxwellBoltzmannSpeed(T_kelvin);
                 liquidMolecules.push({
                     x: Math.random() * width,
                     y: liquidLevel + Math.random() * (height - liquidLevel - 20),
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: (Math.random() - 0.5) * 2
+                    vx: vel.vx * scale,
+                    vy: vel.vy * scale,
+                    baseSpeed: vel.speed
                 });
             }
 
-            // Create vapor molecules
+            // Create vapor molecules with Maxwell-Boltzmann speeds (higher average due to phase)
             for (let i = 0; i < 30; i++) {
+                const vel = sampleMaxwellBoltzmannSpeed(T_kelvin, 0.8); // Slightly faster for vapor
                 vaporMolecules.push({
                     x: Math.random() * width,
                     y: 40 + Math.random() * (liquidLevel - 80),
-                    vx: (Math.random() - 0.5) * 4,
-                    vy: (Math.random() - 0.5) * 4
+                    vx: vel.vx * scale * 1.3,
+                    vy: vel.vy * scale * 1.3,
+                    baseSpeed: vel.speed
                 });
             }
 
@@ -621,24 +946,61 @@
 
         initMolecules();
 
-        // Get speed multiplier based on temperature
-        function getSpeedMultiplier() {
-            return 0.5 + (temperature - 20) / 50;
+        // Reassign Maxwell-Boltzmann speeds to all molecules based on current temperature
+        function updateMoleculeSpeedsForTemperature() {
+            const T_kelvin = tempToKelvin(temperature);
+            const scale = getVisualSpeedScale(T_kelvin);
+
+            liquidMolecules.forEach(mol => {
+                const currentSpeed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                if (currentSpeed > 0.01) {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin);
+                    const newSpeed = vel.speed * scale;
+                    // Preserve direction, update magnitude
+                    const ratio = newSpeed / currentSpeed;
+                    mol.vx *= ratio;
+                    mol.vy *= ratio;
+                    mol.baseSpeed = vel.speed;
+                } else {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin);
+                    mol.vx = vel.vx * scale;
+                    mol.vy = vel.vy * scale;
+                    mol.baseSpeed = vel.speed;
+                }
+            });
+
+            vaporMolecules.forEach(mol => {
+                const currentSpeed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                if (currentSpeed > 0.01) {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin, 0.8);
+                    const newSpeed = vel.speed * scale * 1.3;
+                    const ratio = newSpeed / currentSpeed;
+                    mol.vx *= ratio;
+                    mol.vy *= ratio;
+                    mol.baseSpeed = vel.speed;
+                } else {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin, 0.8);
+                    mol.vx = vel.vx * scale * 1.3;
+                    mol.vy = vel.vy * scale * 1.3;
+                    mol.baseSpeed = vel.speed;
+                }
+            });
         }
 
-        // Update molecules
+        // Update molecules with Maxwell-Boltzmann physics
         function updateMolecules() {
             const width = canvas.width / window.devicePixelRatio;
             const height = canvas.height / window.devicePixelRatio;
             const liquidLevel = height * 0.6;
-            const speedMult = getSpeedMultiplier();
+            const T_kelvin = tempToKelvin(temperature);
+            const scale = getVisualSpeedScale(T_kelvin);
 
             // Update liquid molecules
             liquidMolecules.forEach(mol => {
-                mol.x += mol.vx * speedMult;
-                mol.y += mol.vy * speedMult;
+                mol.x += mol.vx;
+                mol.y += mol.vy;
 
-                // Boundary collision
+                // Boundary collision with velocity redistribution
                 if (mol.x < MOLECULE_RADIUS || mol.x > width - MOLECULE_RADIUS) {
                     mol.vx *= -1;
                     mol.x = Math.max(MOLECULE_RADIUS, Math.min(width - MOLECULE_RADIUS, mol.x));
@@ -648,24 +1010,19 @@
                     mol.y = Math.max(liquidLevel, Math.min(height - MOLECULE_RADIUS, mol.y));
                 }
 
-                // Random jitter
-                mol.vx += (Math.random() - 0.5) * 0.5 * speedMult;
-                mol.vy += (Math.random() - 0.5) * 0.5 * speedMult;
-
-                // Speed limit
-                const maxSpeed = 3 * speedMult;
-                const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
-                if (speed > maxSpeed) {
-                    mol.vx = (mol.vx / speed) * maxSpeed;
-                    mol.vy = (mol.vy / speed) * maxSpeed;
+                // Occasional velocity redistribution (thermal equilibrium)
+                if (Math.random() < 0.02) {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin);
+                    mol.vx = vel.vx * scale;
+                    mol.vy = vel.vy * scale;
+                    mol.baseSpeed = vel.speed;
                 }
             });
 
             // Update vapor molecules
-            const vaporSpeedMult = speedMult * 1.5;
             vaporMolecules.forEach(mol => {
-                mol.x += mol.vx * vaporSpeedMult;
-                mol.y += mol.vy * vaporSpeedMult;
+                mol.x += mol.vx;
+                mol.y += mol.vy;
 
                 // Boundary collision
                 if (mol.x < MOLECULE_RADIUS || mol.x > width - MOLECULE_RADIUS) {
@@ -677,16 +1034,12 @@
                     mol.y = Math.max(40, Math.min(liquidLevel - 20, mol.y));
                 }
 
-                // Random jitter
-                mol.vx += (Math.random() - 0.5) * 0.8;
-                mol.vy += (Math.random() - 0.5) * 0.8;
-
-                // Speed limit
-                const maxSpeed = 5 * speedMult;
-                const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
-                if (speed > maxSpeed) {
-                    mol.vx = (mol.vx / speed) * maxSpeed;
-                    mol.vy = (mol.vy / speed) * maxSpeed;
+                // Occasional velocity redistribution
+                if (Math.random() < 0.03) {
+                    const vel = sampleMaxwellBoltzmannSpeed(T_kelvin, 0.8);
+                    mol.vx = vel.vx * scale * 1.3;
+                    mol.vy = vel.vy * scale * 1.3;
+                    mol.baseSpeed = vel.speed;
                 }
             });
 
@@ -695,11 +1048,13 @@
                 const escapeChance = (temperature - BOILING_POINT) / 200;
                 liquidMolecules = liquidMolecules.filter(mol => {
                     if (mol.y < liquidLevel + 20 && Math.random() < escapeChance) {
+                        const vel = sampleMaxwellBoltzmannSpeed(T_kelvin, 0.8);
                         vaporMolecules.push({
                             x: mol.x,
                             y: liquidLevel - 30,
-                            vx: (Math.random() - 0.5) * 6,
-                            vy: -Math.random() * 4 - 2
+                            vx: vel.vx * scale * 1.3,
+                            vy: -Math.abs(vel.vy * scale * 1.3) - 2,
+                            baseSpeed: vel.speed
                         });
                         return false;
                     }
@@ -715,7 +1070,8 @@
                 const dy = liquidTracer.y - mol.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < TRACER_RADIUS + MOLECULE_RADIUS + 5) {
-                    const force = speedMult * 0.3 / (dist + 1);
+                    const molSpeed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                    const force = molSpeed * 0.15 / (dist + 1);
                     brownianForceX += (dx / dist) * force;
                     brownianForceY += (dy / dist) * force;
                 }
@@ -740,7 +1096,8 @@
                 const dy = vaporTracer.y - mol.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist < TRACER_RADIUS + MOLECULE_RADIUS + 10) {
-                    const force = speedMult * 0.5 / (dist + 1);
+                    const molSpeed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                    const force = molSpeed * 0.2 / (dist + 1);
                     vaporForceX += (dx / dist) * force;
                     vaporForceY += (dy / dist) * force;
                 }
@@ -754,7 +1111,7 @@
             vaporTracer.x += vaporTracer.vx;
             vaporTracer.y += vaporTracer.vy;
 
-            // Keep vapor tracer in bounds (but let it settle toward liquid surface)
+            // Keep vapor tracer in bounds
             vaporTracer.x = Math.max(TRACER_RADIUS, Math.min(width - TRACER_RADIUS, vaporTracer.x));
             vaporTracer.y = Math.max(50 + TRACER_RADIUS, Math.min(liquidLevel - TRACER_RADIUS, vaporTracer.y));
 
@@ -771,11 +1128,31 @@
                 }
             }
 
-            // Update speed displays
-            const avgLiquidSpeed = Math.round(speedMult * 400 + 100);
-            const avgVaporSpeed = Math.round(speedMult * 600 + 200);
+            // Calculate and update average speeds (in m/s)
+            let liquidTotalSpeed = 0;
+            liquidMolecules.forEach(mol => {
+                liquidTotalSpeed += mol.baseSpeed;
+            });
+            const avgLiquidSpeed = liquidMolecules.length > 0 ?
+                Math.round(liquidTotalSpeed / liquidMolecules.length) : 0;
+
+            let vaporTotalSpeed = 0;
+            vaporMolecules.forEach(mol => {
+                vaporTotalSpeed += mol.baseSpeed;
+            });
+            const avgVaporSpeed = vaporMolecules.length > 0 ?
+                Math.round(vaporTotalSpeed / vaporMolecules.length) : 0;
+
             document.getElementById('liquidSpeed').textContent = avgLiquidSpeed;
             document.getElementById('vaporSpeed').textContent = avgVaporSpeed;
+        }
+
+        // Get molecule size based on speed (faster = larger visual)
+        function getMoleculeSize(mol, baseRadius) {
+            const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+            const avgSpeed = 3; // approximate average pixel speed
+            const ratio = speed / avgSpeed;
+            return baseRadius * (0.6 + 0.8 * Math.min(ratio, 2));
         }
 
         // Draw function
@@ -796,10 +1173,10 @@
             ctx.fillRect(0, 0, width, height);
 
             // Heat glow at bottom based on temperature
-            if (temperature > 50) {
-                const heatIntensity = (temperature - 50) / 100;
+            if (temperature > 20) {
+                const heatIntensity = (temperature - 20) / 130;
                 const heatGrad = ctx.createLinearGradient(0, height, 0, height - 100);
-                heatGrad.addColorStop(0, `rgba(255, 87, 34, ${heatIntensity * 0.3})`);
+                heatGrad.addColorStop(0, `rgba(255, 87, 34, ${heatIntensity * 0.4})`);
                 heatGrad.addColorStop(1, 'transparent');
                 ctx.fillStyle = heatGrad;
                 ctx.fillRect(0, height - 100, width, 100);
@@ -812,11 +1189,13 @@
             ctx.fillStyle = liquidGrad;
             ctx.fillRect(0, liquidLevel, width, height - liquidLevel);
 
-            // Draw liquid surface
+            // Draw liquid surface with wave based on temperature
+            const waveAmplitude = 1 + (temperature / 50);
+            const waveSpeed = 0.002 + (temperature / 5000);
             ctx.beginPath();
             ctx.moveTo(0, liquidLevel);
             for (let x = 0; x <= width; x += 20) {
-                const wave = Math.sin(x * 0.03 + Date.now() * 0.003 * getSpeedMultiplier()) * 2;
+                const wave = Math.sin(x * 0.03 + Date.now() * waveSpeed) * waveAmplitude;
                 ctx.lineTo(x, liquidLevel + wave);
             }
             ctx.strokeStyle = 'rgba(77, 171, 247, 0.6)';
@@ -859,34 +1238,46 @@
                 }
             }
 
-            // Draw liquid molecules
+            // Draw liquid molecules with size based on speed
             if (viewMode === 'both' || viewMode === 'liquid') {
                 liquidMolecules.forEach(mol => {
+                    const r = getMoleculeSize(mol, MOLECULE_RADIUS);
+                    const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                    const intensity = Math.min(speed / 6, 1);
+
                     ctx.beginPath();
-                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS, 0, Math.PI * 2);
-                    ctx.fillStyle = '#4dabf7';
+                    ctx.arc(mol.x, mol.y, r, 0, Math.PI * 2);
+                    // Color intensity based on speed
+                    const blue = Math.floor(171 + 84 * intensity);
+                    ctx.fillStyle = `rgb(77, ${blue}, 247)`;
                     ctx.fill();
 
                     // Glow effect
                     ctx.beginPath();
-                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS + 2, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(77, 171, 247, 0.3)';
+                    ctx.arc(mol.x, mol.y, r + 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(77, 171, 247, ${0.2 + 0.2 * intensity})`;
                     ctx.fill();
                 });
             }
 
-            // Draw vapor molecules
+            // Draw vapor molecules with size based on speed
             if (viewMode === 'both' || viewMode === 'vapor') {
                 vaporMolecules.forEach(mol => {
+                    const r = getMoleculeSize(mol, MOLECULE_RADIUS);
+                    const speed = Math.sqrt(mol.vx * mol.vx + mol.vy * mol.vy);
+                    const intensity = Math.min(speed / 8, 1);
+
                     ctx.beginPath();
-                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS, 0, Math.PI * 2);
-                    ctx.fillStyle = '#ffa94d';
+                    ctx.arc(mol.x, mol.y, r, 0, Math.PI * 2);
+                    // Color intensity based on speed
+                    const red = Math.floor(200 + 55 * intensity);
+                    ctx.fillStyle = `rgb(${red}, 169, 77)`;
                     ctx.fill();
 
                     // Glow effect
                     ctx.beginPath();
-                    ctx.arc(mol.x, mol.y, MOLECULE_RADIUS + 3, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255, 169, 77, 0.25)';
+                    ctx.arc(mol.x, mol.y, r + 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 169, 77, ${0.15 + 0.2 * intensity})`;
                     ctx.fill();
                 });
             }
@@ -989,6 +1380,347 @@
 
         animate();
 
+        // ========== HEATING CURVE CHART ==========
+        const chartCanvas = document.getElementById('heatingCurveCanvas');
+        const chartCtx = chartCanvas.getContext('2d');
+        const tooltip = document.getElementById('chartTooltip');
+
+        function resizeChartCanvas() {
+            const wrapper = chartCanvas.parentElement;
+            const rect = wrapper.getBoundingClientRect();
+            chartCanvas.width = rect.width * window.devicePixelRatio;
+            chartCanvas.height = rect.height * window.devicePixelRatio;
+            chartCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            chartCanvas.style.width = rect.width + 'px';
+            chartCanvas.style.height = rect.height + 'px';
+            drawHeatingCurve();
+        }
+
+        resizeChartCanvas();
+        window.addEventListener('resize', resizeChartCanvas);
+
+        // Chart dimensions and margins
+        function getChartDimensions() {
+            const width = chartCanvas.width / window.devicePixelRatio;
+            const height = chartCanvas.height / window.devicePixelRatio;
+            return {
+                width,
+                height,
+                margin: { top: 40, right: 30, bottom: 60, left: 60 },
+                plotWidth: width - 90,
+                plotHeight: height - 100
+            };
+        }
+
+        // Convert data to pixel coordinates
+        function dataToPixel(Q, T) {
+            const dim = getChartDimensions();
+            const minT = WATER_PROPERTIES.T_min - 10;
+            const maxT = WATER_PROPERTIES.T_max + 10;
+
+            const x = dim.margin.left + (Q / MAX_Q) * dim.plotWidth;
+            const y = dim.margin.top + dim.plotHeight - ((T - minT) / (maxT - minT)) * dim.plotHeight;
+            return { x, y };
+        }
+
+        // Convert pixel to data coordinates
+        function pixelToData(px, py) {
+            const dim = getChartDimensions();
+            const minT = WATER_PROPERTIES.T_min - 10;
+            const maxT = WATER_PROPERTIES.T_max + 10;
+
+            const Q = ((px - dim.margin.left) / dim.plotWidth) * MAX_Q;
+            const T = minT + ((dim.margin.top + dim.plotHeight - py) / dim.plotHeight) * (maxT - minT);
+            return { Q, T };
+        }
+
+        // Find which segment the mouse is over
+        function findSegmentAtPoint(px, py) {
+            const data = pixelToData(px, py);
+            if (data.Q < 0 || data.Q > MAX_Q) return null;
+
+            for (const seg of heatingCurveSegments) {
+                if (data.Q >= seg.startQ && data.Q <= seg.endQ) {
+                    // Calculate expected T at this Q
+                    let expectedT;
+                    if (seg.startT === seg.endT) {
+                        expectedT = seg.startT;
+                    } else {
+                        const ratio = (data.Q - seg.startQ) / (seg.endQ - seg.startQ);
+                        expectedT = seg.startT + ratio * (seg.endT - seg.startT);
+                    }
+                    // Check if close to the line
+                    if (Math.abs(data.T - expectedT) < 20) {
+                        return seg;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Get current position on curve based on temperature
+        function getCurrentQFromTemp(temp) {
+            for (const seg of heatingCurveSegments) {
+                if (temp >= seg.startT && temp <= seg.endT) {
+                    if (seg.startT === seg.endT) {
+                        // Phase change - return midpoint of Q range
+                        return (seg.startQ + seg.endQ) / 2;
+                    } else {
+                        // Linear interpolation
+                        const ratio = (temp - seg.startT) / (seg.endT - seg.startT);
+                        return seg.startQ + ratio * (seg.endQ - seg.startQ);
+                    }
+                }
+            }
+            // Handle edge cases
+            if (temp < WATER_PROPERTIES.T_min) return 0;
+            if (temp > WATER_PROPERTIES.T_max) return MAX_Q;
+            return 0;
+        }
+
+        // Draw the heating curve
+        function drawHeatingCurve() {
+            const dim = getChartDimensions();
+            const minT = WATER_PROPERTIES.T_min - 10;
+            const maxT = WATER_PROPERTIES.T_max + 10;
+
+            // Clear canvas
+            chartCtx.clearRect(0, 0, dim.width, dim.height);
+
+            // Background
+            chartCtx.fillStyle = '#0d0d1a';
+            chartCtx.fillRect(0, 0, dim.width, dim.height);
+
+            // Grid lines
+            chartCtx.strokeStyle = 'rgba(124, 58, 237, 0.1)';
+            chartCtx.lineWidth = 1;
+
+            // Horizontal grid lines (temperature)
+            for (let t = -20; t <= 160; t += 20) {
+                const p = dataToPixel(0, t);
+                chartCtx.beginPath();
+                chartCtx.moveTo(dim.margin.left, p.y);
+                chartCtx.lineTo(dim.margin.left + dim.plotWidth, p.y);
+                chartCtx.stroke();
+            }
+
+            // Vertical grid lines (heat) - dynamic based on MAX_Q
+            const qStep = Math.pow(10, Math.floor(Math.log10(MAX_Q / 5)));
+            for (let q = 0; q <= MAX_Q; q += qStep) {
+                const p = dataToPixel(q, 0);
+                chartCtx.beginPath();
+                chartCtx.moveTo(p.x, dim.margin.top);
+                chartCtx.lineTo(p.x, dim.margin.top + dim.plotHeight);
+                chartCtx.stroke();
+            }
+
+            // Phase change temperature lines (0°C and 100°C)
+            chartCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            chartCtx.setLineDash([5, 5]);
+            const p0 = dataToPixel(0, WATER_PROPERTIES.T_melting);
+            chartCtx.beginPath();
+            chartCtx.moveTo(dim.margin.left, p0.y);
+            chartCtx.lineTo(dim.margin.left + dim.plotWidth, p0.y);
+            chartCtx.stroke();
+
+            const p100 = dataToPixel(0, WATER_PROPERTIES.T_boiling);
+            chartCtx.beginPath();
+            chartCtx.moveTo(dim.margin.left, p100.y);
+            chartCtx.lineTo(dim.margin.left + dim.plotWidth, p100.y);
+            chartCtx.stroke();
+            chartCtx.setLineDash([]);
+
+            // Labels for phase change lines
+            chartCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            chartCtx.font = '10px JetBrains Mono';
+            chartCtx.textAlign = 'right';
+            chartCtx.fillText(`${WATER_PROPERTIES.T_melting}°C (Melting)`, dim.margin.left + dim.plotWidth - 5, p0.y - 5);
+            chartCtx.fillText(`${WATER_PROPERTIES.T_boiling}°C (Boiling)`, dim.margin.left + dim.plotWidth - 5, p100.y - 5);
+
+            // Draw curve segments
+            heatingCurveSegments.forEach(seg => {
+                const start = dataToPixel(seg.startQ, seg.startT);
+                const end = dataToPixel(seg.endQ, seg.endT);
+
+                chartCtx.beginPath();
+                chartCtx.moveTo(start.x, start.y);
+                chartCtx.lineTo(end.x, end.y);
+                chartCtx.strokeStyle = seg.color;
+                chartCtx.lineWidth = 4;
+                chartCtx.lineCap = 'round';
+                chartCtx.stroke();
+
+                // Glow effect
+                chartCtx.beginPath();
+                chartCtx.moveTo(start.x, start.y);
+                chartCtx.lineTo(end.x, end.y);
+                chartCtx.strokeStyle = seg.color + '40';
+                chartCtx.lineWidth = 12;
+                chartCtx.stroke();
+            });
+
+            // Draw current position indicator
+            const currentQ = getCurrentQFromTemp(temperature);
+            const currentP = dataToPixel(currentQ, Math.min(Math.max(temperature, WATER_PROPERTIES.T_min), WATER_PROPERTIES.T_max));
+
+            // Vertical line to current position
+            chartCtx.beginPath();
+            chartCtx.moveTo(currentP.x, dim.margin.top + dim.plotHeight);
+            chartCtx.lineTo(currentP.x, currentP.y);
+            chartCtx.strokeStyle = 'rgba(247, 37, 133, 0.3)';
+            chartCtx.lineWidth = 2;
+            chartCtx.setLineDash([4, 4]);
+            chartCtx.stroke();
+            chartCtx.setLineDash([]);
+
+            // Current position dot
+            chartCtx.beginPath();
+            chartCtx.arc(currentP.x, currentP.y, 8, 0, Math.PI * 2);
+            chartCtx.fillStyle = '#f72585';
+            chartCtx.fill();
+            chartCtx.strokeStyle = 'white';
+            chartCtx.lineWidth = 2;
+            chartCtx.stroke();
+
+            // Outer glow for current position
+            chartCtx.beginPath();
+            chartCtx.arc(currentP.x, currentP.y, 14, 0, Math.PI * 2);
+            chartCtx.fillStyle = 'rgba(247, 37, 133, 0.3)';
+            chartCtx.fill();
+
+            // Axes
+            chartCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            chartCtx.lineWidth = 2;
+
+            // Y-axis
+            chartCtx.beginPath();
+            chartCtx.moveTo(dim.margin.left, dim.margin.top);
+            chartCtx.lineTo(dim.margin.left, dim.margin.top + dim.plotHeight);
+            chartCtx.stroke();
+
+            // X-axis
+            chartCtx.beginPath();
+            chartCtx.moveTo(dim.margin.left, dim.margin.top + dim.plotHeight);
+            chartCtx.lineTo(dim.margin.left + dim.plotWidth, dim.margin.top + dim.plotHeight);
+            chartCtx.stroke();
+
+            // Axis labels
+            chartCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            chartCtx.font = '12px Space Grotesk';
+            chartCtx.textAlign = 'center';
+
+            // X-axis label
+            chartCtx.fillText('Heat Added (Q) →', dim.margin.left + dim.plotWidth / 2, dim.height - 10);
+
+            // Y-axis label
+            chartCtx.save();
+            chartCtx.translate(15, dim.margin.top + dim.plotHeight / 2);
+            chartCtx.rotate(-Math.PI / 2);
+            chartCtx.fillText('Temperature (°C) →', 0, 0);
+            chartCtx.restore();
+
+            // Y-axis tick labels
+            chartCtx.font = '10px JetBrains Mono';
+            chartCtx.textAlign = 'right';
+            for (let t = -20; t <= 160; t += 40) {
+                const p = dataToPixel(0, t);
+                chartCtx.fillText(t + '°', dim.margin.left - 8, p.y + 4);
+            }
+
+            // Formula annotations on segments
+            chartCtx.font = 'bold 11px JetBrains Mono';
+            chartCtx.textAlign = 'center';
+
+            // Sensible heat formula (sloped sections) - use water heating segment
+            const waterSeg = heatingCurveSegments[2];
+            const sensibleMidQ = (waterSeg.startQ + waterSeg.endQ) / 2;
+            const sensibleMidT = (waterSeg.startT + waterSeg.endT) / 2;
+            const sensibleP = dataToPixel(sensibleMidQ, sensibleMidT);
+            chartCtx.fillStyle = '#4dabf7';
+            chartCtx.fillText('Q = mcΔT', sensibleP.x, sensibleP.y - 15);
+
+            // Latent heat of fusion formula
+            const fusionSeg = heatingCurveSegments[1];
+            const fusionMidQ = (fusionSeg.startQ + fusionSeg.endQ) / 2;
+            const fusionP = dataToPixel(fusionMidQ, WATER_PROPERTIES.T_melting);
+            chartCtx.fillStyle = '#7c3aed';
+            chartCtx.fillText('Q = mL', fusionP.x, fusionP.y - 15);
+            chartCtx.font = '9px JetBrains Mono';
+            chartCtx.fillText('(Latent Heat)', fusionP.x, fusionP.y + 15);
+
+            // Latent heat of vaporization formula
+            const vapSeg = heatingCurveSegments[3];
+            const vapMidQ = (vapSeg.startQ + vapSeg.endQ) / 2;
+            const vapP = dataToPixel(vapMidQ, WATER_PROPERTIES.T_boiling);
+            chartCtx.font = 'bold 11px JetBrains Mono';
+            chartCtx.fillStyle = '#ff6b35';
+            chartCtx.fillText('Q = mL', vapP.x, vapP.y - 15);
+            chartCtx.font = '9px JetBrains Mono';
+            chartCtx.fillText('(Latent Heat)', vapP.x, vapP.y + 15);
+        }
+
+        // Tooltip handling
+        chartCanvas.addEventListener('mousemove', (e) => {
+            const rect = chartCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const segment = findSegmentAtPoint(x, y);
+
+            if (segment) {
+                tooltip.classList.add('visible');
+                tooltip.querySelector('.tooltip-title').textContent = segment.name;
+                tooltip.querySelector('.tooltip-formula').textContent = segment.formulaExpanded;
+                tooltip.querySelector('.tooltip-desc').textContent = segment.description;
+
+                // Position tooltip
+                let tooltipX = e.clientX - rect.left + 15;
+                let tooltipY = e.clientY - rect.top - 10;
+
+                // Keep tooltip in bounds
+                if (tooltipX + 280 > rect.width) {
+                    tooltipX = e.clientX - rect.left - 290;
+                }
+                if (tooltipY + 120 > rect.height) {
+                    tooltipY = rect.height - 130;
+                }
+                if (tooltipY < 0) tooltipY = 10;
+
+                tooltip.style.left = tooltipX + 'px';
+                tooltip.style.top = tooltipY + 'px';
+            } else {
+                tooltip.classList.remove('visible');
+            }
+        });
+
+        chartCanvas.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('visible');
+        });
+
+        // Touch support for tooltip
+        chartCanvas.addEventListener('touchstart', (e) => {
+            const rect = chartCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            const segment = findSegmentAtPoint(x, y);
+
+            if (segment) {
+                tooltip.classList.add('visible');
+                tooltip.querySelector('.tooltip-title').textContent = segment.name;
+                tooltip.querySelector('.tooltip-formula').textContent = segment.formulaExpanded;
+                tooltip.querySelector('.tooltip-desc').textContent = segment.description;
+
+                tooltip.style.left = Math.min(x + 15, rect.width - 290) + 'px';
+                tooltip.style.top = Math.max(10, y - 60) + 'px';
+            }
+        });
+
+        chartCanvas.addEventListener('touchend', () => {
+            setTimeout(() => tooltip.classList.remove('visible'), 2000);
+        });
+
         // Temperature slider
         const tempSlider = document.getElementById('tempSlider');
         const tempValue = document.getElementById('tempValue');
@@ -1002,6 +1734,9 @@
         tempSlider.addEventListener('input', (e) => {
             temperature = parseInt(e.target.value);
             tempValue.textContent = temperature + '°C';
+
+            // Update molecule speeds based on new temperature
+            updateMoleculeSpeedsForTemperature();
 
             // Update phase indicators
             phaseLiquid.classList.remove('active');
@@ -1021,6 +1756,9 @@
                 phaseVapor.classList.add('active');
                 infoVapor.classList.add('active');
             }
+
+            // Redraw heating curve with new position
+            drawHeatingCurve();
         });
 
         // View mode buttons
@@ -1056,6 +1794,9 @@
             document.getElementById('btnTrailOff').classList.add('active');
             document.getElementById('btnTrailOn').classList.remove('active');
         });
+
+        // Initial draw of heating curve
+        drawHeatingCurve();
     </script>
 </body>
 </html>
