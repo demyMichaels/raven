@@ -43,6 +43,95 @@ Mastering when to use `Q = mcΔT` and when to use `Q = mL` is the key to solving
 ---------------------------------
 explanation Box Parser
 ---------------------------------
+
+function parseExplanation(text) {
+const result = {
+steps: [],
+keyTakeaway: null
+};
+
+// Check for key takeaway patterns
+const takeawayPatterns = [
+/(?:key\s*takeaway|remember|note|tip|important)[:\s]+(.+?)(?=\n\n|$)/i,
+/(?:therefore|hence|thus)[,:\s]+(.+?)(?=\n\n|$)/i
+];
+
+let remainingText = text;
+for (const pattern of takeawayPatterns) {
+const match = remainingText.match(pattern);
+if (match) {
+result.keyTakeaway = match[1].trim();
+remainingText = remainingText.replace(match[0], '').trim();
+break;
+}
+}
+
+// Split by common step indicators
+const stepPatterns = [
+// Numbered steps: "1.", "1)", "Step 1:", etc.
+/(?:^|\n)\s*(?:step\s*)?(\d+)[.):\s-]+/gi,
+// Bullet points: "•", "-", "*"
+/(?:^|\n)\s*[•\-\*]\s+/g,
+// Sequential words: "First,", "Second,", "Then,", "Next,", "Finally,"
+/(?:^|\n)\s*(?:first|second|third|fourth|fifth|then|next|finally|lastly|also|additionally)[,:\s]+/gi
+];
+
+// Try to split by numbered steps first
+const numberedMatch = remainingText.match(/(?:^|\n)\s*(?:step\s*)?(\d+)[.):\s-]+/gi);
+
+if (numberedMatch && numberedMatch.length >= 2) {
+// Split by numbered pattern
+const parts = remainingText.split(/(?:^|\n)\s*(?:step\s*)?\d+[.):\s-]+/i).filter(p => p.trim());
+parts.forEach((part, index) => {
+const cleanText = part.trim();
+if (cleanText) {
+result.steps.push({
+number: index + 1,
+text: cleanText
+});
+}
+});
+} else {
+// Try splitting by sentences or line breaks
+const sentences = remainingText
+.split(/(?:\.\s+|\n+)/)
+.map(s => s.trim())
+.filter(s => s.length > 10); // Filter out very short fragments
+
+if (sentences.length > 1) {
+sentences.forEach((sentence, index) => {
+// Add period back if it was removed
+const text = sentence.endsWith('.') ? sentence : sentence + '.';
+result.steps.push({
+number: index + 1,
+text: text
+});
+});
+} else {
+// Just one block of text - display as single step
+result.steps.push({
+number: 1,
+text: remainingText.trim()
+});
+}
+}
+
+return result;
+}
+
+// Sanitize HTML to allow only safe formatting tags
+function sanitizeHTML(html) {
+// Allow only specific safe tags for formatting
+const allowedTags = ['sub', 'sup', 'strong', 'em', 'b', 'i', 'u', 'br', 'span'];
+
+
+// Check for key takeaway patterns
+const takeawayPatterns = [
+/(?:key\s*takeaway|remember|note|tip|important)[:\s]+(.+?)(?=\n\n|$)/i,
+/(?:therefore|hence|thus)[,:\s]+(.+?)(?=\n\n|$)/i
+];
+
+------------------------------------------------------------------------------------
 Yes, that JSON format will work perfectly! 
 The explanation box will display it correctly.
 
