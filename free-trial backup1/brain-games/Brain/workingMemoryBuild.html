@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-back Cognitive Trainer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --bg-tertiary: #2a2f4a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #ff0088;
+            --accent-tertiary: #00d4ff;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --grid-size: 280px;
+            --transition-speed: 0.2s;
+        }
+
+        .dark {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --bg-tertiary: #2a2f4a;
+            --accent-primary: #00ff88;
+            --accent-secondary: #ff0088;
+            --accent-tertiary: #00d4ff;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        h1 {
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: clamp(14px, 2vw, 18px);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        .mode-card {
+            background: var(--bg-secondary);
+            border: 2px solid var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            opacity: 0;
+            transition: opacity var(--transition-speed);
+        }
+
+        .mode-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .mode-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .mode-card.active {
+            border-color: var(--accent-primary);
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.15));
+        }
+
+        .mode-card.active::before {
+            opacity: 0.15;
+        }
+
+        .mode-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .mode-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-family: 'Fira Code', monospace;
+            line-height: 1.5;
+        }
+
+        .game-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 2px solid var(--bg-tertiary);
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-tertiary);
+            padding: 10px 16px;
+            border-radius: 12px;
+        }
+
+        label {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            background: var(--bg-primary);
+            border: 2px solid var(--accent-primary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--accent-secondary), #ff4466);
+        }
+
+        .btn-stop:hover {
+            box-shadow: 0 8px 24px rgba(255, 0, 136, 0.3);
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .grid-container {
+            width: var(--grid-size);
+            height: var(--grid-size);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            background: var(--bg-tertiary);
+            padding: 12px;
+            border-radius: 16px;
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .grid-cell {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .grid-cell.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            box-shadow: 0 0 20px var(--accent-primary);
+            animation: pulse 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .audio-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-tertiary);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            padding: 20px 40px;
+            border-radius: 16px;
+            border: 2px solid var(--accent-tertiary);
+            text-shadow: 0 0 20px var(--accent-tertiary);
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        .audio-display.speaking {
+            animation: audioGlow 0.5s ease-in-out infinite;
+        }
+
+        @keyframes audioGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px var(--accent-tertiary);
+                border-color: var(--accent-tertiary);
+            }
+            50% {
+                box-shadow: 0 0 30px var(--accent-tertiary);
+                border-color: var(--accent-primary);
+            }
+        }
+
+        .match-buttons {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .match-btn {
+            padding: 16px 32px;
+            font-size: 18px;
+            min-width: 180px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid var(--bg-primary);
+            transition: all var(--transition-speed);
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            animation: slideInRight 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .feedback.correct {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: var(--bg-primary);
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(135deg, #ff0088, #cc0066);
+            color: white;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .instructions {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent-primary);
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        .instructions h3 {
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .instructions p {
+            color: var(--text-secondary);
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .instructions kbd {
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .demo-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-secondary), #ff4466);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --grid-size: 240px;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .game-container {
+                padding: 20px;
+            }
+
+            .audio-display {
+                font-size: 36px;
+                padding: 15px 30px;
+            }
+
+            .match-btn {
+                min-width: 140px;
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+        }
+
+        /* Color indicators for Triple N-back */
+        .grid-cell.color-red { background: linear-gradient(135deg, #ff0088, #cc0066) !important; }
+        .grid-cell.color-blue { background: linear-gradient(135deg, #00d4ff, #0088cc) !important; }
+        .grid-cell.color-green { background: linear-gradient(135deg, #00ff88, #00cc66) !important; }
+        .grid-cell.color-yellow { background: linear-gradient(135deg, #ffdd00, #ccaa00) !important; }
+
+        .audio-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-secondary);
+            border-radius: 50%;
+            animation: audioIndicator 0.8s ease-in-out infinite;
+        }
+
+        @keyframes audioIndicator {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>N-back Cognitive Trainer</h1>
+            <p class="subtitle">Build working memory for base-conversion algebra mastery</p>
+        </header>
+
+        <div class="mode-selector">
+            <div class="mode-card active" data-mode="dual">
+                <div class="mode-content">
+                    <div class="mode-title">Classic Dual N-back</div>
+                    <div class="mode-description">Visual positions + auditory letters. Foundation for working memory.</div>
+                </div>
+            </div>
+            <div class="mode-card" data-mode="triple">
+                <div class="mode-content">
+                    <div class="mode-title">Triple N-back</div>
+                    <div class="mode-description">Positions + letters + colors. Advanced 3-stream tracking.</div>
+                </div>
+            </div>
+            <div class="mode-card" data-mode="math">
+                <div class="mode-content">
+                    <div class="mode-title">Math N-back</div>
+                    <div class="mode-description">Arithmetic expressions + numbers. Train algebraic reasoning.</div>
+                </div>
+            </div>
+            <div class="mode-card" data-mode="base">
+                <div class="mode-content">
+                    <div class="mode-title">Base-Conversion N-back</div>
+                    <div class="mode-description">Base 10 ↔ Base 6 conversion. Direct skill transfer.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-container">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="nback-level">N-back Level:</label>
+                    <input type="number" id="nback-level" min="1" max="5" value="2">
+                </div>
+                <button id="start-btn">Start Training</button>
+                <button id="stop-btn" class="btn-stop" style="display: none;">Stop</button>
+            </div>
+
+            <div class="instructions" id="instructions">
+                <h3>Instructions <span class="demo-badge" id="demo-badge">DEMO MODE</span></h3>
+                <p><strong>Classic Dual N-back:</strong> Watch the grid position and listen to the letter. Press <kbd>P</kbd> when position matches N steps back. Press <kbd>L</kbd> when letter matches N steps back.</p>
+                <p><strong>Keyboard shortcuts:</strong> <kbd>P</kbd> = Position match | <kbd>L</kbd> = Letter/Audio match</p>
+            </div>
+
+            <div class="game-area">
+                <div class="grid-container" id="grid">
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                    <div class="grid-cell"></div>
+                </div>
+
+                <div class="audio-display" id="audio-display">
+                    Starting demo...
+                </div>
+
+                <div class="match-buttons">
+                    <button class="match-btn" id="position-match">Position Match (P)</button>
+                    <button class="match-btn" id="audio-match">Audio Match (L)</button>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="trials">0</div>
+                    <div class="stat-label">Trials</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="correct">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="score">0</div>
+                    <div class="stat-label">Score</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Speech synthesis
+        let speechSynth = window.speechSynthesis;
+        let audioEnabled = true;
+
+        // Test speech on load
+        function testSpeech() {
+            if (!speechSynth) {
+                console.warn('Speech synthesis not supported');
+                audioEnabled = false;
+                return;
+            }
+
+            // Get voices (may need to wait for them to load)
+            let voices = speechSynth.getVoices();
+            if (voices.length === 0) {
+                speechSynth.addEventListener('voiceschanged', () => {
+                    voices = speechSynth.getVoices();
+                });
+            }
+        }
+
+        function speakText(text, rate = 1.0) {
+            if (!audioEnabled || !speechSynth) return;
+
+            // Cancel any ongoing speech
+            speechSynth.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = rate;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // Visual feedback
+            const audioDisplay = document.getElementById('audio-display');
+            audioDisplay.classList.add('speaking');
+
+            utterance.onend = () => {
+                audioDisplay.classList.remove('speaking');
+            };
+
+            utterance.onerror = () => {
+                audioDisplay.classList.remove('speaking');
+            };
+
+            speechSynth.speak(utterance);
+        }
+
+        // Game state
+        let currentMode = 'dual';
+        let nBackLevel = 2;
+        let gameActive = false;
+        let isDemoMode = false;
+        let history = { positions: [], audio: [], colors: [] };
+        let currentTrial = 0;
+        let stats = { trials: 0, correct: 0, positionMatches: [], audioMatches: [] };
+        let gameInterval;
+        let currentPosition = -1;
+        let currentAudio = '';
+        let currentColor = '';
+
+        // Constants
+        const LETTERS = 'CHLQRSTW'.split(''); // Distinct sounding letters
+        const COLORS = ['red', 'blue', 'green', 'yellow'];
+        const TRIAL_DURATION = 3000; // 3 seconds per trial
+        const DEMO_TRIALS = 8;
+
+        // Mode configurations
+        const modes = {
+            dual: {
+                name: 'Classic Dual N-back',
+                instructions: 'Watch the grid position and listen to the letter. Press <kbd>P</kbd> when position matches N steps back. Press <kbd>L</kbd> when letter matches N steps back.',
+                usePosition: true,
+                useAudio: true,
+                useColor: false,
+                audioType: 'letter',
+                generateAudio: () => LETTERS[Math.floor(Math.random() * LETTERS.length)]
+            },
+            triple: {
+                name: 'Triple N-back',
+                instructions: 'Track position, letter, AND color. Press <kbd>P</kbd> for position match, <kbd>L</kbd> for letter match, <kbd>C</kbd> for color match.',
+                usePosition: true,
+                useAudio: true,
+                useColor: true,
+                audioType: 'letter',
+                generateAudio: () => LETTERS[Math.floor(Math.random() * LETTERS.length)]
+            },
+            math: {
+                name: 'Math N-back',
+                instructions: 'Visual shows expressions (e.g., 6²). Audio says numbers. Press <kbd>P</kbd> when current visual value matches N-back audio. Press <kbd>L</kbd> when current audio matches N-back visual value.',
+                usePosition: true,
+                useAudio: true,
+                useColor: false,
+                audioType: 'number',
+                generateExpression: () => {
+                    const type = Math.random();
+                    if (type < 0.3) {
+                        const base = Math.floor(Math.random() * 8) + 2;
+                        return { expr: `${base}²`, value: base * base };
+                    } else if (type < 0.6) {
+                        const a = Math.floor(Math.random() * 10) + 1;
+                        const b = Math.floor(Math.random() * 10) + 1;
+                        return { expr: `${a}×${b}`, value: a * b };
+                    } else {
+                        const a = Math.floor(Math.random() * 20) + 10;
+                        const b = Math.floor(Math.random() * 10) + 1;
+                        return { expr: `${a}+${b}`, value: a + b };
+                    }
+                },
+                generateAudio: () => Math.floor(Math.random() * 100) + 1
+            },
+            base: {
+                name: 'Base-Conversion N-back',
+                instructions: 'Visual shows base-10 numbers. Audio speaks base-6 numbers. Press <kbd>P</kbd> when current visual (base 10) matches N-back audio (converted from base 6). Press <kbd>L</kbd> when current audio (base 6) matches N-back visual (converted to base 6).',
+                usePosition: true,
+                useAudio: true,
+                useColor: false,
+                audioType: 'base6',
+                generatePosition: () => {
+                    return Math.floor(Math.random() * 200) + 10;
+                },
+                generateAudio: () => {
+                    const base10 = Math.floor(Math.random() * 200) + 10;
+                    return convertToBase6(base10);
+                }
+            }
+        };
+
+        // Utility functions
+        function convertToBase6(num) {
+            return num.toString(6);
+        }
+
+        function convertFromBase6(str) {
+            return parseInt(str, 6);
+        }
+
+        function showFeedback(correct) {
+            const feedback = document.createElement('div');
+            feedback.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
+            feedback.textContent = correct ? '✓ Correct!' : '✗ Incorrect';
+            document.body.appendChild(feedback);
+            setTimeout(() => feedback.remove(), 1500);
+        }
+
+        function updateStats() {
+            document.getElementById('trials').textContent = stats.trials;
+            document.getElementById('correct').textContent = stats.correct;
+            const accuracy = stats.trials > 0 ? Math.round((stats.correct / stats.trials) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            document.getElementById('score').textContent = stats.correct * 10;
+        }
+
+        function updateInstructions() {
+            const mode = modes[currentMode];
+            const demoBadge = isDemoMode ? '<span class="demo-badge">DEMO MODE</span>' : '';
+            document.getElementById('instructions').innerHTML = `
+                <h3>${mode.name} ${demoBadge}</h3>
+                <p>${mode.instructions}</p>
+                <p><strong>Keyboard shortcuts:</strong> <kbd>P</kbd> = Position/Visual match | <kbd>L</kbd> = Letter/Audio match${mode.useColor ? ' | <kbd>C</kbd> = Color match' : ''}</p>
+            `;
+        }
+
+        // Game logic
+        function runTrial() {
+            if (!gameActive) return;
+
+            // Generate new stimuli
+            const mode = modes[currentMode];
+
+            // Clear previous active cells
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('active', 'color-red', 'color-blue', 'color-green', 'color-yellow');
+            });
+
+            if (currentMode === 'math') {
+                const expr = mode.generateExpression();
+                currentPosition = expr.value;
+                currentAudio = mode.generateAudio();
+
+                document.getElementById('audio-display').textContent = expr.expr;
+
+                setTimeout(() => {
+                    speakText(currentAudio.toString(), 1.2);
+                }, 500);
+
+            } else if (currentMode === 'base') {
+                currentPosition = mode.generatePosition();
+                currentAudio = mode.generateAudio();
+
+                document.getElementById('audio-display').textContent = `${currentPosition}₁₀`;
+
+                setTimeout(() => {
+                    // Speak base-6 number digit by digit
+                    const digits = currentAudio.split('').join(' ');
+                    speakText(digits, 1.0);
+                }, 500);
+
+            } else {
+                // Classic dual or triple mode
+                currentPosition = Math.floor(Math.random() * 9);
+                currentAudio = mode.generateAudio();
+
+                // Activate grid cell
+                const cells = document.querySelectorAll('.grid-cell');
+                cells[currentPosition].classList.add('active');
+
+                // Display and speak audio
+                document.getElementById('audio-display').textContent = currentAudio;
+                setTimeout(() => {
+                    speakText(currentAudio, 1.0);
+                }, 500);
+
+                if (mode.useColor) {
+                    currentColor = COLORS[Math.floor(Math.random() * COLORS.length)];
+                    cells[currentPosition].classList.add(`color-${currentColor}`);
+                }
+            }
+
+            // Store in history
+            history.positions.push(currentPosition);
+            history.audio.push(currentAudio);
+            if (mode.useColor) {
+                history.colors.push(currentColor);
+            }
+
+            // Reset match tracking for this trial
+            stats.positionMatches[currentTrial] = false;
+            stats.audioMatches[currentTrial] = false;
+
+            currentTrial++;
+
+            // Auto-stop demo after set number of trials
+            if (isDemoMode && currentTrial >= DEMO_TRIALS) {
+                setTimeout(() => {
+                    stopGame();
+                    document.getElementById('audio-display').textContent = 'Demo complete! Click Start to play.';
+                }, TRIAL_DURATION);
+            }
+        }
+
+        function checkMatch(type) {
+            if (!gameActive || currentTrial < nBackLevel) return;
+
+            const mode = modes[currentMode];
+            let isCorrect = false;
+            const historyIndex = history.positions.length - 1 - nBackLevel;
+
+            if (type === 'position') {
+                if (currentMode === 'math') {
+                    isCorrect = currentPosition === history.audio[historyIndex];
+                } else if (currentMode === 'base') {
+                    const nBackBase10 = convertFromBase6(history.audio[historyIndex]);
+                    isCorrect = currentPosition === nBackBase10;
+                } else {
+                    isCorrect = currentPosition === history.positions[historyIndex];
+                }
+
+                if (!stats.positionMatches[currentTrial - 1]) {
+                    stats.positionMatches[currentTrial - 1] = true;
+                    stats.trials++;
+                    if (isCorrect) stats.correct++;
+                    showFeedback(isCorrect);
+                    updateStats();
+                }
+            } else if (type === 'audio') {
+                if (currentMode === 'math') {
+                    isCorrect = currentAudio === history.positions[historyIndex];
+                } else if (currentMode === 'base') {
+                    const nBackBase6 = convertToBase6(history.positions[historyIndex]);
+                    isCorrect = currentAudio === nBackBase6;
+                } else {
+                    isCorrect = currentAudio === history.audio[historyIndex];
+                }
+
+                if (!stats.audioMatches[currentTrial - 1]) {
+                    stats.audioMatches[currentTrial - 1] = true;
+                    stats.trials++;
+                    if (isCorrect) stats.correct++;
+                    showFeedback(isCorrect);
+                    updateStats();
+                }
+            } else if (type === 'color' && mode.useColor) {
+                isCorrect = currentColor === history.colors[historyIndex];
+                stats.trials++;
+                if (isCorrect) stats.correct++;
+                showFeedback(isCorrect);
+                updateStats();
+            }
+        }
+
+        function startGame(demoMode = false) {
+            gameActive = true;
+            isDemoMode = demoMode;
+            history = { positions: [], audio: [], colors: [] };
+            currentTrial = 0;
+            stats = { trials: 0, correct: 0, positionMatches: [], audioMatches: [] };
+            nBackLevel = parseInt(document.getElementById('nback-level').value);
+
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('stop-btn').style.display = 'inline-block';
+            document.getElementById('nback-level').disabled = true;
+
+            updateInstructions();
+            updateStats();
+
+            // Start first trial after short delay
+            setTimeout(() => {
+                runTrial();
+                gameInterval = setInterval(runTrial, TRIAL_DURATION);
+            }, 1000);
+        }
+
+        function stopGame() {
+            gameActive = false;
+            isDemoMode = false;
+            clearInterval(gameInterval);
+
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('stop-btn').style.display = 'none';
+            document.getElementById('nback-level').disabled = false;
+
+            updateInstructions();
+
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('active', 'color-red', 'color-blue', 'color-green', 'color-yellow');
+            });
+
+            // Cancel any ongoing speech
+            if (speechSynth) {
+                speechSynth.cancel();
+            }
+        }
+
+        // Event listeners
+        document.getElementById('start-btn').addEventListener('click', () => startGame(false));
+        document.getElementById('stop-btn').addEventListener('click', stopGame);
+        document.getElementById('position-match').addEventListener('click', () => checkMatch('position'));
+        document.getElementById('audio-match').addEventListener('click', () => checkMatch('audio'));
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameActive) return;
+
+            if (e.key.toLowerCase() === 'p') {
+                checkMatch('position');
+            } else if (e.key.toLowerCase() === 'l') {
+                checkMatch('audio');
+            } else if (e.key.toLowerCase() === 'c' && modes[currentMode].useColor) {
+                checkMatch('color');
+            }
+        });
+
+        // Mode selection
+        document.querySelectorAll('.mode-card').forEach(card => {
+            card.addEventListener('click', () => {
+                if (gameActive) return;
+
+                document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentMode = card.dataset.mode;
+                updateInstructions();
+
+                document.getElementById('audio-display').textContent = 'Ready';
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.classList.remove('active', 'color-red', 'color-blue', 'color-green', 'color-yellow');
+                });
+            });
+        });
+
+        // Initialize
+        testSpeech();
+        updateInstructions();
+
+        // Auto-start demo after page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                startGame(true);
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
+
