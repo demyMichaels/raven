@@ -159,3 +159,102 @@ The parser will automatically detect:
 ✅ First, Then, Finally, words
 ✅ Line breaks (\n)
 ✅ Remember: or Note: → Key Takeaway box
+
+
+
+
+
+
+==========================
+Summary of Image Features Added
+1. Question Images (already existed, kept as-is)
+Add an image field to your question:
+
+json
+{
+  "question": "What is the name of this organelle?",
+  "image": "https://example.com/cell-diagram.png",
+  "options": ["Mitochondria", "Ribosome", "Nucleus", "Golgi body"],
+  "answer": "a",
+  "explanation": "This is the mitochondria..."
+}
+
+2. Image Options (NEW - two formats supported)
+
+Format A: Text + Image options (mixed content)
+
+json
+{
+  "question": "Which circuit represents a series connection?",
+  "options": [
+    { "text": "Circuit A", "image": "https://example.com/circuit-a.png" },
+    { "text": "Circuit B", "image": "https://example.com/circuit-b.png" },
+    { "text": "Circuit C", "image": null },
+    { "text": "Circuit D", "image": "https://example.com/circuit-d.png" }
+  ],
+  "answer": "a",
+  "explanation": "Circuit A shows components connected in series..."
+}
+
+Format B: Image-only options (displayed in a 2x2 grid)
+
+json
+{
+  "question": "Select the correct Lewis structure for water:",
+  "optionType": "image",
+  "options": [
+    "https://example.com/structure1.png",
+    "https://example.com/structure2.png",
+    "https://example.com/structure3.png",
+    "https://example.com/structure4.png"
+  ],
+  "answer": "b",
+  "explanation": "The correct structure shows..."
+}
+
+3. Explanation Images (NEW)
+Add an explanationImage field to show a diagram in the solution:
+
+json
+{
+  "question": "Calculate the resultant force.",
+  "image": "https://example.com/force-problem.png",
+  "options": ["10N", "15N", "20N", "25N"],
+  "answer": "c",
+  "explanation": "Using vector addition: F = F1 + F2 = 10N + 10N = 20N at 45°",
+  "explanationImage": "https://example.com/force-solution-diagram.png"
+}
+
+Key Features:
+Tap to enlarge: All images can be tapped/clicked to view in full-screen modal
+Responsive design: Image options display in a 2-column grid on larger screens, single column on mobile
+Dark mode support: Images have proper borders and styling in both light and dark modes
+Wrong answers review: Images are shown correctly when reviewing wrong answers
+
+
+
+Optimize images before adding:
+
+Use PNG for diagrams/charts
+Use JPG for photos
+Keep images under 200KB each
+Resize to max 800px width (that's enough for mobile/tablet)
+
+
+
+
+Image Optimization Tips
+Before adding images, compress them using free tools:
+
+TinyPNG (https://tinypng.com) - Reduces file size by 50-80%
+Squoosh (https://squoosh.app) - Google's free image optimizer
+This keeps your app fast even with many images! 🚀
+========================================================
+
+
+Supported Video URL Formats:
+https://www.youtube.com/watch?v=VIDEO_ID
+https://youtu.be/VIDEO_ID
+https://www.youtube.com/embed/VIDEO_ID
+Direct video ID: VIDEO_ID
+Any other URL (will show as an external link button)
