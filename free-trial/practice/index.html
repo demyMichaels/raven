@@ -436,6 +436,24 @@ background: linear-gradient(135deg, rgba(0, 159, 157, 0.2), rgba(15, 44, 89, 0.2
 .timer-low {
 animation: timerPulse 0.5s ease-in-out infinite;
 }
+
+/* Video container responsive styles */
+.video-container {
+position: relative;
+padding-bottom: 56.25%; /* 16:9 aspect ratio */
+height: 0;
+overflow: hidden;
+border-radius: 0.75rem;
+}
+
+.video-container iframe {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+border: 0;
+}
 </style>
 </head>
 <body class="bg-neutral-50 dark:bg-neutral-900 roboto transition-colors duration-200">
@@ -633,6 +651,8 @@ Got it!
 <div id="explanationContent" class="space-y-4"></div>
 <!-- Explanation Image Container -->
 <div id="explanationImageContainer" class="mt-4 hidden"></div>
+<!-- Explanation Video Container -->
+<div id="explanationVideoContainer" class="mt-4 hidden"></div>
 </div>
 
 <!-- Key Takeaway (if present) -->
@@ -1362,7 +1382,11 @@ showQuizInterface();
 }
 
 // Helper function to get option text from various formats
-function getOptionText(option) {
+function getOptionText(option, question) {
+// For image-only options, return empty string (we'll display image instead)
+if (question && question.optionType === 'image') {
+return '';
+}
 if (typeof option === 'string') {
 return option;
 } else if (option && typeof option === 'object' && option.text) {
@@ -1374,7 +1398,7 @@ return '';
 // Helper function to get option image from various formats
 function getOptionImage(option, question, index) {
 // Format C: optionType === 'image' - options are image URLs
-if (question.optionType === 'image' && typeof option === 'string') {
+if (question && question.optionType === 'image' && typeof option === 'string') {
 return option;
 }
 // Format B: option is an object with text and image
@@ -1427,6 +1451,67 @@ img.onclick = onClick;
 
 img.src = src;
 container.appendChild(img);
+
+return container;
+}
+
+// Extract YouTube video ID from various URL formats
+function getYouTubeVideoId(url) {
+if (!url) return null;
+const patterns = [
+/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([^&\n?#]+)/,
+/^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+];
+for (const pattern of patterns) {
+const match = url.match(pattern);
+if (match) return match[1];
+}
+return null;
+}
+
+// Create video embed element
+function createVideoEmbed(videoUrl) {
+const container = document.createElement('div');
+container.className = 'mt-4';
+
+const youtubeId = getYouTubeVideoId(videoUrl);
+
+if (youtubeId) {
+// YouTube embed
+container.innerHTML = `
+<div class="flex items-center space-x-2 mb-3">
+<span class="material-icons text-red-500">play_circle</span>
+<span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Video Explanation</span>
+</div>
+<div class="video-container border border-neutral-200 dark:border-neutral-700 shadow-material-1">
+<iframe
+src="https://www.youtube.com/embed/${youtubeId}?rel=0"
+title="Video Explanation"
+allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen>
+</iframe>
+</div>
+`;
+} else {
+// Generic video link (non-YouTube)
+container.innerHTML = `
+<div class="flex items-center space-x-2 mb-3">
+<span class="material-icons text-red-500">play_circle</span>
+<span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">Video Explanation</span>
+</div>
+<a href="${videoUrl}" target="_blank" rel="noopener noreferrer"
+class="flex items-center space-x-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+<div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-material-1">
+<span class="material-icons text-white">play_arrow</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-red-700 dark:text-red-300">Watch Video Explanation</p>
+<p class="text-xs text-red-600 dark:text-red-400">Opens in new tab</p>
+</div>
+<span class="material-icons text-red-500">open_in_new</span>
+</a>
+`;
+}
 
 return container;
 }
@@ -1503,7 +1588,7 @@ optionsContainer.className = 'space-y-3';
 
 question.options.forEach((option, index) => {
 const optionBtn = document.createElement('div');
-const optionText = getOptionText(option);
+const optionText = getOptionText(option, question);
 const optionImage = getOptionImage(option, question, index);
 
 if (isImageOnly) {
@@ -1847,9 +1932,11 @@ return temp.innerHTML;
 function renderExplanationContent(parsedExplanation, question) {
 const container = document.getElementById('explanationContent');
 const explanationImageContainer = document.getElementById('explanationImageContainer');
+const explanationVideoContainer = document.getElementById('explanationVideoContainer');
 
 container.innerHTML = '';
 explanationImageContainer.innerHTML = '';
+explanationVideoContainer.innerHTML = '';
 
 parsedExplanation.steps.forEach((step, index) => {
 const stepDiv = document.createElement('div');
@@ -1899,6 +1986,15 @@ explanationImageContainer.classList.remove('hidden');
 explanationImageContainer.classList.add('hidden');
 }
 
+// Handle explanation video
+if (question && question.explanationVideo) {
+const videoEmbed = createVideoEmbed(question.explanationVideo);
+explanationVideoContainer.appendChild(videoEmbed);
+explanationVideoContainer.classList.remove('hidden');
+} else {
+explanationVideoContainer.classList.add('hidden');
+}
+
 // Handle key takeaway
 const keyTakeawayDiv = document.getElementById('keyTakeaway');
 const keyTakeawayText = document.getElementById('keyTakeawayText');
@@ -1917,9 +2013,12 @@ const question = currentQuestions[currentQuestionIndex];
 const explanationBox = document.getElementById('explanationBox');
 const correctIndex = question.answer.charCodeAt(0) - 97;
 
-if (question.explanation) {
+if (question.explanation || question.explanationImage || question.explanationVideo) {
 // Parse and render explanation
-const parsed = parseExplanation(question.explanation);
+const parsed = question.explanation ? parseExplanation(question.explanation) : { steps: [], keyTakeaway: null };
+if (parsed.steps.length === 0 && (question.explanationImage || question.explanationVideo)) {
+parsed.steps.push({ number: 1, text: 'See the solution below.' });
+}
 renderExplanationContent(parsed, question);
 
 explanationBox.classList.remove('hidden');
@@ -1941,30 +2040,6 @@ option.classList.add('incorrect');
 setTimeout(() => {
 explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }, 100);
-} else {
-// No text explanation but might have explanation image
-if (question.explanationImage) {
-const parsed = { steps: [{ number: 1, text: 'See the solution diagram below.' }], keyTakeaway: null };
-renderExplanationContent(parsed, question);
-explanationBox.classList.remove('hidden');
-
-// Mark options as correct/incorrect
-const options = document.querySelectorAll('.option-btn');
-const userIndex = userAnswers[currentQuestionIndex];
-
-options.forEach((option, index) => {
-option.classList.remove('selected');
-if (index === correctIndex) {
-option.classList.add('correct');
-} else if (index === userIndex && index !== correctIndex) {
-option.classList.add('incorrect');
-}
-});
-
-setTimeout(() => {
-explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}, 100);
-}
 }
 }
 
@@ -2043,12 +2118,32 @@ if (userIndex !== correctIndex) {
 const card = document.createElement('div');
 card.className = 'material-card bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden shadow-material-1';
 
-const userAnswer = userIndex !== undefined ? getOptionText(question.options[userIndex]) : 'Not answered';
-const userLetter = userIndex !== undefined ? String.fromCharCode(65 + userIndex) : '—';
+const isImageOnlyQuestion = isImageOnlyOptions(question);
+const userOptionImage = userIndex !== undefined ? getOptionImage(question.options[userIndex], question, userIndex) : null;
+const correctOptionImage = getOptionImage(question.options[correctIndex], question, correctIndex);
+
+// Get display text for answers - handle image-only options
+let userAnswerDisplay = 'Not answered';
+let userLetter = '—';
+if (userIndex !== undefined) {
+userLetter = String.fromCharCode(65 + userIndex);
+if (isImageOnlyQuestion) {
+userAnswerDisplay = `Option ${userLetter}`;
+} else {
+userAnswerDisplay = getOptionText(question.options[userIndex], question);
+}
+}
+
+let correctAnswerDisplay;
 const correctLetter = String.fromCharCode(65 + correctIndex);
-const correctAnswer = getOptionText(question.options[correctIndex]);
+if (isImageOnlyQuestion) {
+correctAnswerDisplay = `Option ${correctLetter}`;
+} else {
+correctAnswerDisplay = getOptionText(question.options[correctIndex], question);
+}
 
 const explanationId = `wrong-explanation-${index}`;
+const videoId = `wrong-video-${index}`;
 
 // Parse explanation for step-by-step display
 const parsedExplanation = question.explanation ? parseExplanation(question.explanation) : null;
@@ -2090,6 +2185,51 @@ explanationImageHtml = `
 `;
 }
 
+// Generate video explanation HTML if present
+let explanationVideoHtml = '';
+if (question.explanationVideo) {
+const youtubeId = getYouTubeVideoId(question.explanationVideo);
+if (youtubeId) {
+explanationVideoHtml = `
+<div class="mt-4">
+<button onclick="toggleVideoExplanation('${videoId}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+<div class="flex items-center space-x-2">
+<span class="material-icons text-red-500 text-lg">play_circle</span>
+<span class="text-sm font-medium text-red-700 dark:text-red-300">Video Explanation</span>
+</div>
+<span class="material-icons text-red-500 text-lg video-toggle-icon" id="icon-${videoId}">expand_more</span>
+</button>
+<div id="${videoId}" class="hidden mt-3">
+<div class="video-container border border-red-200 dark:border-red-700 shadow-material-1">
+<iframe
+src="https://www.youtube.com/embed/${youtubeId}?rel=0"
+title="Video Explanation"
+allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+allowfullscreen>
+</iframe>
+</div>
+</div>
+</div>
+`;
+} else {
+explanationVideoHtml = `
+<div class="mt-4">
+<a href="${question.explanationVideo}" target="_blank" rel="noopener noreferrer"
+class="flex items-center space-x-3 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+<div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center shadow-material-1">
+<span class="material-icons text-white text-lg">play_arrow</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-red-700 dark:text-red-300">Watch Video Explanation</p>
+<p class="text-xs text-red-600 dark:text-red-400">Opens in new tab</p>
+</div>
+<span class="material-icons text-red-500">open_in_new</span>
+</a>
+</div>
+`;
+}
+}
+
 // Generate image HTML if question has an image
 let questionImageHtml = '';
 if (question.image) {
@@ -2102,27 +2242,26 @@ questionImageHtml = `
 
 // Generate user answer image if it's an image option
 let userAnswerImageHtml = '';
-if (userIndex !== undefined) {
-const userOptionImage = getOptionImage(question.options[userIndex], question, userIndex);
-if (userOptionImage) {
+if (userIndex !== undefined && userOptionImage) {
 userAnswerImageHtml = `
 <div class="mt-2 rounded-lg overflow-hidden border border-red-200 dark:border-red-700 max-w-32">
-<img src="${userOptionImage}" alt="Your answer" class="w-full h-auto max-h-24 object-contain" onerror="this.parentElement.style.display='none'" />
+<img src="${userOptionImage}" alt="Your answer" class="w-full h-auto max-h-24 object-contain cursor-pointer hover:opacity-90" onclick="openImageModal('${userOptionImage}')" onerror="this.parentElement.style.display='none'" />
 </div>
 `;
-}
 }
 
 // Generate correct answer image if it's an image option
 let correctAnswerImageHtml = '';
-const correctOptionImage = getOptionImage(question.options[correctIndex], question, correctIndex);
 if (correctOptionImage) {
 correctAnswerImageHtml = `
 <div class="mt-2 rounded-lg overflow-hidden border border-green-200 dark:border-green-700 max-w-32">
-<img src="${correctOptionImage}" alt="Correct answer" class="w-full h-auto max-h-24 object-contain" onerror="this.parentElement.style.display='none'" />
+<img src="${correctOptionImage}" alt="Correct answer" class="w-full h-auto max-h-24 object-contain cursor-pointer hover:opacity-90" onclick="openImageModal('${correctOptionImage}')" onerror="this.parentElement.style.display='none'" />
 </div>
 `;
 }
+
+const hasTextExplanation = question.explanation || question.explanationImage;
+const hasVideoExplanation = question.explanationVideo;
 
 card.innerHTML = `
 <!-- Question Header -->
@@ -2143,7 +2282,7 @@ ${questionImageHtml}
 <span class="material-icons text-error text-lg flex-shrink-0">close</span>
 <div class="flex-1">
 <span class="text-xs text-red-600 dark:text-red-400 font-medium uppercase tracking-wide">Your Answer</span>
-<p class="text-sm text-red-800 dark:text-red-200 mt-0.5"><strong>${userLetter}.</strong> ${sanitizeHTML(userAnswer)}</p>
+<p class="text-sm text-red-800 dark:text-red-200 mt-0.5"><strong>${userLetter}.</strong> ${sanitizeHTML(userAnswerDisplay)}</p>
 ${userAnswerImageHtml}
 </div>
 </div>
@@ -2153,13 +2292,13 @@ ${userAnswerImageHtml}
 <span class="material-icons text-success text-lg flex-shrink-0">check_circle</span>
 <div class="flex-1">
 <span class="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Correct Answer</span>
-<p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${sanitizeHTML(correctAnswer)}</p>
+<p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${sanitizeHTML(correctAnswerDisplay)}</p>
 ${correctAnswerImageHtml}
 </div>
 </div>
 
 <!-- Step-by-Step Solution -->
-${question.explanation || question.explanationImage ? `
+${hasTextExplanation ? `
 <div class="mt-4">
 <button onclick="toggleWrongExplanation('${explanationId}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-700 hover:bg-accent-100 dark:hover:bg-accent-900/30 transition-colors">
 <div class="flex items-center space-x-2">
@@ -2175,6 +2314,9 @@ ${takeawayHtml}
 </div>
 </div>
 ` : ''}
+
+<!-- Video Explanation -->
+${explanationVideoHtml}
 </div>
 `;
 
@@ -2195,6 +2337,20 @@ document.getElementById('wrongAnswersSection').scrollIntoView({ behavior: 'smoot
 function toggleWrongExplanation(explanationId) {
 const content = document.getElementById(explanationId);
 const icon = document.getElementById('icon-' + explanationId);
+
+if (content.classList.contains('hidden')) {
+content.classList.remove('hidden');
+icon.textContent = 'expand_less';
+} else {
+content.classList.add('hidden');
+icon.textContent = 'expand_more';
+}
+}
+
+// Toggle video explanation visibility in wrong answers review
+function toggleVideoExplanation(videoId) {
+const content = document.getElementById(videoId);
+const icon = document.getElementById('icon-' + videoId);
 
 if (content.classList.contains('hidden')) {
 content.classList.remove('hidden');
