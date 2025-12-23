@@ -297,6 +297,58 @@ background-color: rgba(239, 68, 68, 0.2);
 color: #ef4444;
 }
 
+/* Image option styles */
+.option-btn.image-option {
+padding: 8px;
+}
+
+.option-btn.image-option img {
+border-radius: 8px;
+transition: transform 0.2s ease;
+}
+
+.option-btn.image-option:hover img {
+transform: scale(1.02);
+}
+
+.option-btn.image-option.selected img,
+.option-btn.image-option.correct img,
+.option-btn.image-option.incorrect img {
+opacity: 0.9;
+}
+
+/* Image loading states */
+.img-loading {
+background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+background-size: 200% 100%;
+animation: shimmer 1.5s infinite;
+}
+
+.dark .img-loading {
+background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+0% { background-position: -200% 0; }
+100% { background-position: 200% 0; }
+}
+
+.img-error {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+background-color: #fef2f2;
+color: #ef4444;
+padding: 1rem;
+border-radius: 8px;
+}
+
+.dark .img-error {
+background-color: rgba(239, 68, 68, 0.1);
+}
+
 .progress-bar {
 height: 6px;
 background-color: rgba(34, 197, 94, 0.2);
@@ -560,6 +612,8 @@ Got it!
 </span>
 </div>
 <h3 class="text-lg sm:text-xl font-medium mb-6 sm:mb-8 text-neutral-900 dark:text-white leading-relaxed" id="questionText"></h3>
+<!-- Question Image Container -->
+<div id="questionImageContainer" class="mb-6 hidden"></div>
 <div id="questionOptions" class="space-y-3"></div>
 
 
@@ -577,6 +631,8 @@ Got it!
 <!-- Solution Steps Container -->
 <div class="px-5 py-5">
 <div id="explanationContent" class="space-y-4"></div>
+<!-- Explanation Image Container -->
+<div id="explanationImageContainer" class="mt-4 hidden"></div>
 </div>
 
 <!-- Key Takeaway (if present) -->
@@ -1305,6 +1361,76 @@ renderQuestion();
 showQuizInterface();
 }
 
+// Helper function to get option text from various formats
+function getOptionText(option) {
+if (typeof option === 'string') {
+return option;
+} else if (option && typeof option === 'object' && option.text) {
+return option.text;
+}
+return '';
+}
+
+// Helper function to get option image from various formats
+function getOptionImage(option, question, index) {
+// Format C: optionType === 'image' - options are image URLs
+if (question.optionType === 'image' && typeof option === 'string') {
+return option;
+}
+// Format B: option is an object with text and image
+if (option && typeof option === 'object' && option.image) {
+return option.image;
+}
+return null;
+}
+
+// Helper function to determine if question has image-only options
+function isImageOnlyOptions(question) {
+return question.optionType === 'image';
+}
+
+// Create image element with loading and error handling
+function createImageElement(src, alt, className, onClick) {
+const container = document.createElement('div');
+container.className = 'relative';
+
+const img = document.createElement('img');
+img.alt = alt;
+img.className = className + ' img-loading';
+img.style.minHeight = '80px';
+
+// Create loading placeholder
+const loadingPlaceholder = document.createElement('div');
+loadingPlaceholder.className = 'absolute inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded-lg';
+loadingPlaceholder.innerHTML = '<span class="material-icons text-neutral-400 animate-pulse">image</span>';
+container.appendChild(loadingPlaceholder);
+
+img.onload = function() {
+img.classList.remove('img-loading');
+loadingPlaceholder.remove();
+};
+
+img.onerror = function() {
+img.classList.add('hidden');
+loadingPlaceholder.innerHTML = `
+<div class="img-error w-full h-full flex flex-col items-center justify-center p-4 text-center">
+<span class="material-icons text-2xl mb-1">broken_image</span>
+<span class="text-xs">Image failed to load</span>
+</div>
+`;
+};
+
+if (onClick) {
+img.classList.add('cursor-pointer', 'hover:opacity-90', 'transition-opacity');
+img.onclick = onClick;
+}
+
+img.src = src;
+container.appendChild(img);
+
+return container;
+}
+
 // Render current question
 function renderQuestion() {
 const question = currentQuestions[currentQuestionIndex];
@@ -1318,26 +1444,28 @@ document.getElementById('totalQuestions').textContent = currentQuestions.length;
 document.getElementById('questionMeta').textContent = `${currentTopic.name}`;
 document.getElementById('questionText').innerHTML = sanitizeHTML(question.question);
 
-// Handle question image
-let imageContainer = document.getElementById('questionImageContainer');
-if (!imageContainer) {
-// Create image container if it doesn't exist
-imageContainer = document.createElement('div');
-imageContainer.id = 'questionImageContainer';
-imageContainer.className = 'mb-4';
-document.getElementById('questionText').after(imageContainer);
-}
+// Handle question image (Format A and D)
+const imageContainer = document.getElementById('questionImageContainer');
+imageContainer.innerHTML = '';
 
 if (question.image) {
-imageContainer.innerHTML = `
-<div class="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900">
-<img src="${question.image}" alt="Question image" class="w-full h-auto max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.image}')" />
-</div>
-<p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1 text-center">Tap image to enlarge</p>
-`;
+const imgWrapper = createImageElement(
+question.image,
+'Question image',
+'w-full h-auto max-h-64 object-contain rounded-lg',
+() => openImageModal(question.image)
+);
+imgWrapper.className = 'rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900';
+
+imageContainer.appendChild(imgWrapper);
+
+const hint = document.createElement('p');
+hint.className = 'text-xs text-neutral-500 dark:text-neutral-400 mt-1 text-center';
+hint.textContent = 'Tap image to enlarge';
+imageContainer.appendChild(hint);
+
 imageContainer.classList.remove('hidden');
 } else {
-imageContainer.innerHTML = '';
 imageContainer.classList.add('hidden');
 }
 
@@ -1364,15 +1492,90 @@ document.getElementById('progressFill').style.width = `${progress}%`;
 const optionsContainer = document.getElementById('questionOptions');
 optionsContainer.innerHTML = '';
 
+const isImageOnly = isImageOnlyOptions(question);
+
+// Adjust grid layout for image-only options
+if (isImageOnly) {
+optionsContainer.className = 'grid grid-cols-2 gap-3';
+} else {
+optionsContainer.className = 'space-y-3';
+}
+
 question.options.forEach((option, index) => {
 const optionBtn = document.createElement('div');
+const optionText = getOptionText(option);
+const optionImage = getOptionImage(option, question, index);
+
+if (isImageOnly) {
+// Format C: Image-only options (grid layout)
+optionBtn.className = 'option-btn image-option material-button rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 cursor-pointer touch-target overflow-hidden';
+
+const letterBadge = document.createElement('div');
+letterBadge.className = 'absolute top-2 left-2 z-10 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-medium text-sm shadow-material-1';
+letterBadge.textContent = String.fromCharCode(65 + index);
+
+const imgContainer = document.createElement('div');
+imgContainer.className = 'relative aspect-square';
+
+if (optionImage) {
+const imgElement = createImageElement(
+optionImage,
+`Option ${String.fromCharCode(65 + index)}`,
+'w-full h-full object-cover',
+(e) => {
+e.stopPropagation();
+openImageModal(optionImage);
+}
+);
+imgContainer.appendChild(letterBadge);
+imgContainer.appendChild(imgElement);
+} else {
+imgContainer.innerHTML = `
+<div class="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+<span class="material-icons text-neutral-400 text-4xl">image_not_supported</span>
+</div>
+`;
+imgContainer.appendChild(letterBadge);
+}
+
+optionBtn.appendChild(imgContainer);
+
+} else if (optionImage) {
+// Format B: Text with optional image
+optionBtn.className = 'option-btn material-button p-4 sm:p-5 rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white cursor-pointer touch-target';
+
+optionBtn.innerHTML = `
+<div class="flex items-start space-x-3 sm:space-x-4">
+<span class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-medium text-sm">${String.fromCharCode(65 + index)}</span>
+<div class="flex-1">
+<span class="text-sm sm:text-base block mb-2">${sanitizeHTML(optionText)}</span>
+<div class="option-image-container rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-900"></div>
+</div>
+</div>
+`;
+
+const imageContainerEl = optionBtn.querySelector('.option-image-container');
+const imgElement = createImageElement(
+optionImage,
+`Option ${String.fromCharCode(65 + index)} image`,
+'w-full h-auto max-h-32 object-contain',
+(e) => {
+e.stopPropagation();
+openImageModal(optionImage);
+}
+);
+imageContainerEl.appendChild(imgElement);
+
+} else {
+// Format A: Text-only options (original format)
 optionBtn.className = 'option-btn material-button p-4 sm:p-5 rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white cursor-pointer touch-target';
 optionBtn.innerHTML = `
 <div class="flex items-center space-x-3 sm:space-x-4">
 <span class="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent text-white flex items-center justify-center font-medium text-sm">${String.fromCharCode(65 + index)}</span>
-<span class="flex-1 text-sm sm:text-base">${sanitizeHTML(option)}</span>
+<span class="flex-1 text-sm sm:text-base">${sanitizeHTML(optionText)}</span>
 </div>
 `;
+}
 
 const isSelected = userAnswers[currentQuestionIndex] === index;
 if (isSelected) {
@@ -1603,6 +1806,8 @@ return result;
 
 // Sanitize HTML to allow only safe formatting tags
 function sanitizeHTML(html) {
+if (!html) return '';
+
 // Allow only specific safe tags for formatting
 const allowedTags = ['sub', 'sup', 'strong', 'em', 'b', 'i', 'u', 'br', 'span'];
 
@@ -1639,9 +1844,12 @@ return temp.innerHTML;
 }
 
 // Render formatted explanation content
-function renderExplanationContent(parsedExplanation) {
+function renderExplanationContent(parsedExplanation, question) {
 const container = document.getElementById('explanationContent');
+const explanationImageContainer = document.getElementById('explanationImageContainer');
+
 container.innerHTML = '';
+explanationImageContainer.innerHTML = '';
 
 parsedExplanation.steps.forEach((step, index) => {
 const stepDiv = document.createElement('div');
@@ -1666,6 +1874,31 @@ stepDiv.appendChild(contentDiv);
 container.appendChild(stepDiv);
 });
 
+// Handle explanation image (Format D)
+if (question && question.explanationImage) {
+const imgWrapper = document.createElement('div');
+imgWrapper.className = 'rounded-xl overflow-hidden border border-accent-200 dark:border-accent-700 bg-neutral-100 dark:bg-neutral-900';
+
+const imgElement = createImageElement(
+question.explanationImage,
+'Explanation diagram',
+'w-full h-auto max-h-64 object-contain',
+() => openImageModal(question.explanationImage)
+);
+
+imgWrapper.appendChild(imgElement);
+
+const hint = document.createElement('p');
+hint.className = 'text-xs text-neutral-500 dark:text-neutral-400 mt-1 text-center';
+hint.textContent = 'Tap image to enlarge';
+
+explanationImageContainer.appendChild(imgWrapper);
+explanationImageContainer.appendChild(hint);
+explanationImageContainer.classList.remove('hidden');
+} else {
+explanationImageContainer.classList.add('hidden');
+}
+
 // Handle key takeaway
 const keyTakeawayDiv = document.getElementById('keyTakeaway');
 const keyTakeawayText = document.getElementById('keyTakeawayText');
@@ -1687,7 +1920,7 @@ const correctIndex = question.answer.charCodeAt(0) - 97;
 if (question.explanation) {
 // Parse and render explanation
 const parsed = parseExplanation(question.explanation);
-renderExplanationContent(parsed);
+renderExplanationContent(parsed, question);
 
 explanationBox.classList.remove('hidden');
 
@@ -1708,6 +1941,30 @@ option.classList.add('incorrect');
 setTimeout(() => {
 explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }, 100);
+} else {
+// No text explanation but might have explanation image
+if (question.explanationImage) {
+const parsed = { steps: [{ number: 1, text: 'See the solution diagram below.' }], keyTakeaway: null };
+renderExplanationContent(parsed, question);
+explanationBox.classList.remove('hidden');
+
+// Mark options as correct/incorrect
+const options = document.querySelectorAll('.option-btn');
+const userIndex = userAnswers[currentQuestionIndex];
+
+options.forEach((option, index) => {
+option.classList.remove('selected');
+if (index === correctIndex) {
+option.classList.add('correct');
+} else if (index === userIndex && index !== correctIndex) {
+option.classList.add('incorrect');
+}
+});
+
+setTimeout(() => {
+explanationBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}, 100);
+}
 }
 }
 
@@ -1786,11 +2043,11 @@ if (userIndex !== correctIndex) {
 const card = document.createElement('div');
 card.className = 'material-card bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl overflow-hidden shadow-material-1';
 
-const userAnswer = userIndex !== undefined ? question.options[userIndex] : 'Not answered';
+const userAnswer = userIndex !== undefined ? getOptionText(question.options[userIndex]) : 'Not answered';
 const userLetter = userIndex !== undefined ? String.fromCharCode(65 + userIndex) : '—';
 const correctLetter = String.fromCharCode(65 + correctIndex);
+const correctAnswer = getOptionText(question.options[correctIndex]);
 
-const cardId = `wrong-card-${index}`;
 const explanationId = `wrong-explanation-${index}`;
 
 // Parse explanation for step-by-step display
@@ -1823,12 +2080,49 @@ takeawayHtml = `
 `;
 }
 
-// Generate image HTML if question has an image
-const questionImageHtml = question.image ? `
-<div class="mt-3 rounded-lg overflow-hidden border border-red-200 dark:border-red-700">
-<img src="${question.image}" alt="Question image" class="w-full h-auto max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.image}')" />
+// Generate explanation image HTML if present
+let explanationImageHtml = '';
+if (question.explanationImage) {
+explanationImageHtml = `
+<div class="mt-4 rounded-lg overflow-hidden border border-accent-200 dark:border-accent-700">
+<img src="${question.explanationImage}" alt="Explanation diagram" class="w-full h-auto max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.explanationImage}')" onerror="this.parentElement.innerHTML='<div class=\\'img-error p-4\\'><span class=\\'material-icons\\'>broken_image</span><span class=\\'text-xs\\'>Image failed to load</span></div>'" />
 </div>
-` : '';
+`;
+}
+
+// Generate image HTML if question has an image
+let questionImageHtml = '';
+if (question.image) {
+questionImageHtml = `
+<div class="mt-3 rounded-lg overflow-hidden border border-red-200 dark:border-red-700">
+<img src="${question.image}" alt="Question image" class="w-full h-auto max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity" onclick="openImageModal('${question.image}')" onerror="this.parentElement.innerHTML='<div class=\\'img-error p-4\\'><span class=\\'material-icons\\'>broken_image</span><span class=\\'text-xs\\'>Image failed to load</span></div>'" />
+</div>
+`;
+}
+
+// Generate user answer image if it's an image option
+let userAnswerImageHtml = '';
+if (userIndex !== undefined) {
+const userOptionImage = getOptionImage(question.options[userIndex], question, userIndex);
+if (userOptionImage) {
+userAnswerImageHtml = `
+<div class="mt-2 rounded-lg overflow-hidden border border-red-200 dark:border-red-700 max-w-32">
+<img src="${userOptionImage}" alt="Your answer" class="w-full h-auto max-h-24 object-contain" onerror="this.parentElement.style.display='none'" />
+</div>
+`;
+}
+}
+
+// Generate correct answer image if it's an image option
+let correctAnswerImageHtml = '';
+const correctOptionImage = getOptionImage(question.options[correctIndex], question, correctIndex);
+if (correctOptionImage) {
+correctAnswerImageHtml = `
+<div class="mt-2 rounded-lg overflow-hidden border border-green-200 dark:border-green-700 max-w-32">
+<img src="${correctOptionImage}" alt="Correct answer" class="w-full h-auto max-h-24 object-contain" onerror="this.parentElement.style.display='none'" />
+</div>
+`;
+}
 
 card.innerHTML = `
 <!-- Question Header -->
@@ -1850,6 +2144,7 @@ ${questionImageHtml}
 <div class="flex-1">
 <span class="text-xs text-red-600 dark:text-red-400 font-medium uppercase tracking-wide">Your Answer</span>
 <p class="text-sm text-red-800 dark:text-red-200 mt-0.5"><strong>${userLetter}.</strong> ${sanitizeHTML(userAnswer)}</p>
+${userAnswerImageHtml}
 </div>
 </div>
 
@@ -1858,12 +2153,13 @@ ${questionImageHtml}
 <span class="material-icons text-success text-lg flex-shrink-0">check_circle</span>
 <div class="flex-1">
 <span class="text-xs text-green-600 dark:text-green-400 font-medium uppercase tracking-wide">Correct Answer</span>
-<p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${sanitizeHTML(question.options[correctIndex])}</p>
+<p class="text-sm text-green-800 dark:text-green-200 mt-0.5"><strong>${correctLetter}.</strong> ${sanitizeHTML(correctAnswer)}</p>
+${correctAnswerImageHtml}
 </div>
 </div>
 
 <!-- Step-by-Step Solution -->
-${question.explanation ? `
+${question.explanation || question.explanationImage ? `
 <div class="mt-4">
 <button onclick="toggleWrongExplanation('${explanationId}')" class="w-full flex items-center justify-between p-3 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-700 hover:bg-accent-100 dark:hover:bg-accent-900/30 transition-colors">
 <div class="flex items-center space-x-2">
@@ -1873,7 +2169,8 @@ ${question.explanation ? `
 <span class="material-icons text-accent text-lg explanation-toggle-icon" id="icon-${explanationId}">expand_more</span>
 </button>
 <div id="${explanationId}" class="hidden mt-3 p-4 rounded-xl bg-white dark:bg-neutral-900 border border-accent-200 dark:border-accent-700 space-y-3">
-${stepsHtml}
+${stepsHtml || '<p class="text-sm text-neutral-600 dark:text-neutral-400">See the solution diagram below.</p>'}
+${explanationImageHtml}
 ${takeawayHtml}
 </div>
 </div>
@@ -2234,3 +2531,4 @@ init();
 </script>
 </body>
 </html>
+
