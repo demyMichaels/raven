@@ -2,10 +2,9 @@ Temperature and Its Measurement
 (i) concept of temperature 
 (ii) thermometric properties 
 (iii) calibration of thermometers 
-(iv) temperature scales –Celsius and Kelvin. 
+(iv) temperature scales–Celsius and Kelvin. 
 (v) types of thermometers 
 (vi) conversion from one scale of temperature to another
-
 
 
 Candidates should be able to: 
@@ -15,6 +14,10 @@ iii.  differentiate between temperature scales
 e.g. Celsius, Faranheight and Kelvin; 
 iv. compare the types of thermometers; 
 vi. convert from one scale of temperature to another. 
+
+
+
+
 
 
 1. Concept of heat and temperature
@@ -28,3 +31,4 @@ resistance thermometer, thermoelectric thermometer
 1.5 comparison of types of thermometers
 1.6 temperature scale of thermometer and conversion of temperature from one scale to another
 1.7 molecular explanation of temperature
+
