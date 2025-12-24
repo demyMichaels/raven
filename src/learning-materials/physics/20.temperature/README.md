@@ -18,8 +18,6 @@ vi. convert from one scale of temperature to another.
 
 
 
-
-
 1. Concept of heat and temperature
 table 1.1 difference between heat and temperature
 measurement of temperature
