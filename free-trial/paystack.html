@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LearnStack - EdTech Payment Demo</title>
+  <script src="https://js.paystack.co/v2/inline.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #faf8f5;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f0ebe3;
+      --text-primary: #1a1a2e;
+      --text-secondary: #4a4a68;
+      --text-muted: #8888a0;
+      --accent: #e85d04;
+      --accent-hover: #dc2f02;
+      --accent-light: #fff3e6;
+      --success: #2d6a4f;
+      --success-bg: #d8f3dc;
+      --border: #e8e4dc;
+      --card-shadow: 0 4px 24px rgba(26, 26, 46, 0.08);
+      --gradient-hero: linear-gradient(135deg, #1a1a2e 0%, #2d2d4a 100%);
+    }
+
+    .dark {
+      --bg-primary: #0f0f1a;
+      --bg-secondary: #1a1a2e;
+      --bg-tertiary: #252542;
+      --text-primary: #f5f5f7;
+      --text-secondary: #b8b8cc;
+      --text-muted: #6e6e88;
+      --accent: #ff7b29;
+      --accent-hover: #ff9149;
+      --accent-light: #2a1f14;
+      --success: #52b788;
+      --success-bg: #1a2e25;
+      --border: #2d2d4a;
+      --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --gradient-hero: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .hero {
+      background: var(--gradient-hero);
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.75rem, 5vw, 2.5rem);
+      color: #fff;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .hero p {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 1.1rem;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    /* Course Cards */
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .course-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .course-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(26, 26, 46, 0.12);
+    }
+
+    .dark .course-card:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .course-image {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      position: relative;
+    }
+
+    .course-image.python { background: linear-gradient(135deg, #306998 0%, #ffd43b 100%); }
+    .course-image.web { background: linear-gradient(135deg, #e44d26 0%, #f7df1e 100%); }
+    .course-image.data { background: linear-gradient(135deg, #4c8bf5 0%, #34a853 100%); }
+
+    .course-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .course-content {
+      padding: 1.5rem;
+    }
+
+    .course-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .course-desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .course-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .course-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .course-price {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .price-currency {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: scale(1.02);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    /* Subscription Plans */
+    .plans-section {
+      background: var(--bg-tertiary);
+      padding: 3rem 1.5rem;
+      margin: 0 -1.5rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .plan-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 2rem;
+      border: 2px solid var(--border);
+      position: relative;
+      transition: border-color 0.3s ease;
+    }
+
+    .plan-card.popular {
+      border-color: var(--accent);
+    }
+
+    .plan-card.popular::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #fff;
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .plan-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .plan-period {
+      color: var(--text-muted);
+    }
+
+    .plan-desc {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .plan-features {
+      list-style: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .plan-features li {
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .plan-features li::before {
+      content: '✓';
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .plan-btn {
+      width: 100%;
+    }
+
+    /* Checkout Form */
+    .checkout-section {
+      margin-top: 3rem;
+    }
+
+    .checkout-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .checkout-summary {
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      color: var(--text-secondary);
+    }
+
+    .summary-row.total {
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .payment-channels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .channel-chip {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .channel-chip.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      padding: 2rem;
+      max-width: 420px;
+      width: 100%;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      text-align: center;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+    }
+
+    .modal-icon.success {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .modal-icon.error {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .dark .modal-icon.error {
+      background: #2e1a1a;
+    }
+
+    .modal-icon.info {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-text {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .modal-buttons .btn {
+      min-width: 120px;
+    }
+
+    /* Loading Spinner */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Transaction Log */
+    .log-section {
+      margin-top: 3rem;
+    }
+
+    .log-card {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .log-header {
+      padding: 1rem 1.5rem;
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .log-clear {
+      font-size: 0.85rem;
+      color: var(--accent);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+
+    .log-body {
+      padding: 1rem 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .log-empty {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .log-entry {
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      font-family: 'SF Mono', 'Monaco', monospace;
+    }
+
+    .log-entry.info {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .log-entry.success {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .log-entry.error {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .dark .log-entry.error {
+      background: #2e1a1a;
+    }
+
+    .log-time {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-buttons {
+        flex-direction: column;
+      }
+
+      .modal-buttons .btn {
+        width: 100%;
+      }
+    }
+
+    /* Animation */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .animate-in:nth-child(2) { animation-delay: 0.1s; }
+    .animate-in:nth-child(3) { animation-delay: 0.2s; }
+  </style>
+</head>
+<body>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="logo">
+        <span class="logo-icon">📚</span>
+        LearnStack
+      </div>
+      <h1>Master Tech Skills with Expert-Led Courses</h1>
+      <p>Learn to code, analyze data, and build amazing projects with our interactive curriculum</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <!-- One-Time Purchase Courses -->
+    <section class="courses-section">
+      <h2 class="section-title">Featured Courses</h2>
+      <p class="section-desc">One-time purchase, lifetime access</p>
+
+      <div class="courses-grid">
+        <div class="course-card animate-in">
+          <div class="course-image python">
+            🐍
+            <span class="course-badge">Bestseller</span>
+          </div>
+          <div class="course-content">
+            <h3 class="course-title">Python Masterclass</h3>
+            <p class="course-desc">From basics to advanced concepts including OOP, APIs, and automation</p>
+            <div class="course-meta">
+              <span>📹 48 lessons</span>
+              <span>⏱️ 12 hours</span>
+            </div>
+            <div class="course-price">
+              <span class="price"><span class="price-currency">₦</span>25,000</span>
+              <button class="btn btn-primary" onclick="initiateCoursePayment('Python Masterclass', 25000)">Enroll Now</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="course-card animate-in">
+          <div class="course-image web">
+            🌐
+            <span class="course-badge">Updated</span>
+          </div>
+          <div class="course-content">
+            <h3 class="course-title">Full-Stack Web Dev</h3>
+            <p class="course-desc">HTML, CSS, JavaScript, React, Node.js and deployment strategies</p>
+            <div class="course-meta">
+              <span>📹 72 lessons</span>
+              <span>⏱️ 24 hours</span>
+            </div>
+            <div class="course-price">
+              <span class="price"><span class="price-currency">₦</span>45,000</span>
+              <button class="btn btn-primary" onclick="initiateCoursePayment('Full-Stack Web Dev', 45000)">Enroll Now</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="course-card animate-in">
+          <div class="course-image data">
+            📊
+            <span class="course-badge">New</span>
+          </div>
+          <div class="course-content">
+            <h3 class="course-title">Data Science Bootcamp</h3>
+            <p class="course-desc">Python, Pandas, Machine Learning, and real-world data projects</p>
+            <div class="course-meta">
+              <span>📹 60 lessons</span>
+              <span>⏱️ 18 hours</span>
+            </div>
+            <div class="course-price">
+              <span class="price"><span class="price-currency">₦</span>55,000</span>
+              <button class="btn btn-primary" onclick="initiateCoursePayment('Data Science Bootcamp', 55000)">Enroll Now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Subscription Plans -->
+    <section class="plans-section">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto 2rem;">
+        <h2 class="section-title">All-Access Subscription</h2>
+        <p class="section-desc">Unlimited access to all courses with recurring billing</p>
+      </div>
+
+      <div class="plans-grid">
+        <div class="plan-card">
+          <h3 class="plan-name">Monthly</h3>
+          <div class="plan-price">
+            <span class="plan-amount">₦15,000</span>
+            <span class="plan-period">/month</span>
+          </div>
+          <p class="plan-desc">Flexible monthly access to all courses</p>
+          <ul class="plan-features">
+            <li>Access to 50+ courses</li>
+            <li>New courses every month</li>
+            <li>Certificate of completion</li>
+            <li>Community access</li>
+          </ul>
+          <button class="btn btn-secondary plan-btn" onclick="initiateSubscription('monthly', 15000)">
+            Subscribe Monthly
+          </button>
+        </div>
+
+        <div class="plan-card popular">
+          <h3 class="plan-name">Annual</h3>
+          <div class="plan-price">
+            <span class="plan-amount">₦120,000</span>
+            <span class="plan-period">/year</span>
+          </div>
+          <p class="plan-desc">Save ₦60,000 with annual billing</p>
+          <ul class="plan-features">
+            <li>Everything in Monthly</li>
+            <li>Priority support</li>
+            <li>Exclusive workshops</li>
+            <li>1-on-1 mentoring session</li>
+          </ul>
+          <button class="btn btn-primary plan-btn" onclick="initiateSubscription('annually', 120000)">
+            Subscribe Yearly
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Custom Checkout Form -->
+    <section class="checkout-section">
+      <h2 class="section-title" style="text-align: center;">Custom Checkout</h2>
+      <p class="section-desc" style="text-align: center;">Test the payment flow with custom options</p>
+
+      <div class="checkout-card">
+        <form id="checkoutForm" onsubmit="handleCustomCheckout(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-input" id="firstName" placeholder="John">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-input" id="lastName" placeholder="Doe">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address *</label>
+            <input type="email" class="form-input" id="email" placeholder="john@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" class="form-input" id="phone" placeholder="+234 800 000 0000">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Amount (₦) *</label>
+            <input type="number" class="form-input" id="amount" placeholder="5000" min="100" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Payment Channels</label>
+            <div class="payment-channels" id="channelSelector">
+              <span class="channel-chip active" data-channel="card">💳 Card</span>
+              <span class="channel-chip active" data-channel="bank_transfer">🏦 Bank Transfer</span>
+              <span class="channel-chip" data-channel="ussd">📱 USSD</span>
+              <span class="channel-chip" data-channel="mobile_money">📲 Mobile Money</span>
+            </div>
+          </div>
+
+          <div class="checkout-summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="subtotalDisplay">₦0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Processing Fee</span>
+              <span>₦0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="totalDisplay">₦0.00</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;" id="payBtn">
+            Pay with Paystack
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Transaction Log -->
+    <section class="log-section">
+      <div class="log-card">
+        <div class="log-header">
+          <span>📋 Transaction Log</span>
+          <button class="log-clear" onclick="clearLog()">Clear</button>
+        </div>
+        <div class="log-body" id="logBody">
+          <p class="log-empty">Payment events will appear here...</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-icon" id="modalIcon">✓</div>
+      <h3 class="modal-title" id="modalTitle">Success!</h3>
+      <p class="modal-text" id="modalText">Your payment was successful.</p>
+      <div class="modal-buttons" id="modalButtons">
+        <button class="btn btn-primary" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode detection
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      if (event.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    });
+
+    // Initialize Paystack
+    const popup = new PaystackPop();
+
+    // Demo public key - Replace with your actual public key
+    const PAYSTACK_KEY = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+
+    // Generate unique reference
+    function generateReference() {
+      return 'LSK_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+      return '₦' + amount.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+    }
+
+    // Log transaction events
+    function addLog(message, type = 'info') {
+      const logBody = document.getElementById('logBody');
+      const emptyMsg = logBody.querySelector('.log-empty');
+      if (emptyMsg) emptyMsg.remove();
+
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="log-time">[${time}]</span> ${message}`;
+      logBody.insertBefore(entry, logBody.firstChild);
+    }
+
+    function clearLog() {
+      const logBody = document.getElementById('logBody');
+      logBody.innerHTML = '<p class="log-empty">Payment events will appear here...</p>';
+    }
+
+    // Modal functions
+    function showModal(title, text, type = 'success', buttons = null) {
+      const overlay = document.getElementById('modalOverlay');
+      const iconEl = document.getElementById('modalIcon');
+      const titleEl = document.getElementById('modalTitle');
+      const textEl = document.getElementById('modalText');
+      const buttonsEl = document.getElementById('modalButtons');
+
+      const icons = {
+        success: '✓',
+        error: '✕',
+        info: 'ℹ'
+      };
+
+      iconEl.className = `modal-icon ${type}`;
+      iconEl.textContent = icons[type] || icons.info;
+      titleEl.textContent = title;
+      textEl.textContent = text;
+
+      if (buttons) {
+        buttonsEl.innerHTML = buttons;
+      } else {
+        buttonsEl.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Close</button>';
+      }
+
+      overlay.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    // Paystack callbacks
+    const paystackCallbacks = {
+      onLoad: (response) => {
+        addLog(`Transaction loaded - ID: ${response.id}`, 'info');
+      },
+      onSuccess: (transaction) => {
+        addLog(`Payment successful! Reference: ${transaction.reference}`, 'success');
+        showModal(
+          'Payment Successful!',
+          `Your payment was completed successfully. Reference: ${transaction.reference}`,
+          'success'
+        );
+      },
+      onCancel: () => {
+        addLog('Transaction cancelled by user', 'info');
+        showModal(
+          'Payment Cancelled',
+          'You cancelled the payment. No charges were made.',
+          'info'
+        );
+      },
+      onError: (error) => {
+        addLog(`Error: ${error.message}`, 'error');
+        showModal(
+          'Payment Error',
+          error.message || 'An error occurred during payment. Please try again.',
+          'error'
+        );
+      }
+    };
+
+    // One-time course payment
+    function initiateCoursePayment(courseName, price) {
+      showModal(
+        `Enroll in ${courseName}`,
+        `You're about to pay ${formatCurrency(price)} for lifetime access to this course.`,
+        'info',
+        `
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="processCoursePayment('${courseName}', ${price})">Proceed to Pay</button>
+        `
+      );
+    }
+
+    function processCoursePayment(courseName, price) {
+      closeModal();
+
+      addLog(`Initiating payment for ${courseName}...`, 'info');
+
+      popup.newTransaction({
+        key: PAYSTACK_KEY,
+        email: 'student@learnstack.com', // In production, collect from user
+        amount: price * 100, // Amount in kobo
+        currency: 'NGN',
+        reference: generateReference(),
+        metadata: {
+          custom_fields: [
+            {
+              display_name: 'Course Name',
+              variable_name: 'course_name',
+              value: courseName
+            },
+            {
+              display_name: 'Payment Type',
+              variable_name: 'payment_type',
+              value: 'one_time'
+            }
+          ]
+        },
+        ...paystackCallbacks
+      });
+    }
+
+    // Subscription payment
+    function initiateSubscription(interval, price) {
+      const intervalLabel = interval === 'monthly' ? 'Monthly' : 'Annual';
+
+      showModal(
+        `${intervalLabel} Subscription`,
+        `You'll be charged ${formatCurrency(price)} ${interval === 'monthly' ? 'every month' : 'annually'}. You can cancel anytime.`,
+        'info',
+        `
+          <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="processSubscription('${interval}', ${price})">Subscribe Now</button>
+        `
+      );
+    }
+
+    function processSubscription(interval, price) {
+      closeModal();
+
+      addLog(`Initiating ${interval} subscription...`, 'info');
+
+      popup.newTransaction({
+        key: PAYSTACK_KEY,
+        email: 'student@learnstack.com',
+        amount: price * 100,
+        currency: 'NGN',
+        reference: generateReference(),
+        planInterval: interval, // 'monthly' or 'annually' for subscriptions
+        metadata: {
+          custom_fields: [
+            {
+              display_name: 'Plan',
+              variable_name: 'plan',
+              value: `${interval} subscription`
+            },
+            {
+              display_name: 'Payment Type',
+              variable_name: 'payment_type',
+              value: 'subscription'
+            }
+          ]
+        },
+        ...paystackCallbacks
+      });
+    }
+
+    // Custom checkout with channel selection
+    function handleCustomCheckout(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const amount = parseInt(document.getElementById('amount').value);
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const phone = document.getElementById('phone').value;
+
+      if (!email || !amount) {
+        showModal('Missing Information', 'Please enter your email and amount.', 'error');
+        return;
+      }
+
+      if (amount < 100) {
+        showModal('Invalid Amount', 'Minimum amount is ₦100.', 'error');
+        return;
+      }
+
+      // Get selected channels
+      const selectedChips = document.querySelectorAll('.channel-chip.active');
+      const channels = Array.from(selectedChips).map(chip => chip.dataset.channel);
+
+      if (channels.length === 0) {
+        showModal('No Payment Channel', 'Please select at least one payment channel.', 'error');
+        return;
+      }
+
+      addLog(`Processing custom payment of ${formatCurrency(amount)}...`, 'info');
+      addLog(`Selected channels: ${channels.join(', ')}`, 'info');
+
+      const payBtn = document.getElementById('payBtn');
+      payBtn.innerHTML = '<span class="loading"><span class="spinner"></span>Processing...</span>';
+      payBtn.disabled = true;
+
+      // Build transaction options
+      const transactionOptions = {
+        key: PAYSTACK_KEY,
+        email: email,
+        amount: amount * 100,
+        currency: 'NGN',
+        reference: generateReference(),
+        channels: channels,
+        onLoad: (response) => {
+          payBtn.innerHTML = 'Pay with Paystack';
+          payBtn.disabled = false;
+          paystackCallbacks.onLoad(response);
+        },
+        onSuccess: paystackCallbacks.onSuccess,
+        onCancel: () => {
+          payBtn.innerHTML = 'Pay with Paystack';
+          payBtn.disabled = false;
+          paystackCallbacks.onCancel();
+        },
+        onError: (error) => {
+          payBtn.innerHTML = 'Pay with Paystack';
+          payBtn.disabled = false;
+          paystackCallbacks.onError(error);
+        }
+      };
+
+      // Add optional fields
+      if (firstName) transactionOptions.firstName = firstName;
+      if (lastName) transactionOptions.lastName = lastName;
+      if (phone) transactionOptions.phone = phone;
+
+      popup.newTransaction(transactionOptions);
+    }
+
+    // Channel selector toggle
+    document.getElementById('channelSelector').addEventListener('click', (e) => {
+      if (e.target.classList.contains('channel-chip')) {
+        e.target.classList.toggle('active');
+      }
+    });
+
+    // Update amount display
+    document.getElementById('amount').addEventListener('input', (e) => {
+      const amount = parseInt(e.target.value) || 0;
+      document.getElementById('subtotalDisplay').textContent = formatCurrency(amount);
+      document.getElementById('totalDisplay').textContent = formatCurrency(amount);
+    });
+
+    // Close modal on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeModal();
+      }
+    });
+
+    // Initial log message
+    addLog('LearnStack payment demo ready. Click any button to test!', 'info');
+  </script>
+</body>
+</html>
