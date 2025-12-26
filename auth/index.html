@@ -1,0 +1,1892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.75, maximum-scale=1.0, user-scalable=no">
+<title>Raven - Exam Preparation Platform</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                primary: {
+                    DEFAULT: "#0F2C59",
+                    50: "#f0f3f8",
+                    100: "#d6e1ee",
+                    500: "#0F2C59",
+                    600: "#0a2549",
+                    700: "#081e39",
+                },
+                accent: {
+                    DEFAULT: "#009F9D",
+                    50: "#e6f7f7",
+                    100: "#b3ebea",
+                    500: "#009F9D",
+                    600: "#008280",
+                    700: "#006663",
+                },
+                neutral: {
+                    25: "#FEFEFE",
+                    50: "#F8F9FA",
+                    100: "#F1F3F4",
+                    200: "#E8EAED",
+                    300: "#DADCE0",
+                    400: "#BDC1C6",
+                    500: "#9AA0A6",
+                    600: "#80868B",
+                    700: "#5F6368",
+                    800: "#2D3748",
+                    900: "#1F2937",
+                },
+                premium: {
+                    DEFAULT: "#D2C1A7",
+                    50: "#fbf9f6",
+                    100: "#f4efe6",
+                    500: "#D2C1A7",
+                    600: "#c4b095",
+                    700: "#b69f83",
+                },
+                data: {
+                    DEFAULT: "#5A7B9E",
+                    50: "#f2f5f9",
+                    100: "#e1e9f2",
+                    500: "#5A7B9E",
+                    600: "#4d6a87",
+                    700: "#405970",
+                },
+                success: "#22c55e",
+                warning: "#f59e0b",
+                error: "#ef4444",
+            },
+            boxShadow: {
+                'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+                'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
+                'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+                'material-4': '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
+                'material-5': '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
+            },
+            fontFamily: {
+                'sans': ['Roboto', 'system-ui', 'sans-serif'],
+            },
+            borderRadius: {
+                'material': '4px',
+            }
+        }
+    }
+}
+</script>
+
+<style>
+/* OAuth Config */
+:root {
+    --google-client-id: '481928532393-qvg45onsbtfhttro4u5i38gngj2tseup.apps.googleusercontent.com';
+    --redirect-uri: 'https://www.examtutor.xyz';
+}
+
+.fade-in {
+    animation: fadeIn 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(0, 159, 157, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(0, 159, 157, 0.6); }
+}
+
+.material-card {
+    transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.material-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.material-button {
+    transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.material-button:active {
+    transform: scale(0.98);
+}
+
+.material-fab {
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 5px -1px rgba(0,0,0,0.2), 0 6px 10px 0 rgba(0,0,0,0.14), 0 1px 18px 0 rgba(0,0,0,0.12);
+    transition: box-shadow 0.28s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.material-fab:hover {
+    box-shadow: 0 5px 5px -3px rgba(0,0,0,0.2), 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12);
+}
+
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Typography Scale */
+.headline-1 { font-size: clamp(2.5rem, 8vw, 3.5rem); font-weight: 300; line-height: 1.167; letter-spacing: -0.75px; }
+.headline-2 { font-size: clamp(2rem, 6vw, 2.5rem); font-weight: 300; line-height: 1.2; letter-spacing: -0.25px; }
+.headline-3 { font-size: clamp(1.5rem, 4.5vw, 1.75rem); font-weight: 700; line-height: 1.25; }
+.headline-4 { font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+.headline-5 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+.headline-6 { font-size: 1rem; font-weight: 500; line-height: 1.5; letter-spacing: 0.1px; }
+.subtitle-1 { font-size: 1rem; font-weight: 400; line-height: 1.6; letter-spacing: 0.15px; }
+.subtitle-2 { font-size: 0.875rem; font-weight: 500; line-height: 1.57; letter-spacing: 0.1px; }
+.body-1 { font-size: 1rem; font-weight: 400; line-height: 1.6; letter-spacing: 0.25px; }
+.body-2 { font-size: 0.875rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.15px; }
+.button-text { font-size: 0.75rem; font-weight: 500; line-height: 1.75; letter-spacing: 0.75px; text-transform: uppercase; }
+.caption { font-size: 0.75rem; font-weight: 400; line-height: 1.5; letter-spacing: 0.25px; }
+.overline { font-size: 0.75rem; font-weight: 400; line-height: 2; letter-spacing: 0.75px; text-transform: uppercase; }
+
+@media (min-width: 1024px) {
+    .headline-1 { font-size: 6rem; letter-spacing: -1.5px; }
+    .headline-2 { font-size: 3.75rem; letter-spacing: -0.5px; }
+    .headline-3 { font-size: 3rem; letter-spacing: -0.5px; }
+    .headline-4 { font-size: 2.125rem; letter-spacing: 0.25px; }
+    .headline-5 { font-size: 1.5rem; }
+    .headline-6 { font-size: 1.25rem; letter-spacing: 0.15px; }
+}
+
+.hidden-content { display: none !important; }
+
+/* Google Sign-In Button */
+.google-signin-btn {
+    background: white;
+    border: 2px solid #e5e7eb;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.google-signin-btn:hover {
+    background: #f8f9fa;
+    border-color: #009F9D;
+    box-shadow: 0 4px 12px rgba(0, 159, 157, 0.2);
+}
+
+.google-signin-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.dark .google-signin-btn {
+    background: #1f2937;
+    border-color: #374151;
+    color: white;
+}
+
+.dark .google-signin-btn:hover {
+    background: #2d3748;
+    border-color: #009F9D;
+}
+
+/* Subject Selection */
+.subject-checkbox { display: none; }
+
+.subject-label {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.subject-label:hover {
+    border-color: #009F9D;
+    background-color: #f0f9ff;
+}
+
+.dark .subject-label {
+    border-color: #374151;
+}
+
+.dark .subject-label:hover {
+    border-color: #009F9D;
+    background-color: #1e3a3a;
+}
+
+.subject-checkbox:checked + .subject-label {
+    border-color: #009F9D;
+    background-color: #e6f7f7;
+    color: #006663;
+}
+
+.dark .subject-checkbox:checked + .subject-label {
+    background-color: #1e3a3a;
+    color: #009F9D;
+}
+
+.subject-checkbox:disabled + .subject-label {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #f3f4f6;
+}
+
+.dark .subject-checkbox:disabled + .subject-label {
+    background-color: #1f2937;
+}
+
+.subject-checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #9AA0A6;
+    border-radius: 4px;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.subject-checkbox:checked + .subject-label .subject-checkmark {
+    background-color: #009F9D;
+    border-color: #009F9D;
+}
+
+.subject-checkbox:checked + .subject-label .subject-checkmark::after {
+    content: '✓';
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-container canvas {
+    max-height: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Heatmap */
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.heatmap-cell {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.heatmap-cell:hover { transform: scale(1.05); }
+
+.status-excellent { background: linear-gradient(135deg, #10B981, #059669); }
+.status-good { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+.status-average { background: linear-gradient(135deg, #F59E0B, #D97706); }
+.status-weak { background: linear-gradient(135deg, #EF4444, #DC2626); }
+.status-unstarted { background: linear-gradient(135deg, #6B7280, #4B5563); }
+
+.progress-ring { transform: rotate(-90deg); }
+
+.progress-ring-circle {
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: 251.2;
+    transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 1rem;
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Auth loading overlay */
+.auth-loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 44, 89, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.auth-loading .spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #009F9D;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Dark mode */
+.dark .material-card {
+    background-color: #1F2937;
+    border-color: #374151;
+}
+
+.dark .material-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 768px) {
+    .touch-target {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+</style>
+</head>
+
+<body class="bg-neutral-50 dark:bg-neutral-900 font-sans transition-colors duration-200">
+
+<!-- Auth Loading Overlay -->
+<div id="authLoading" class="auth-loading hidden">
+    <div class="spinner mb-6"></div>
+    <p class="text-white text-lg font-medium">Authenticating with Google...</p>
+    <p class="text-white/60 text-sm mt-2">Please wait</p>
+</div>
+
+<!-- Header -->
+<header id="mainHeader" class="bg-white dark:bg-neutral-800 shadow-material-2 sticky top-0 z-50" style="display: none;">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-lg flex items-center justify-center shadow-material-1">
+                        <span class="text-white font-medium text-sm sm:text-lg">R</span>
+                    </div>
+                    <div>
+                        <h1 class="headline-6 text-neutral-800 dark:text-white">Raven</h1>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-1">
+                <a href="#" onclick="showSection(dashboardSection); return false;" class="nav-btn px-4 py-2 text-primary dark:text-white font-medium button-text rounded-lg bg-primary/10">Dashboard</a>
+                <a href="#" id="analyticsNavBtn" class="nav-btn px-4 py-2 text-neutral-600 dark:text-white hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Analytics</a>
+                <a href="#" onclick="showSection(studySection); return false;" class="nav-btn px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-primary button-text rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">Study</a>
+            </nav>
+
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="logoutBtn" class="hidden material-button touch-target px-3 py-2 bg-error text-white rounded-lg text-sm" onclick="logout()">
+                    Logout
+                </button>
+                <button onclick="toggleMobileMenu()" class="md:hidden material-button touch-target w-10 h-10 bg-neutral-100 dark:bg-neutral-700 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                    <span class="material-icons text-lg">menu</span>
+                </button>
+                <div id="userAvatar" class="w-8 h-8 sm:w-10 sm:h-10 bg-accent rounded-full flex items-center justify-center shadow-material-1 overflow-hidden">
+                    <span class="text-white font-medium text-xs sm:text-sm" id="userInitials">?</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden md:hidden" onclick="toggleMobileMenu()"></div>
+
+<!-- Mobile Menu Drawer -->
+<nav id="mobileMenu" class="fixed top-0 left-0 h-full w-80 max-w-sm bg-white dark:bg-neutral-800 shadow-material-4 z-50 transform -translate-x-full transition-transform duration-300 md:hidden">
+    <div class="flex flex-col h-full">
+        <div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-neutral-700">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-material-1">
+                    <span class="text-white font-medium text-sm">R</span>
+                </div>
+                <h2 class="subtitle-1 text-neutral-800 dark:text-white">Raven</h2>
+            </div>
+            <button onclick="toggleMobileMenu()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4">
+            <div class="space-y-2">
+                <a href="#" onclick="showSection(dashboardSection); toggleMobileMenu(); return false;" class="flex items-center space-x-3 p-3 text-primary dark:text-accent bg-primary/10 rounded-lg">
+                    <span class="material-icons">dashboard</span>
+                    <span class="subtitle-1">Dashboard</span>
+                </a>
+                <button id="mobileAnalyticsBtn" class="w-full flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg" onclick="showAnalyticsFromMobile()">
+                    <span class="material-icons">analytics</span>
+                    <span class="subtitle-1">Analytics</span>
+                </button>
+                <a href="#" onclick="showSection(studySection); toggleMobileMenu(); return false;" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg">
+                    <span class="material-icons">school</span>
+                    <span class="subtitle-1">Study</span>
+                </a>
+                <button onclick="openSettingsModal(); toggleMobileMenu();" class="flex items-center space-x-3 p-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg w-full text-left">
+                    <span class="material-icons">settings</span>
+                    <span class="subtitle-1">Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-neutral-200 dark:border-neutral-700">
+            <div class="flex items-center space-x-3 p-3 bg-accent/10 rounded-lg">
+                <div id="mobileUserAvatar" class="w-10 h-10 bg-accent rounded-full flex items-center justify-center overflow-hidden">
+                    <span class="text-white font-medium text-sm" id="mobileUserInitials">?</span>
+                </div>
+                <div>
+                    <p class="subtitle-2 text-neutral-800 dark:text-white" id="mobileUserName">User</p>
+                    <p class="caption text-neutral-600 dark:text-neutral-400">Student</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+    <!-- Landing Section with Google OAuth -->
+    <section id="landingSection" class="hidden-content">
+        <div class="min-h-screen flex items-center justify-center">
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-md w-full shadow-material-3 text-center" style="animation: slideUp 0.6s ease-out;">
+                <div class="mb-8">
+                    <div class="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-material-3" style="animation: pulse-glow 2s infinite;">
+                        <span class="text-white font-bold text-4xl">R</span>
+                    </div>
+                    <h2 class="headline-3 text-neutral-800 dark:text-white mb-3">Welcome to Raven</h2>
+                    <p class="body-1 text-neutral-600 dark:text-neutral-400">Your gateway to JAMB, WAEC & NECO exam success</p>
+                </div>
+
+                <div class="space-y-4">
+                    <button onclick="initiateGoogleOAuth()" class="google-signin-btn">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+
+                    <p class="caption text-neutral-500 dark:text-neutral-400 mt-4">
+                        By signing in, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
+                    <p class="body-2 text-neutral-600 dark:text-neutral-400 mb-4">Why choose Raven?</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                <span class="material-icons text-accent text-sm">quiz</span>
+                            </div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">10K+ Questions</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                <span class="material-icons text-primary dark:text-white text-sm">analytics</span>
+                            </div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">Smart Analytics</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                                <span class="material-icons text-success text-sm">emoji_events</span>
+                            </div>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">Track Progress</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Complete Profile Section (for new Google users) -->
+    <section id="completeProfileSection" class="hidden-content">
+        <div class="min-h-screen flex items-center justify-center py-8">
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-8 max-w-2xl w-full shadow-material-3">
+                <div class="text-center mb-6">
+                    <div id="newUserAvatar" class="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-4 shadow-material-2 overflow-hidden">
+                        <span class="text-white font-medium text-2xl" id="newUserInitials">?</span>
+                    </div>
+                    <h2 class="headline-4 text-neutral-800 dark:text-white mb-2">Complete Your Profile</h2>
+                    <p class="body-2 text-neutral-600 dark:text-neutral-400">Welcome, <span id="newUserName">User</span>! Let's set up your study preferences.</p>
+                </div>
+
+                <form id="completeProfileForm" class="space-y-4">
+                    <div>
+                        <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
+                        <select id="profileInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+                            <option value="">Select your target institution</option>
+                            <option value="UNILAG">University of Lagos (UNILAG)</option>
+                            <option value="UI">University of Ibadan (UI)</option>
+                            <option value="OAU">Obafemi Awolowo University (OAU)</option>
+                            <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+                            <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+                            <option value="UNIBEN">University of Benin (UNIBEN)</option>
+                            <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+                            <option value="COVENANT">Covenant University</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Course</label>
+                        <input type="text" id="profileCourse" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="Enter your course" style="font-size: 16px;">
+                    </div>
+
+                    <div>
+                        <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">
+                            JAMB Subjects
+                            <span class="caption text-neutral-500 dark:text-neutral-400 ml-2">(Select 3 additional subjects)</span>
+                        </label>
+                        <div id="subjectSelectionMessage" class="mb-2 text-sm text-accent font-medium"></div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2 border border-neutral-300 dark:border-neutral-600 rounded-lg">
+                            <div>
+                                <input type="checkbox" id="subject-english" class="subject-checkbox" checked disabled value="Use of English">
+                                <label for="subject-english" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Use of English</span>
+                                    <span class="ml-auto text-xs text-accent">(Required)</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-mathematics" class="subject-checkbox" value="Mathematics">
+                                <label for="subject-mathematics" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Mathematics</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-physics" class="subject-checkbox" value="Physics">
+                                <label for="subject-physics" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Physics</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-chemistry" class="subject-checkbox" value="Chemistry">
+                                <label for="subject-chemistry" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Chemistry</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-biology" class="subject-checkbox" value="Biology">
+                                <label for="subject-biology" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Biology</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-economics" class="subject-checkbox" value="Economics">
+                                <label for="subject-economics" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Economics</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-accounting" class="subject-checkbox" value="Accounting">
+                                <label for="subject-accounting" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Accounting</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-agriculture" class="subject-checkbox" value="Agriculture">
+                                <label for="subject-agriculture" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Agriculture</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-commerce" class="subject-checkbox" value="Commerce">
+                                <label for="subject-commerce" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Commerce</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-geography" class="subject-checkbox" value="Geography">
+                                <label for="subject-geography" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Geography</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-government" class="subject-checkbox" value="Government">
+                                <label for="subject-government" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Government</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-literature" class="subject-checkbox" value="Literature">
+                                <label for="subject-literature" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">Literature</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-crs" class="subject-checkbox" value="CRS">
+                                <label for="subject-crs" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">CRS</span>
+                                </label>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="subject-history" class="subject-checkbox" value="History">
+                                <label for="subject-history" class="subject-label">
+                                    <div class="subject-checkmark"></div>
+                                    <span class="body-2 dark:text-white">History</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
+                        <input type="number" id="profileTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" placeholder="e.g., 320" style="font-size: 16px;">
+                    </div>
+
+                    <button type="submit" class="material-button w-full px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+                        <span class="button-text">Complete Setup & Start Learning</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboardSection" class="hidden-content">
+        <div class="bg-gradient-to-r from-primary to-primary-700 rounded-xl sm:rounded-2xl p-4 sm:p-8 text-white mb-6 sm:mb-8 shadow-material-3 relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div class="max-w-2xl">
+                        <h2 class="headline-4 mb-2 sm:mb-4">Hey, <span id="dashboardUserName">Student</span>!</h2>
+                        <p class="subtitle-1 text-primary-100 mb-4 sm:mb-6">Ready to ace your JAMB, WAEC and NECO exam? Track your study for detailed analysis.</p>
+                        <button onclick="startQuickPractice()" class="material-button px-4 sm:px-6 py-2 sm:py-3 bg-accent text-white rounded-lg shadow-material-2 hover:shadow-material-3 ripple touch-target">
+                            <span class="button-text">Start Quick Practice</span>
+                        </button>
+                    </div>
+                    <div class="hidden lg:block">
+                        <div class="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <span class="material-icons text-5xl text-white">school</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-20 -mt-20"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full -ml-12 -mb-12"></div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-data-50 dark:bg-data-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                        <span class="material-icons text-data-500 dark:text-white text-sm sm:text-base">school</span>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Institute</p>
+                        <p class="headline-5 text-neutral-800 dark:text-white" id="instituteDisplay">-</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="caption text-success bg-success/10 px-2 py-1 rounded-full text-xs" id="courseDisplay">course</span>
+                </div>
+            </div>
+
+            <div class="material-card bg-white dark:bg-neutral-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-1">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-success/10 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0">
+                        <span class="material-icons text-success text-sm sm:text-base">emoji_events</span>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="overline text-neutral-600 dark:text-neutral-400 text-xs">Target Score</p>
+                        <p class="headline-5 text-neutral-800 dark:text-white" id="targetScoreDisplay">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="material-card bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 border-2 border-orange-200 dark:border-orange-700 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-2">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0 shadow-lg">
+                        <span class="material-icons text-white text-sm sm:text-base">local_fire_department</span>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="overline text-orange-700 dark:text-orange-300 text-xs font-semibold">Study Streak</p>
+                        <p class="headline-5 text-orange-900 dark:text-orange-100 font-bold" id="studyStreakCount">0 days</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="caption text-orange-700 dark:text-orange-300 bg-orange-200 dark:bg-orange-800 px-2 py-1 rounded-full text-xs font-medium" id="streakMessage">Start your streak! 💪</span>
+                </div>
+            </div>
+
+            <div class="material-card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-2 border-blue-200 dark:border-blue-700 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-material-2">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-4">
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-0 shadow-lg">
+                        <span class="material-icons text-white text-sm sm:text-base">emoji_events</span>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="overline text-blue-700 dark:text-blue-300 text-xs font-semibold">Topics Mastered</p>
+                        <p class="headline-5 text-blue-900 dark:text-blue-100 font-bold" id="topicsMasteredCount">0/0</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="caption text-blue-700 dark:text-blue-300 bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded-full text-xs font-medium" id="masteryPercentage">0% mastered</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject Progress -->
+        <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2 mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="material-icons text-primary dark:text-accent">equalizer</span>
+                    <h3 class="headline-6 text-neutral-800 dark:text-white">Subject Progress</h3>
+                </div>
+                <div class="flex items-center space-x-2 bg-neutral-100 dark:bg-neutral-700 rounded-lg p-1">
+                    <button id="jambModeBtn" class="px-3 py-1 rounded-md text-xs font-medium transition-all bg-primary text-white" onclick="toggleExamMode('jamb')">JAMB</button>
+                    <button id="waecModeBtn" class="px-3 py-1 rounded-md text-xs font-medium transition-all text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600" onclick="toggleExamMode('waec')">WAEC/NECO</button>
+                </div>
+            </div>
+            <div id="subjectProgressBars"></div>
+        </div>
+
+        <!-- Progress Chart -->
+        <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2 mb-6 sm:mb-8">
+            <div class="flex items-center space-x-3 mb-4">
+                <span class="material-icons text-accent">show_chart</span>
+                <h3 class="headline-6 text-neutral-800 dark:text-white">Progress Over Time</h3>
+            </div>
+            <div class="chart-container">
+                <canvas id="dashboardProgressChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-6 shadow-material-2">
+            <div class="flex items-center space-x-3 mb-4">
+                <span class="material-icons text-warning">history</span>
+                <h3 class="headline-6 text-neutral-800 dark:text-white">Recent Activity</h3>
+            </div>
+            <div id="recentActivity"></div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analyticsSection" class="hidden-content">
+        <div class="text-center mb-8 sm:mb-12 fade-in">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-material-3">
+                <span class="material-icons text-white text-2xl sm:text-3xl">analytics</span>
+            </div>
+            <h2 class="headline-4 text-neutral-800 dark:text-white mb-3 sm:mb-4">Performance Analytics</h2>
+            <p class="subtitle-1 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">Deep insights into your learning patterns and performance metrics.</p>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-white text-xs sm:text-sm">Overall Score</p>
+                        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary dark:text-white" id="analyticsOverallScore">--%</p>
+                    </div>
+                    <div class="relative w-12 h-12 sm:w-16 sm:h-16">
+                        <svg class="progress-ring w-12 h-12 sm:w-16 sm:h-16" viewBox="0 0 84 84">
+                            <circle cx="42" cy="42" r="40" stroke="#e5e7eb" stroke-width="4" fill="none"/>
+                            <circle cx="42" cy="42" r="40" stroke="#009F9D" stroke-width="4" fill="none" class="progress-ring-circle" id="analyticsProgressCircle"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xs sm:text-sm dark:text-white font-semibold" id="analyticsProgressText">--%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-white text-xs sm:text-sm">Topics Mastered</p>
+                        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary dark:text-white" id="analyticsMasteredCount">--/--</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
+                        <span class="material-icons text-green-600 dark:text-green-400 text-lg sm:text-xl">check_circle</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-white text-xs sm:text-sm">Weak Topics</p>
+                        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-error" id="analyticsWeakCount">--</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
+                        <span class="material-icons text-red-600 dark:text-red-400 text-lg sm:text-xl">warning</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="caption text-neutral-600 dark:text-white text-xs sm:text-sm">Avg Time/Question</p>
+                        <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-primary dark:text-white" id="analyticsAvgTime">--min</p>
+                    </div>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
+                        <span class="material-icons text-orange-600 dark:text-orange-400 text-lg sm:text-xl">schedule</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Heatmap -->
+        <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2 mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="headline-6 font-semibold text-base sm:text-lg text-neutral-800 dark:text-white">🔥 Performance Heatmap</h3>
+                <div class="flex items-center space-x-2 text-xs sm:text-sm">
+                    <div class="flex items-center space-x-1"><div class="w-3 h-3 rounded status-excellent"></div><span class="text-neutral-600 dark:text-neutral-400">Excellent</span></div>
+                    <div class="flex items-center space-x-1"><div class="w-3 h-3 rounded status-good"></div><span class="text-neutral-600 dark:text-neutral-400">Good</span></div>
+                    <div class="flex items-center space-x-1"><div class="w-3 h-3 rounded status-average"></div><span class="text-neutral-600 dark:text-neutral-400">Average</span></div>
+                    <div class="flex items-center space-x-1"><div class="w-3 h-3 rounded status-weak"></div><span class="text-neutral-600 dark:text-neutral-400">Weak</span></div>
+                </div>
+            </div>
+            <div id="analyticsHeatmap"></div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="material-card bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-xl p-4 sm:p-6 shadow-material-2">
+            <h3 class="headline-6 font-semibold mb-4 text-base sm:text-lg text-neutral-800 dark:text-white">💡 Personalized Recommendations</h3>
+            <div id="analyticsRecommendations"></div>
+        </div>
+    </section>
+
+    <!-- Study Section Placeholder -->
+    <section id="studySection" class="hidden-content">
+        <div class="text-center py-16">
+            <div class="w-20 h-20 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span class="material-icons text-accent text-4xl">menu_book</span>
+            </div>
+            <h2 class="headline-4 text-neutral-800 dark:text-white mb-4">Study Materials</h2>
+            <p class="body-1 text-neutral-600 dark:text-neutral-400">Study materials and resources will appear here.</p>
+        </div>
+    </section>
+
+</main>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="hidden modal-backdrop">
+    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-2xl w-full shadow-material-5 modal-content">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="headline-5 text-neutral-800 dark:text-white">Account Settings</h2>
+            <button onclick="closeSettingsModal()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <form id="settingsForm" class="space-y-4">
+            <div>
+                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Full Name</label>
+                <input type="text" id="settingsName" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+            </div>
+            <div>
+                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Email Address</label>
+                <input type="email" id="settingsEmail" disabled class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-neutral-100 dark:bg-neutral-900 text-neutral-500 cursor-not-allowed" style="font-size: 16px;">
+                <p class="caption text-neutral-500 mt-1">Email is managed by Google</p>
+            </div>
+            <div>
+                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Institute of Choice</label>
+                <select id="settingsInstitute" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+                    <option value="">Select your target institution</option>
+                    <option value="UNILAG">University of Lagos (UNILAG)</option>
+                    <option value="UI">University of Ibadan (UI)</option>
+                    <option value="OAU">Obafemi Awolowo University (OAU)</option>
+                    <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+                    <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+                    <option value="UNIBEN">University of Benin (UNIBEN)</option>
+                    <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+                    <option value="COVENANT">Covenant University</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Course</label>
+                <input type="text" id="settingsCourse" required class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+            </div>
+            <div>
+                <label class="block subtitle-2 text-neutral-700 dark:text-neutral-300 mb-2">Target Score (JAMB)</label>
+                <input type="number" id="settingsTargetScore" required min="180" max="400" class="w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent dark:bg-neutral-700 dark:text-white" style="font-size: 16px;">
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="material-button flex-1 px-6 py-3 bg-accent text-white rounded-xl shadow-material-1 hover:shadow-material-2 ripple">
+                    <span class="button-text">Save Changes</span>
+                </button>
+                <button type="button" onclick="closeSettingsModal()" class="material-button px-6 py-3 border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                    <span class="button-text">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Topic Detail Modal -->
+<div id="topicDetailModal" class="hidden modal-backdrop">
+    <div class="material-card bg-white dark:bg-neutral-800 rounded-2xl p-6 sm:p-8 max-w-3xl w-full shadow-material-5 modal-content">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="headline-5 text-neutral-800 dark:text-white" id="topicDetailTitle">Topic Details</h2>
+            <button onclick="closeTopicDetail()" class="material-button w-10 h-10 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+        <div class="mb-6">
+            <h3 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">📊 Last 5 Attempts</h3>
+            <div id="topicAttempts" class="space-y-2"></div>
+        </div>
+        <div>
+            <h3 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">⏱️ Time Trend</h3>
+            <div class="chart-container">
+                <canvas id="topicTimeTrendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAB -->
+<a href="#" onclick="startQuickPractice(); return false;" id="fabButton" class="material-fab fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-accent text-white shadow-material-3 hover:shadow-material-4 hidden">
+    <span class="material-icons">quiz</span>
+</a>
+
+<script>
+/* eslint-disable no-restricted-globals */
+
+// ============ OAUTH CONFIGURATION ============
+const GOOGLE_CLIENT_ID = '481928532393-qvg45onsbtfhttro4u5i38gngj2tseup.apps.googleusercontent.com';
+const REDIRECT_URI = 'https://www.examtutor.xyz';
+const OAUTH_SCOPES = 'openid profile email';
+
+// ============ GLOBAL STATE ============
+let allUsers = [];
+let currentUser = null;
+let authState = { accessToken: null, stateToken: null };
+let analyticsData = { quizResults: [], topicProgress: {}, subjectProgress: {}, timeSpent: {} };
+let examMode = 'jamb';
+
+// ============ DOM ELEMENTS ============
+const landingSection = document.getElementById('landingSection');
+const completeProfileSection = document.getElementById('completeProfileSection');
+const dashboardSection = document.getElementById('dashboardSection');
+const analyticsSection = document.getElementById('analyticsSection');
+const studySection = document.getElementById('studySection');
+const mainHeader = document.getElementById('mainHeader');
+const fabButton = document.getElementById('fabButton');
+const logoutBtn = document.getElementById('logoutBtn');
+const authLoading = document.getElementById('authLoading');
+
+// ============ INITIALIZATION ============
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDarkMode();
+    loadStoredData();
+    initializeSubjectSelection();
+    setupEventListeners();
+    handleOAuthCallback();
+});
+
+function initializeDarkMode() {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        document.documentElement.classList.toggle('dark', event.matches);
+    });
+}
+
+function loadStoredData() {
+    try {
+        allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
+        const savedAnalytics = localStorage.getItem('ravenAnalytics');
+        if (savedAnalytics) {
+            analyticsData = JSON.parse(savedAnalytics);
+        }
+    } catch (e) {
+        console.error('Error loading stored data:', e);
+    }
+}
+
+function setupEventListeners() {
+    document.getElementById('analyticsNavBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        showAnalyticsSection();
+    });
+
+    document.getElementById('completeProfileForm')?.addEventListener('submit', handleProfileCompletion);
+    document.getElementById('settingsForm')?.addEventListener('submit', handleSettingsUpdate);
+}
+
+// ============ GOOGLE OAUTH ============
+function generateState() {
+    const randomValues = new Uint32Array(4);
+    window.crypto.getRandomValues(randomValues);
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(randomValues.buffer)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function initiateGoogleOAuth() {
+    authState.stateToken = generateState();
+    localStorage.setItem('oauth_state', authState.stateToken);
+
+    const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'token',
+        scope: OAUTH_SCOPES,
+        include_granted_scopes: 'true',
+        state: authState.stateToken,
+        prompt: 'select_account'
+    });
+
+    window.location.href = `${oauth2Endpoint}?${params.toString()}`;
+}
+
+function parseOAuthCallback() {
+    const fragmentString = location.hash.substring(1);
+    if (!fragmentString) return null;
+
+    const params = {};
+    const regex = /([^&=]+)=([^&]*)/g;
+    let m;
+    while ((m = regex.exec(fragmentString))) {
+        params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+    }
+    return Object.keys(params).length > 0 ? params : null;
+}
+
+function handleOAuthCallback() {
+    const params = parseOAuthCallback();
+
+    if (params) {
+        if (params.error) {
+            showMaterialToast(params.error_description || 'Authentication failed', 'error');
+            showSection(landingSection);
+            history.replaceState(null, '', location.pathname);
+            return;
+        }
+
+        if (params.access_token) {
+            const savedState = localStorage.getItem('oauth_state');
+            if (savedState && params.state !== savedState) {
+                showMaterialToast('Security validation failed. Please try again.', 'error');
+                showSection(landingSection);
+                return;
+            }
+
+            localStorage.removeItem('oauth_state');
+            authState.accessToken = params.access_token;
+            authLoading.classList.remove('hidden');
+            history.replaceState(null, '', location.pathname);
+            fetchGoogleUserInfo(params.access_token);
+            return;
+        }
+    }
+
+    // Check for existing session
+    checkExistingSession();
+}
+
+function fetchGoogleUserInfo(accessToken) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://www.googleapis.com/oauth2/v2/userinfo?access_token=' + accessToken);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            authLoading.classList.add('hidden');
+            if (xhr.status === 200) {
+                const googleUser = JSON.parse(xhr.responseText);
+                handleGoogleUserAuthenticated(googleUser);
+            } else {
+                showMaterialToast('Failed to fetch user info. Please try again.', 'error');
+                showSection(landingSection);
+            }
+        }
+    };
+    xhr.send(null);
+}
+
+function handleGoogleUserAuthenticated(googleUser) {
+    const existingUser = allUsers.find(u => u.googleId === googleUser.id || u.email === googleUser.email);
+
+    if (existingUser) {
+        // Returning user
+        existingUser.googleId = googleUser.id;
+        existingUser.picture = googleUser.picture;
+        existingUser.lastLogin = new Date().toISOString();
+        updateStudyStreak(existingUser);
+        saveUsers();
+
+        currentUser = existingUser;
+        localStorage.setItem('currentUserEmail', existingUser.email);
+
+        if (existingUser.profileComplete) {
+            loginSuccess(existingUser);
+        } else {
+            showCompleteProfile(existingUser);
+        }
+    } else {
+        // New user
+        const newUser = {
+            id: Date.now(),
+            googleId: googleUser.id,
+            name: googleUser.name,
+            email: googleUser.email,
+            picture: googleUser.picture,
+            registrationDate: new Date().toISOString(),
+            profileComplete: false,
+            studyStreak: 0,
+            lastStudyDate: null
+        };
+
+        allUsers.push(newUser);
+        saveUsers();
+
+        currentUser = newUser;
+        localStorage.setItem('currentUserEmail', newUser.email);
+        showCompleteProfile(newUser);
+    }
+}
+
+function showCompleteProfile(user) {
+    document.getElementById('newUserName').textContent = user.name.split(' ')[0];
+    const avatarEl = document.getElementById('newUserAvatar');
+    const initialsEl = document.getElementById('newUserInitials');
+
+    if (user.picture) {
+        avatarEl.innerHTML = `<img src="${user.picture}" alt="Avatar" class="w-full h-full object-cover">`;
+    } else {
+        initialsEl.textContent = getInitials(user.name);
+    }
+
+    showSection(completeProfileSection);
+}
+
+function handleProfileCompletion(e) {
+    e.preventDefault();
+
+    const institute = document.getElementById('profileInstitute').value;
+    const course = document.getElementById('profileCourse').value;
+    const targetScore = document.getElementById('profileTargetScore').value;
+    const selectedSubjects = getSelectedSubjects();
+
+    if (selectedSubjects.length !== 4) {
+        showMaterialToast('Please select exactly 3 additional subjects', 'error');
+        return;
+    }
+
+    currentUser.institute = institute;
+    currentUser.course = course;
+    currentUser.targetScore = parseInt(targetScore);
+    currentUser.jambSubjects = selectedSubjects;
+    currentUser.profileComplete = true;
+
+    const subjectsProgress = {};
+    selectedSubjects.forEach(subject => {
+        subjectsProgress[subject] = { progress: 0, questionsAnswered: 0, correctAnswers: 0 };
+    });
+    currentUser.subjects = subjectsProgress;
+
+    saveUsers();
+    loginSuccess(currentUser);
+    showMaterialToast('Profile complete! Welcome to Raven 🎓', 'success');
+}
+
+function loginSuccess(user) {
+    updateUserDisplay(user);
+    renderDashboard();
+    showSection(dashboardSection);
+}
+
+function checkExistingSession() {
+    const userEmail = localStorage.getItem('currentUserEmail');
+    if (userEmail) {
+        const user = allUsers.find(u => u.email === userEmail);
+        if (user) {
+            currentUser = user;
+            updateStudyStreak(user);
+            if (user.profileComplete) {
+                loginSuccess(user);
+            } else {
+                showCompleteProfile(user);
+            }
+            return;
+        }
+    }
+    showSection(landingSection);
+}
+
+function logout() {
+    localStorage.removeItem('currentUserEmail');
+    currentUser = null;
+    authState = { accessToken: null, stateToken: null };
+    logoutBtn.classList.add('hidden');
+    showSection(landingSection);
+    showMaterialToast('Logged out successfully', 'info');
+}
+
+// ============ SUBJECT SELECTION ============
+function initializeSubjectSelection() {
+    const checkboxes = document.querySelectorAll('.subject-checkbox:not(#subject-english)');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSubjectSelection);
+    });
+    updateSubjectSelection();
+}
+
+function updateSubjectSelection() {
+    const checkboxes = document.querySelectorAll('.subject-checkbox:not(#subject-english)');
+    const messageDiv = document.getElementById('subjectSelectionMessage');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    const remaining = 3 - checkedCount;
+
+    if (remaining > 0) {
+        messageDiv.textContent = `Select ${remaining} more subject${remaining !== 1 ? 's' : ''}`;
+        messageDiv.className = 'mb-2 text-sm text-warning font-medium';
+    } else if (remaining === 0) {
+        messageDiv.textContent = '✓ All subjects selected';
+        messageDiv.className = 'mb-2 text-sm text-success font-medium';
+    } else {
+        messageDiv.textContent = `⚠ Too many subjects! Remove ${Math.abs(remaining)}`;
+        messageDiv.className = 'mb-2 text-sm text-error font-medium';
+    }
+
+    checkboxes.forEach(cb => {
+        cb.disabled = checkedCount >= 3 && !cb.checked;
+    });
+}
+
+function getSelectedSubjects() {
+    const subjects = ['Use of English'];
+    document.querySelectorAll('.subject-checkbox:not(#subject-english)').forEach(checkbox => {
+        if (checkbox.checked) subjects.push(checkbox.value);
+    });
+    return subjects;
+}
+
+// ============ UI HELPERS ============
+function showSection(section) {
+    [landingSection, completeProfileSection, dashboardSection, analyticsSection, studySection].forEach(s => {
+        s.classList.add('hidden-content');
+    });
+    section.classList.remove('hidden-content');
+
+    const isAuthSection = section === landingSection || section === completeProfileSection;
+    mainHeader.style.display = isAuthSection ? 'none' : 'block';
+    fabButton.classList.toggle('hidden', section !== dashboardSection);
+
+    window.scrollTo(0, 0);
+}
+
+function showAnalyticsSection() {
+    showSection(analyticsSection);
+    renderAnalytics();
+}
+
+function showAnalyticsFromMobile() {
+    toggleMobileMenu();
+    showAnalyticsSection();
+}
+
+function toggleMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    const isOpen = !mobileMenu.classList.contains('-translate-x-full');
+
+    mobileMenu.classList.toggle('-translate-x-full', isOpen);
+    overlay.classList.toggle('hidden', isOpen);
+    document.body.classList.toggle('overflow-hidden', !isOpen);
+}
+
+function getInitials(name) {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function capitalizeWords(str) {
+    return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function updateUserDisplay(user) {
+    const initials = getInitials(user.name);
+    const avatarEl = document.getElementById('userAvatar');
+    const initialsEl = document.getElementById('userInitials');
+
+    if (user.picture) {
+        avatarEl.innerHTML = `<img src="${user.picture}" alt="Avatar" class="w-full h-full object-cover">`;
+    } else {
+        initialsEl.textContent = initials;
+    }
+
+    document.getElementById('mobileUserInitials').textContent = initials;
+    document.getElementById('mobileUserName').textContent = user.name;
+    document.getElementById('dashboardUserName').textContent = user.name.split(' ')[0];
+
+    const mobileAvatar = document.getElementById('mobileUserAvatar');
+    if (user.picture && mobileAvatar) {
+        mobileAvatar.innerHTML = `<img src="${user.picture}" alt="Avatar" class="w-full h-full object-cover">`;
+    }
+
+    logoutBtn.classList.remove('hidden');
+}
+
+function saveUsers() {
+    localStorage.setItem('raven_users', JSON.stringify(allUsers));
+}
+
+function saveAnalyticsData() {
+    try {
+        localStorage.setItem('ravenAnalytics', JSON.stringify(analyticsData));
+    } catch (e) {
+        console.error('Error saving analytics:', e);
+    }
+}
+
+// ============ STUDY STREAK ============
+function updateStudyStreak(user) {
+    const today = new Date().toDateString();
+    const lastStudy = user.lastStudyDate ? new Date(user.lastStudyDate).toDateString() : null;
+
+    if (lastStudy !== today) {
+        if (lastStudy) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            user.studyStreak = lastStudy === yesterday.toDateString() ? (user.studyStreak || 0) + 1 : 1;
+        } else {
+            user.studyStreak = 1;
+        }
+        user.lastStudyDate = new Date().toISOString();
+        saveUsers();
+    }
+}
+
+// ============ DASHBOARD ============
+function renderDashboard() {
+    if (!currentUser) return;
+
+    document.getElementById('instituteDisplay').textContent = currentUser.institute || '-';
+    document.getElementById('courseDisplay').textContent = currentUser.course || '-';
+    document.getElementById('targetScoreDisplay').textContent = currentUser.targetScore || '-';
+
+    const streak = currentUser.studyStreak || 0;
+    document.getElementById('studyStreakCount').textContent = streak === 1 ? '1 day' : `${streak} days`;
+
+    const streakMessages = ['Start your streak! 💪', 'Great start! 🔥', 'Keep it up! 🔥', 'Amazing streak! 🔥🔥', 'Legendary! 🔥🔥🔥'];
+    document.getElementById('streakMessage').textContent = streakMessages[Math.min(streak === 0 ? 0 : streak === 1 ? 1 : streak < 7 ? 2 : streak < 30 ? 3 : 4, 4)];
+
+    const topicProgress = analyticsData.topicProgress || {};
+    const totalTopics = Object.keys(topicProgress).length;
+    const masteredTopics = Object.values(topicProgress).filter(t => t.attempts > 0 && (t.totalScore / t.attempts) >= 80).length;
+
+    document.getElementById('topicsMasteredCount').textContent = `${masteredTopics}/${totalTopics}`;
+    document.getElementById('masteryPercentage').textContent = `${totalTopics > 0 ? Math.round((masteredTopics / totalTopics) * 100) : 0}% mastered`;
+
+    renderProgress();
+}
+
+function renderProgress() {
+    const subjectProgressBars = document.getElementById('subjectProgressBars');
+    const recentActivity = document.getElementById('recentActivity');
+    const subjectProgress = analyticsData.subjectProgress || {};
+    const hasSubjectData = Object.keys(subjectProgress).length > 0;
+
+    if (!hasSubjectData) {
+        subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Subject progress will appear here after completing quizzes.</p>';
+    } else {
+        const jambSubjects = currentUser?.jambSubjects || [];
+        let filteredSubjects = Object.entries(subjectProgress);
+
+        if (examMode === 'jamb' && jambSubjects.length > 0) {
+            filteredSubjects = filteredSubjects.filter(([subject]) => {
+                const normalize = s => s.toLowerCase().replace('use of english', 'english').replace(/[^a-z]/g, '');
+                return jambSubjects.some(js => normalize(js) === normalize(subject));
+            });
+        }
+
+        filteredSubjects.sort(([a], [b]) => {
+            const isEnglishA = a.toLowerCase().includes('english');
+            const isEnglishB = b.toLowerCase().includes('english');
+            return isEnglishA ? -1 : isEnglishB ? 1 : a.localeCompare(b);
+        });
+
+        if (filteredSubjects.length > 0) {
+            subjectProgressBars.innerHTML = filteredSubjects.map(([subject, data]) => {
+                const avg = data.attempts > 0 ? Math.round(data.totalScore / data.attempts) : 0;
+                const color = avg >= 80 ? '#10B981' : avg >= 60 ? '#3B82F6' : avg >= 40 ? '#F59E0B' : '#EF4444';
+                const displaySubject = subject.toLowerCase() === 'english' ? 'Use Of English' : capitalizeWords(subject);
+
+                return `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="subtitle-2 text-neutral-800 dark:text-white">${displaySubject}</span>
+                            <span class="caption text-neutral-600 dark:text-neutral-400">${avg}% (${data.attempts || 0} attempts)</span>
+                        </div>
+                        <div class="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-3">
+                            <div class="h-3 rounded-full transition-all duration-500" style="width: ${avg}%; background-color: ${color}"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            subjectProgressBars.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Complete quizzes to see progress.</p>';
+        }
+    }
+
+    const quizResults = analyticsData.quizResults || [];
+    if (quizResults.length > 0) {
+        const recentQuizzes = quizResults.slice(-5).reverse();
+        recentActivity.innerHTML = recentQuizzes.map(quiz => {
+            const date = new Date(quiz.date);
+            const score = Math.round(quiz.score);
+            const scoreColor = score >= 80 ? 'text-green-600 dark:text-green-400' : score >= 60 ? 'text-blue-600 dark:text-blue-400' : score >= 40 ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400';
+            let subject = quiz.subject || 'Mixed';
+            if (subject.toLowerCase() === 'english') subject = 'Use Of English';
+
+            return `
+                <div class="flex items-center justify-between p-3 border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center">
+                            <span class="material-icons text-neutral-600 dark:text-neutral-400 text-sm">quiz</span>
+                        </div>
+                        <div>
+                            <p class="subtitle-2 text-neutral-800 dark:text-white">${capitalizeWords(quiz.topic || 'General Quiz')}</p>
+                            <p class="caption text-neutral-600 dark:text-neutral-400">${capitalizeWords(subject)} • ${date.toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <p class="subtitle-1 font-bold ${scoreColor}">${score}%</p>
+                </div>
+            `;
+        }).join('');
+    } else {
+        recentActivity.innerHTML = '<p class="text-gray-600 dark:text-gray-400 text-center py-4">Recent activity will appear here.</p>';
+    }
+
+    renderDashboardProgressChart();
+}
+
+function toggleExamMode(mode) {
+    examMode = mode;
+    document.getElementById('jambModeBtn').className = `px-3 py-1 rounded-md text-xs font-medium transition-all ${mode === 'jamb' ? 'bg-primary text-white' : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600'}`;
+    document.getElementById('waecModeBtn').className = `px-3 py-1 rounded-md text-xs font-medium transition-all ${mode === 'waec' ? 'bg-primary text-white' : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600'}`;
+    renderProgress();
+}
+
+function renderDashboardProgressChart() {
+    const chartCanvas = document.getElementById('dashboardProgressChart');
+    if (window.dashboardChart) window.dashboardChart.destroy();
+
+    const quizResults = analyticsData.quizResults || [];
+    const isDark = document.documentElement.classList.contains('dark');
+
+    if (chartCanvas && window.Chart) {
+        if (quizResults.length > 0) {
+            const dailyScores = {};
+            quizResults.forEach(quiz => {
+                const dateKey = new Date(quiz.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                if (!dailyScores[dateKey]) dailyScores[dateKey] = { total: 0, count: 0 };
+                dailyScores[dateKey].total += quiz.score;
+                dailyScores[dateKey].count++;
+            });
+
+            const dates = Object.keys(dailyScores).slice(-15);
+            const averages = dates.map(d => Math.round(dailyScores[d].total / dailyScores[d].count));
+
+            window.dashboardChart = new Chart(chartCanvas.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Average Daily Score',
+                        data: averages,
+                        borderColor: '#009F9D',
+                        backgroundColor: 'rgba(0, 159, 157, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: isDark ? '#E8EAED' : '#5F6368' } } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: isDark ? '#9AA0A6' : '#5F6368' }, grid: { color: isDark ? '#374151' : '#E8EAED' } },
+                        x: { ticks: { color: isDark ? '#9AA0A6' : '#5F6368' }, grid: { color: isDark ? '#374151' : '#E8EAED' } }
+                    }
+                }
+            });
+        } else {
+            window.dashboardChart = new Chart(chartCanvas.getContext('2d'), {
+                type: 'line',
+                data: { labels: ['No Data'], datasets: [{ label: 'Score', data: [0], borderColor: '#E8EAED' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    }
+}
+
+// ============ ANALYTICS ============
+function renderAnalytics() {
+    const quizResults = analyticsData.quizResults || [];
+    const topicProgress = analyticsData.topicProgress || {};
+
+    if (quizResults.length === 0) {
+        document.getElementById('analyticsOverallScore').textContent = '--%';
+        document.getElementById('analyticsProgressText').textContent = '--%';
+        document.getElementById('analyticsMasteredCount').textContent = '0/0';
+        document.getElementById('analyticsWeakCount').textContent = '0';
+        document.getElementById('analyticsAvgTime').textContent = '--min';
+        document.getElementById('analyticsHeatmap').innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-8">Complete quizzes to see your performance heatmap!</p>';
+        document.getElementById('analyticsRecommendations').innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-4">Recommendations will appear after completing quizzes.</p>';
+        return;
+    }
+
+    const avgScore = Math.round(quizResults.reduce((sum, r) => sum + r.score, 0) / quizResults.length);
+    document.getElementById('analyticsOverallScore').textContent = `${avgScore}%`;
+    document.getElementById('analyticsProgressText').textContent = `${avgScore}%`;
+
+    const progressCircle = document.getElementById('analyticsProgressCircle');
+    if (progressCircle) progressCircle.style.strokeDashoffset = 251.2 - (avgScore / 100) * 251.2;
+
+    const topics = Object.entries(topicProgress);
+    const masteredCount = topics.filter(([, d]) => d.attempts > 0 && (d.totalScore / d.attempts) >= 80).length;
+    const weakCount = topics.filter(([, d]) => d.attempts > 0 && (d.totalScore / d.attempts) < 60).length;
+
+    document.getElementById('analyticsMasteredCount').textContent = `${masteredCount}/${topics.length}`;
+    document.getElementById('analyticsWeakCount').textContent = `${weakCount}`;
+
+    const quizzesWithTime = quizResults.filter(r => r.timeSpent && r.timeSpent > 0);
+    const avgTime = quizzesWithTime.length > 0 ? Math.round(quizzesWithTime.reduce((sum, r) => sum + r.timeSpent / 60000, 0) / quizzesWithTime.length) : 0;
+    document.getElementById('analyticsAvgTime').textContent = avgTime > 0 ? `${avgTime}min` : '--min';
+
+    renderAnalyticsHeatmap();
+    renderAnalyticsRecommendations();
+}
+
+function renderAnalyticsHeatmap() {
+    const heatmapContainer = document.getElementById('analyticsHeatmap');
+    const topicProgress = analyticsData.topicProgress || {};
+    const topics = Object.entries(topicProgress);
+
+    if (topics.length === 0) {
+        heatmapContainer.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-8">No topic data available yet.</p>';
+        return;
+    }
+
+    const subjectGroups = {};
+    topics.forEach(([key, data]) => {
+        const [subjectId, ...topicParts] = key.split('_');
+        const topicName = topicParts.join('_');
+        if (!subjectGroups[subjectId]) subjectGroups[subjectId] = [];
+
+        const avgScore = data.attempts > 0 ? Math.round(data.totalScore / data.attempts) : 0;
+        const statusClass = data.attempts === 0 ? 'status-unstarted' : avgScore >= 80 ? 'status-excellent' : avgScore >= 60 ? 'status-good' : avgScore >= 40 ? 'status-average' : 'status-weak';
+
+        subjectGroups[subjectId].push({ name: topicName, score: avgScore, attempts: data.attempts, statusClass, subjectId });
+    });
+
+    heatmapContainer.innerHTML = Object.entries(subjectGroups).map(([subject, topicList]) => {
+        const displaySubject = subject.toLowerCase() === 'english' ? 'Use Of English' : capitalizeWords(subject);
+        return `
+            <div class="mb-6">
+                <h4 class="subtitle-1 font-semibold mb-3 text-neutral-800 dark:text-white">${displaySubject}</h4>
+                <div class="heatmap-grid">
+                    ${topicList.map(t => `
+                        <div class="heatmap-cell ${t.statusClass} text-white" onclick="showTopicDetail('${t.subjectId}', '${t.name}')">
+                            <div class="text-xs sm:text-sm font-medium mb-1 truncate w-full px-1">${capitalizeWords(t.name)}</div>
+                            <div class="text-lg sm:text-xl font-bold">${t.attempts > 0 ? t.score + '%' : 'New'}</div>
+                            <div class="text-xs opacity-90">${t.attempts} attempt${t.attempts !== 1 ? 's' : ''}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderAnalyticsRecommendations() {
+    const container = document.getElementById('analyticsRecommendations');
+    const topicProgress = analyticsData.topicProgress || {};
+    const topics = Object.entries(topicProgress);
+
+    if (topics.length === 0) {
+        container.innerHTML = '<p class="text-neutral-600 dark:text-neutral-400 text-center py-4">Recommendations will appear after completing quizzes.</p>';
+        return;
+    }
+
+    const weakTopics = topics.map(([key, data]) => {
+        const [subjectId, ...topicParts] = key.split('_');
+        return { subject: subjectId, topic: topicParts.join('_'), score: data.attempts > 0 ? data.totalScore / data.attempts : 0, attempts: data.attempts };
+    }).filter(t => t.attempts > 0 && t.score < 60).sort((a, b) => a.score - b.score).slice(0, 5);
+
+    const strongTopics = topics.map(([key, data]) => {
+        const [subjectId, ...topicParts] = key.split('_');
+        return { subject: subjectId, topic: topicParts.join('_'), score: data.attempts > 0 ? data.totalScore / data.attempts : 0, attempts: data.attempts };
+    }).filter(t => t.attempts > 0 && t.score >= 80).sort((a, b) => b.score - a.score).slice(0, 3);
+
+    let html = '<div class="space-y-4">';
+
+    if (weakTopics.length > 0) {
+        html += `
+            <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <h4 class="subtitle-2 font-semibold mb-2 text-red-800 dark:text-red-300 flex items-center">
+                    <span class="material-icons text-sm mr-2">warning</span>Areas Needing Improvement
+                </h4>
+                <ul class="space-y-2">
+                    ${weakTopics.map(t => `<li class="body-2 text-red-700 dark:text-red-400"><strong>${t.subject} - ${t.topic}</strong>: ${Math.round(t.score)}% average</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    if (strongTopics.length > 0) {
+        html += `
+            <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <h4 class="subtitle-2 font-semibold mb-2 text-green-800 dark:text-green-300 flex items-center">
+                    <span class="material-icons text-sm mr-2">check_circle</span>Your Strengths
+                </h4>
+                <ul class="space-y-2">
+                    ${strongTopics.map(t => `<li class="body-2 text-green-700 dark:text-green-400"><strong>${t.subject} - ${t.topic}</strong>: ${Math.round(t.score)}% average</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function showTopicDetail(subjectId, topicName) {
+    const quizResults = analyticsData.quizResults || [];
+    const topicQuizzes = quizResults.filter(r => {
+        const ns = (r.subject || '').toLowerCase();
+        const nt = (r.topic || '').toLowerCase();
+        return (ns === subjectId.toLowerCase() || ns.includes(subjectId.toLowerCase())) &&
+               (nt === topicName.toLowerCase() || nt.includes(topicName.toLowerCase()));
+    });
+
+    const last5 = topicQuizzes.slice(-5).reverse();
+    const displaySubject = subjectId.toLowerCase() === 'english' ? 'Use Of English' : capitalizeWords(subjectId);
+
+    document.getElementById('topicDetailTitle').textContent = `${displaySubject} - ${capitalizeWords(topicName)}`;
+
+    const attemptsContainer = document.getElementById('topicAttempts');
+    attemptsContainer.innerHTML = last5.length > 0 ? last5.map((quiz, i) => {
+        const date = new Date(quiz.date);
+        const score = Math.round(quiz.score);
+        const scoreColor = score >= 80 ? 'text-green-600 dark:text-green-400' : score >= 60 ? 'text-blue-600 dark:text-blue-400' : score >= 40 ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400';
+
+        return `
+            <div class="flex items-center justify-between p-3 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-900">
+                <div>
+                    <p class="subtitle-2 text-neutral-800 dark:text-white">Attempt ${last5.length - i}</p>
+                    <p class="caption text-neutral-600 dark:text-neutral-400">${date.toLocaleDateString()}</p>
+                </div>
+                <p class="subtitle-1 font-bold ${scoreColor}">${score}%</p>
+            </div>
+        `;
+    }).join('') : '<p class="text-neutral-600 dark:text-neutral-400 text-center py-4">No attempts yet.</p>';
+
+    renderTopicTimeTrend(topicQuizzes);
+    document.getElementById('topicDetailModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeTopicDetail() {
+    document.getElementById('topicDetailModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    if (window.topicTimeTrendChart) window.topicTimeTrendChart.destroy();
+}
+
+function renderTopicTimeTrend(quizzes) {
+    const chartCanvas = document.getElementById('topicTimeTrendChart');
+    if (window.topicTimeTrendChart) window.topicTimeTrendChart.destroy();
+
+    if (chartCanvas && window.Chart && quizzes.length > 0) {
+        window.topicTimeTrendChart = new Chart(chartCanvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: quizzes.map((_, i) => `Attempt ${i + 1}`),
+                datasets: [{
+                    label: 'Time (minutes)',
+                    data: quizzes.map(q => q.timeSpent ? Math.round(q.timeSpent / 60000) : 0),
+                    borderColor: '#F59E0B',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+}
+
+// ============ SETTINGS ============
+function openSettingsModal() {
+    if (!currentUser) return;
+    document.getElementById('settingsName').value = currentUser.name;
+    document.getElementById('settingsEmail').value = currentUser.email;
+    document.getElementById('settingsInstitute').value = currentUser.institute || '';
+    document.getElementById('settingsCourse').value = currentUser.course || '';
+    document.getElementById('settingsTargetScore').value = currentUser.targetScore || '';
+    document.getElementById('settingsModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+function handleSettingsUpdate(e) {
+    e.preventDefault();
+    currentUser.name = document.getElementById('settingsName').value;
+    currentUser.institute = document.getElementById('settingsInstitute').value;
+    currentUser.course = document.getElementById('settingsCourse').value;
+    currentUser.targetScore = parseInt(document.getElementById('settingsTargetScore').value);
+    saveUsers();
+    updateUserDisplay(currentUser);
+    renderDashboard();
+    closeSettingsModal();
+    showMaterialToast('Settings updated successfully!', 'success');
+}
+
+// ============ UTILITIES ============
+function startQuickPractice() {
+    showMaterialToast('Practice feature coming soon!', 'info');
+}
+
+function showMaterialToast(message, type = 'info') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 max-w-xs sm:max-w-sm';
+        document.body.appendChild(container);
+    }
+
+    const icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+    const colors = { success: 'bg-success text-white', error: 'bg-error text-white', warning: 'bg-warning text-white', info: 'bg-accent text-white' };
+
+    const toast = document.createElement('div');
+    toast.className = `material-card flex items-center space-x-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-material-3 ${colors[type]} transform translate-y-2 opacity-0 transition-all duration-300 mb-4`;
+    toast.innerHTML = `
+        <span class="material-icons">${icons[type]}</span>
+        <span class="subtitle-2 flex-1">${message}</span>
+        <button onclick="this.parentElement.remove()" class="material-icons hover:bg-white/10 rounded-full p-1">close</button>
+    `;
+
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 100);
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('translate-y-2', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Close mobile menu on outside click
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const menuButton = event.target.closest('[onclick="toggleMobileMenu()"]');
+    if (!mobileMenu.contains(event.target) && !menuButton && !mobileMenu.classList.contains('-translate-x-full')) {
+        toggleMobileMenu();
+    }
+});
+
+window.addEventListener('resize', function() {
+    if (window.innerWidth >= 768) {
+        document.getElementById('mobileMenu').classList.add('-translate-x-full');
+        document.getElementById('mobileMenuOverlay').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+});
+
+/* eslint-enable no-restricted-globals */
+</script>
+</body>
+</html>
+
