@@ -1,11 +1,31 @@
-Welcome to Raven ....
+LANDING PAGE
+Welcome to Raven ....the visual learners classroom.
 
 Brand colors: Gray, Teal, 
 
+tab in hero section for chemistry, physics, mathematics topics.
+The aim is to give the users an experience of what they will get in the Premium.
+Hero section showing the periodic table 
 
-Home Page
+Show how polynomials are used by engineers in drones
+show chemistry interactivity
+show physics bohr simulation
+show students in our community being assigned topics because we belive teaching is the best way to learn
 
-Raven Landing Page
+Commercial Students - show economics graphs being brought to life
+Art Students - what will we show art students anad their parents?
+
+show that 1500 students are already using this.... marketing trick
+
+show how the heatmap visually shows their strenghts and weaknesses across all topics
+
+show how they can use the timer and quiz
+
+show the videos and images after each failed attempt to help them master the questions
+
+
+show the options to master the keyboard controls introduced by JAMB
+
 
 Our mode of study: 
 JAMB
@@ -15,15 +35,6 @@ NECO
 NECO GCE
 Normal School - SS1 to SS3
 After School Students
-
-
-Show how polynomials are used by engineers in drones
-show chemistry interactivity
-show physics bohr simulation
-show students in our community being assigned topics because we belive teaching is the best way to learn
-
-Commercial Students - show economics graphs being brought to life
-Art Students - what will we show art students anad their parents?
 
 
 
@@ -44,3 +55,9 @@ PAST QUESTION BY INSTITUTIONS
 - FUTMINNA
 - LASU
 - ETC
+
+
+Marketing Copies and Hooks
+1. contrarian: 
+2. d
+3. 
