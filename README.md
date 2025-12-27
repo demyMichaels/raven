@@ -44,6 +44,13 @@ Join for Free
 Using our whatsapp channel
 
 
+Should we put images of the JAMB SERIES textbooks?
+Then convince those that are far behind that they have 
+to master each topic before then moving to mixed
+quiz - they must see reasons why this product is 
+worth their money.
+If they think the book is 
+then why not the digital form?
 
 
 JAMB SERIES REMIX
