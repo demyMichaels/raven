@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Raven - Exam Preparation Platform</title>
+
+<script src="https://js.paystack.co/v2/inline.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-auth-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-firestore-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-analytics-compat.min.js"></script>
+
+<script>
+tailwind.config = {
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                primary: {
+                    DEFAULT: "#0F2C59",
+                    50: "#f0f4f9",
+                    100: "#d6e1ee",
+                    200: "#a8c2dd",
+                    500: "#0F2C59",
+                    600: "#0a2248",
+                    700: "#081a38",
+                },
+                accent: {
+                    DEFAULT: "#00B4A6",
+                    50: "#e6f9f7",
+                    100: "#b3eeea",
+                    200: "#80e3dd",
+                    500: "#00B4A6",
+                    600: "#009085",
+                    700: "#006c64",
+                },
+                gold: {
+                    DEFAULT: "#F7B32B",
+                    50: "#fef7e6",
+                    100: "#fce9b3",
+                    500: "#F7B32B",
+                    600: "#d99a1f",
+                },
+                success: "#10B981",
+                warning: "#F59E0B",
+                error: "#EF4444",
+            },
+            fontFamily: {
+                'display': ['Space Grotesk', 'system-ui', 'sans-serif'],
+                'sans': ['DM Sans', 'system-ui', 'sans-serif'],
+            },
+        }
+    }
+}
+</script>
+
+<style>
+:root {
+    --bg-primary: #FAFBFC;
+    --bg-card: #FFFFFF;
+    --bg-elevated: #F3F4F6;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --border-color: #E5E7EB;
+}
+
+.dark {
+    --bg-primary: #0D1117;
+    --bg-card: #161B22;
+    --bg-elevated: #21262D;
+    --text-primary: #F0F6FC;
+    --text-secondary: #8B949E;
+    --border-color: #30363D;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+}
+
+.hidden-section { display: none !important; }
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(0, 180, 166, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(0, 180, 166, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 180, 166, 0); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes confetti {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+}
+
+.fade-up { animation: fadeUp 0.5s ease forwards; }
+.pulse-ring { animation: pulse-ring 2s infinite; }
+
+.shimmer-bg {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+.glass-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.dark .glass-card:hover {
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #00B4A6 0%, #009085 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 180, 166, 0.3);
+}
+
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #F7B32B 0%, #d99a1f 100%);
+    color: #1a1a1a;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-gold:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(247, 179, 43, 0.4);
+}
+
+.referral-link-box {
+    background: linear-gradient(135deg, #0F2C59 0%, #1a4080 100%);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.referral-link-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(0,180,166,0.15) 0%, transparent 70%);
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card.gold-gradient {
+    background: linear-gradient(135deg, #fef7e6 0%, #fce9b3 100%);
+    border-color: #F7B32B;
+}
+
+.dark .stat-card.gold-gradient {
+    background: linear-gradient(135deg, #2a2210 0%, #3d3015 100%);
+}
+
+.progress-ring-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-bg {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-width: 8;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke: #00B4A6;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 339.292;
+    stroke-dashoffset: 339.292;
+    transition: stroke-dashoffset 1s ease;
+}
+
+.tier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tier-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: white; }
+.tier-silver { background: linear-gradient(135deg, #C0C0C0, #808080); color: #1a1a1a; }
+.tier-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a1a; }
+.tier-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); color: #1a1a1a; }
+
+.timeline-item {
+    position: relative;
+    padding-left: 32px;
+    padding-bottom: 24px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 24px;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.timeline-item:last-child::before { display: none; }
+
+.timeline-dot {
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timeline-dot.pending { background: #F59E0B; }
+.timeline-dot.completed { background: #10B981; }
+.timeline-dot.paid { background: #00B4A6; }
+
+.subject-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.subject-chip:hover {
+    border-color: #00B4A6;
+    background: rgba(0, 180, 166, 0.05);
+}
+
+.subject-chip.selected {
+    border-color: #00B4A6;
+    background: rgba(0, 180, 166, 0.1);
+    color: #00B4A6;
+}
+
+.subject-chip.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    padding: 8px 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 100;
+    display: flex;
+    justify-content: space-around;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 16px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 500;
+    transition: color 0.2s;
+    border-radius: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.mobile-nav-item.active {
+    color: #00B4A6;
+    background: rgba(0, 180, 166, 0.1);
+}
+
+.mobile-nav-item .material-icons {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    animation: fadeUp 0.3s ease;
+    max-width: 360px;
+}
+
+.toast.success { border-left: 4px solid #10B981; }
+.toast.error { border-left: 4px solid #EF4444; }
+.toast.info { border-left: 4px solid #00B4A6; }
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.modal-backdrop.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--bg-card);
+    border-radius: 20px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.modal-backdrop.active .modal-content {
+    transform: scale(1);
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border-color);
+    border-top-color: #00B4A6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 24px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.google-btn:hover {
+    border-color: #00B4A6;
+    box-shadow: 0 4px 12px rgba(0, 180, 166, 0.15);
+}
+
+.google-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.dark .google-btn {
+    background: #21262D;
+    border-color: #30363D;
+    color: white;
+}
+
+.share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    flex: 1;
+    min-width: 0;
+}
+
+.share-btn.whatsapp { background: #25D366; color: white; }
+.share-btn.twitter { background: #1DA1F2; color: white; }
+.share-btn.copy { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-color); }
+
+.share-btn:hover { transform: scale(1.02); }
+
+.payout-card {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.payout-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 200px;
+    height: 200px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+.chart-container {
+    position: relative;
+    height: 200px;
+}
+
+@media (max-width: 768px) {
+    .mobile-nav { display: flex; }
+    main { padding-bottom: 80px; }
+}
+
+@media (min-width: 769px) {
+    .mobile-nav { display: none; }
+}
+
+input, select {
+    font-size: 16px;
+    padding: 14px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #00B4A6;
+}
+
+::placeholder {
+    color: var(--text-secondary);
+}
+
+.online-indicator {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 50;
+    transition: all 0.3s;
+}
+
+.online-indicator.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.online-indicator.offline {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.online-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.online-indicator.online .dot { background: #10B981; }
+.online-indicator.offline .dot { background: #EF4444; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Auth Loading -->
+<div id="authLoading" class="fixed inset-0 bg-primary-500 flex flex-col items-center justify-center z-50">
+    <div class="spinner w-16 h-16 border-4 border-white/30 border-t-white mb-6"></div>
+    <p class="text-white text-lg font-medium">Loading Raven...</p>
+    <p class="text-white/60 text-sm mt-2" id="loadingStatus">Connecting to servers...</p>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- Connection Status -->
+<div id="connectionStatus" class="online-indicator online" style="display: none;">
+    <span class="dot"></span>
+    <span id="connectionText">Online</span>
+</div>
+
+<!-- Header -->
+<header id="mainHeader" class="sticky top-0 z-50 bg-[var(--bg-card)] border-b border-[var(--border-color)]" style="display: none;">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span class="text-white font-bold text-lg font-display">R</span>
+            </div>
+            <span class="font-display font-bold text-xl hidden sm:block">Raven</span>
+        </div>
+
+        <nav class="hidden md:flex items-center gap-1">
+            <button onclick="showSection('dashboard')" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition-all" data-section="dashboard">Dashboard</button>
+            <button onclick="showSection('referrals')" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition-all" data-section="referrals">Referrals</button>
+            <button onclick="showSection('analytics')" class="nav-btn px-4 py-2 rounded-lg font-medium text-sm transition-all" data-section="analytics">Analytics</button>
+        </nav>
+
+        <div class="flex items-center gap-3">
+            <button id="premiumBtn" onclick="showPremiumModal()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gold-50 dark:bg-gold-500/20 text-gold-600 dark:text-gold-500 rounded-lg font-semibold text-sm hover:bg-gold-100 transition-all">
+                <span class="material-icons text-sm">workspace_premium</span>
+                <span id="premiumBtnText">Go Premium</span>
+            </button>
+            <div id="userAvatar" class="w-10 h-10 bg-accent-500 rounded-full flex items-center justify-center overflow-hidden cursor-pointer" onclick="openSettingsModal()">
+                <span class="text-white font-semibold text-sm" id="userInitials">?</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Bottom Nav -->
+<nav class="mobile-nav md:hidden" id="mobileNav" style="display: none;">
+    <button onclick="showSection('dashboard')" class="mobile-nav-item active" data-section="dashboard">
+        <span class="material-icons">dashboard</span>
+        Dashboard
+    </button>
+    <button onclick="showSection('referrals')" class="mobile-nav-item" data-section="referrals">
+        <span class="material-icons">group_add</span>
+        Referrals
+    </button>
+    <button onclick="showSection('analytics')" class="mobile-nav-item" data-section="analytics">
+        <span class="material-icons">analytics</span>
+        Analytics
+    </button>
+    <button onclick="openSettingsModal()" class="mobile-nav-item">
+        <span class="material-icons">settings</span>
+        Settings
+    </button>
+</nav>
+
+<main class="max-w-6xl mx-auto px-4 py-6">
+
+<!-- Landing Section -->
+<section id="landingSection" class="hidden-section min-h-screen flex items-center justify-center py-12">
+    <div class="glass-card p-8 max-w-md w-full text-center fade-up">
+        <div class="w-24 h-24 bg-gradient-to-br from-primary-500 to-accent-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl pulse-ring">
+            <span class="text-white font-bold text-4xl font-display">R</span>
+        </div>
+
+        <h1 class="font-display text-3xl font-bold mb-3">Welcome to Raven</h1>
+        <p class="text-[var(--text-secondary)] mb-8">Your gateway to JAMB, WAEC & NECO exam success</p>
+
+        <button id="googleSignInBtn" onclick="signInWithGoogle()" class="google-btn mb-6">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span id="googleBtnText">Continue with Google</span>
+        </button>
+
+        <p class="text-xs text-[var(--text-secondary)]">By signing in, you agree to our Terms of Service</p>
+
+        <div class="mt-8 pt-6 border-t border-[var(--border-color)]">
+            <p class="text-sm text-[var(--text-secondary)] mb-4">Why 10,000+ students choose Raven</p>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div class="w-10 h-10 bg-accent-50 dark:bg-accent-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <span class="material-icons text-accent-500 text-lg">quiz</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">10K+ Questions</p>
+                </div>
+                <div>
+                    <div class="w-10 h-10 bg-gold-50 dark:bg-gold-500/20 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <span class="material-icons text-gold-500 text-lg">payments</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Earn ₦500/Referral</p>
+                </div>
+                <div>
+                    <div class="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <span class="material-icons text-success text-lg">emoji_events</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Track Progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Complete Profile Section -->
+<section id="profileSection" class="hidden-section min-h-screen flex items-center justify-center py-8">
+    <div class="glass-card p-6 sm:p-8 max-w-2xl w-full fade-up">
+        <div class="text-center mb-6">
+            <div id="profileAvatar" class="w-20 h-20 bg-accent-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+                <span class="text-white font-semibold text-2xl" id="profileInitials">?</span>
+            </div>
+            <h2 class="font-display text-2xl font-bold mb-2">Complete Your Profile</h2>
+            <p class="text-[var(--text-secondary)]">Welcome, <span id="profileName">User</span>! Set up your study preferences.</p>
+        </div>
+
+        <form id="profileForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-medium mb-2">Target Institution</label>
+                <select id="inputInstitute" required>
+                    <option value="">Select your target institution</option>
+                    <option value="UNILAG">University of Lagos (UNILAG)</option>
+                    <option value="UI">University of Ibadan (UI)</option>
+                    <option value="OAU">Obafemi Awolowo University (OAU)</option>
+                    <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+                    <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+                    <option value="UNIBEN">University of Benin (UNIBEN)</option>
+                    <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+                    <option value="COVENANT">Covenant University</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Course</label>
+                <input type="text" id="inputCourse" required placeholder="e.g., Medicine, Engineering">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">
+                    JAMB Subjects <span class="text-[var(--text-secondary)] font-normal">(Select 3 additional subjects)</span>
+                </label>
+                <p id="subjectMessage" class="text-sm text-warning font-medium mb-3">Select 3 more subjects</p>
+                <div id="subjectGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div class="subject-chip selected" data-subject="Use of English" data-required="true">
+                        <span class="material-icons text-sm mr-2">check_circle</span>
+                        Use of English
+                        <span class="ml-auto text-xs opacity-70">(Required)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Target JAMB Score</label>
+                <input type="number" id="inputTargetScore" required min="180" max="400" placeholder="e.g., 320">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium mb-2">Bank Account for Referral Payouts</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select id="inputBank">
+                        <option value="">Select Bank</option>
+                        <option value="GTB">GTBank</option>
+                        <option value="ACCESS">Access Bank</option>
+                        <option value="UBA">UBA</option>
+                        <option value="ZENITH">Zenith Bank</option>
+                        <option value="FIRST">First Bank</option>
+                        <option value="KUDA">Kuda Bank</option>
+                        <option value="OPAY">OPay</option>
+                        <option value="PALMPAY">PalmPay</option>
+                    </select>
+                    <input type="text" id="inputAccountNumber" placeholder="Account Number" maxlength="10">
+                </div>
+                <p class="text-xs text-[var(--text-secondary)] mt-2">Optional: Required to receive referral earnings</p>
+            </div>
+
+            <button type="submit" class="btn-primary w-full" id="profileSubmitBtn">
+                <span class="material-icons text-lg">check_circle</span>
+                Complete Setup & Start Learning
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- Dashboard Section -->
+<section id="dashboardSection" class="hidden-section fade-up">
+    <!-- Welcome Banner -->
+    <div class="bg-gradient-to-r from-primary-500 to-primary-700 rounded-2xl p-6 sm:p-8 text-white mb-6 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full -ml-16 -mb-16"></div>
+
+        <div class="relative z-10">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold mb-2">Hey, <span id="dashboardName">Student</span>! 👋</h2>
+                    <p class="text-white/80 mb-4 max-w-md">Ready to ace your exams? Track your progress and earn by referring friends.</p>
+                    <button onclick="showSection('referrals')" class="btn-gold">
+                        <span class="material-icons text-lg">share</span>
+                        Invite Friends & Earn ₦500
+                    </button>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+                        <span class="material-icons text-5xl">school</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-accent-50 dark:bg-accent-500/20 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-accent-500">school</span>
+                </div>
+                <span id="dashboardInstitute" class="text-xs font-semibold text-accent-500 bg-accent-50 dark:bg-accent-500/20 px-2 py-1 rounded-full">-</span>
+            </div>
+            <p class="text-xs text-[var(--text-secondary)] mb-1">Target Institution</p>
+            <p class="font-semibold truncate" id="dashboardCourse">-</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-gold-50 dark:bg-gold-500/20 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-gold-500">emoji_events</span>
+                </div>
+            </div>
+            <p class="text-xs text-[var(--text-secondary)] mb-1">Target Score</p>
+            <p class="font-display text-2xl font-bold" id="dashboardTarget">-</p>
+        </div>
+
+        <div class="stat-card gold-gradient">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-gold-500 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-white">payments</span>
+                </div>
+            </div>
+            <p class="text-xs text-gold-700 dark:text-gold-500 mb-1">Total Earnings</p>
+            <p class="font-display text-2xl font-bold text-gold-700 dark:text-gold-500" id="dashboardEarnings">₦0</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <span class="material-icons text-orange-500">local_fire_department</span>
+                </div>
+            </div>
+            <p class="text-xs text-[var(--text-secondary)] mb-1">Study Streak</p>
+            <p class="font-display text-2xl font-bold" id="dashboardStreak">0 days</p>
+        </div>
+    </div>
+
+    <!-- Referral CTA -->
+    <div class="glass-card p-6 mb-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-gold-500 to-gold-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <span class="material-icons text-white text-2xl">group_add</span>
+                </div>
+                <div>
+                    <h3 class="font-display text-lg font-bold mb-1">Refer Friends, Earn Cash! 💰</h3>
+                    <p class="text-sm text-[var(--text-secondary)]">Get <strong>₦500</strong> for every friend who subscribes to Raven Premium</p>
+                </div>
+            </div>
+            <button onclick="showSection('referrals')" class="btn-primary whitespace-nowrap">
+                <span class="material-icons">arrow_forward</span>
+                Start Referring
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="glass-card p-6">
+        <h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+            <span class="material-icons text-accent-500">history</span>
+            Recent Activity
+        </h3>
+        <div id="recentActivity">
+            <div class="text-center py-8 text-[var(--text-secondary)]">
+                <span class="material-icons text-4xl mb-2 opacity-50">inbox</span>
+                <p>No activity yet. Start practicing to see your progress!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Referrals Section -->
+<section id="referralsSection" class="hidden-section fade-up">
+    <!-- Referral Hero -->
+    <div class="referral-link-box text-white mb-6">
+        <div class="relative z-10">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="tier-badge tier-bronze" id="referralTierBadge">
+                    <span class="material-icons text-sm">military_tech</span>
+                    <span id="referralTierName">Bronze</span>
+                </span>
+                <span class="text-white/60 text-sm">|</span>
+                <span class="text-white/80 text-sm"><span id="referralCount">0</span> referrals</span>
+            </div>
+
+            <h2 class="font-display text-2xl sm:text-3xl font-bold mb-2">Invite Friends & Earn</h2>
+            <p class="text-white/70 mb-6 max-w-lg">Share your unique link. When friends subscribe to Raven Premium (₦2,000), you earn ₦500 cash instantly!</p>
+
+            <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-4">
+                <label class="text-white/60 text-xs font-medium mb-2 block">YOUR REFERRAL LINK</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="referralLinkInput" readonly class="flex-1 bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 text-sm">
+                    <button onclick="copyReferralLink()" class="btn-gold whitespace-nowrap">
+                        <span class="material-icons text-lg">content_copy</span>
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-3">
+                <button onclick="shareWhatsApp()" class="share-btn whatsapp">
+                    <span class="material-icons text-lg">chat</span>
+                    WhatsApp
+                </button>
+                <button onclick="shareTwitter()" class="share-btn twitter">
+                    <span class="material-icons text-lg">tag</span>
+                    Twitter
+                </button>
+                <button onclick="copyReferralLink()" class="share-btn copy">
+                    <span class="material-icons text-lg">link</span>
+                    Copy Link
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings Overview -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <div class="stat-card">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-xl flex items-center justify-center">
+                    <span class="material-icons text-blue-500">people</span>
+                </div>
+                <div>
+                    <p class="text-xs text-[var(--text-secondary)]">Total Referrals</p>
+                    <p class="font-display text-2xl font-bold" id="totalReferrals">0</p>
+                </div>
+            </div>
+            <div class="flex gap-4 text-sm">
+                <span class="text-warning"><span id="pendingReferrals">0</span> pending</span>
+                <span class="text-success"><span id="paidReferrals">0</span> paid</span>
+            </div>
+        </div>
+
+        <div class="stat-card gold-gradient">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-gold-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <span class="material-icons text-white">account_balance_wallet</span>
+                </div>
+                <div>
+                    <p class="text-xs text-gold-700 dark:text-gold-500">Total Earnings</p>
+                    <p class="font-display text-2xl font-bold text-gold-700 dark:text-gold-500" id="totalEarnings">₦0</p>
+                </div>
+            </div>
+            <div class="flex gap-4 text-sm">
+                <span class="text-gold-600 dark:text-gold-500"><span id="pendingEarnings">₦0</span> pending</span>
+            </div>
+        </div>
+
+        <div class="payout-card">
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <span class="material-icons text-white">send</span>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-xs">Available to Withdraw</p>
+                        <p class="font-display text-2xl font-bold" id="availableBalance">₦0</p>
+                    </div>
+                </div>
+                <button onclick="initiateWithdrawal()" id="withdrawBtn" class="w-full bg-white text-success font-semibold py-3 rounded-xl hover:bg-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Withdraw to Bank
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Progress -->
+    <div class="glass-card p-6 mb-6">
+        <h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+            <span class="material-icons text-gold-500">trending_up</span>
+            Referral Tiers
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="text-center p-4 rounded-xl border-2 border-[#CD7F32] bg-[#CD7F32]/5" id="tierBronze">
+                <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-[#CD7F32] to-[#8B4513] rounded-full flex items-center justify-center">
+                    <span class="material-icons text-white">military_tech</span>
+                </div>
+                <p class="font-semibold text-sm">Bronze</p>
+                <p class="text-xs text-[var(--text-secondary)]">0-4 referrals</p>
+                <p class="text-xs text-[#CD7F32] font-semibold mt-1">₦500/referral</p>
+            </div>
+            <div class="text-center p-4 rounded-xl border-2 border-gray-400 bg-gray-400/5" id="tierSilver">
+                <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                    <span class="material-icons text-white">military_tech</span>
+                </div>
+                <p class="font-semibold text-sm">Silver</p>
+                <p class="text-xs text-[var(--text-secondary)]">5-14 referrals</p>
+                <p class="text-xs text-gray-500 font-semibold mt-1">₦600/referral</p>
+            </div>
+            <div class="text-center p-4 rounded-xl border-2 border-gold-500 bg-gold-500/5" id="tierGold">
+                <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-gold-500 to-yellow-600 rounded-full flex items-center justify-center">
+                    <span class="material-icons text-white">military_tech</span>
+                </div>
+                <p class="font-semibold text-sm">Gold</p>
+                <p class="text-xs text-[var(--text-secondary)]">15-29 referrals</p>
+                <p class="text-xs text-gold-600 font-semibold mt-1">₦750/referral</p>
+            </div>
+            <div class="text-center p-4 rounded-xl border-2 border-cyan-400 bg-cyan-400/5" id="tierDiamond">
+                <div class="w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <span class="material-icons text-white">diamond</span>
+                </div>
+                <p class="font-semibold text-sm">Diamond</p>
+                <p class="text-xs text-[var(--text-secondary)]">30+ referrals</p>
+                <p class="text-xs text-cyan-600 font-semibold mt-1">₦1,000/referral</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral History -->
+    <div class="glass-card p-6">
+        <h3 class="font-display text-lg font-bold mb-4 flex items-center gap-2">
+            <span class="material-icons text-accent-500">history</span>
+            Referral History
+        </h3>
+        <div id="referralHistory">
+            <div class="text-center py-8 text-[var(--text-secondary)]">
+                <span class="material-icons text-4xl mb-2 opacity-50">group_add</span>
+                <p>No referrals yet. Share your link to start earning!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analytics Section -->
+<section id="analyticsSection" class="hidden-section fade-up">
+    <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+            <span class="material-icons text-white text-2xl">analytics</span>
+        </div>
+        <h2 class="font-display text-2xl font-bold mb-2">Performance Analytics</h2>
+        <p class="text-[var(--text-secondary)]">Track your learning progress and identify areas for improvement</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card">
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Overall Score</p>
+            <p class="font-display text-3xl font-bold text-accent-500" id="analyticsScore">--%</p>
+        </div>
+        <div class="stat-card">
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Topics Mastered</p>
+            <p class="font-display text-3xl font-bold text-success" id="analyticsMastered">0</p>
+        </div>
+        <div class="stat-card">
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Weak Areas</p>
+            <p class="font-display text-3xl font-bold text-error" id="analyticsWeak">0</p>
+        </div>
+        <div class="stat-card">
+            <p class="text-xs text-[var(--text-secondary)] mb-2">Avg Time/Question</p>
+            <p class="font-display text-3xl font-bold text-warning" id="analyticsTime">--</p>
+        </div>
+    </div>
+
+    <!-- Progress Chart -->
+    <div class="glass-card p-6 mb-6">
+        <h3 class="font-display text-lg font-bold mb-4">Progress Over Time</h3>
+        <div class="chart-container">
+            <canvas id="progressChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Subject Breakdown -->
+    <div class="glass-card p-6">
+        <h3 class="font-display text-lg font-bold mb-4">Subject Performance</h3>
+        <div id="subjectPerformance">
+            <div class="text-center py-8 text-[var(--text-secondary)]">
+                <span class="material-icons text-4xl mb-2 opacity-50">bar_chart</span>
+                <p>Complete quizzes to see your subject breakdown</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-backdrop">
+    <div class="modal-content p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-display text-xl font-bold">Settings</h2>
+            <button onclick="closeSettingsModal()" class="w-10 h-10 rounded-full hover:bg-[var(--bg-elevated)] flex items-center justify-center transition-colors">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <form id="settingsForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-2">Full Name</label>
+                <input type="text" id="settingsName" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Email</label>
+                <input type="email" id="settingsEmail" disabled class="bg-[var(--bg-elevated)] cursor-not-allowed">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Institution</label>
+                <select id="settingsInstitute">
+                    <option value="UNILAG">UNILAG</option>
+                    <option value="UI">UI</option>
+                    <option value="OAU">OAU</option>
+                    <option value="UNILORIN">UNILORIN</option>
+                    <option value="FUTA">FUTA</option>
+                    <option value="UNIBEN">UNIBEN</option>
+                    <option value="UNN">UNN</option>
+                    <option value="COVENANT">Covenant</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Course</label>
+                <input type="text" id="settingsCourse">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Target Score</label>
+                <input type="number" id="settingsTargetScore" min="180" max="400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Bank for Payouts</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="settingsBank">
+                        <option value="">Select Bank</option>
+                        <option value="GTB">GTBank</option>
+                        <option value="ACCESS">Access Bank</option>
+                        <option value="UBA">UBA</option>
+                        <option value="ZENITH">Zenith Bank</option>
+                        <option value="FIRST">First Bank</option>
+                        <option value="KUDA">Kuda Bank</option>
+                        <option value="OPAY">OPay</option>
+                        <option value="PALMPAY">PalmPay</option>
+                    </select>
+                    <input type="text" id="settingsAccountNumber" placeholder="Account Number" maxlength="10">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="btn-primary flex-1">Save Changes</button>
+                <button type="button" onclick="logout()" class="btn-secondary text-error">Logout</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Premium Modal -->
+<div id="premiumModal" class="modal-backdrop">
+    <div class="modal-content p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-display text-xl font-bold">Go Premium</h2>
+            <button onclick="closePremiumModal()" class="w-10 h-10 rounded-full hover:bg-[var(--bg-elevated)] flex items-center justify-center transition-colors">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="text-center mb-6">
+            <div class="w-20 h-20 bg-gradient-to-br from-gold-500 to-gold-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                <span class="material-icons text-white text-3xl">workspace_premium</span>
+            </div>
+            <h3 class="font-display text-2xl font-bold mb-2">Raven Premium</h3>
+            <div class="flex items-center justify-center gap-2 mb-4">
+                <span class="text-3xl font-bold text-gold-600">₦2,000</span>
+                <span class="text-[var(--text-secondary)]">/month</span>
+            </div>
+        </div>
+
+        <ul class="space-y-3 mb-6">
+            <li class="flex items-center gap-3">
+                <span class="material-icons text-success">check_circle</span>
+                <span>Unlimited practice questions</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <span class="material-icons text-success">check_circle</span>
+                <span>Detailed explanations for all answers</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <span class="material-icons text-success">check_circle</span>
+                <span>AI-powered study recommendations</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <span class="material-icons text-success">check_circle</span>
+                <span>Mock exams with timer</span>
+            </li>
+            <li class="flex items-center gap-3">
+                <span class="material-icons text-success">check_circle</span>
+                <span>Priority support</span>
+            </li>
+        </ul>
+
+        <div id="referralApplied" class="hidden bg-success/10 border border-success/30 rounded-xl p-4 mb-4">
+            <div class="flex items-center gap-3">
+                <span class="material-icons text-success">card_giftcard</span>
+                <div>
+                    <p class="font-semibold text-success">Referral Applied!</p>
+                    <p class="text-sm text-[var(--text-secondary)]">Your friend will earn ₦500 when you subscribe</p>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="initiatePremiumPayment()" class="btn-gold w-full text-lg py-4">
+            <span class="material-icons">lock</span>
+            Subscribe Now - ₦2,000
+        </button>
+
+        <p class="text-center text-xs text-[var(--text-secondary)] mt-4">
+            Secure payment powered by Paystack
+        </p>
+    </div>
+</div>
+
+<!-- Withdrawal Modal -->
+<div id="withdrawalModal" class="modal-backdrop">
+    <div class="modal-content p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-display text-xl font-bold">Withdraw Earnings</h2>
+            <button onclick="closeWithdrawalModal()" class="w-10 h-10 rounded-full hover:bg-[var(--bg-elevated)] flex items-center justify-center transition-colors">
+                <span class="material-icons">close</span>
+            </button>
+        </div>
+
+        <div class="bg-success/10 rounded-xl p-4 mb-6">
+            <p class="text-sm text-[var(--text-secondary)]">Available Balance</p>
+            <p class="font-display text-3xl font-bold text-success" id="withdrawAmount">₦0</p>
+        </div>
+
+        <div class="space-y-4 mb-6">
+            <div>
+                <label class="block text-sm font-medium mb-2">Bank</label>
+                <input type="text" id="withdrawBank" readonly class="bg-[var(--bg-elevated)]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Account Number</label>
+                <input type="text" id="withdrawAccountNumber" readonly class="bg-[var(--bg-elevated)]">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Account Name</label>
+                <input type="text" id="withdrawAccountName" readonly class="bg-[var(--bg-elevated)]">
+            </div>
+        </div>
+
+        <button onclick="confirmWithdrawal()" id="confirmWithdrawBtn" class="btn-primary w-full">
+            <span class="material-icons">send</span>
+            Confirm Withdrawal
+        </button>
+    </div>
+</div>
+
+<script>
+// ============ FIREBASE CONFIGURATION ============
+// IMPORTANT: Replace these with your actual Firebase config from Firebase Console
+const firebaseConfig = {
+    apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
+    authDomain: "raven-bddf7.firebaseapp.com",
+    projectId: "raven-bddf7",
+    storageBucket: "raven-bddf7.firebasestorage.app",
+    messagingSenderId: "515918066242",
+    appId: "1:515918066242:web:3aba4c8d6007310371f3db",
+    measurementId: "G-GGK7G5S0WB"
+  };
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let analytics = null;
+
+// Try to initialize analytics (may fail in some environments)
+try {
+    analytics = firebase.analytics();
+} catch (e) {
+    console.log('Analytics not available:', e.message);
+}
+
+// Enable offline persistence
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    if (err.code === 'failed-precondition') {
+        console.log('Multiple tabs open, persistence only in one tab');
+    } else if (err.code === 'unimplemented') {
+        console.log('Browser does not support persistence');
+    }
+});
+
+// ============ APP CONFIGURATION ============
+const PAYSTACK_KEY = 'pk_test_7537e70ed589ef3d0364e04aa86b5b2070153cd5';
+const REFERRAL_REWARD = 500;
+const PREMIUM_PRICE = 2000;
+const BASE_URL = 'https://examtutor.xyz/waitlist';
+
+const TIERS = {
+    bronze: { min: 0, max: 4, reward: 500, name: 'Bronze' },
+    silver: { min: 5, max: 14, reward: 600, name: 'Silver' },
+    gold: { min: 15, max: 29, reward: 750, name: 'Gold' },
+    diamond: { min: 30, max: Infinity, reward: 1000, name: 'Diamond' }
+};
+
+const SUBJECTS = [
+    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
+    'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
+    'Agricultural Science', 'CRS', 'History'
+];
+
+// ============ STATE ============
+let currentUser = null;
+let currentUserData = null;
+let userReferrals = [];
+let unsubscribeUser = null;
+let unsubscribeReferrals = null;
+let isOnline = navigator.onLine;
+
+// ============ INITIALIZATION ============
+document.addEventListener('DOMContentLoaded', () => {
+    initDarkMode();
+    initSubjectSelection();
+    checkReferralCode();
+    setupConnectionListener();
+    setupAuthListener();
+});
+
+function initDarkMode() {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        document.documentElement.classList.toggle('dark', e.matches);
+    });
+}
+
+function setupConnectionListener() {
+    const statusEl = document.getElementById('connectionStatus');
+    const textEl = document.getElementById('connectionText');
+
+    function updateStatus() {
+        isOnline = navigator.onLine;
+        statusEl.style.display = 'flex';
+        statusEl.className = `online-indicator ${isOnline ? 'online' : 'offline'}`;
+        textEl.textContent = isOnline ? 'Online' : 'Offline';
+
+        setTimeout(() => {
+            if (isOnline) statusEl.style.display = 'none';
+        }, 3000);
+    }
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+}
+
+function updateLoadingStatus(message) {
+    const el = document.getElementById('loadingStatus');
+    if (el) el.textContent = message;
+}
+
+// ============ FIREBASE AUTH ============
+function setupAuthListener() {
+    updateLoadingStatus('Checking authentication...');
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            currentUser = user;
+            updateLoadingStatus('Loading your data...');
+            await loadUserData(user);
+        } else {
+            currentUser = null;
+            currentUserData = null;
+            document.getElementById('authLoading').classList.add('hidden');
+            showSection('landing');
+        }
+    });
+}
+
+async function signInWithGoogle() {
+    const btn = document.getElementById('googleSignInBtn');
+    const btnText = document.getElementById('googleBtnText');
+
+    btn.disabled = true;
+    btnText.textContent = 'Signing in...';
+
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
+        const result = await auth.signInWithPopup(provider);
+
+        if (analytics) {
+            analytics.logEvent('login', { method: 'google' });
+        }
+    } catch (error) {
+        console.error('Sign in error:', error);
+
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('Sign in cancelled', 'info');
+        } else if (error.code === 'auth/popup-blocked') {
+            showToast('Please allow popups for this site', 'error');
+        } else {
+            showToast('Sign in failed: ' + error.message, 'error');
+        }
+
+        btn.disabled = false;
+        btnText.textContent = 'Continue with Google';
+    }
+}
+
+async function loadUserData(user) {
+    try {
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+            currentUserData = userDoc.data();
+
+            // Update last login and activity tracking
+            await userRef.update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount: firebase.firestore.FieldValue.increment(1)
+            });
+
+            // Check if profile is complete
+            if (currentUserData.profileComplete) {
+                await setupRealtimeListeners();
+                loginSuccess();
+            } else {
+                document.getElementById('authLoading').classList.add('hidden');
+                showProfileSetup();
+            }
+        } else {
+            // New user - create document
+            const pendingReferral = sessionStorage.getItem('pending_referral') || null;
+
+            const newUserData = {
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName || 'User',
+                photoURL: user.photoURL || null,
+                referralCode: generateReferralCode(),
+                referredBy: pendingReferral,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount: 1,
+                profileComplete: false,
+                isPremium: false,
+                premiumExpiry: null,
+                balance: 0,
+                totalEarnings: 0,
+                withdrawnAmount: 0,
+                bankDetails: null,
+                studyStreak: 0,
+                totalQuestions: 0,
+                correctAnswers: 0
+            };
+
+            await userRef.set(newUserData);
+            currentUserData = newUserData;
+
+            if (analytics) {
+                analytics.logEvent('sign_up', { method: 'google' });
+            }
+
+            // Track new user in analytics collection
+            await db.collection('analytics').doc('users').set({
+                totalUsers: firebase.firestore.FieldValue.increment(1),
+                newUsersToday: firebase.firestore.FieldValue.increment(1),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            document.getElementById('authLoading').classList.add('hidden');
+            showProfileSetup();
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('authLoading').classList.add('hidden');
+        showToast('Error loading data. Please try again.', 'error');
+        showSection('landing');
+    }
+}
+
+async function setupRealtimeListeners() {
+    // Listen to user data changes
+    if (unsubscribeUser) unsubscribeUser();
+
+    unsubscribeUser = db.collection('users').doc(currentUser.uid)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                currentUserData = doc.data();
+                updateUserDisplay();
+            }
+        }, (error) => {
+            console.error('User listener error:', error);
+        });
+
+    // Listen to referrals changes
+    if (unsubscribeReferrals) unsubscribeReferrals();
+
+    unsubscribeReferrals = db.collection('referrals')
+        .where('referrerCode', '==', currentUserData.referralCode)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            userReferrals = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            updateReferralDisplay();
+        }, (error) => {
+            console.error('Referrals listener error:', error);
+        });
+}
+
+function generateReferralCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+function checkReferralCode() {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+        sessionStorage.setItem('pending_referral', refCode);
+        showToast('Referral code applied! Subscribe to give your friend ₦500', 'success');
+    }
+}
+
+// ============ PROFILE SETUP ============
+function showProfileSetup() {
+    const user = currentUser;
+    document.getElementById('profileName').textContent = (currentUserData.name || 'User').split(' ')[0];
+
+    const avatarEl = document.getElementById('profileAvatar');
+    if (user.photoURL) {
+        avatarEl.innerHTML = `<img src="${user.photoURL}" alt="Avatar" class="w-full h-full object-cover">`;
+    } else {
+        document.getElementById('profileInitials').textContent = getInitials(currentUserData.name || 'User');
+    }
+
+    showSection('profile');
+}
+
+function initSubjectSelection() {
+    const grid = document.getElementById('subjectGrid');
+    SUBJECTS.forEach(subject => {
+        const chip = document.createElement('div');
+        chip.className = 'subject-chip';
+        chip.dataset.subject = subject;
+        chip.innerHTML = `
+            <span class="material-icons text-sm mr-2 opacity-0">check_circle</span>
+            ${subject}
+        `;
+        chip.onclick = () => toggleSubject(chip);
+        grid.appendChild(chip);
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', handleProfileSubmit);
+}
+
+function toggleSubject(chip) {
+    if (chip.dataset.required) return;
+
+    const selected = document.querySelectorAll('.subject-chip.selected:not([data-required])');
+
+    if (chip.classList.contains('selected')) {
+        chip.classList.remove('selected');
+        chip.querySelector('.material-icons').classList.add('opacity-0');
+    } else if (selected.length < 3) {
+        chip.classList.add('selected');
+        chip.querySelector('.material-icons').classList.remove('opacity-0');
+    }
+
+    updateSubjectMessage();
+}
+
+function updateSubjectMessage() {
+    const selected = document.querySelectorAll('.subject-chip.selected:not([data-required])').length;
+    const remaining = 3 - selected;
+    const msgEl = document.getElementById('subjectMessage');
+
+    if (remaining > 0) {
+        msgEl.textContent = `Select ${remaining} more subject${remaining !== 1 ? 's' : ''}`;
+        msgEl.className = 'text-sm text-warning font-medium mb-3';
+    } else {
+        msgEl.textContent = '✓ All subjects selected';
+        msgEl.className = 'text-sm text-success font-medium mb-3';
+    }
+
+    document.querySelectorAll('.subject-chip:not(.selected):not([data-required])').forEach(chip => {
+        chip.classList.toggle('disabled', remaining === 0);
+    });
+}
+
+async function handleProfileSubmit(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('profileSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+    const selectedSubjects = ['Use of English'];
+    document.querySelectorAll('.subject-chip.selected:not([data-required])').forEach(chip => {
+        selectedSubjects.push(chip.dataset.subject);
+    });
+
+    if (selectedSubjects.length !== 4) {
+        showToast('Please select exactly 3 additional subjects', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-icons text-lg">check_circle</span> Complete Setup & Start Learning';
+        return;
+    }
+
+    try {
+        const updateData = {
+            institute: document.getElementById('inputInstitute').value,
+            course: document.getElementById('inputCourse').value,
+            targetScore: parseInt(document.getElementById('inputTargetScore').value),
+            subjects: selectedSubjects,
+            profileComplete: true,
+            profileCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const bank = document.getElementById('inputBank').value;
+        const accountNumber = document.getElementById('inputAccountNumber').value;
+        if (bank && accountNumber) {
+            updateData.bankDetails = {
+                bank: bank,
+                accountNumber: accountNumber,
+                accountName: currentUserData.name
+            };
+        }
+
+        await db.collection('users').doc(currentUser.uid).update(updateData);
+
+        // Update analytics
+        await db.collection('analytics').doc('users').set({
+            profilesCompleted: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        currentUserData = { ...currentUserData, ...updateData };
+
+        await setupRealtimeListeners();
+        loginSuccess();
+        showToast('Welcome to Raven! 🎓', 'success');
+
+        if (analytics) {
+            analytics.logEvent('complete_registration');
+        }
+    } catch (error) {
+        console.error('Profile save error:', error);
+        showToast('Error saving profile. Please try again.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-icons text-lg">check_circle</span> Complete Setup & Start Learning';
+}
+
+// ============ LOGIN SUCCESS ============
+function loginSuccess() {
+    document.getElementById('authLoading').classList.add('hidden');
+    document.getElementById('mainHeader').style.display = 'block';
+    document.getElementById('mobileNav').style.display = 'flex';
+
+    updateUserDisplay();
+    updateReferralDisplay();
+    showSection('dashboard');
+
+    // Track active session
+    trackUserActivity();
+
+    // Clear pending referral
+    sessionStorage.removeItem('pending_referral');
+}
+
+async function trackUserActivity() {
+    if (!currentUser) return;
+
+    try {
+        // Update user's last active timestamp
+        await db.collection('users').doc(currentUser.uid).update({
+            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Track daily active users
+        const today = new Date().toISOString().split('T')[0];
+        await db.collection('analytics').doc('daily').collection(today).doc(currentUser.uid).set({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: currentUser.uid
+        }, { merge: true });
+
+        // Update aggregate daily stats
+        await db.collection('analytics').doc('daily').set({
+            [today]: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    } catch (error) {
+        console.error('Error tracking activity:', error);
+    }
+}
+
+function updateUserDisplay() {
+    if (!currentUserData) return;
+
+    const avatarEl = document.getElementById('userAvatar');
+    if (currentUser?.photoURL) {
+        avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="Avatar" class="w-full h-full object-cover">`;
+    } else {
+        document.getElementById('userInitials').textContent = getInitials(currentUserData.name || 'User');
+    }
+
+    document.getElementById('dashboardName').textContent = (currentUserData.name || 'Student').split(' ')[0];
+    document.getElementById('dashboardInstitute').textContent = currentUserData.institute || '-';
+    document.getElementById('dashboardCourse').textContent = currentUserData.course || '-';
+    document.getElementById('dashboardTarget').textContent = currentUserData.targetScore || '-';
+    document.getElementById('dashboardEarnings').textContent = formatCurrency(currentUserData.totalEarnings || 0);
+    document.getElementById('dashboardStreak').textContent = (currentUserData.studyStreak || 0) + ' days';
+
+    // Update premium button
+    const premiumBtn = document.getElementById('premiumBtn');
+    const premiumText = document.getElementById('premiumBtnText');
+    if (currentUserData.isPremium) {
+        premiumText.textContent = 'Premium ✓';
+        premiumBtn.classList.add('bg-gold-500', 'text-white');
+        premiumBtn.classList.remove('bg-gold-50', 'text-gold-600');
+    }
+}
+
+// ============ REFERRAL SYSTEM ============
+function updateReferralDisplay() {
+    if (!currentUserData) return;
+
+    const paidReferrals = userReferrals.filter(r => r.status === 'paid');
+    const pendingReferrals = userReferrals.filter(r => r.status === 'pending');
+
+    const tier = getCurrentTier(paidReferrals.length);
+    const totalEarnings = calculateTotalEarnings(userReferrals);
+    const pendingEarnings = pendingReferrals.length * tier.reward;
+
+    // Update referral link
+    const referralCode = currentUserData.referralCode || '';
+    const referralLink = `${BASE_URL}?ref=${referralCode}`;
+    document.getElementById('referralLinkInput').value = referralLink;
+
+    // Update counts
+    document.getElementById('referralCount').textContent = paidReferrals.length;
+    document.getElementById('totalReferrals').textContent = userReferrals.length;
+    document.getElementById('pendingReferrals').textContent = pendingReferrals.length;
+    document.getElementById('paidReferrals').textContent = paidReferrals.length;
+
+    // Update earnings
+    document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings);
+    document.getElementById('pendingEarnings').textContent = formatCurrency(pendingEarnings);
+    document.getElementById('availableBalance').textContent = formatCurrency(currentUserData.balance || 0);
+
+    // Update tier badge
+    const tierBadge = document.getElementById('referralTierBadge');
+    tierBadge.className = `tier-badge tier-${tier.name.toLowerCase()}`;
+    document.getElementById('referralTierName').textContent = tier.name;
+
+    // Update withdraw button
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    withdrawBtn.disabled = (currentUserData.balance || 0) < 500;
+
+    // Highlight current tier
+    ['bronze', 'silver', 'gold', 'diamond'].forEach(t => {
+        const el = document.getElementById('tier' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (t === tier.name.toLowerCase()) {
+            el.classList.add('ring-2', 'ring-offset-2');
+        } else {
+            el.classList.remove('ring-2', 'ring-offset-2');
+        }
+    });
+
+    // Render referral history
+    renderReferralHistory();
+}
+
+function getCurrentTier(paidCount) {
+    if (paidCount >= TIERS.diamond.min) return TIERS.diamond;
+    if (paidCount >= TIERS.gold.min) return TIERS.gold;
+    if (paidCount >= TIERS.silver.min) return TIERS.silver;
+    return TIERS.bronze;
+}
+
+function calculateTotalEarnings(refs) {
+    return refs.filter(r => r.status === 'paid').reduce((sum, r) => sum + (r.reward || REFERRAL_REWARD), 0);
+}
+
+function renderReferralHistory() {
+    const container = document.getElementById('referralHistory');
+
+    if (userReferrals.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-[var(--text-secondary)]">
+                <span class="material-icons text-4xl mb-2 opacity-50">group_add</span>
+                <p>No referrals yet. Share your link to start earning!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = userReferrals.map(ref => {
+        const date = ref.createdAt?.toDate ? ref.createdAt.toDate().toLocaleDateString() : 'Recently';
+        const statusClass = ref.status === 'paid' ? 'completed' : 'pending';
+        const statusText = ref.status === 'paid' ? 'Paid' : 'Pending';
+        const statusIcon = ref.status === 'paid' ? 'check' : 'schedule';
+
+        return `
+            <div class="timeline-item">
+                <div class="timeline-dot ${statusClass}">
+                    <span class="material-icons text-white text-xs">${statusIcon}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">${ref.referredName || 'User'}</p>
+                        <p class="text-sm text-[var(--text-secondary)]">${date}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold ${ref.status === 'paid' ? 'text-success' : 'text-warning'}">
+                            ${ref.status === 'paid' ? '+' : ''}${formatCurrency(ref.reward || REFERRAL_REWARD)}
+                        </p>
+                        <p class="text-xs text-[var(--text-secondary)]">${statusText}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============ SHARE FUNCTIONS ============
+function copyReferralLink() {
+    const link = document.getElementById('referralLinkInput').value;
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('Referral link copied!', 'success');
+
+        if (analytics) {
+            analytics.logEvent('share', { method: 'copy', content_type: 'referral_link' });
+        }
+    }).catch(() => {
+        const input = document.getElementById('referralLinkInput');
+        input.select();
+        document.execCommand('copy');
+        showToast('Referral link copied!', 'success');
+    });
+}
+
+function shareWhatsApp() {
+    const link = document.getElementById('referralLinkInput').value;
+    const text = encodeURIComponent(`🎓 Join me on Raven - Nigeria's #1 JAMB Prep Platform!\n\n✅ 10,000+ Past Questions\n✅ AI-Powered Study Plans\n✅ Track Your Progress\n\nSign up with my link and let's ace JAMB together!\n\n${link}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+
+    if (analytics) {
+        analytics.logEvent('share', { method: 'whatsapp', content_type: 'referral_link' });
+    }
+}
+
+function shareTwitter() {
+    const link = document.getElementById('referralLinkInput').value;
+    const text = encodeURIComponent(`🎓 Preparing for JAMB 2026? Join Raven - the smartest way to study!\n\n${link}\n\n#JAMB2026 #Raven`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+
+    if (analytics) {
+        analytics.logEvent('share', { method: 'twitter', content_type: 'referral_link' });
+    }
+}
+
+// ============ PAYMENT INTEGRATION ============
+function showPremiumModal() {
+    const modal = document.getElementById('premiumModal');
+    modal.classList.add('active');
+
+    if (currentUserData?.referredBy) {
+        document.getElementById('referralApplied').classList.remove('hidden');
+    }
+}
+
+function closePremiumModal() {
+    document.getElementById('premiumModal').classList.remove('active');
+}
+
+function initiatePremiumPayment() {
+    if (!window.PaystackPop) {
+        showToast('Payment system loading...', 'info');
+        return;
+    }
+
+    closePremiumModal();
+
+    const popup = new PaystackPop();
+    popup.newTransaction({
+        key: PAYSTACK_KEY,
+        email: currentUser.email,
+        amount: PREMIUM_PRICE * 100,
+        currency: 'NGN',
+        reference: 'RAVEN_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        metadata: {
+            user_id: currentUser.uid,
+            referrer_code: currentUserData.referredBy || null,
+            custom_fields: [
+                {
+                    display_name: 'User Name',
+                    variable_name: 'user_name',
+                    value: currentUserData.name
+                },
+                {
+                    display_name: 'Subscription Type',
+                    variable_name: 'subscription_type',
+                    value: 'premium_monthly'
+                }
+            ]
+        },
+        onSuccess: (transaction) => {
+            handlePaymentSuccess(transaction);
+        },
+        onCancel: () => {
+            showToast('Payment cancelled', 'info');
+        },
+        onError: (error) => {
+            showToast('Payment failed: ' + (error.message || 'Please try again'), 'error');
+        }
+    });
+}
+
+async function handlePaymentSuccess(transaction) {
+    try {
+        const batch = db.batch();
+        const userRef = db.collection('users').doc(currentUser.uid);
+
+        // Update user to premium
+        batch.update(userRef, {
+            isPremium: true,
+            premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            premiumStartDate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Record payment
+        const paymentRef = db.collection('payments').doc();
+        batch.set(paymentRef, {
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: PREMIUM_PRICE,
+            currency: 'NGN',
+            reference: transaction.reference,
+            status: 'success',
+            type: 'premium_subscription',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Process referral reward
+        if (currentUserData.referredBy) {
+            // Find referrer
+            const referrerQuery = await db.collection('users')
+                .where('referralCode', '==', currentUserData.referredBy)
+                .limit(1)
+                .get();
+
+            if (!referrerQuery.empty) {
+                const referrerDoc = referrerQuery.docs[0];
+                const referrerId = referrerDoc.id;
+                const referrerData = referrerDoc.data();
+
+                // Calculate tier-based reward
+                const existingReferrals = await db.collection('referrals')
+                    .where('referrerCode', '==', currentUserData.referredBy)
+                    .where('status', '==', 'paid')
+                    .get();
+
+                const tier = getCurrentTier(existingReferrals.size);
+                const reward = tier.reward;
+
+                // Create referral record
+                const referralRef = db.collection('referrals').doc();
+                batch.set(referralRef, {
+                    referrerCode: currentUserData.referredBy,
+                    referrerId: referrerId,
+                    referredId: currentUser.uid,
+                    referredName: currentUserData.name,
+                    referredEmail: currentUser.email,
+                    status: 'paid',
+                    reward: reward,
+                    transactionRef: transaction.reference,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Credit referrer's balance
+                const referrerRef = db.collection('users').doc(referrerId);
+                batch.update(referrerRef, {
+                    balance: firebase.firestore.FieldValue.increment(reward),
+                    totalEarnings: firebase.firestore.FieldValue.increment(reward)
+                });
+
+                // Clear referral code from user
+                batch.update(userRef, {
+                    referredBy: null
+                });
+
+                showToast(`Your friend earned ₦${reward}!`, 'success');
+            }
+        }
+
+        // Update analytics
+        const analyticsRef = db.collection('analytics').doc('revenue');
+        batch.set(analyticsRef, {
+            totalRevenue: firebase.firestore.FieldValue.increment(PREMIUM_PRICE),
+            premiumSubscriptions: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await batch.commit();
+
+        if (analytics) {
+            analytics.logEvent('purchase', {
+                currency: 'NGN',
+                value: PREMIUM_PRICE,
+                items: [{ item_name: 'premium_monthly' }]
+            });
+        }
+
+        showToast('Welcome to Raven Premium! 🎉', 'success');
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        showToast('Payment recorded. Contact support if premium is not activated.', 'info');
+    }
+}
+
+// ============ WITHDRAWAL ============
+function initiateWithdrawal() {
+    if (!currentUserData.bankDetails) {
+        showToast('Please add your bank details in settings first', 'error');
+        openSettingsModal();
+        return;
+    }
+
+    if ((currentUserData.balance || 0) < 500) {
+        showToast('Minimum withdrawal is ₦500', 'error');
+        return;
+    }
+
+    document.getElementById('withdrawAmount').textContent = formatCurrency(currentUserData.balance);
+    document.getElementById('withdrawBank').value = currentUserData.bankDetails.bank;
+    document.getElementById('withdrawAccountNumber').value = currentUserData.bankDetails.accountNumber;
+    document.getElementById('withdrawAccountName').value = currentUserData.bankDetails.accountName || currentUserData.name;
+
+    document.getElementById('withdrawalModal').classList.add('active');
+}
+
+function closeWithdrawalModal() {
+    document.getElementById('withdrawalModal').classList.remove('active');
+}
+
+async function confirmWithdrawal() {
+    const btn = document.getElementById('confirmWithdrawBtn');
+    btn.innerHTML = '<span class="spinner"></span> Processing...';
+    btn.disabled = true;
+
+    try {
+        const amount = currentUserData.balance;
+
+        // Create withdrawal request
+        await db.collection('withdrawals').add({
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: amount,
+            bankDetails: currentUserData.bankDetails,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Update user balance
+        await db.collection('users').doc(currentUser.uid).update({
+            balance: 0,
+            withdrawnAmount: firebase.firestore.FieldValue.increment(amount)
+        });
+
+        closeWithdrawalModal();
+        showToast(`Withdrawal of ₦${amount.toLocaleString()} initiated! Processing within 24 hours.`, 'success');
+
+        if (analytics) {
+            analytics.logEvent('withdrawal_request', { amount: amount });
+        }
+    } catch (error) {
+        console.error('Withdrawal error:', error);
+        showToast('Withdrawal failed. Please try again.', 'error');
+    }
+
+    btn.innerHTML = '<span class="material-icons">send</span> Confirm Withdrawal';
+    btn.disabled = false;
+}
+
+// ============ SETTINGS ============
+function openSettingsModal() {
+    if (!currentUserData) return;
+
+    document.getElementById('settingsName').value = currentUserData.name || '';
+    document.getElementById('settingsEmail').value = currentUser?.email || '';
+    document.getElementById('settingsInstitute').value = currentUserData.institute || '';
+    document.getElementById('settingsCourse').value = currentUserData.course || '';
+    document.getElementById('settingsTargetScore').value = currentUserData.targetScore || '';
+
+    if (currentUserData.bankDetails) {
+        document.getElementById('settingsBank').value = currentUserData.bankDetails.bank || '';
+        document.getElementById('settingsAccountNumber').value = currentUserData.bankDetails.accountNumber || '';
+    }
+
+    document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettingsModal() {
+    document.getElementById('settingsModal').classList.remove('active');
+}
+
+document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    try {
+        const updateData = {
+            name: document.getElementById('settingsName').value,
+            institute: document.getElementById('settingsInstitute').value,
+            course: document.getElementById('settingsCourse').value,
+            targetScore: parseInt(document.getElementById('settingsTargetScore').value) || null
+        };
+
+        const bank = document.getElementById('settingsBank').value;
+        const accountNumber = document.getElementById('settingsAccountNumber').value;
+        if (bank && accountNumber) {
+            updateData.bankDetails = {
+                bank: bank,
+                accountNumber: accountNumber,
+                accountName: document.getElementById('settingsName').value
+            };
+        }
+
+        await db.collection('users').doc(currentUser.uid).update(updateData);
+
+        closeSettingsModal();
+        showToast('Settings saved!', 'success');
+    } catch (error) {
+        console.error('Settings save error:', error);
+        showToast('Error saving settings', 'error');
+    }
+});
+
+async function logout() {
+    try {
+        // Clean up listeners
+        if (unsubscribeUser) unsubscribeUser();
+        if (unsubscribeReferrals) unsubscribeReferrals();
+
+        await auth.signOut();
+
+        currentUser = null;
+        currentUserData = null;
+        userReferrals = [];
+
+        document.getElementById('mainHeader').style.display = 'none';
+        document.getElementById('mobileNav').style.display = 'none';
+        closeSettingsModal();
+        showSection('landing');
+        showToast('Logged out successfully', 'info');
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('Error logging out', 'error');
+    }
+}
+
+// ============ NAVIGATION ============
+function showSection(sectionName) {
+    const sections = ['landing', 'profile', 'dashboard', 'referrals', 'analytics'];
+
+    sections.forEach(s => {
+        const el = document.getElementById(s + 'Section');
+        if (el) {
+            el.classList.toggle('hidden-section', s !== sectionName);
+        }
+    });
+
+    // Update nav buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        const isActive = btn.dataset.section === sectionName;
+        btn.classList.toggle('bg-accent-500/10', isActive);
+        btn.classList.toggle('text-accent-500', isActive);
+        btn.classList.toggle('text-[var(--text-secondary)]', !isActive);
+    });
+
+    document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+        const isActive = btn.dataset.section === sectionName;
+        btn.classList.toggle('active', isActive);
+    });
+
+    if (sectionName === 'analytics' && currentUserData) {
+        renderAnalytics();
+    }
+
+    // Track page view
+    if (analytics && currentUser) {
+        analytics.logEvent('page_view', { page_name: sectionName });
+    }
+
+    window.scrollTo(0, 0);
+}
+
+// ============ ANALYTICS ============
+function renderAnalytics() {
+    const ctx = document.getElementById('progressChart');
+    if (ctx && window.Chart) {
+        if (window.progressChartInstance) {
+            window.progressChartInstance.destroy();
+        }
+
+        const isDark = document.documentElement.classList.contains('dark');
+
+        window.progressChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Score %',
+                    data: [0, 0, 0, 0],
+                    borderColor: '#00B4A6',
+                    backgroundColor: 'rgba(0, 180, 166, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: isDark ? '#8B949E' : '#6B7280' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: isDark ? '#8B949E' : '#6B7280' },
+                        grid: { color: isDark ? '#30363D' : '#E5E7EB' }
+                    },
+                    x: {
+                        ticks: { color: isDark ? '#8B949E' : '#6B7280' },
+                        grid: { color: isDark ? '#30363D' : '#E5E7EB' }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// ============ UTILITIES ============
+function getInitials(name) {
+    return (name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function formatCurrency(amount) {
+    return '₦' + (amount || 0).toLocaleString();
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+    const colors = { success: 'text-success', error: 'text-error', info: 'text-accent-500', warning: 'text-warning' };
+
+    toast.innerHTML = `
+        <span class="material-icons ${colors[type]}">${icons[type]}</span>
+        <span class="flex-1 text-sm">${message}</span>
+        <button onclick="this.parentElement.remove()" class="material-icons text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-lg">close</button>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 4000);
+}
+
+// Close modals on backdrop click
+['settingsModal', 'premiumModal', 'withdrawalModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            e.currentTarget.classList.remove('active');
+        }
+    });
+});
+
+// Track user activity periodically
+setInterval(() => {
+    if (currentUser && document.visibilityState === 'visible') {
+        trackUserActivity();
+    }
+}, 5 * 60 * 1000); // Every 5 minutes
+</script>
+
+</body>
+</html>
