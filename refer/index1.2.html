@@ -11,6 +11,12 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- Firebase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-auth-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-firestore-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-analytics-compat.min.js"></script>
+
 <script>
 tailwind.config = {
     darkMode: 'class',
@@ -86,7 +92,6 @@ body {
 
 .hidden-section { display: none !important; }
 
-/* Animations */
 @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
@@ -103,13 +108,20 @@ body {
     100% { background-position: 200% 0; }
 }
 
-@keyframes confetti {
-    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(247, 179, 43, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(247, 179, 43, 0.6); }
 }
 
 .fade-up { animation: fadeUp 0.5s ease forwards; }
 .pulse-ring { animation: pulse-ring 2s infinite; }
+.float-animation { animation: float 3s ease-in-out infinite; }
+.glow-animation { animation: glow 2s ease-in-out infinite; }
 
 .shimmer-bg {
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
@@ -117,7 +129,6 @@ body {
     animation: shimmer 2s infinite;
 }
 
-/* Cards */
 .glass-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -134,7 +145,6 @@ body {
     box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
 }
 
-/* Buttons */
 .btn-primary {
     background: linear-gradient(135deg, #00B4A6 0%, #009085 100%);
     color: white;
@@ -156,6 +166,12 @@ body {
 }
 
 .btn-primary:active { transform: scale(0.98); }
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
 
 .btn-secondary {
     background: var(--bg-elevated);
@@ -188,7 +204,6 @@ body {
     box-shadow: 0 8px 24px rgba(247, 179, 43, 0.4);
 }
 
-/* Referral Link Box */
 .referral-link-box {
     background: linear-gradient(135deg, #0F2C59 0%, #1a4080 100%);
     border-radius: 16px;
@@ -207,7 +222,6 @@ body {
     background: radial-gradient(circle, rgba(0,180,166,0.15) 0%, transparent 70%);
 }
 
-/* Stats Cards */
 .stat-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -226,34 +240,6 @@ body {
     background: linear-gradient(135deg, #2a2210 0%, #3d3015 100%);
 }
 
-/* Progress Ring */
-.progress-ring-container {
-    position: relative;
-    width: 120px;
-    height: 120px;
-}
-
-.progress-ring {
-    transform: rotate(-90deg);
-}
-
-.progress-ring-bg {
-    fill: none;
-    stroke: var(--border-color);
-    stroke-width: 8;
-}
-
-.progress-ring-fill {
-    fill: none;
-    stroke: #00B4A6;
-    stroke-width: 8;
-    stroke-linecap: round;
-    stroke-dasharray: 339.292;
-    stroke-dashoffset: 339.292;
-    transition: stroke-dashoffset 1s ease;
-}
-
-/* Referral Tier Badge */
 .tier-badge {
     display: inline-flex;
     align-items: center;
@@ -271,7 +257,6 @@ body {
 .tier-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #1a1a1a; }
 .tier-diamond { background: linear-gradient(135deg, #b9f2ff, #00bfff); color: #1a1a1a; }
 
-/* Timeline */
 .timeline-item {
     position: relative;
     padding-left: 32px;
@@ -306,7 +291,6 @@ body {
 .timeline-dot.completed { background: #10B981; }
 .timeline-dot.paid { background: #00B4A6; }
 
-/* Subject Selection */
 .subject-chip {
     display: inline-flex;
     align-items: center;
@@ -336,7 +320,6 @@ body {
     pointer-events: none;
 }
 
-/* Mobile Nav */
 .mobile-nav {
     position: fixed;
     bottom: 0;
@@ -362,6 +345,9 @@ body {
     font-weight: 500;
     transition: color 0.2s;
     border-radius: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
 }
 
 .mobile-nav-item.active {
@@ -374,7 +360,6 @@ body {
     margin-bottom: 2px;
 }
 
-/* Toast */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -402,7 +387,6 @@ body {
 .toast.error { border-left: 4px solid #EF4444; }
 .toast.info { border-left: 4px solid #00B4A6; }
 
-/* Modal */
 .modal-backdrop {
     position: fixed;
     inset: 0;
@@ -438,7 +422,6 @@ body {
     transform: scale(1);
 }
 
-/* Loading */
 .spinner {
     width: 24px;
     height: 24px;
@@ -452,7 +435,6 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Google Button */
 .google-btn {
     display: flex;
     align-items: center;
@@ -474,13 +456,17 @@ body {
     box-shadow: 0 4px 12px rgba(0, 180, 166, 0.15);
 }
 
+.google-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .dark .google-btn {
     background: #21262D;
     border-color: #30363D;
     color: white;
 }
 
-/* Share buttons */
 .share-btn {
     display: flex;
     align-items: center;
@@ -503,7 +489,6 @@ body {
 
 .share-btn:hover { transform: scale(1.02); }
 
-/* Payout Card */
 .payout-card {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%);
     border-radius: 16px;
@@ -524,10 +509,86 @@ body {
     border-radius: 50%;
 }
 
-/* Chart container */
 .chart-container {
     position: relative;
     height: 200px;
+}
+
+/* Referral Landing Hero */
+.referral-hero {
+    background: linear-gradient(135deg, #0F2C59 0%, #1a4080 50%, #0F2C59 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.referral-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 30%, rgba(0, 180, 166, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(247, 179, 43, 0.1) 0%, transparent 50%);
+    animation: float 8s ease-in-out infinite;
+}
+
+.referral-hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--bg-primary), transparent);
+}
+
+.gift-icon {
+    background: linear-gradient(135deg, #F7B32B 0%, #FFD700 100%);
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 60px rgba(247, 179, 43, 0.4);
+}
+
+.referrer-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid #F7B32B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #00B4A6, #009085);
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 180, 166, 0.3);
+    overflow: hidden;
+}
+
+.referrer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.benefit-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.benefit-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
 }
 
 @media (max-width: 768px) {
@@ -539,7 +600,6 @@ body {
     .mobile-nav { display: none; }
 }
 
-/* Input styles */
 input, select {
     font-size: 16px;
     padding: 14px 16px;
@@ -559,19 +619,68 @@ input:focus, select:focus {
 ::placeholder {
     color: var(--text-secondary);
 }
+
+.online-indicator {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 50;
+    transition: all 0.3s;
+}
+
+.online-indicator.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.online-indicator.offline {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.online-indicator .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.online-indicator.online .dot { background: #10B981; }
+.online-indicator.offline .dot { background: #EF4444; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
 </style>
 </head>
 
 <body>
 
 <!-- Auth Loading -->
-<div id="authLoading" class="fixed inset-0 bg-primary-500 flex flex-col items-center justify-center z-50 hidden">
+<div id="authLoading" class="fixed inset-0 bg-primary-500 flex flex-col items-center justify-center z-50">
     <div class="spinner w-16 h-16 border-4 border-white/30 border-t-white mb-6"></div>
-    <p class="text-white text-lg font-medium">Authenticating...</p>
+    <p class="text-white text-lg font-medium">Loading Raven...</p>
+    <p class="text-white/60 text-sm mt-2" id="loadingStatus">Connecting to servers...</p>
 </div>
 
 <!-- Toast Container -->
 <div id="toastContainer" class="toast-container"></div>
+
+<!-- Connection Status -->
+<div id="connectionStatus" class="online-indicator online" style="display: none;">
+    <span class="dot"></span>
+    <span id="connectionText">Online</span>
+</div>
 
 <!-- Header -->
 <header id="mainHeader" class="sticky top-0 z-50 bg-[var(--bg-card)] border-b border-[var(--border-color)]" style="display: none;">
@@ -623,6 +732,129 @@ input:focus, select:focus {
 
 <main class="max-w-6xl mx-auto px-4 py-6">
 
+<!-- Referral Landing Section (NEW) -->
+<section id="referralLandingSection" class="hidden-section">
+    <div class="referral-hero rounded-3xl text-white mb-8 relative">
+        <div class="relative z-10 p-8 sm:p-12 text-center">
+            <!-- Gift Icon -->
+            <div class="gift-icon mx-auto mb-6 float-animation glow-animation">
+                <span class="material-icons text-white text-5xl">card_giftcard</span>
+            </div>
+
+            <h1 class="font-display text-3xl sm:text-4xl font-bold mb-3">You've Been Invited! 🎉</h1>
+            <p class="text-white/80 text-lg mb-6 max-w-md mx-auto">
+                Your friend wants you to join Nigeria's #1 exam preparation platform
+            </p>
+
+            <!-- Referrer Info -->
+            <div id="referrerInfo" class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 max-w-sm mx-auto">
+                <div class="referrer-avatar mx-auto mb-4" id="referrerAvatar">
+                    <span id="referrerInitials">?</span>
+                </div>
+                <p class="text-white/70 text-sm mb-1">Invited by</p>
+                <p class="font-display text-xl font-bold" id="referrerName">A Friend</p>
+                <p class="text-white/60 text-sm mt-1" id="referrerInstitute"></p>
+            </div>
+
+            <!-- Benefits Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
+                <div class="benefit-card">
+                    <div class="w-12 h-12 bg-accent-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-icons text-white">quiz</span>
+                    </div>
+                    <p class="font-semibold mb-1">10,000+ Questions</p>
+                    <p class="text-sm text-white/60">JAMB, WAEC & NECO</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="w-12 h-12 bg-gold-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-icons text-white">psychology</span>
+                    </div>
+                    <p class="font-semibold mb-1">AI Study Plans</p>
+                    <p class="text-sm text-white/60">Personalized for you</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="w-12 h-12 bg-success rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-icons text-white">trending_up</span>
+                    </div>
+                    <p class="font-semibold mb-1">Track Progress</p>
+                    <p class="text-sm text-white/60">Detailed analytics</p>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <button id="referralGoogleBtn" onclick="signInWithGoogle()" class="google-btn max-w-md mx-auto">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span id="referralGoogleBtnText">Join with Google - It's Free!</span>
+            </button>
+
+            <p class="text-white/50 text-sm mt-4">Join 10,000+ students already on Raven</p>
+        </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="glass-card p-6 mb-6">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="w-14 h-14 bg-gradient-to-br from-gold-500 to-gold-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <span class="material-icons text-white text-2xl">payments</span>
+            </div>
+            <div>
+                <h3 class="font-display text-lg font-bold mb-1">Refer & Earn Together! 💰</h3>
+                <p class="text-sm text-[var(--text-secondary)]">When you subscribe, your friend earns ₦500. Then you can start earning too!</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-[var(--bg-elevated)] rounded-xl p-4 flex items-center gap-4">
+                <div class="w-10 h-10 bg-accent-500/20 rounded-full flex items-center justify-center">
+                    <span class="text-accent-500 font-bold">1</span>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm">Sign up for free</p>
+                    <p class="text-xs text-[var(--text-secondary)]">Create your account</p>
+                </div>
+            </div>
+            <div class="bg-[var(--bg-elevated)] rounded-xl p-4 flex items-center gap-4">
+                <div class="w-10 h-10 bg-accent-500/20 rounded-full flex items-center justify-center">
+                    <span class="text-accent-500 font-bold">2</span>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm">Go Premium (₦2,000/mo)</p>
+                    <p class="text-xs text-[var(--text-secondary)]">Unlock all features</p>
+                </div>
+            </div>
+            <div class="bg-[var(--bg-elevated)] rounded-xl p-4 flex items-center gap-4">
+                <div class="w-10 h-10 bg-gold-500/20 rounded-full flex items-center justify-center">
+                    <span class="text-gold-500 font-bold">3</span>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm">Your friend earns ₦500</p>
+                    <p class="text-xs text-[var(--text-secondary)]">Instant reward</p>
+                </div>
+            </div>
+            <div class="bg-[var(--bg-elevated)] rounded-xl p-4 flex items-center gap-4">
+                <div class="w-10 h-10 bg-gold-500/20 rounded-full flex items-center justify-center">
+                    <span class="text-gold-500 font-bold">4</span>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm">Share & earn yourself</p>
+                    <p class="text-xs text-[var(--text-secondary)]">Get your own referral link</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skip to regular landing -->
+    <p class="text-center text-sm text-[var(--text-secondary)]">
+        Not interested in the referral?
+        <button onclick="skipToLanding()" class="text-accent-500 hover:underline font-medium">Sign up without referral</button>
+    </p>
+</section>
+
 <!-- Landing Section -->
 <section id="landingSection" class="hidden-section min-h-screen flex items-center justify-center py-12">
     <div class="glass-card p-8 max-w-md w-full text-center fade-up">
@@ -633,14 +865,14 @@ input:focus, select:focus {
         <h1 class="font-display text-3xl font-bold mb-3">Welcome to Raven</h1>
         <p class="text-[var(--text-secondary)] mb-8">Your gateway to JAMB, WAEC & NECO exam success</p>
 
-        <button onclick="initiateGoogleOAuth()" class="google-btn mb-6">
+        <button id="googleSignInBtn" onclick="signInWithGoogle()" class="google-btn mb-6">
             <svg width="20" height="20" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google
+            <span id="googleBtnText">Continue with Google</span>
         </button>
 
         <p class="text-xs text-[var(--text-secondary)]">By signing in, you agree to our Terms of Service</p>
@@ -742,7 +974,7 @@ input:focus, select:focus {
                 <p class="text-xs text-[var(--text-secondary)] mt-2">Optional: Required to receive referral earnings</p>
             </div>
 
-            <button type="submit" class="btn-primary w-full">
+            <button type="submit" class="btn-primary w-full" id="profileSubmitBtn">
                 <span class="material-icons text-lg">check_circle</span>
                 Complete Setup & Start Learning
             </button>
@@ -1229,15 +1461,44 @@ input:focus, select:focus {
 </div>
 
 <script>
-// ============ CONFIGURATION ============
-const GOOGLE_CLIENT_ID = '481928532393-qvg45onsbtfhttro4u5i38gngj2tseup.apps.googleusercontent.com';
-const REDIRECT_URI = 'https://www.examtutor.xyz/refer/index.html';
-const PAYSTACK_KEY = 'pk_test_7537e70ed589ef3d0364e04aa86b5b2070153cd5'; // Replace with actual key
-const REFERRAL_REWARD = 500; // ₦500 per referral
-const PREMIUM_PRICE = 2000; // ₦2,000 per month
-const BASE_URL = 'https://examtutor.xyz/';
+// ============ FIREBASE CONFIGURATION ============
+const firebaseConfig = {
+    apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
+    authDomain: "raven-bddf7.firebaseapp.com",
+    projectId: "raven-bddf7",
+    storageBucket: "raven-bddf7.firebasestorage.app",
+    messagingSenderId: "515918066242",
+    appId: "1:515918066242:web:3aba4c8d6007310371f3db",
+    measurementId: "G-GGK7G5S0WB"
+};
 
-// Tier configuration
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let analytics = null;
+
+try {
+    analytics = firebase.analytics();
+} catch (e) {
+    console.log('Analytics not available:', e.message);
+}
+
+// Enable offline persistence
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    if (err.code === 'failed-precondition') {
+        console.log('Multiple tabs open, persistence only in one tab');
+    } else if (err.code === 'unimplemented') {
+        console.log('Browser does not support persistence');
+    }
+});
+
+// ============ APP CONFIGURATION ============
+const PAYSTACK_KEY = 'pk_test_7537e70ed589ef3d0364e04aa86b5b2070153cd5';
+const REFERRAL_REWARD = 500;
+const PREMIUM_PRICE = 2000;
+const BASE_URL = 'https://examtutor.xyz/firebase/index.html';
+
 const TIERS = {
     bronze: { min: 0, max: 4, reward: 500, name: 'Bronze' },
     silver: { min: 5, max: 14, reward: 600, name: 'Silver' },
@@ -1245,26 +1506,30 @@ const TIERS = {
     diamond: { min: 30, max: Infinity, reward: 1000, name: 'Diamond' }
 };
 
-// ============ STATE ============
-let currentUser = null;
-let allUsers = [];
-let referrals = [];
-let currentSection = 'dashboard';
-
-// ============ SUBJECTS ============
 const SUBJECTS = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
     'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
     'Agricultural Science', 'CRS', 'History'
 ];
 
+// ============ STATE ============
+let currentUser = null;
+let currentUserData = null;
+let userReferrals = [];
+let unsubscribeUser = null;
+let unsubscribeReferrals = null;
+let isOnline = navigator.onLine;
+let pendingReferralCode = null;
+let referrerInfo = null;
+
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
-    loadData();
     initSubjectSelection();
-    handleOAuthCallback();
-    checkReferralCode();
+    setupConnectionListener();
+
+    // Check for referral code FIRST before auth listener
+    checkReferralCodeOnLoad();
 });
 
 function initDarkMode() {
@@ -1276,150 +1541,289 @@ function initDarkMode() {
     });
 }
 
-function loadData() {
-    try {
-        allUsers = JSON.parse(localStorage.getItem('raven_users')) || [];
-        referrals = JSON.parse(localStorage.getItem('raven_referrals')) || [];
-    } catch (e) {
-        console.error('Error loading data:', e);
+function setupConnectionListener() {
+    const statusEl = document.getElementById('connectionStatus');
+    const textEl = document.getElementById('connectionText');
+
+    function updateStatus() {
+        isOnline = navigator.onLine;
+        statusEl.style.display = 'flex';
+        statusEl.className = `online-indicator ${isOnline ? 'online' : 'offline'}`;
+        textEl.textContent = isOnline ? 'Online' : 'Offline';
+
+        setTimeout(() => {
+            if (isOnline) statusEl.style.display = 'none';
+        }, 3000);
     }
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
 }
 
-function saveData() {
-    localStorage.setItem('raven_users', JSON.stringify(allUsers));
-    localStorage.setItem('raven_referrals', JSON.stringify(referrals));
+function updateLoadingStatus(message) {
+    const el = document.getElementById('loadingStatus');
+    if (el) el.textContent = message;
 }
 
-function checkReferralCode() {
+// ============ REFERRAL CODE CHECK (NEW FLOW) ============
+async function checkReferralCodeOnLoad() {
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get('ref');
+
     if (refCode) {
-        localStorage.setItem('pending_referral', refCode);
-        showToast('Referral code applied! Subscribe to give your friend ₦500', 'success');
-    }
-}
+        pendingReferralCode = refCode;
+        sessionStorage.setItem('pending_referral', refCode);
+        updateLoadingStatus('Loading referral info...');
 
-// ============ GOOGLE OAUTH ============
-function initiateGoogleOAuth() {
-    const state = btoa(Math.random().toString(36).substring(2));
-    localStorage.setItem('oauth_state', state);
+        // Fetch referrer info from Firebase
+        try {
+            const referrerQuery = await db.collection('users')
+                .where('referralCode', '==', refCode)
+                .limit(1)
+                .get();
 
-    const params = new URLSearchParams({
-        client_id: GOOGLE_CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        response_type: 'token',
-        scope: 'openid profile email',
-        state: state,
-        prompt: 'select_account'
-    });
+            if (!referrerQuery.empty) {
+                const referrerDoc = referrerQuery.docs[0];
+                const referrerData = referrerDoc.data();
 
-    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-}
+                referrerInfo = {
+                    name: referrerData.name || 'A Friend',
+                    photoURL: referrerData.photoURL || null,
+                    institute: referrerData.institute || null,
+                    course: referrerData.course || null
+                };
 
-function handleOAuthCallback() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) {
-        checkExistingSession();
-        return;
-    }
-
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
-    const state = params.get('state');
-
-    if (accessToken) {
-        const savedState = localStorage.getItem('oauth_state');
-        if (savedState && state !== savedState) {
-            showToast('Security validation failed', 'error');
-            showSection('landing');
-            return;
+                // Show the referral landing page with referrer info
+                showReferralLanding();
+                return;
+            } else {
+                // Referral code not found, but still store it
+                console.log('Referral code not found in database');
+                showToast('Referral link applied!', 'success');
+            }
+        } catch (error) {
+            console.error('Error fetching referrer:', error);
         }
-
-        localStorage.removeItem('oauth_state');
-        history.replaceState(null, '', window.location.pathname + window.location.search);
-        document.getElementById('authLoading').classList.remove('hidden');
-
-        fetchGoogleUser(accessToken);
-    } else {
-        checkExistingSession();
     }
+
+    // No referral code or couldn't fetch referrer - proceed with normal auth flow
+    setupAuthListener();
 }
 
-function fetchGoogleUser(token) {
-    fetch('https://www.googleapis.com/oauth2/v2/userinfo?access_token=' + token)
-        .then(res => res.json())
-        .then(googleUser => {
-            document.getElementById('authLoading').classList.add('hidden');
-            handleAuthentication(googleUser);
-        })
-        .catch(err => {
-            document.getElementById('authLoading').classList.add('hidden');
-            showToast('Authentication failed', 'error');
-            showSection('landing');
-        });
-}
+function showReferralLanding() {
+    document.getElementById('authLoading').classList.add('hidden');
 
-function handleAuthentication(googleUser) {
-    let user = allUsers.find(u => u.googleId === googleUser.id || u.email === googleUser.email);
+    // Update referrer info display
+    if (referrerInfo) {
+        document.getElementById('referrerName').textContent = referrerInfo.name;
 
-    if (user) {
-        user.googleId = googleUser.id;
-        user.picture = googleUser.picture;
-        user.lastLogin = new Date().toISOString();
-        saveData();
-
-        currentUser = user;
-        localStorage.setItem('currentUserEmail', user.email);
-
-        if (user.profileComplete) {
-            loginSuccess();
+        const avatarEl = document.getElementById('referrerAvatar');
+        if (referrerInfo.photoURL) {
+            avatarEl.innerHTML = `<img src="${referrerInfo.photoURL}" alt="${referrerInfo.name}">`;
         } else {
-            showProfileSetup(user);
+            document.getElementById('referrerInitials').textContent = getInitials(referrerInfo.name);
+        }
+
+        // Show institute if available
+        const instituteEl = document.getElementById('referrerInstitute');
+        if (referrerInfo.institute) {
+            instituteEl.textContent = referrerInfo.institute + (referrerInfo.course ? ' • ' + referrerInfo.course : '');
         }
     } else {
-        // New user
-        user = {
-            id: Date.now(),
-            googleId: googleUser.id,
-            name: googleUser.name,
-            email: googleUser.email,
-            picture: googleUser.picture,
-            referralCode: generateReferralCode(),
-            referredBy: localStorage.getItem('pending_referral') || null,
-            registrationDate: new Date().toISOString(),
-            profileComplete: false,
-            isPremium: false,
-            premiumExpiry: null,
-            balance: 0,
-            totalEarnings: 0,
-            withdrawnAmount: 0,
-            bankDetails: null
-        };
-
-        allUsers.push(user);
-        saveData();
-
-        currentUser = user;
-        localStorage.setItem('currentUserEmail', user.email);
-        showProfileSetup(user);
+        document.getElementById('referrerName').textContent = 'A Friend';
+        document.getElementById('referrerInitials').textContent = '👤';
     }
+
+    showSection('referralLanding');
 }
 
-function checkExistingSession() {
-    const email = localStorage.getItem('currentUserEmail');
-    if (email) {
-        const user = allUsers.find(u => u.email === email);
+function skipToLanding() {
+    // Clear the pending referral
+    sessionStorage.removeItem('pending_referral');
+    pendingReferralCode = null;
+    referrerInfo = null;
+
+    // Remove ref param from URL
+    const url = new URL(window.location);
+    url.searchParams.delete('ref');
+    history.replaceState(null, '', url.pathname);
+
+    // Setup auth listener and show landing
+    setupAuthListener();
+}
+
+// ============ FIREBASE AUTH ============
+function setupAuthListener() {
+    updateLoadingStatus('Checking authentication...');
+
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
-            if (user.profileComplete) {
-                loginSuccess();
-            } else {
-                showProfileSetup(user);
-            }
-            return;
+            updateLoadingStatus('Loading your data...');
+            await loadUserData(user);
+        } else {
+            currentUser = null;
+            currentUserData = null;
+            document.getElementById('authLoading').classList.add('hidden');
+            showSection('landing');
+        }
+    });
+}
+
+async function signInWithGoogle() {
+    // Determine which button was clicked
+    const mainBtn = document.getElementById('googleSignInBtn');
+    const mainBtnText = document.getElementById('googleBtnText');
+    const refBtn = document.getElementById('referralGoogleBtn');
+    const refBtnText = document.getElementById('referralGoogleBtnText');
+
+    // Disable both buttons
+    if (mainBtn) {
+        mainBtn.disabled = true;
+        if (mainBtnText) mainBtnText.textContent = 'Signing in...';
+    }
+    if (refBtn) {
+        refBtn.disabled = true;
+        if (refBtnText) refBtnText.textContent = 'Signing in...';
+    }
+
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+
+        const result = await auth.signInWithPopup(provider);
+
+        if (analytics) {
+            analytics.logEvent('login', { method: 'google' });
+        }
+    } catch (error) {
+        console.error('Sign in error:', error);
+
+        if (error.code === 'auth/popup-closed-by-user') {
+            showToast('Sign in cancelled', 'info');
+        } else if (error.code === 'auth/popup-blocked') {
+            showToast('Please allow popups for this site', 'error');
+        } else {
+            showToast('Sign in failed: ' + error.message, 'error');
+        }
+
+        // Re-enable buttons
+        if (mainBtn) {
+            mainBtn.disabled = false;
+            if (mainBtnText) mainBtnText.textContent = 'Continue with Google';
+        }
+        if (refBtn) {
+            refBtn.disabled = false;
+            if (refBtnText) refBtnText.textContent = 'Join with Google - It\'s Free!';
         }
     }
-    showSection('landing');
+}
+
+async function loadUserData(user) {
+    try {
+        const userRef = db.collection('users').doc(user.uid);
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+            currentUserData = userDoc.data();
+
+            // Update last login
+            await userRef.update({
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount: firebase.firestore.FieldValue.increment(1)
+            });
+
+            if (currentUserData.profileComplete) {
+                await setupRealtimeListeners();
+                loginSuccess();
+            } else {
+                document.getElementById('authLoading').classList.add('hidden');
+                showProfileSetup();
+            }
+        } else {
+            // New user - get the pending referral code
+            const pendingRef = sessionStorage.getItem('pending_referral') || pendingReferralCode;
+
+            const newUserData = {
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName || 'User',
+                photoURL: user.photoURL || null,
+                referralCode: generateReferralCode(),
+                referredBy: pendingRef || null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+                loginCount: 1,
+                profileComplete: false,
+                isPremium: false,
+                premiumExpiry: null,
+                balance: 0,
+                totalEarnings: 0,
+                withdrawnAmount: 0,
+                bankDetails: null,
+                studyStreak: 0,
+                totalQuestions: 0,
+                correctAnswers: 0
+            };
+
+            await userRef.set(newUserData);
+            currentUserData = newUserData;
+
+            if (analytics) {
+                analytics.logEvent('sign_up', { method: 'google' });
+            }
+
+            // Track new user
+            await db.collection('analytics').doc('users').set({
+                totalUsers: firebase.firestore.FieldValue.increment(1),
+                newUsersToday: firebase.firestore.FieldValue.increment(1),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            if (pendingRef) {
+                showToast('Referral applied! Your friend will earn ₦500 when you subscribe.', 'success');
+            }
+
+            document.getElementById('authLoading').classList.add('hidden');
+            showProfileSetup();
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('authLoading').classList.add('hidden');
+        showToast('Error loading data. Please try again.', 'error');
+        showSection('landing');
+    }
+}
+
+async function setupRealtimeListeners() {
+    if (unsubscribeUser) unsubscribeUser();
+
+    unsubscribeUser = db.collection('users').doc(currentUser.uid)
+        .onSnapshot((doc) => {
+            if (doc.exists) {
+                currentUserData = doc.data();
+                updateUserDisplay();
+            }
+        }, (error) => {
+            console.error('User listener error:', error);
+        });
+
+    if (unsubscribeReferrals) unsubscribeReferrals();
+
+    unsubscribeReferrals = db.collection('referrals')
+        .where('referrerCode', '==', currentUserData.referralCode)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            userReferrals = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            updateReferralDisplay();
+        }, (error) => {
+            console.error('Referrals listener error:', error);
+        });
 }
 
 function generateReferralCode() {
@@ -1432,14 +1836,15 @@ function generateReferralCode() {
 }
 
 // ============ PROFILE SETUP ============
-function showProfileSetup(user) {
-    document.getElementById('profileName').textContent = user.name.split(' ')[0];
+function showProfileSetup() {
+    const user = currentUser;
+    document.getElementById('profileName').textContent = (currentUserData.name || 'User').split(' ')[0];
 
     const avatarEl = document.getElementById('profileAvatar');
-    if (user.picture) {
-        avatarEl.innerHTML = `<img src="${user.picture}" alt="Avatar" class="w-full h-full object-cover">`;
+    if (user.photoURL) {
+        avatarEl.innerHTML = `<img src="${user.photoURL}" alt="Avatar" class="w-full h-full object-cover">`;
     } else {
-        document.getElementById('profileInitials').textContent = getInitials(user.name);
+        document.getElementById('profileInitials').textContent = getInitials(currentUserData.name || 'User');
     }
 
     showSection('profile');
@@ -1496,8 +1901,12 @@ function updateSubjectMessage() {
     });
 }
 
-function handleProfileSubmit(e) {
+async function handleProfileSubmit(e) {
     e.preventDefault();
+
+    const btn = document.getElementById('profileSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving...';
 
     const selectedSubjects = ['Use of English'];
     document.querySelectorAll('.subject-chip.selected:not([data-required])').forEach(chip => {
@@ -1506,32 +1915,59 @@ function handleProfileSubmit(e) {
 
     if (selectedSubjects.length !== 4) {
         showToast('Please select exactly 3 additional subjects', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-icons text-lg">check_circle</span> Complete Setup & Start Learning';
         return;
     }
 
-    currentUser.institute = document.getElementById('inputInstitute').value;
-    currentUser.course = document.getElementById('inputCourse').value;
-    currentUser.targetScore = parseInt(document.getElementById('inputTargetScore').value);
-    currentUser.subjects = selectedSubjects;
-    currentUser.profileComplete = true;
-
-    const bank = document.getElementById('inputBank').value;
-    const accountNumber = document.getElementById('inputAccountNumber').value;
-    if (bank && accountNumber) {
-        currentUser.bankDetails = {
-            bank: bank,
-            accountNumber: accountNumber,
-            accountName: currentUser.name
+    try {
+        const updateData = {
+            institute: document.getElementById('inputInstitute').value,
+            course: document.getElementById('inputCourse').value,
+            targetScore: parseInt(document.getElementById('inputTargetScore').value),
+            subjects: selectedSubjects,
+            profileComplete: true,
+            profileCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
+
+        const bank = document.getElementById('inputBank').value;
+        const accountNumber = document.getElementById('inputAccountNumber').value;
+        if (bank && accountNumber) {
+            updateData.bankDetails = {
+                bank: bank,
+                accountNumber: accountNumber,
+                accountName: currentUserData.name
+            };
+        }
+
+        await db.collection('users').doc(currentUser.uid).update(updateData);
+
+        await db.collection('analytics').doc('users').set({
+            profilesCompleted: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        currentUserData = { ...currentUserData, ...updateData };
+
+        await setupRealtimeListeners();
+        loginSuccess();
+        showToast('Welcome to Raven! 🎓', 'success');
+
+        if (analytics) {
+            analytics.logEvent('complete_registration');
+        }
+    } catch (error) {
+        console.error('Profile save error:', error);
+        showToast('Error saving profile. Please try again.', 'error');
     }
 
-    saveData();
-    loginSuccess();
-    showToast('Welcome to Raven! 🎓', 'success');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-icons text-lg">check_circle</span> Complete Setup & Start Learning';
 }
 
 // ============ LOGIN SUCCESS ============
 function loginSuccess() {
+    document.getElementById('authLoading').classList.add('hidden');
     document.getElementById('mainHeader').style.display = 'block';
     document.getElementById('mobileNav').style.display = 'flex';
 
@@ -1539,29 +1975,53 @@ function loginSuccess() {
     updateReferralDisplay();
     showSection('dashboard');
 
-    // Check for pending referral
-    localStorage.removeItem('pending_referral');
+    trackUserActivity();
+    sessionStorage.removeItem('pending_referral');
+}
+
+async function trackUserActivity() {
+    if (!currentUser) return;
+
+    try {
+        await db.collection('users').doc(currentUser.uid).update({
+            lastActive: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        const today = new Date().toISOString().split('T')[0];
+        await db.collection('analytics').doc('daily').collection(today).doc(currentUser.uid).set({
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userId: currentUser.uid
+        }, { merge: true });
+
+        await db.collection('analytics').doc('daily').set({
+            [today]: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+    } catch (error) {
+        console.error('Error tracking activity:', error);
+    }
 }
 
 function updateUserDisplay() {
+    if (!currentUserData) return;
+
     const avatarEl = document.getElementById('userAvatar');
-    if (currentUser.picture) {
-        avatarEl.innerHTML = `<img src="${currentUser.picture}" alt="Avatar" class="w-full h-full object-cover">`;
+    if (currentUser?.photoURL) {
+        avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="Avatar" class="w-full h-full object-cover">`;
     } else {
-        document.getElementById('userInitials').textContent = getInitials(currentUser.name);
+        document.getElementById('userInitials').textContent = getInitials(currentUserData.name || 'User');
     }
 
-    document.getElementById('dashboardName').textContent = currentUser.name.split(' ')[0];
-    document.getElementById('dashboardInstitute').textContent = currentUser.institute || '-';
-    document.getElementById('dashboardCourse').textContent = currentUser.course || '-';
-    document.getElementById('dashboardTarget').textContent = currentUser.targetScore || '-';
-    document.getElementById('dashboardEarnings').textContent = formatCurrency(currentUser.totalEarnings || 0);
-    document.getElementById('dashboardStreak').textContent = (currentUser.studyStreak || 0) + ' days';
+    document.getElementById('dashboardName').textContent = (currentUserData.name || 'Student').split(' ')[0];
+    document.getElementById('dashboardInstitute').textContent = currentUserData.institute || '-';
+    document.getElementById('dashboardCourse').textContent = currentUserData.course || '-';
+    document.getElementById('dashboardTarget').textContent = currentUserData.targetScore || '-';
+    document.getElementById('dashboardEarnings').textContent = formatCurrency(currentUserData.totalEarnings || 0);
+    document.getElementById('dashboardStreak').textContent = (currentUserData.studyStreak || 0) + ' days';
 
-    // Update premium button
     const premiumBtn = document.getElementById('premiumBtn');
     const premiumText = document.getElementById('premiumBtnText');
-    if (currentUser.isPremium) {
+    if (currentUserData.isPremium) {
         premiumText.textContent = 'Premium ✓';
         premiumBtn.classList.add('bg-gold-500', 'text-white');
         premiumBtn.classList.remove('bg-gold-50', 'text-gold-600');
@@ -1570,7 +2030,8 @@ function updateUserDisplay() {
 
 // ============ REFERRAL SYSTEM ============
 function updateReferralDisplay() {
-    const userReferrals = referrals.filter(r => r.referrerCode === currentUser.referralCode);
+    if (!currentUserData) return;
+
     const paidReferrals = userReferrals.filter(r => r.status === 'paid');
     const pendingReferrals = userReferrals.filter(r => r.status === 'pending');
 
@@ -1578,31 +2039,26 @@ function updateReferralDisplay() {
     const totalEarnings = calculateTotalEarnings(userReferrals);
     const pendingEarnings = pendingReferrals.length * tier.reward;
 
-    // Update referral link
-    const referralLink = `${BASE_URL}?ref=${currentUser.referralCode}`;
+    const referralCode = currentUserData.referralCode || '';
+    const referralLink = `${BASE_URL}?ref=${referralCode}`;
     document.getElementById('referralLinkInput').value = referralLink;
 
-    // Update counts
     document.getElementById('referralCount').textContent = paidReferrals.length;
     document.getElementById('totalReferrals').textContent = userReferrals.length;
     document.getElementById('pendingReferrals').textContent = pendingReferrals.length;
     document.getElementById('paidReferrals').textContent = paidReferrals.length;
 
-    // Update earnings
     document.getElementById('totalEarnings').textContent = formatCurrency(totalEarnings);
     document.getElementById('pendingEarnings').textContent = formatCurrency(pendingEarnings);
-    document.getElementById('availableBalance').textContent = formatCurrency(currentUser.balance || 0);
+    document.getElementById('availableBalance').textContent = formatCurrency(currentUserData.balance || 0);
 
-    // Update tier badge
     const tierBadge = document.getElementById('referralTierBadge');
     tierBadge.className = `tier-badge tier-${tier.name.toLowerCase()}`;
     document.getElementById('referralTierName').textContent = tier.name;
 
-    // Update withdraw button
     const withdrawBtn = document.getElementById('withdrawBtn');
-    withdrawBtn.disabled = (currentUser.balance || 0) < 500;
+    withdrawBtn.disabled = (currentUserData.balance || 0) < 500;
 
-    // Highlight current tier
     ['bronze', 'silver', 'gold', 'diamond'].forEach(t => {
         const el = document.getElementById('tier' + t.charAt(0).toUpperCase() + t.slice(1));
         if (t === tier.name.toLowerCase()) {
@@ -1612,8 +2068,7 @@ function updateReferralDisplay() {
         }
     });
 
-    // Render referral history
-    renderReferralHistory(userReferrals);
+    renderReferralHistory();
 }
 
 function getCurrentTier(paidCount) {
@@ -1623,11 +2078,11 @@ function getCurrentTier(paidCount) {
     return TIERS.bronze;
 }
 
-function calculateTotalEarnings(userReferrals) {
-    return userReferrals.filter(r => r.status === 'paid').reduce((sum, r) => sum + (r.reward || REFERRAL_REWARD), 0);
+function calculateTotalEarnings(refs) {
+    return refs.filter(r => r.status === 'paid').reduce((sum, r) => sum + (r.reward || REFERRAL_REWARD), 0);
 }
 
-function renderReferralHistory(userReferrals) {
+function renderReferralHistory() {
     const container = document.getElementById('referralHistory');
 
     if (userReferrals.length === 0) {
@@ -1640,8 +2095,8 @@ function renderReferralHistory(userReferrals) {
         return;
     }
 
-    container.innerHTML = userReferrals.slice().reverse().map(ref => {
-        const date = new Date(ref.date).toLocaleDateString();
+    container.innerHTML = userReferrals.map(ref => {
+        const date = ref.createdAt?.toDate ? ref.createdAt.toDate().toLocaleDateString() : 'Recently';
         const statusClass = ref.status === 'paid' ? 'completed' : 'pending';
         const statusText = ref.status === 'paid' ? 'Paid' : 'Pending';
         const statusIcon = ref.status === 'paid' ? 'check' : 'schedule';
@@ -1673,8 +2128,11 @@ function copyReferralLink() {
     const link = document.getElementById('referralLinkInput').value;
     navigator.clipboard.writeText(link).then(() => {
         showToast('Referral link copied!', 'success');
+
+        if (analytics) {
+            analytics.logEvent('share', { method: 'copy', content_type: 'referral_link' });
+        }
     }).catch(() => {
-        // Fallback
         const input = document.getElementById('referralLinkInput');
         input.select();
         document.execCommand('copy');
@@ -1686,12 +2144,20 @@ function shareWhatsApp() {
     const link = document.getElementById('referralLinkInput').value;
     const text = encodeURIComponent(`🎓 Join me on Raven - Nigeria's #1 JAMB Prep Platform!\n\n✅ 10,000+ Past Questions\n✅ AI-Powered Study Plans\n✅ Track Your Progress\n\nSign up with my link and let's ace JAMB together!\n\n${link}`);
     window.open(`https://wa.me/?text=${text}`, '_blank');
+
+    if (analytics) {
+        analytics.logEvent('share', { method: 'whatsapp', content_type: 'referral_link' });
+    }
 }
 
 function shareTwitter() {
     const link = document.getElementById('referralLinkInput').value;
     const text = encodeURIComponent(`🎓 Preparing for JAMB 2026? Join Raven - the smartest way to study!\n\n${link}\n\n#JAMB2026 #Raven`);
     window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+
+    if (analytics) {
+        analytics.logEvent('share', { method: 'twitter', content_type: 'referral_link' });
+    }
 }
 
 // ============ PAYMENT INTEGRATION ============
@@ -1699,9 +2165,7 @@ function showPremiumModal() {
     const modal = document.getElementById('premiumModal');
     modal.classList.add('active');
 
-    // Check if user was referred
-    const pendingRef = currentUser.referredBy;
-    if (pendingRef) {
+    if (currentUserData?.referredBy) {
         document.getElementById('referralApplied').classList.remove('hidden');
     }
 }
@@ -1722,17 +2186,17 @@ function initiatePremiumPayment() {
     popup.newTransaction({
         key: PAYSTACK_KEY,
         email: currentUser.email,
-        amount: PREMIUM_PRICE * 100, // Amount in kobo
+        amount: PREMIUM_PRICE * 100,
         currency: 'NGN',
         reference: 'RAVEN_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
         metadata: {
-            user_id: currentUser.id,
-            referrer_code: currentUser.referredBy || null,
+            user_id: currentUser.uid,
+            referrer_code: currentUserData.referredBy || null,
             custom_fields: [
                 {
                     display_name: 'User Name',
                     variable_name: 'user_name',
-                    value: currentUser.name
+                    value: currentUserData.name
                 },
                 {
                     display_name: 'Subscription Type',
@@ -1753,67 +2217,115 @@ function initiatePremiumPayment() {
     });
 }
 
-function handlePaymentSuccess(transaction) {
-    // Update user to premium
-    currentUser.isPremium = true;
-    currentUser.premiumExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+async function handlePaymentSuccess(transaction) {
+    try {
+        const batch = db.batch();
+        const userRef = db.collection('users').doc(currentUser.uid);
 
-    // Process referral reward
-    if (currentUser.referredBy) {
-        const referrer = allUsers.find(u => u.referralCode === currentUser.referredBy);
-        if (referrer) {
-            const tier = getCurrentTier(referrals.filter(r => r.referrerCode === referrer.referralCode && r.status === 'paid').length);
-            const reward = tier.reward;
+        batch.update(userRef, {
+            isPremium: true,
+            premiumExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            premiumStartDate: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-            // Create referral record
-            const referralRecord = {
-                id: Date.now(),
-                referrerCode: currentUser.referredBy,
-                referredId: currentUser.id,
-                referredName: currentUser.name,
-                referredEmail: currentUser.email,
-                date: new Date().toISOString(),
-                status: 'paid',
-                reward: reward,
-                transactionRef: transaction.reference
-            };
+        const paymentRef = db.collection('payments').doc();
+        batch.set(paymentRef, {
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: PREMIUM_PRICE,
+            currency: 'NGN',
+            reference: transaction.reference,
+            status: 'success',
+            type: 'premium_subscription',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-            referrals.push(referralRecord);
+        if (currentUserData.referredBy) {
+            const referrerQuery = await db.collection('users')
+                .where('referralCode', '==', currentUserData.referredBy)
+                .limit(1)
+                .get();
 
-            // Credit referrer's balance
-            referrer.balance = (referrer.balance || 0) + reward;
-            referrer.totalEarnings = (referrer.totalEarnings || 0) + reward;
+            if (!referrerQuery.empty) {
+                const referrerDoc = referrerQuery.docs[0];
+                const referrerId = referrerDoc.id;
 
-            showToast(`Your friend earned ₦${reward}!`, 'success');
+                const existingReferrals = await db.collection('referrals')
+                    .where('referrerCode', '==', currentUserData.referredBy)
+                    .where('status', '==', 'paid')
+                    .get();
+
+                const tier = getCurrentTier(existingReferrals.size);
+                const reward = tier.reward;
+
+                const referralRef = db.collection('referrals').doc();
+                batch.set(referralRef, {
+                    referrerCode: currentUserData.referredBy,
+                    referrerId: referrerId,
+                    referredId: currentUser.uid,
+                    referredName: currentUserData.name,
+                    referredEmail: currentUser.email,
+                    status: 'paid',
+                    reward: reward,
+                    transactionRef: transaction.reference,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                const referrerRef = db.collection('users').doc(referrerId);
+                batch.update(referrerRef, {
+                    balance: firebase.firestore.FieldValue.increment(reward),
+                    totalEarnings: firebase.firestore.FieldValue.increment(reward)
+                });
+
+                batch.update(userRef, {
+                    referredBy: null
+                });
+
+                showToast(`Your friend earned ₦${reward}!`, 'success');
+            }
         }
 
-        // Clear the referral code
-        currentUser.referredBy = null;
+        const analyticsRef = db.collection('analytics').doc('revenue');
+        batch.set(analyticsRef, {
+            totalRevenue: firebase.firestore.FieldValue.increment(PREMIUM_PRICE),
+            premiumSubscriptions: firebase.firestore.FieldValue.increment(1),
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        await batch.commit();
+
+        if (analytics) {
+            analytics.logEvent('purchase', {
+                currency: 'NGN',
+                value: PREMIUM_PRICE,
+                items: [{ item_name: 'premium_monthly' }]
+            });
+        }
+
+        showToast('Welcome to Raven Premium! 🎉', 'success');
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        showToast('Payment recorded. Contact support if premium is not activated.', 'info');
     }
-
-    saveData();
-    updateUserDisplay();
-
-    showToast('Welcome to Raven Premium! 🎉', 'success');
 }
 
 // ============ WITHDRAWAL ============
 function initiateWithdrawal() {
-    if (!currentUser.bankDetails) {
+    if (!currentUserData.bankDetails) {
         showToast('Please add your bank details in settings first', 'error');
         openSettingsModal();
         return;
     }
 
-    if ((currentUser.balance || 0) < 500) {
+    if ((currentUserData.balance || 0) < 500) {
         showToast('Minimum withdrawal is ₦500', 'error');
         return;
     }
 
-    document.getElementById('withdrawAmount').textContent = formatCurrency(currentUser.balance);
-    document.getElementById('withdrawBank').value = currentUser.bankDetails.bank;
-    document.getElementById('withdrawAccountNumber').value = currentUser.bankDetails.accountNumber;
-    document.getElementById('withdrawAccountName').value = currentUser.bankDetails.accountName || currentUser.name;
+    document.getElementById('withdrawAmount').textContent = formatCurrency(currentUserData.balance);
+    document.getElementById('withdrawBank').value = currentUserData.bankDetails.bank;
+    document.getElementById('withdrawAccountNumber').value = currentUserData.bankDetails.accountNumber;
+    document.getElementById('withdrawAccountName').value = currentUserData.bankDetails.accountName || currentUserData.name;
 
     document.getElementById('withdrawalModal').classList.add('active');
 }
@@ -1822,45 +2334,56 @@ function closeWithdrawalModal() {
     document.getElementById('withdrawalModal').classList.remove('active');
 }
 
-function confirmWithdrawal() {
+async function confirmWithdrawal() {
     const btn = document.getElementById('confirmWithdrawBtn');
     btn.innerHTML = '<span class="spinner"></span> Processing...';
     btn.disabled = true;
 
+    try {
+        const amount = currentUserData.balance;
 
+        await db.collection('withdrawals').add({
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: amount,
+            bankDetails: currentUserData.bankDetails,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    // Simulate payout processing (in production, this would be a Paystack Transfer API call)
-    setTimeout(() => {
-        const amount = currentUser.balance;
-        currentUser.withdrawnAmount = (currentUser.withdrawnAmount || 0) + amount;
-        currentUser.balance = 0;
-
-        saveData();
+        await db.collection('users').doc(currentUser.uid).update({
+            balance: 0,
+            withdrawnAmount: firebase.firestore.FieldValue.increment(amount)
+        });
 
         closeWithdrawalModal();
-        updateReferralDisplay();
-        updateUserDisplay();
+        showToast(`Withdrawal of ₦${amount.toLocaleString()} initiated! Processing within 24 hours.`, 'success');
 
-        showToast(`₦${amount.toLocaleString()} sent to your bank account!`, 'success');
+        if (analytics) {
+            analytics.logEvent('withdrawal_request', { amount: amount });
+        }
+    } catch (error) {
+        console.error('Withdrawal error:', error);
+        showToast('Withdrawal failed. Please try again.', 'error');
+    }
 
-        btn.innerHTML = '<span class="material-icons">send</span> Confirm Withdrawal';
-        btn.disabled = false;
-    }, 2000);
+    btn.innerHTML = '<span class="material-icons">send</span> Confirm Withdrawal';
+    btn.disabled = false;
 }
 
 // ============ SETTINGS ============
 function openSettingsModal() {
-    if (!currentUser) return;
+    if (!currentUserData) return;
 
-    document.getElementById('settingsName').value = currentUser.name;
-    document.getElementById('settingsEmail').value = currentUser.email;
-    document.getElementById('settingsInstitute').value = currentUser.institute || '';
-    document.getElementById('settingsCourse').value = currentUser.course || '';
-    document.getElementById('settingsTargetScore').value = currentUser.targetScore || '';
+    document.getElementById('settingsName').value = currentUserData.name || '';
+    document.getElementById('settingsEmail').value = currentUser?.email || '';
+    document.getElementById('settingsInstitute').value = currentUserData.institute || '';
+    document.getElementById('settingsCourse').value = currentUserData.course || '';
+    document.getElementById('settingsTargetScore').value = currentUserData.targetScore || '';
 
-    if (currentUser.bankDetails) {
-        document.getElementById('settingsBank').value = currentUser.bankDetails.bank || '';
-        document.getElementById('settingsAccountNumber').value = currentUser.bankDetails.accountNumber || '';
+    if (currentUserData.bankDetails) {
+        document.getElementById('settingsBank').value = currentUserData.bankDetails.bank || '';
+        document.getElementById('settingsAccountNumber').value = currentUserData.bankDetails.accountNumber || '';
     }
 
     document.getElementById('settingsModal').classList.add('active');
@@ -1870,45 +2393,62 @@ function closeSettingsModal() {
     document.getElementById('settingsModal').classList.remove('active');
 }
 
-document.getElementById('settingsForm').addEventListener('submit', (e) => {
+document.getElementById('settingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    currentUser.name = document.getElementById('settingsName').value;
-    currentUser.institute = document.getElementById('settingsInstitute').value;
-    currentUser.course = document.getElementById('settingsCourse').value;
-    currentUser.targetScore = parseInt(document.getElementById('settingsTargetScore').value);
-
-    const bank = document.getElementById('settingsBank').value;
-    const accountNumber = document.getElementById('settingsAccountNumber').value;
-    if (bank && accountNumber) {
-        currentUser.bankDetails = {
-            bank: bank,
-            accountNumber: accountNumber,
-            accountName: currentUser.name
+    try {
+        const updateData = {
+            name: document.getElementById('settingsName').value,
+            institute: document.getElementById('settingsInstitute').value,
+            course: document.getElementById('settingsCourse').value,
+            targetScore: parseInt(document.getElementById('settingsTargetScore').value) || null
         };
+
+        const bank = document.getElementById('settingsBank').value;
+        const accountNumber = document.getElementById('settingsAccountNumber').value;
+        if (bank && accountNumber) {
+            updateData.bankDetails = {
+                bank: bank,
+                accountNumber: accountNumber,
+                accountName: document.getElementById('settingsName').value
+            };
+        }
+
+        await db.collection('users').doc(currentUser.uid).update(updateData);
+
+        closeSettingsModal();
+        showToast('Settings saved!', 'success');
+    } catch (error) {
+        console.error('Settings save error:', error);
+        showToast('Error saving settings', 'error');
     }
-
-    saveData();
-    updateUserDisplay();
-    updateReferralDisplay();
-    closeSettingsModal();
-
-    showToast('Settings saved!', 'success');
 });
 
-function logout() {
-    localStorage.removeItem('currentUserEmail');
-    currentUser = null;
-    document.getElementById('mainHeader').style.display = 'none';
-    document.getElementById('mobileNav').style.display = 'none';
-    closeSettingsModal();
-    showSection('landing');
-    showToast('Logged out successfully', 'info');
+async function logout() {
+    try {
+        if (unsubscribeUser) unsubscribeUser();
+        if (unsubscribeReferrals) unsubscribeReferrals();
+
+        await auth.signOut();
+
+        currentUser = null;
+        currentUserData = null;
+        userReferrals = [];
+
+        document.getElementById('mainHeader').style.display = 'none';
+        document.getElementById('mobileNav').style.display = 'none';
+        closeSettingsModal();
+        showSection('landing');
+        showToast('Logged out successfully', 'info');
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast('Error logging out', 'error');
+    }
 }
 
 // ============ NAVIGATION ============
 function showSection(sectionName) {
-    const sections = ['landing', 'profile', 'dashboard', 'referrals', 'analytics'];
+    const sections = ['landing', 'profile', 'dashboard', 'referrals', 'analytics', 'referralLanding'];
 
     sections.forEach(s => {
         const el = document.getElementById(s + 'Section');
@@ -1917,7 +2457,6 @@ function showSection(sectionName) {
         }
     });
 
-    // Update nav buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
         const isActive = btn.dataset.section === sectionName;
         btn.classList.toggle('bg-accent-500/10', isActive);
@@ -1930,15 +2469,12 @@ function showSection(sectionName) {
         btn.classList.toggle('active', isActive);
     });
 
-    currentSection = sectionName;
-
-    // Refresh data when switching sections
-    if (sectionName === 'referrals' && currentUser) {
-        updateReferralDisplay();
+    if (sectionName === 'analytics' && currentUserData) {
+        renderAnalytics();
     }
 
-    if (sectionName === 'analytics' && currentUser) {
-        renderAnalytics();
+    if (analytics && currentUser) {
+        analytics.logEvent('page_view', { page_name: sectionName });
     }
 
     window.scrollTo(0, 0);
@@ -1946,7 +2482,6 @@ function showSection(sectionName) {
 
 // ============ ANALYTICS ============
 function renderAnalytics() {
-    // Placeholder analytics
     const ctx = document.getElementById('progressChart');
     if (ctx && window.Chart) {
         if (window.progressChartInstance) {
@@ -1995,7 +2530,7 @@ function renderAnalytics() {
 
 // ============ UTILITIES ============
 function getInitials(name) {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    return (name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
 function formatCurrency(amount) {
@@ -2009,9 +2544,10 @@ function showToast(message, type = 'info') {
     toast.className = `toast ${type}`;
 
     const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+    const colors = { success: 'text-success', error: 'text-error', info: 'text-accent-500', warning: 'text-warning' };
 
     toast.innerHTML = `
-        <span class="material-icons text-${type === 'success' ? 'success' : type === 'error' ? 'error' : 'accent-500'}">${icons[type]}</span>
+        <span class="material-icons ${colors[type]}">${icons[type]}</span>
         <span class="flex-1 text-sm">${message}</span>
         <button onclick="this.parentElement.remove()" class="material-icons text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-lg">close</button>
     `;
@@ -2035,8 +2571,14 @@ function showToast(message, type = 'info') {
         }
     });
 });
+
+// Track user activity periodically
+setInterval(() => {
+    if (currentUser && document.visibilityState === 'visible') {
+        trackUserActivity();
+    }
+}, 5 * 60 * 1000);
 </script>
 
 </body>
 </html>
-
