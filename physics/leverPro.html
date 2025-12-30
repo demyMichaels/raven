@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lever Physics Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #131a2b;
+            --bg-tertiary: #1c2640;
+            --accent-cyan: #00e5ff;
+            --accent-orange: #ff6b35;
+            --accent-yellow: #ffd23f;
+            --accent-green: #39ff14;
+            --text-primary: #e8edf5;
+            --text-secondary: #8b97b0;
+            --grid-color: rgba(0, 229, 255, 0.08);
+        }
+
+        .dark {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #131a2b;
+            --bg-tertiary: #1c2640;
+            --accent-cyan: #00e5ff;
+            --text-primary: #e8edf5;
+            --text-secondary: #8b97b0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-orange), var(--accent-yellow));
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 5vw, 2.2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .lab-container {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 50%;
+            background: linear-gradient(180deg, #0d1220 0%, #151d30 100%);
+        }
+
+        #physicsCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 24px;
+            background: var(--bg-tertiary);
+        }
+
+        .control-group {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 229, 255, 0.1);
+        }
+
+        .control-group h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group h3::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .slider-container {
+            margin-bottom: 16px;
+        }
+
+        .slider-container:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .slider-label span {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            background: rgba(255, 210, 63, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0099cc);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.7);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, var(--accent-cyan), #0099cc);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+        }
+
+        .results-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 24px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+        }
+
+        .result-card {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(0, 229, 255, 0.1);
+            transition: transform 0.3s, border-color 0.3s;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-cyan);
+        }
+
+        .result-card.balanced {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+        }
+
+        .result-card.unbalanced {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+        }
+
+        .result-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .result-card.balanced .result-value {
+            color: var(--accent-green);
+        }
+
+        .result-card.unbalanced .result-value {
+            color: var(--accent-orange);
+        }
+
+        .result-unit {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .formula-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .formula-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+        }
+
+        .formula {
+            font-size: 1rem;
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        .formula .highlight {
+            color: var(--accent-yellow);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-indicator.balanced {
+            background: rgba(57, 255, 20, 0.15);
+            color: var(--accent-green);
+        }
+
+        .status-indicator.unbalanced {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .status-indicator::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .apply-force-btn {
+            width: 100%;
+            padding: 14px 24px;
+            margin-top: 16px;
+            background: linear-gradient(135deg, var(--accent-orange), #cc5528);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .apply-force-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .apply-force-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px;
+            }
+
+            .controls-panel {
+                padding: 16px;
+            }
+
+            .result-value {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚖️ Lever Physics Lab</h1>
+            <p class="subtitle">Explore torque, equilibrium & mechanical advantage</p>
+        </header>
+
+        <div class="lab-container">
+            <div class="canvas-wrapper">
+                <canvas id="physicsCanvas"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <div class="control-group">
+                    <h3>Mass Properties</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Mass (kg)</span>
+                            <span class="slider-value" id="massValue">180</span>
+                        </div>
+                        <input type="range" id="massSlider" min="10" max="500" value="180">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Mass Position (m)</span>
+                            <span class="slider-value" id="massPositionValue">60</span>
+                        </div>
+                        <input type="range" id="massPositionSlider" min="10" max="190" value="60">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Lever Configuration</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Fulcrum Position (m)</span>
+                            <span class="slider-value" id="fulcrumValue">120</span>
+                        </div>
+                        <input type="range" id="fulcrumSlider" min="20" max="180" value="120">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Applied Force (N)</span>
+                            <span class="slider-value" id="forceValue">1000</span>
+                        </div>
+                        <input type="range" id="forceSlider" min="0" max="20000" value="1000">
+                    </div>
+                    <button class="apply-force-btn" id="autoBalanceBtn">⚡ Auto-Balance Force</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-panel">
+            <div class="result-card" id="torqueLeftCard">
+                <div class="result-label">Torque (Mass Side)</div>
+                <div class="result-value" id="torqueLeft">105,948<span class="result-unit">N·m</span></div>
+            </div>
+            <div class="result-card" id="torqueRightCard">
+                <div class="result-label">Torque (Force Side)</div>
+                <div class="result-value" id="torqueRight">80,000<span class="result-unit">N·m</span></div>
+            </div>
+            <div class="result-card" id="statusCard">
+                <div class="result-label">System Status</div>
+                <div class="result-value" id="systemStatus">Unbalanced</div>
+                <div class="status-indicator unbalanced" id="statusIndicator">
+                    Lever will rotate
+                </div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Required Force</div>
+                <div class="result-value" id="requiredForce">1,324<span class="result-unit">N</span></div>
+            </div>
+        </div>
+
+        <div class="formula-box">
+            <div class="formula-title">Physics Principle</div>
+            <div class="formula">
+                <span class="highlight">τ = F × d</span> (Torque = Force × Distance)<br>
+                At equilibrium: <span class="highlight">τ₁ = τ₂</span> → <span class="highlight">m₁g × d₁ = F₂ × d₂</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('physicsCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const g = 9.81;
+        const beamLength = 200;
+
+        let state = {
+            mass: 180,
+            massPosition: 60,
+            fulcrumPosition: 120,
+            appliedForce: 1000,
+            leverAngle: 0,
+            angularVelocity: 0,
+            isAnimating: false
+        };
+
+        function resizeCanvas() {
+            const wrapper = canvas.parentElement;
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            draw();
+        }
+
+        function toCanvasX(meterPos) {
+            const padding = 40;
+            const width = canvas.width / window.devicePixelRatio - padding * 2;
+            return padding + (meterPos / beamLength) * width;
+        }
+
+        function draw() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+
+            ctx.clearRect(0, 0, width, height);
+
+            const groundY = height * 0.75;
+            const fulcrumX = toCanvasX(state.fulcrumPosition);
+            const fulcrumHeight = 40;
+            const beamY = groundY - fulcrumHeight;
+
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.3)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 10; i++) {
+                const x = toCanvasX(i * 20);
+                ctx.beginPath();
+                ctx.moveTo(x, groundY);
+                ctx.lineTo(x, groundY + 15);
+                ctx.stroke();
+
+                ctx.fillStyle = '#8b97b0';
+                ctx.font = '11px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${i * 20}m`, x, groundY + 28);
+            }
+
+            ctx.strokeStyle = '#2a3a5c';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(toCanvasX(0), groundY);
+            ctx.lineTo(toCanvasX(beamLength), groundY);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(fulcrumX, beamY);
+            ctx.rotate(state.leverAngle);
+
+            const beamStartX = toCanvasX(0) - fulcrumX;
+            const beamEndX = toCanvasX(beamLength) - fulcrumX;
+
+            const gradient = ctx.createLinearGradient(beamStartX, -8, beamStartX, 8);
+            gradient.addColorStop(0, '#4a5568');
+            gradient.addColorStop(0.5, '#718096');
+            gradient.addColorStop(1, '#4a5568');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(beamStartX, -8, beamEndX - beamStartX, 16);
+
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(beamStartX, -8, beamEndX - beamStartX, 16);
+
+            const massX = toCanvasX(state.massPosition) - fulcrumX;
+            const massSize = 30 + (state.mass / 500) * 30;
+
+            ctx.fillStyle = '#1a202c';
+            ctx.strokeStyle = '#ff6b35';
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.rect(massX - massSize/2, -8 - massSize, massSize, massSize);
+            ctx.fill();
+            ctx.stroke();
+
+            for (let i = 0; i < 5; i++) {
+                ctx.strokeStyle = 'rgba(255, 107, 53, 0.3)';
+                ctx.beginPath();
+                ctx.moveTo(massX - massSize/2 + i * massSize/4, -8 - massSize);
+                ctx.lineTo(massX - massSize/2 + i * massSize/4 + massSize/4, -8);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ffd23f';
+            ctx.font = 'bold 12px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${state.mass}kg`, massX, -8 - massSize/2 + 4);
+
+            const forceX = toCanvasX(beamLength) - fulcrumX - 10;
+            const forceLength = Math.min(80, (state.appliedForce / 20000) * 80 + 20);
+
+            ctx.strokeStyle = '#39ff14';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(forceX, 8);
+            ctx.lineTo(forceX, 8 + forceLength);
+            ctx.stroke();
+
+            ctx.fillStyle = '#39ff14';
+            ctx.beginPath();
+            ctx.moveTo(forceX, 8 + forceLength);
+            ctx.lineTo(forceX - 8, 8 + forceLength - 12);
+            ctx.lineTo(forceX + 8, 8 + forceLength - 12);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#39ff14';
+            ctx.font = 'bold 11px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText('F', forceX, 8 + forceLength + 18);
+
+            ctx.restore();
+
+            ctx.fillStyle = '#00e5ff';
+            ctx.beginPath();
+            ctx.moveTo(fulcrumX, beamY);
+            ctx.lineTo(fulcrumX - 20, groundY);
+            ctx.lineTo(fulcrumX + 20, groundY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#00e5ff';
+            ctx.font = 'bold 14px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText('P', fulcrumX, groundY + 45);
+
+            ctx.shadowColor = '#00e5ff';
+            ctx.shadowBlur = 15;
+            ctx.beginPath();
+            ctx.arc(fulcrumX, beamY, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        function calculatePhysics() {
+            const weight = state.mass * g;
+            const d1 = state.fulcrumPosition - state.massPosition;
+            const d2 = beamLength - state.fulcrumPosition;
+
+            const torqueLeft = weight * d1;
+            const torqueRight = state.appliedForce * d2;
+
+            const requiredForce = (weight * d1) / d2;
+
+            const netTorque = torqueRight - torqueLeft;
+            const isBalanced = Math.abs(netTorque) < 10;
+
+            document.getElementById('torqueLeft').innerHTML =
+                `${Math.abs(torqueLeft).toLocaleString(undefined, {maximumFractionDigits: 0})}<span class="result-unit">N·m</span>`;
+            document.getElementById('torqueRight').innerHTML =
+                `${torqueRight.toLocaleString(undefined, {maximumFractionDigits: 0})}<span class="result-unit">N·m</span>`;
+            document.getElementById('requiredForce').innerHTML =
+                `${requiredForce.toLocaleString(undefined, {maximumFractionDigits: 0})}<span class="result-unit">N</span>`;
+
+            const statusCard = document.getElementById('statusCard');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const systemStatus = document.getElementById('systemStatus');
+
+            if (isBalanced) {
+                statusCard.className = 'result-card balanced';
+                systemStatus.textContent = 'Balanced';
+                statusIndicator.className = 'status-indicator balanced';
+                statusIndicator.textContent = '✓ In equilibrium';
+            } else {
+                statusCard.className = 'result-card unbalanced';
+                systemStatus.textContent = 'Unbalanced';
+                statusIndicator.className = 'status-indicator unbalanced';
+                statusIndicator.textContent = netTorque > 0 ? '↻ Rotates right' : '↺ Rotates left';
+            }
+
+            return { netTorque, isBalanced };
+        }
+
+        function animate() {
+            const { netTorque, isBalanced } = calculatePhysics();
+
+            if (!isBalanced) {
+                const momentOfInertia = 50000;
+                const angularAccel = netTorque / momentOfInertia * 0.0001;
+                state.angularVelocity += angularAccel;
+                state.angularVelocity *= 0.98;
+                state.leverAngle += state.angularVelocity;
+
+                state.leverAngle = Math.max(-0.3, Math.min(0.3, state.leverAngle));
+            } else {
+                state.angularVelocity *= 0.9;
+                state.leverAngle *= 0.95;
+            }
+
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        document.getElementById('massSlider').addEventListener('input', (e) => {
+            state.mass = parseInt(e.target.value);
+            document.getElementById('massValue').textContent = state.mass;
+            state.leverAngle = 0;
+            state.angularVelocity = 0;
+        });
+
+        document.getElementById('massPositionSlider').addEventListener('input', (e) => {
+            state.massPosition = parseInt(e.target.value);
+            document.getElementById('massPositionValue').textContent = state.massPosition;
+            state.leverAngle = 0;
+            state.angularVelocity = 0;
+        });
+
+        document.getElementById('fulcrumSlider').addEventListener('input', (e) => {
+            state.fulcrumPosition = parseInt(e.target.value);
+            document.getElementById('fulcrumValue').textContent = state.fulcrumPosition;
+            state.leverAngle = 0;
+            state.angularVelocity = 0;
+        });
+
+        document.getElementById('forceSlider').addEventListener('input', (e) => {
+            state.appliedForce = parseInt(e.target.value);
+            document.getElementById('forceValue').textContent = state.appliedForce.toLocaleString();
+            state.leverAngle = 0;
+            state.angularVelocity = 0;
+        });
+
+        document.getElementById('autoBalanceBtn').addEventListener('click', () => {
+            const weight = state.mass * g;
+            const d1 = state.fulcrumPosition - state.massPosition;
+            const d2 = beamLength - state.fulcrumPosition;
+            const requiredForce = Math.round((weight * d1) / d2);
+
+            state.appliedForce = Math.min(20000, Math.max(0, requiredForce));
+            document.getElementById('forceSlider').value = state.appliedForce;
+            document.getElementById('forceValue').textContent = state.appliedForce.toLocaleString();
+            state.leverAngle = 0;
+            state.angularVelocity = 0;
+        });
+
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animate();
+    </script>
+</body>
+</html>
+
