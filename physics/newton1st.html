@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newton's 1st Law - Inertia Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121a2d;
+            --bg-tertiary: #1a2540;
+            --accent-cyan: #00f0ff;
+            --accent-magenta: #ff00aa;
+            --accent-yellow: #ffdd00;
+            --text-primary: #e8edf5;
+            --text-secondary: #8892a8;
+            --success: #00ff88;
+            --error: #ff4466;
+            --glass: rgba(18, 26, 45, 0.85);
+        }
+
+        .dark {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121a2d;
+            --bg-tertiary: #1a2540;
+            --text-primary: #e8edf5;
+            --text-secondary: #8892a8;
+        }
+
+        html:not(.dark) {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e4eaf2;
+            --text-primary: #1a2540;
+            --text-secondary: #5a6580;
+            --glass: rgba(255, 255, 255, 0.9);
+            --accent-cyan: #0088cc;
+            --accent-magenta: #cc0077;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            margin-top: 8px;
+            font-weight: 300;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 28px;
+            background: var(--bg-secondary);
+            border: 2px solid transparent;
+            border-radius: 50px;
+            color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Simulator Section */
+        .sim-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .scenario-select {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .scenario-btn:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        .scenario-btn.active {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        #simCanvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-btn {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 25px rgba(0, 240, 255, 0.3);
+        }
+
+        .control-btn.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'Space Mono', monospace;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 120px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .info-panel {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-title {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-cyan);
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-title::before {
+            content: '◆';
+        }
+
+        .info-text {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .physics-values {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .physics-value {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .physics-value-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .physics-value-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Quiz Section */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .quiz-progress {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .quiz-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        .question-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            padding: 18px 20px;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            border-color: var(--accent-cyan);
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .option.correct {
+            border-color: var(--success);
+            background: rgba(0, 255, 136, 0.15);
+        }
+
+        .option.incorrect {
+            border-color: var(--error);
+            background: rgba(255, 68, 102, 0.15);
+        }
+
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .option.selected .option-letter {
+            background: var(--accent-cyan);
+            color: var(--bg-primary);
+        }
+
+        .option.correct .option-letter {
+            background: var(--success);
+            color: var(--bg-primary);
+        }
+
+        .option.incorrect .option-letter {
+            background: var(--error);
+            color: #fff;
+        }
+
+        .explanation-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 14px;
+            border-left: 4px solid var(--accent-cyan);
+            display: none;
+        }
+
+        .explanation-box.show {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .explanation-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+        }
+
+        .explanation-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .explanation-content strong {
+            color: var(--text-primary);
+        }
+
+        .explanation-content em {
+            color: var(--accent-yellow);
+            font-style: normal;
+        }
+
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            gap: 15px;
+        }
+
+        .quiz-btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Space Mono', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quiz-btn.prev {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .quiz-btn.next {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            color: #fff;
+        }
+
+        .quiz-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .quiz-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        /* Results */
+        .results-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .results-score {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(3rem, 10vw, 5rem);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .results-label {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .results-message {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+
+        /* Learn Section */
+        .learn-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .learn-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--bg-tertiary);
+            transition: all 0.3s ease;
+        }
+
+        .learn-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+        }
+
+        .learn-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .learn-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .learn-content {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .formula-box {
+            background: var(--bg-tertiary);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-cyan);
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            color: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            .nav-tabs {
+                gap: 8px;
+            }
+
+            .nav-tab {
+                padding: 10px 20px;
+                font-size: 12px;
+            }
+
+            #simCanvas {
+                height: 300px;
+            }
+
+            .sim-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-btn {
+                width: 100%;
+            }
+
+            .slider-group {
+                justify-content: space-between;
+            }
+
+            .quiz-card {
+                padding: 20px;
+            }
+
+            .option {
+                padding: 14px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+        <header>
+            <h1 class="logo">INERTIA LAB</h1>
+            <p class="subtitle">Newton's 1st Law Interactive Simulator</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-section="simulator">⚡ Simulator</button>
+            <button class="nav-tab" data-section="quiz">📝 Quiz</button>
+            <button class="nav-tab" data-section="learn">📚 Learn</button>
+        </nav>
+
+        <!-- Simulator Section -->
+        <section id="simulator" class="section active">
+            <div class="sim-container">
+                <div class="sim-header">
+                    <div class="scenario-select">
+                        <button class="scenario-btn active" data-scenario="frictionless">Frictionless Puck</button>
+                        <button class="scenario-btn" data-scenario="braking">Car Braking</button>
+                        <button class="scenario-btn" data-scenario="tablecloth">Tablecloth Trick</button>
+                        <button class="scenario-btn" data-scenario="space">Space Drift</button>
+                    </div>
+                </div>
+
+                <div class="canvas-wrapper">
+                    <canvas id="simCanvas"></canvas>
+                </div>
+
+                <div class="sim-controls">
+                    <button class="control-btn" id="startBtn">▶ START</button>
+                    <button class="control-btn secondary" id="resetBtn">↺ RESET</button>
+                    <div class="slider-group">
+                        <span class="slider-label">Mass:</span>
+                        <input type="range" id="massSlider" min="1" max="10" value="5">
+                        <span id="massValue">5 kg</span>
+                    </div>
+                    <div class="slider-group" id="frictionGroup">
+                        <span class="slider-label">Friction:</span>
+                        <input type="range" id="frictionSlider" min="0" max="10" value="0">
+                        <span id="frictionValue">0%</span>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title">About This Scenario</div>
+                    <p class="info-text" id="scenarioInfo">
+                        A puck slides across frictionless ice. With no unbalanced forces acting horizontally, it will continue at constant velocity forever — a perfect demonstration of Newton's 1st Law.
+                    </p>
+                    <div class="physics-values">
+                        <div class="physics-value">
+                            <div class="physics-value-label">Velocity</div>
+                            <div class="physics-value-num" id="velocityDisplay">0 m/s</div>
+                        </div>
+                        <div class="physics-value">
+                            <div class="physics-value-label">Net Force</div>
+                            <div class="physics-value-num" id="forceDisplay">0 N</div>
+                        </div>
+                        <div class="physics-value">
+                            <div class="physics-value-label">Inertia (Mass)</div>
+                            <div class="physics-value-num" id="inertiaDisplay">5 kg</div>
+                        </div>
+                        <div class="physics-value">
+                            <div class="physics-value-label">Acceleration</div>
+                            <div class="physics-value-num" id="accelDisplay">0 m/s²</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Section -->
+        <section id="quiz" class="section">
+            <div class="quiz-container">
+                <div class="quiz-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="questionCount">Question 1 of 30</span>
+                        <span id="scoreCount">Score: 0</span>
+                    </div>
+                </div>
+
+                <div class="quiz-card" id="quizCard">
+                    <div class="question-number" id="questionNumber">QUESTION 01</div>
+                    <div class="question-text" id="questionText"></div>
+                    <div class="options" id="optionsContainer"></div>
+                    <div class="explanation-box" id="explanationBox">
+                        <div class="explanation-title">💡 EXPLANATION</div>
+                        <div class="explanation-content" id="explanationText"></div>
+                    </div>
+                    <div class="quiz-nav">
+                        <button class="quiz-btn prev" id="prevBtn" disabled>← Previous</button>
+                        <button class="quiz-btn next" id="nextBtn">Next →</button>
+                    </div>
+                </div>
+
+                <div class="results-container" id="resultsContainer" style="display: none;">
+                    <div class="results-score" id="finalScore">0%</div>
+                    <div class="results-label">Final Score</div>
+                    <div class="results-message" id="resultsMessage"></div>
+                    <button class="control-btn" id="retryBtn">Try Again</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learn Section -->
+        <section id="learn" class="section">
+            <div class="learn-grid">
+                <div class="learn-card">
+                    <div class="learn-icon">📖</div>
+                    <h3 class="learn-title">The Law of Inertia</h3>
+                    <div class="learn-content">
+                        <p>Newton's 1st Law states:</p>
+                        <div class="formula-box">"An object at rest stays at rest, and an object in motion stays in motion with constant velocity, unless acted upon by an unbalanced force."</div>
+                        <p>This describes <strong>inertia</strong> — the tendency of objects to resist changes in their motion.</p>
+                    </div>
+                </div>
+
+                <div class="learn-card">
+                    <div class="learn-icon">⚖️</div>
+                    <h3 class="learn-title">Mass = Measure of Inertia</h3>
+                    <div class="learn-content">
+                        <p>Mass is the quantitative measure of inertia:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                            <li>More mass = more inertia</li>
+                            <li>More inertia = harder to start/stop</li>
+                            <li>Mass is constant everywhere</li>
+                        </ul>
+                        <div class="formula-box">Inertia ∝ Mass</div>
+                    </div>
+                </div>
+
+                <div class="learn-card">
+                    <div class="learn-icon">🚗</div>
+                    <h3 class="learn-title">Real-World Examples</h3>
+                    <div class="learn-content">
+                        <p><strong>Car Braking:</strong> Passengers lurch forward because their bodies want to continue moving at the original speed.</p>
+                        <br>
+                        <p><strong>Tablecloth Trick:</strong> Dishes stay in place due to inertia when the cloth is pulled quickly.</p>
+                        <br>
+                        <p><strong>Seatbelts:</strong> Provide the unbalanced force needed to stop passengers with the car.</p>
+                    </div>
+                </div>
+
+                <div class="learn-card">
+                    <div class="learn-icon">🔬</div>
+                    <h3 class="learn-title">Balanced vs Unbalanced Forces</h3>
+                    <div class="learn-content">
+                        <p><strong>Balanced Forces (ΣF = 0):</strong></p>
+                        <p style="color: var(--text-secondary);">Object maintains its state — either at rest or constant velocity.</p>
+                        <br>
+                        <p><strong>Unbalanced Forces (ΣF ≠ 0):</strong></p>
+                        <p style="color: var(--text-secondary);">Object accelerates — changes speed or direction.</p>
+                        <div class="formula-box">ΣF = 0 → a = 0</div>
+                    </div>
+                </div>
+
+                <div class="learn-card">
+                    <div class="learn-icon">🚀</div>
+                    <h3 class="learn-title">Space & Inertia</h3>
+                    <div class="learn-content">
+                        <p>In deep space with engines off:</p>
+                        <ul style="margin-left: 20px; margin-top: 10px; color: var(--text-secondary);">
+                            <li>No air resistance (vacuum)</li>
+                            <li>No friction</li>
+                            <li>Negligible gravity</li>
+                        </ul>
+                        <p style="margin-top: 10px;">The spacecraft continues at constant velocity indefinitely — this is how ships coast between planets!</p>
+                    </div>
+                </div>
+
+                <div class="learn-card">
+                    <div class="learn-icon">🎯</div>
+                    <h3 class="learn-title">Common Misconceptions</h3>
+                    <div class="learn-content">
+                        <p><strong>❌ "Objects need force to keep moving"</strong></p>
+                        <p style="color: var(--text-secondary);">Actually, objects need force to CHANGE their motion, not maintain it.</p>
+                        <br>
+                        <p><strong>❌ "Zero force means zero motion"</strong></p>
+                        <p style="color: var(--text-secondary);">Zero net force means zero ACCELERATION — objects can be moving at constant velocity!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+            <p class="modal-text" id="modalText">Are you sure?</p>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Quiz Data
+        const quizData = [
+            {"id":"phy-newton-1st-001","question":"Newton's First Law of Motion is also called:","options":["Law of Acceleration","Law of Action-Reaction","Law of Inertia","Law of Gravitation"],"answer":"c","explanation":"Newton's 1st Law states: 'An object at rest stays at rest, and an object in motion stays in motion with the same speed and in the same direction unless acted upon by an unbalanced force.'<br><br>This describes <strong>inertia</strong> - the tendency of objects to resist changes in their motion.<br><br><em>Key takeaway:</em> 1st Law = Law of Inertia, 2nd Law = F=ma, 3rd Law = Action-Reaction"},
+            {"id":"phy-newton-1st-002","question":"A book resting on a table remains at rest because:","options":["No force acts on it","Forces on it are balanced","Gravity doesn't affect it","Table exerts upward force only"],"answer":"b","explanation":"The book experiences two main forces:<br>1. <strong>Downward:</strong> Gravity (weight) pulling it down<br>2. <strong>Upward:</strong> Normal force from the table pushing it up<br><br>These forces are equal and opposite → <strong>net force = 0</strong><br>According to Newton's 1st Law: When net force = 0, object remains at rest or continues constant motion.<br><br><em>Important:</em> Forces DO act on the book, but they balance each other."},
+            {"id":"phy-newton-1st-003","question":"In a moving car, if brakes are applied suddenly, passengers lurch forward due to:","options":["Momentum","Inertia","Gravity","Friction"],"answer":"b","explanation":"Before braking: Car and passengers move forward together at same speed.<br>During braking: Car slows down (decelerates) due to friction from brakes.<br><br>Passengers' bodies want to <strong>continue moving forward</strong> at original speed due to <strong>inertia</strong>.<br>Seatbelts provide the unbalanced force needed to slow passengers down with the car.<br><br><em>Real-world example:</em> This is why seatbelts are crucial for safety!"},
+            {"id":"phy-newton-1st-004","question":"Which of the following best demonstrates inertia?","options":["A ball rolling down a hill speeds up","A rocket accelerates upward when fuel burns","A coin continues spinning on a table before stopping","A magnet attracts iron filings"],"answer":"c","explanation":"Inertia = resistance to changes in motion state.<br><br>The spinning coin:<br>• Starts spinning (needs force to begin)<br>• Continues spinning (inertia keeps it moving)<br>• Eventually stops due to friction (unbalanced force)<br><br>This shows both aspects of inertia:<br>1. Reluctance to start moving (needs initial push)<br>2. Reluctance to stop moving (continues until friction stops it)<br><br><em>Other options:</em> Demonstrate acceleration (A,B) or magnetic force (D), not pure inertia."},
+            {"id":"phy-newton-1st-005","question":"If the total force acting on an object is zero, the object will:","options":["Accelerate","Move at constant velocity","Come to rest","Change direction"],"answer":"b","explanation":"Newton's 1st Law states: ∑F = 0 → no acceleration<br><br>Two possibilities:<br>1. <strong>If at rest:</strong> Stays at rest<br>2. <strong>If moving:</strong> Continues moving at constant velocity (same speed AND direction)<br><br><em>Key clarification:</em> 'Constant velocity' means both constant speed AND straight line direction.<br><em>Common mistake:</em> Thinking zero force means zero motion - but moving objects also obey 1st Law!"},
+            {"id":"phy-newton-1st-006","question":"A hockey puck slides across frictionless ice. According to Newton's 1st Law, it will:","options":["Slow down gradually","Speed up","Continue at constant speed forever","Curve in a circle"],"answer":"c","explanation":"Frictionless ice means <strong>no unbalanced forces</strong> act horizontally.<br><br>Vertical forces (gravity and normal force) balance each other.<br>Horizontal forces = 0 (no friction, no pushing)<br><br>Since ∑F = 0:<br>• Puck maintains its velocity (speed + direction)<br>• Would continue forever in straight line<br><br><em>Ideal scenario:</em> In reality, air resistance and ice friction eventually slow it, but 1st Law describes ideal case."},
+            {"id":"phy-newton-1st-007","question":"When a car turns left suddenly, passengers feel pushed to the right because:","options":["Centrifugal force pushes them","They want to continue straight (inertia)","Gravity pulls them right","Car seat pushes them"],"answer":"b","explanation":"Before turn: Car and passengers move forward together.<br>During left turn: Car changes direction leftward.<br><br>Passengers' bodies want to <strong>continue moving forward in straight line</strong> due to inertia.<br>Relative to the turning car, they feel 'pushed' toward the right side.<br><br><em>Physics truth:</em> There's no actual 'centrifugal force' pushing outward - it's inertia resisting direction change!<br><em>Safety:</em> This is why you should wear seatbelts and not stand in moving vehicles."},
+            {"id":"phy-newton-1st-008","question":"Which quantity measures an object's inertia?","options":["Velocity","Acceleration","Mass","Weight"],"answer":"c","explanation":"<strong>Mass = quantitative measure of inertia</strong><br><br>More mass → more inertia → more resistance to changes in motion<br><br>Examples:<br>• Pushing empty shopping cart (less mass) = easy to start/stop<br>• Pushing loaded cart (more mass) = harder to start/stop<br><br><em>Important distinction:</em> Mass measures inertia (constant everywhere), weight measures gravitational force (varies with location)."},
+            {"id":"phy-newton-1st-009","question":"A magician pulls a tablecloth out from under dishes without moving them. This works because:","options":["Dishes have no inertia","Dishes' inertia keeps them at rest","Friction helps dishes move","Gravity cancels inertia"],"answer":"b","explanation":"Dishes are at rest on the tablecloth.<br>When cloth is pulled quickly:<br>• Friction between cloth and dishes is reduced (quick pull)<br>• Very little force acts on dishes<br>• Dishes' inertia makes them 'want' to stay at rest<br>• Cloth slides out, dishes remain in place<br><br><em>Key factors:</em><br>1. Quick pull reduces friction force duration<br>2. Dishes' inertia resists motion<br>3. If pulled slowly, friction would accelerate dishes with cloth"},
+            {"id":"phy-newton-1st-010","question":"In space (far from gravity), a spaceship with engines off will:","options":["Slow down and stop","Continue at constant velocity","Speed up gradually","Fall toward nearest planet"],"answer":"b","explanation":"In deep space with engines off:<br>• No air resistance (vacuum)<br>• No friction (nothing to rub against)<br>• Far from planets → negligible gravity<br><br>Therefore: <strong>Net force ≈ 0</strong><br><br>Newton's 1st Law: With ∑F = 0, spaceship continues at constant velocity.<br><br><em>Space reality:</em> This is how spacecraft coast between planets - engines only needed to start/stop/turn!"},
+            {"id":"phy-newton-1st-011","question":"When you jump vertically in a moving bus, you land:","options":["Behind your starting point","Ahead of your starting point","At your starting point","To the side of your starting point"],"answer":"c","explanation":"While in the bus, you're moving forward with it at bus speed.<br>When you jump:<br>• You continue moving forward at bus speed (inertia!)<br>• Bus also moves forward at same speed<br>• Both cover same horizontal distance while you're airborne<br><br>Result: You land at same spot relative to bus.<br><br><em>Inside vs outside:</em> Inside bus, you land at starting point. If you jumped from bus roof, you'd land behind because air resistance affects you differently than bus."},
+            {"id":"phy-newton-1st-012","question":"A ball rolling on grass eventually stops because:","options":["It runs out of force","Inertia decreases","Unbalanced forces act on it","It wants to be at rest"],"answer":"c","explanation":"Initial state: Ball rolling (has inertia keeping it moving)<br>Forces acting:<br>1. <strong>Friction</strong> with grass (opposes motion)<br>2. <strong>Air resistance</strong> (opposes motion)<br><br>These create <strong>unbalanced force</strong> backward → deceleration<br><br>Newton's 1st Law: Ball would continue rolling if ∑F = 0<br>But friction + air resistance ≠ 0 → ball slows down<br><br><em>Misconception alert:</em> Objects don't 'run out of force' - force isn't something objects 'have', it's something that acts ON them."},
+            {"id":"phy-newton-1st-013","question":"Which requires more force to achieve the same acceleration?","options":["A bicycle","A motorcycle","A car","A loaded truck"],"answer":"d","explanation":"Newton's 2nd Law: F = ma<br>For same acceleration (a constant), force ∝ mass<br><br>Loaded truck has greatest mass → needs greatest force<br><br>This relates to 1st Law because:<br>• More mass = more inertia<br>• More inertia = harder to change motion (start/stop/turn)<br>• Therefore needs more force for same acceleration<br><br><em>Everyday example:</em> Easy to push bicycle, hard to push car!"},
+            {"id":"phy-newton-1st-014","question":"When a bus starts moving forward, standing passengers fall backward because:","options":["Bus pushes them back","Their inertia resists forward motion","Gravity increases suddenly","Air pushes them back"],"answer":"b","explanation":"Before bus moves: Passengers at rest.<br>When bus accelerates forward:<br>• Bus floor moves forward under passengers' feet<br>• Passengers' bodies resist starting to move (inertia!)<br>• Feet go forward with bus, upper body lags behind<br>• Result: They fall backward relative to bus<br><br><em>Prevention:</em> Hold handrails! This gives force to accelerate your body with the bus."},
+            {"id":"phy-newton-1st-015","question":"An astronaut floats inside a spacecraft because:","options":["There's no gravity in space","Spacecraft and astronaut are both falling freely","Inertia cancels gravity","Air pressure pushes them up"],"answer":"b","explanation":"In orbit:<br>• Spacecraft is in free-fall around Earth (constantly falling but moving sideways fast enough to miss)<br>• Astronaut also in free-fall<br>• Both accelerate toward Earth at same rate<br><br>Relative to spacecraft, astronaut appears weightless/floating.<br><br><em>Key insight:</em> Gravity DOES exist in space (keeps them in orbit)! Weightlessness comes from everything accelerating together, not from absence of gravity."},
+            {"id":"phy-newton-1st-016","question":"A coin is placed on a playing card on a cup. When card is flicked quickly, coin drops into cup because:","options":["Card pulls coin with it","Coin's inertia keeps it in place","Gravity acts only on coin","Air pushes coin down"],"answer":"b","explanation":"Setup: Coin at rest on card over cup.<br>Quick flick:<br>• Card accelerates rapidly sideways<br>• Very little friction between card and coin (brief contact)<br>• Coin's inertia resists starting to move<br>• Card slides out from under stationary coin<br>• Gravity then pulls coin straight down into cup<br><br><em>Science trick:</em> Works because force acts for very short time → minimal horizontal impulse to coin."},
+            {"id":"phy-newton-1st-017","question":"Which object has the greatest inertia?","options":["A tennis ball","A basketball","A bowling ball","A ping-pong ball"],"answer":"c","explanation":"Inertia ∝ mass<br><br>Comparing masses:<br>• Ping-pong ball: ~2.7g<br>• Tennis ball: ~58g<br>• Basketball: ~600g<br>• Bowling ball: ~7kg (heaviest!)<br><br>Bowling ball has most mass → most inertia → hardest to start/stop.<br><br><em>Practical test:</em> Try to throw each with same force - bowling ball accelerates least (F=ma, m largest → a smallest)."},
+            {"id":"phy-newton-1st-018","question":"When a horse suddenly stops while pulling a cart, the cart:","options":["Stops instantly with horse","Continues moving forward","Moves backward","Lifts off ground"],"answer":"b","explanation":"Before stopping: Horse and cart moving forward together.<br>Horse stops suddenly:<br>• Horse's legs provide large backward force (friction with ground)<br>• Cart has no such stopping force (wheels roll freely)<br>• Cart's inertia makes it want to continue forward<br>• Cart may hit horse from behind!<br><br><em>Historical solution:</em> Cart brakes! Modern vehicles have brakes on all wheels for this reason."},
+            {"id":"phy-newton-1st-019","question":"A pendulum bob at the bottom of its swing wants to:","options":["Stop moving","Continue in straight line","Move backward","Fall downward"],"answer":"b","explanation":"At bottom of swing:<br>• Bob moving horizontally at maximum speed<br>• If string were cut at this instant<br>• Bob would continue in straight line (inertia!)<br>• Tangent to the circular path<br><br><em>Why it doesn't:</em> String tension provides centripetal force, pulling bob into circular path.<br><em>1st Law application:</em> Without unbalanced force (tension), bob would follow straight line."},
+            {"id":"phy-newton-1st-020","question":"Dust particles fall off a carpet when beaten because:","options":["Gravity increases","Dust is sticky","Carpet moves but dust inertia resists","Air blows dust away"],"answer":"c","explanation":"Beating carpet:<br>• Carpet accelerates rapidly backward and forward<br>• Dust particles resist changing motion (inertia!)<br>• Carpet moves out from under dust<br>• Dust continues moving (or stays at rest) relative to ground<br>• Gravity then pulls dust down<br><br><em>Cleaning science:</em> Similar principle to shaking out clothes or beating pillows."},
+            {"id":"phy-newton-1st-021","question":"A person standing in a subway train should hold onto something when:","options":["Train is moving at constant speed","Train is stopping","Train is turning","Both B and C"],"answer":"d","explanation":"Hold on during <strong>changes in motion</strong>:<br><br>1. <strong>Stopping:</strong> Body wants to continue forward (inertia)<br>2. <strong>Turning:</strong> Body wants to continue straight (inertia)<br><br>Constant speed in straight line: No need to hold on (∑F=0 on you).<br><br><em>Safety rule:</em> Brace yourself for acceleration/deceleration/turning - all involve changing velocity (direction or speed)."},
+            {"id":"phy-newton-1st-022","question":"Why do we lean forward when a bus stops?","options":["To see better","Inertia of upper body","Air pressure change","Muscle reflex"],"answer":"b","explanation":"While bus moves: Your whole body moves forward.<br>When bus stops:<br>• Feet stop with bus (friction with floor)<br>• Upper body continues forward due to inertia<br>• Body pivots at hips/ankles → lean forward<br><br><em>Physics of falling:</em> If bus stops too suddenly, you might fall forward completely!<br><em>Countermeasure:</em> Hold handrail - provides backward force to stop your upper body."},
+            {"id":"phy-newton-1st-023","question":"A rock is twirled on a string in horizontal circle. If string breaks, rock will:","options":["Fly inward toward center","Fly outward away from center","Fly tangent to circle","Fall straight down"],"answer":"c","explanation":"While twirling: String tension provides centripetal force toward center.<br>When string breaks:<br>• No more inward force<br>• Rock's inertia makes it want to continue in straight line<br>• At moment of break, that's tangent to circle<br><br><em>Visualize:</em> Like mud flying off a spinning tire - goes tangent, not radial.<br><em>1st Law:</em> Without unbalanced force, motion continues in straight line."},
+            {"id":"phy-newton-1st-024","question":"Which situation demonstrates Newton's 1st Law?","options":["Pushing a car makes it accelerate","A book on a table doesn't move","A rocket exhaust pushes rocket up","Swimmer pushes water backward to move forward"],"answer":"b","explanation":"Newton's 1st Law: Objects at rest stay at rest unless unbalanced force acts.<br><br>Book on table:<br>• Gravity down = Normal force up → ∑F=0<br>• Book remains at rest (1st Law)<br><br><em>Other options:</em><br>A: Demonstrates 2nd Law (F=ma)<br>C & D: Demonstrate 3rd Law (action-reaction)"},
+            {"id":"phy-newton-1st-025","question":"In a head-on car collision, why are passengers thrown forward?","options":["Car pushes them","Airbag inflation","Inertia - bodies want to continue moving","Seatbelt malfunction"],"answer":"c","explanation":"Before collision: Car and passengers moving forward.<br>During collision:<br>• Car stops suddenly (hits obstacle)<br>• Passengers' bodies want to continue forward (inertia!)<br>• Without seatbelts, they keep moving until hitting windshield/dashboard<br><br><em>Safety physics:</em> Seatbelts provide unbalanced force to stop passengers with car. Airbags increase stopping time (reduce force).<br><em>1st Law lesson:</em> Changing motion requires force - seatbelts provide that force safely."},
+            {"id":"phy-newton-1st-026","question":"A ball is rolling east. No forces act east-west on it. It will:","options":["Speed up going east","Slow down going east","Turn north","Continue east at constant speed"],"answer":"d","explanation":"Given: No east-west forces → ∑Fₓ = 0<br>Newton's 1st Law: With no net force in direction of motion, object continues at constant velocity.<br><br>Eastward motion continues unchanged.<br><br><em>Assumptions:</em> Ignoring friction/air resistance (problem states no forces).<br><em>Real world:</em> Friction would slow it, but this is ideal 1st Law scenario."},
+            {"id":"phy-newton-1st-027","question":"Why is it hard to start pushing a heavy box?","options":["Friction is too high","Box has large inertia","Gravity pulls it down","Air pressure resists"],"answer":"b","explanation":"Large mass → large inertia → resists starting to move.<br><br>Two aspects:<br>1. <strong>Static friction</strong> must be overcome (different concept)<br>2. <strong>Inertia</strong> resists acceleration<br><br>Even on frictionless surface, heavy box resists starting to move due to inertia (F=ma: large m needs large F for same a).<br><br><em>Everyday experience:</em> Empty cardboard box easy to push, same box filled with books much harder."},
+            {"id":"phy-newton-1st-028","question":"A satellite orbits Earth with engines off. This illustrates:","options":["2nd Law - F=ma","1st Law - inertia in motion","3rd Law - action-reaction","Law of gravity only"],"answer":"b","explanation":"Satellite in stable orbit:<br>• Engines off → no thrust force<br>• In vacuum → no air resistance<br>• Only force: Gravity (provides centripetal force for circular path)<br><br>But horizontally: No forces → continues forward motion (inertia)<br>Combination: Forward inertia + downward gravity = circular orbit<br><br><em>1st Law aspect:</em> Without gravity, satellite would go straight (inertia). Gravity changes direction but not speed (in circular orbit)."},
+            {"id":"phy-newton-1st-029","question":"When you're standing in a bus and it turns right, you lean left because:","options":["Bus pushes you left","Your inertia carries you straight","Centrifugal force acts","Gravity changes direction"],"answer":"b","explanation":"Before turn: You and bus moving forward.<br>During right turn:<br>• Bus changes direction rightward<br>• Your body wants to continue straight forward (inertia!)<br>• Relative to turning bus, you lean to the left<br><br><em>Inside the bus:</em> You're not actually pushed left - you continue straight while bus turns around you.<br><em>Safety:</em> This is why buses have handrails at curves!"},
+            {"id":"phy-newton-1st-030","question":"The tendency of an object to resist changes in its state of motion is called:","options":["Momentum","Velocity","Inertia","Acceleration"],"answer":"c","explanation":"This is the definition of <strong>inertia</strong> - the core concept of Newton's 1st Law.<br><br><strong>Newton's 1st Law (Law of Inertia):</strong><br>'An object at rest stays at rest, and an object in motion stays in motion with constant velocity, unless acted upon by an unbalanced force.'<br><br><em>Simple memory aid:</em> Inertia = 'laziness' of objects - they 'want' to keep doing what they're doing!<br><em>Mass measures:</em> How much inertia an object has."}
+        ];
+
+        // Modal Functions
+        function showModal(title, text, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            modal.classList.add('show');
+
+            const confirmBtn = document.getElementById('modalConfirm');
+            const cancelBtn = document.getElementById('modalCancel');
+
+            const closeModal = () => {
+                modal.classList.remove('show');
+                confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+                cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+            };
+
+            document.getElementById('modalConfirm').onclick = () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            };
+
+            document.getElementById('modalCancel').onclick = closeModal;
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // ============ PHYSICS SIMULATOR ============
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let animationId;
+        let isRunning = false;
+        let currentScenario = 'frictionless';
+
+        // Physics state
+        let state = {
+            mass: 5,
+            friction: 0,
+            velocity: 0,
+            acceleration: 0,
+            netForce: 0,
+            position: 0,
+            time: 0
+        };
+
+        // Scenario-specific objects
+        let objects = {};
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = 400;
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Scenario definitions
+        const scenarios = {
+            frictionless: {
+                info: "A puck slides across frictionless ice. With no unbalanced forces acting horizontally, it will continue at constant velocity forever — a perfect demonstration of Newton's 1st Law.",
+                init: () => {
+                    objects = {
+                        puck: { x: 100, y: canvas.height / 2, vx: 0, radius: 30 },
+                        trail: []
+                    };
+                    state.velocity = 0;
+                    state.position = 100;
+                },
+                start: () => {
+                    objects.puck.vx = 5;
+                    state.velocity = 5;
+                },
+                update: () => {
+                    const frictionForce = state.friction * 0.02 * state.mass;
+                    state.acceleration = -frictionForce / state.mass;
+                    state.netForce = -frictionForce;
+
+                    if (objects.puck.vx > 0) {
+                        objects.puck.vx = Math.max(0, objects.puck.vx + state.acceleration * 0.1);
+                    }
+
+                    objects.puck.x += objects.puck.vx;
+                    state.velocity = objects.puck.vx;
+                    state.position = objects.puck.x;
+
+                    // Trail
+                    if (state.time % 5 === 0 && objects.puck.vx > 0.1) {
+                        objects.trail.push({ x: objects.puck.x, y: objects.puck.y, alpha: 1 });
+                    }
+                    objects.trail.forEach(t => t.alpha -= 0.02);
+                    objects.trail = objects.trail.filter(t => t.alpha > 0);
+
+                    // Loop around
+                    if (objects.puck.x > canvas.width + 50) {
+                        objects.puck.x = -50;
+                    }
+
+                    state.time++;
+                },
+                draw: () => {
+                    // Ice surface
+                    const gradient = ctx.createLinearGradient(0, canvas.height/2, 0, canvas.height);
+                    const isDark = document.documentElement.classList.contains('dark');
+                    gradient.addColorStop(0, isDark ? '#1a3a5c' : '#a8d8ea');
+                    gradient.addColorStop(1, isDark ? '#0d1f33' : '#7ec8e3');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, canvas.height/2 - 20, canvas.width, canvas.height/2 + 20);
+
+                    // Ice pattern
+                    ctx.strokeStyle = isDark ? 'rgba(0, 240, 255, 0.1)' : 'rgba(0, 100, 150, 0.1)';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < canvas.width; i += 60) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, canvas.height/2 - 20);
+                        ctx.lineTo(i + 30, canvas.height);
+                        ctx.stroke();
+                    }
+
+                    // Trail
+                    objects.trail.forEach(t => {
+                        ctx.beginPath();
+                        ctx.arc(t.x, t.y, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(0, 240, 255, ${t.alpha * 0.3})`;
+                        ctx.fill();
+                    });
+
+                    // Puck
+                    ctx.beginPath();
+                    ctx.arc(objects.puck.x, objects.puck.y, objects.puck.radius, 0, Math.PI * 2);
+                    const puckGrad = ctx.createRadialGradient(
+                        objects.puck.x - 10, objects.puck.y - 10, 0,
+                        objects.puck.x, objects.puck.y, objects.puck.radius
+                    );
+                    puckGrad.addColorStop(0, '#333');
+                    puckGrad.addColorStop(1, '#111');
+                    ctx.fillStyle = puckGrad;
+                    ctx.fill();
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Velocity vector
+                    if (objects.puck.vx > 0.1) {
+                        const arrowLen = objects.puck.vx * 15;
+                        ctx.beginPath();
+                        ctx.moveTo(objects.puck.x + objects.puck.radius + 10, objects.puck.y);
+                        ctx.lineTo(objects.puck.x + objects.puck.radius + 10 + arrowLen, objects.puck.y);
+                        ctx.strokeStyle = '#00ff88';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+
+                        // Arrow head
+                        ctx.beginPath();
+                        ctx.moveTo(objects.puck.x + objects.puck.radius + 10 + arrowLen, objects.puck.y);
+                        ctx.lineTo(objects.puck.x + objects.puck.radius + arrowLen, objects.puck.y - 8);
+                        ctx.lineTo(objects.puck.x + objects.puck.radius + arrowLen, objects.puck.y + 8);
+                        ctx.closePath();
+                        ctx.fillStyle = '#00ff88';
+                        ctx.fill();
+
+                        ctx.fillStyle = '#00ff88';
+                        ctx.font = '12px Space Mono';
+                        ctx.fillText('v', objects.puck.x + objects.puck.radius + 15 + arrowLen/2, objects.puck.y - 15);
+                    }
+
+                    // Label
+                    ctx.fillStyle = isDark ? '#fff' : '#1a2540';
+                    ctx.font = 'bold 14px Outfit';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`Mass: ${state.mass} kg`, objects.puck.x, objects.puck.y + objects.puck.radius + 30);
+                }
+            },
+
+            braking: {
+                info: "When a car brakes suddenly, passengers lurch forward. The car decelerates due to friction, but passengers' bodies want to continue moving at the original speed due to inertia.",
+                init: () => {
+                    objects = {
+                        car: { x: canvas.width * 0.7, y: canvas.height / 2 + 30, vx: 0, width: 160, height: 60 },
+                        passenger: { x: canvas.width * 0.7 + 50, y: canvas.height / 2, offsetX: 0, vx: 0 },
+                        braking: false,
+                        brakingTime: 0
+                    };
+                    state.velocity = 0;
+                },
+                start: () => {
+                    objects.car.vx = -4;
+                    objects.passenger.vx = -4;
+                    state.velocity = 4;
+                    objects.braking = false;
+                    objects.brakingTime = 0;
+                },
+                update: () => {
+                    if (objects.car.x < canvas.width * 0.3 && !objects.braking) {
+                        objects.braking = true;
+                    }
+
+                    if (objects.braking) {
+                        objects.brakingTime++;
+                        // Car brakes
+                        objects.car.vx = Math.min(0, objects.car.vx + 0.15);
+                        // Passenger continues forward (relative to car) due to inertia
+                        if (objects.passenger.offsetX < 30) {
+                            objects.passenger.offsetX += 2;
+                        }
+                        state.netForce = -state.mass * 1.5;
+                        state.acceleration = -1.5;
+                    } else {
+                        state.netForce = 0;
+                        state.acceleration = 0;
+                    }
+
+                    objects.car.x += objects.car.vx;
+                    state.velocity = Math.abs(objects.car.vx);
+                    state.position = objects.car.x;
+
+                    // Reset when stopped
+                    if (objects.car.vx >= 0 && objects.braking && objects.brakingTime > 60) {
+                        objects.passenger.offsetX = Math.max(0, objects.passenger.offsetX - 0.5);
+                        if (objects.passenger.offsetX <= 0) {
+                            objects.braking = false;
+                            objects.brakingTime = 0;
+                            objects.car.x = canvas.width * 0.7;
+                            objects.car.vx = -4;
+                            objects.passenger.offsetX = 0;
+                        }
+                    }
+                },
+                draw: () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+
+                    // Road
+                    ctx.fillStyle = isDark ? '#2a2a2a' : '#444';
+                    ctx.fillRect(0, canvas.height/2 + 60, canvas.width, 80);
+
+                    // Road markings
+                    ctx.strokeStyle = isDark ? '#ffdd00' : '#fff';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([40, 30]);
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height/2 + 100);
+                    ctx.lineTo(canvas.width, canvas.height/2 + 100);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Car body
+                    const carX = objects.car.x;
+                    const carY = objects.car.y;
+
+                    ctx.fillStyle = isDark ? '#00f0ff' : '#0088cc';
+                    ctx.beginPath();
+                    ctx.roundRect(carX - 80, carY - 25, 160, 50, 10);
+                    ctx.fill();
+
+                    // Car roof
+                    ctx.fillStyle = isDark ? '#00c8d8' : '#006699';
+                    ctx.beginPath();
+                    ctx.moveTo(carX - 40, carY - 25);
+                    ctx.lineTo(carX - 20, carY - 55);
+                    ctx.lineTo(carX + 40, carY - 55);
+                    ctx.lineTo(carX + 50, carY - 25);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Windows
+                    ctx.fillStyle = isDark ? 'rgba(0, 0, 0, 0.5)' : 'rgba(150, 200, 255, 0.7)';
+                    ctx.beginPath();
+                    ctx.moveTo(carX - 35, carY - 23);
+                    ctx.lineTo(carX - 18, carY - 50);
+                    ctx.lineTo(carX + 35, carY - 50);
+                    ctx.lineTo(carX + 45, carY - 23);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Wheels
+                    ctx.fillStyle = '#222';
+                    ctx.beginPath();
+                    ctx.arc(carX - 50, carY + 25, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(carX + 50, carY + 25, 18, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wheel rims
+                    ctx.fillStyle = '#666';
+                    ctx.beginPath();
+                    ctx.arc(carX - 50, carY + 25, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(carX + 50, carY + 25, 8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Passenger (stick figure)
+                    const passX = carX + objects.passenger.offsetX;
+                    const passY = carY - 35;
+                    const lean = objects.passenger.offsetX * 0.5;
+
+                    // Head
+                    ctx.fillStyle = isDark ? '#ffcc88' : '#dda066';
+                    ctx.beginPath();
+                    ctx.arc(passX + lean * 0.3, passY - 10, 10, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Body (leaning)
+                    ctx.strokeStyle = isDark ? '#ffcc88' : '#dda066';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(passX + lean * 0.3, passY);
+                    ctx.lineTo(passX - lean * 0.2, passY + 25);
+                    ctx.stroke();
+
+                    // Arms
+                    ctx.beginPath();
+                    ctx.moveTo(passX + lean * 0.2, passY + 5);
+                    ctx.lineTo(passX + lean * 0.5 + 15, passY + 15);
+                    ctx.stroke();
+
+                    // Brake lights
+                    if (objects.braking) {
+                        ctx.fillStyle = '#ff4466';
+                        ctx.shadowColor = '#ff4466';
+                        ctx.shadowBlur = 20;
+                        ctx.fillRect(carX + 72, carY - 15, 8, 20);
+                        ctx.shadowBlur = 0;
+                    }
+
+                    // Inertia label
+                    if (objects.braking && objects.passenger.offsetX > 5) {
+                        ctx.fillStyle = '#ff00aa';
+                        ctx.font = 'bold 14px Space Mono';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('INERTIA →', passX + 30, passY - 30);
+                    }
+
+                    // Brake label
+                    if (objects.braking) {
+                        ctx.fillStyle = '#ff4466';
+                        ctx.font = 'bold 12px Space Mono';
+                        ctx.fillText('BRAKING!', carX, carY + 70);
+                    }
+                }
+            },
+
+            tablecloth: {
+                info: "The famous tablecloth trick! When pulled quickly, dishes stay in place due to inertia. The brief friction force isn't enough to overcome the dishes' resistance to motion.",
+                init: () => {
+                    objects = {
+                        table: { x: canvas.width/2, y: canvas.height/2 + 50, width: 300, height: 20 },
+                        cloth: { x: canvas.width/2, pulled: false, pullProgress: 0 },
+                        dishes: [
+                            { x: canvas.width/2 - 80, y: canvas.height/2, wobble: 0 },
+                            { x: canvas.width/2, y: canvas.height/2, wobble: 0 },
+                            { x: canvas.width/2 + 80, y: canvas.height/2, wobble: 0 }
+                        ],
+                        phase: 'ready'
+                    };
+                    state.velocity = 0;
+                },
+                start: () => {
+                    objects.cloth.pulled = true;
+                    objects.phase = 'pulling';
+                    state.velocity = 10;
+                },
+                update: () => {
+                    if (objects.cloth.pulled && objects.phase === 'pulling') {
+                        objects.cloth.pullProgress += 0.08;
+
+                        // Dishes wobble slightly but stay in place (inertia!)
+                        objects.dishes.forEach(d => {
+                            d.wobble = Math.sin(state.time * 0.5) * 3 * (1 - objects.cloth.pullProgress);
+                        });
+
+                        if (objects.cloth.pullProgress >= 1) {
+                            objects.phase = 'done';
+                            state.velocity = 0;
+                            state.netForce = 0;
+                        }
+                    }
+
+                    if (objects.phase === 'done') {
+                        objects.dishes.forEach(d => {
+                            d.wobble *= 0.9;
+                        });
+                    }
+
+                    // Reset after showing
+                    if (objects.phase === 'done' && state.time > 120) {
+                        objects.cloth.pulled = false;
+                        objects.cloth.pullProgress = 0;
+                        objects.phase = 'ready';
+                        objects.dishes.forEach(d => d.wobble = 0);
+                    }
+
+                    state.time++;
+                },
+                draw: () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const tableX = objects.table.x;
+                    const tableY = objects.table.y;
+
+                    // Table legs
+                    ctx.fillStyle = isDark ? '#5a3d2b' : '#8b5a2b';
+                    ctx.fillRect(tableX - 130, tableY + 20, 15, 80);
+                    ctx.fillRect(tableX + 115, tableY + 20, 15, 80);
+
+                    // Table surface
+                    ctx.fillStyle = isDark ? '#6b4423' : '#a0522d';
+                    ctx.fillRect(tableX - 150, tableY, 300, 25);
+
+                    // Tablecloth
+                    const clothOffset = objects.cloth.pullProgress * 350;
+                    ctx.fillStyle = '#ff4466';
+                    ctx.beginPath();
+                    ctx.moveTo(tableX - 140 + clothOffset, tableY - 5);
+                    ctx.lineTo(tableX + 140, tableY - 5);
+                    ctx.lineTo(tableX + 160, tableY + 60);
+                    ctx.lineTo(tableX - 120 + clothOffset, tableY + 60);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Cloth pattern
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 2;
+                    for (let i = -120 + clothOffset; i < 150; i += 30) {
+                        if (i > -140 + clothOffset) {
+                            ctx.beginPath();
+                            ctx.moveTo(tableX + i, tableY - 5);
+                            ctx.lineTo(tableX + i + 20, tableY + 60);
+                            ctx.stroke();
+                        }
+                    }
+
+                    // Dishes (stay in place!)
+                    objects.dishes.forEach((dish, i) => {
+                        const dx = dish.x + dish.wobble;
+                        const dy = dish.y;
+
+                        // Plate
+                        ctx.beginPath();
+                        ctx.ellipse(dx, dy + 10, 35, 12, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = '#fff';
+                        ctx.fill();
+                        ctx.strokeStyle = '#ddd';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+
+                        // Plate rim
+                        ctx.beginPath();
+                        ctx.ellipse(dx, dy + 8, 28, 9, 0, 0, Math.PI * 2);
+                        ctx.strokeStyle = isDark ? '#00f0ff' : '#0088cc';
+                        ctx.stroke();
+
+                        // Glass on middle plate
+                        if (i === 1) {
+                            ctx.fillStyle = 'rgba(200, 230, 255, 0.6)';
+                            ctx.beginPath();
+                            ctx.moveTo(dx - 12, dy + 5);
+                            ctx.lineTo(dx - 8, dy - 35);
+                            ctx.lineTo(dx + 8, dy - 35);
+                            ctx.lineTo(dx + 12, dy + 5);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.stroke();
+                        }
+                    });
+
+                    // Hand pulling cloth
+                    if (objects.phase === 'pulling') {
+                        const handX = tableX - 160 + clothOffset;
+                        ctx.fillStyle = isDark ? '#ffcc88' : '#dda066';
+                        ctx.beginPath();
+                        ctx.ellipse(handX, tableY + 25, 20, 15, -0.3, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Pull arrow
+                        ctx.strokeStyle = '#ffdd00';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.moveTo(handX - 40, tableY + 25);
+                        ctx.lineTo(handX - 80, tableY + 25);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(handX - 80, tableY + 25);
+                        ctx.lineTo(handX - 65, tableY + 15);
+                        ctx.moveTo(handX - 80, tableY + 25);
+                        ctx.lineTo(handX - 65, tableY + 35);
+                        ctx.stroke();
+                    }
+
+                    // Inertia labels
+                    if (objects.phase === 'pulling' || objects.phase === 'done') {
+                        ctx.fillStyle = isDark ? '#00f0ff' : '#0088cc';
+                        ctx.font = 'bold 12px Space Mono';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('INERTIA', objects.dishes[0].x, objects.dishes[0].y - 50);
+                        ctx.fillText('KEEPS', objects.dishes[1].x, objects.dishes[1].y - 55);
+                        ctx.fillText('THEM STILL!', objects.dishes[2].x, objects.dishes[2].y - 50);
+                    }
+
+                    // Success message
+                    if (objects.phase === 'done') {
+                        ctx.fillStyle = '#00ff88';
+                        ctx.font = 'bold 18px Space Mono';
+                        ctx.fillText('✓ DISHES STAYED IN PLACE!', canvas.width/2, 60);
+                    }
+                }
+            },
+
+            space: {
+                info: "In the vacuum of space with no friction or air resistance, a spacecraft with engines off will continue at constant velocity forever. This is how ships coast between planets!",
+                init: () => {
+                    objects = {
+                        ship: { x: 100, y: canvas.height/2, vx: 0, rotation: 0 },
+                        stars: Array.from({length: 100}, () => ({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            size: Math.random() * 2 + 0.5,
+                            twinkle: Math.random() * Math.PI * 2
+                        })),
+                        thrust: false,
+                        thrustTime: 0
+                    };
+                    state.velocity = 0;
+                },
+                start: () => {
+                    objects.thrust = true;
+                    objects.thrustTime = 0;
+                },
+                update: () => {
+                    // Thrust phase
+                    if (objects.thrust && objects.thrustTime < 60) {
+                        objects.ship.vx += 0.1;
+                        objects.thrustTime++;
+                        state.netForce = state.mass * 0.1;
+                        state.acceleration = 0.1;
+                    } else {
+                        objects.thrust = false;
+                        state.netForce = 0;
+                        state.acceleration = 0;
+                    }
+
+                    // Ship moves (no friction in space!)
+                    objects.ship.x += objects.ship.vx;
+                    state.velocity = objects.ship.vx;
+                    state.position = objects.ship.x;
+
+                    // Stars parallax
+                    objects.stars.forEach(star => {
+                        star.x -= objects.ship.vx * 0.3;
+                        star.twinkle += 0.1;
+                        if (star.x < 0) star.x = canvas.width;
+                    });
+
+                    // Loop ship
+                    if (objects.ship.x > canvas.width + 100) {
+                        objects.ship.x = -100;
+                    }
+
+                    state.time++;
+                },
+                draw: () => {
+                    const isDark = document.documentElement.classList.contains('dark');
+
+                    // Space background
+                    const spaceGrad = ctx.createRadialGradient(
+                        canvas.width/2, canvas.height/2, 0,
+                        canvas.width/2, canvas.height/2, canvas.width/2
+                    );
+                    spaceGrad.addColorStop(0, isDark ? '#1a0a2e' : '#2a1a4e');
+                    spaceGrad.addColorStop(1, isDark ? '#000' : '#0a0020');
+                    ctx.fillStyle = spaceGrad;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Stars
+                    objects.stars.forEach(star => {
+                        const twinkle = Math.sin(star.twinkle) * 0.3 + 0.7;
+                        ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
+                        ctx.beginPath();
+                        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+
+                    // Distant planet
+                    const planetGrad = ctx.createRadialGradient(canvas.width - 100, 80, 0, canvas.width - 100, 80, 50);
+                    planetGrad.addColorStop(0, '#ff6644');
+                    planetGrad.addColorStop(1, '#aa2200');
+                    ctx.fillStyle = planetGrad;
+                    ctx.beginPath();
+                    ctx.arc(canvas.width - 100, 80, 40, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Spacecraft
+                    const shipX = objects.ship.x;
+                    const shipY = objects.ship.y;
+
+                    ctx.save();
+                    ctx.translate(shipX, shipY);
+
+                    // Main body
+                    ctx.fillStyle = '#888';
+                    ctx.beginPath();
+                    ctx.moveTo(40, 0);
+                    ctx.lineTo(-30, -20);
+                    ctx.lineTo(-40, -15);
+                    ctx.lineTo(-40, 15);
+                    ctx.lineTo(-30, 20);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#aaa';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Cockpit
+                    ctx.fillStyle = '#00f0ff';
+                    ctx.beginPath();
+                    ctx.ellipse(15, 0, 15, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wings
+                    ctx.fillStyle = '#666';
+                    ctx.beginPath();
+                    ctx.moveTo(-20, -15);
+                    ctx.lineTo(-35, -40);
+                    ctx.lineTo(-45, -35);
+                    ctx.lineTo(-40, -15);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.moveTo(-20, 15);
+                    ctx.lineTo(-35, 40);
+                    ctx.lineTo(-45, 35);
+                    ctx.lineTo(-40, 15);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Engine thrust
+                    if (objects.thrust && objects.thrustTime < 60) {
+                        const flameLen = 30 + Math.random() * 20;
+                        const thrustGrad = ctx.createLinearGradient(-40, 0, -40 - flameLen, 0);
+                        thrustGrad.addColorStop(0, '#ff4400');
+                        thrustGrad.addColorStop(0.5, '#ffaa00');
+                        thrustGrad.addColorStop(1, 'transparent');
+                        ctx.fillStyle = thrustGrad;
+                        ctx.beginPath();
+                        ctx.moveTo(-40, -10);
+                        ctx.lineTo(-40 - flameLen, 0);
+                        ctx.lineTo(-40, 10);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+
+                    ctx.restore();
+
+                    // Velocity vector
+                    if (objects.ship.vx > 0.1) {
+                        const arrowLen = objects.ship.vx * 15;
+                        ctx.beginPath();
+                        ctx.moveTo(shipX + 50, shipY);
+                        ctx.lineTo(shipX + 50 + arrowLen, shipY);
+                        ctx.strokeStyle = '#00ff88';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(shipX + 50 + arrowLen, shipY);
+                        ctx.lineTo(shipX + 40 + arrowLen, shipY - 8);
+                        ctx.lineTo(shipX + 40 + arrowLen, shipY + 8);
+                        ctx.closePath();
+                        ctx.fillStyle = '#00ff88';
+                        ctx.fill();
+                    }
+
+                    // Status text
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 14px Space Mono';
+                    ctx.textAlign = 'left';
+                    if (objects.thrust && objects.thrustTime < 60) {
+                        ctx.fillText('🔥 ENGINES FIRING', 20, 30);
+                    } else if (objects.ship.vx > 0.1) {
+                        ctx.fillText('⚡ COASTING (No Forces)', 20, 30);
+                        ctx.fillStyle = '#00f0ff';
+                        ctx.fillText('Constant velocity forever!', 20, 50);
+                    }
+                }
+            }
+        };
+
+        function initScenario(name) {
+            currentScenario = name;
+            state = { mass: parseInt(document.getElementById('massSlider').value), friction: parseInt(document.getElementById('frictionSlider').value), velocity: 0, acceleration: 0, netForce: 0, position: 0, time: 0 };
+            scenarios[name].init();
+            document.getElementById('scenarioInfo').textContent = scenarios[name].info;
+
+            // Show/hide friction slider
+            const frictionGroup = document.getElementById('frictionGroup');
+            frictionGroup.style.display = (name === 'frictionless') ? 'flex' : 'none';
+
+            updateDisplays();
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            scenarios[currentScenario].draw();
+        }
+
+        function update() {
+            scenarios[currentScenario].update();
+            updateDisplays();
+            draw();
+
+            if (isRunning) {
+                animationId = requestAnimationFrame(update);
+            }
+        }
+
+        function updateDisplays() {
+            document.getElementById('velocityDisplay').textContent = state.velocity.toFixed(1) + ' m/s';
+            document.getElementById('forceDisplay').textContent = state.netForce.toFixed(1) + ' N';
+            document.getElementById('inertiaDisplay').textContent = state.mass + ' kg';
+            document.getElementById('accelDisplay').textContent = state.acceleration.toFixed(2) + ' m/s²';
+        }
+
+        // Event Listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                scenarios[currentScenario].start();
+                document.getElementById('startBtn').textContent = '⏸ PAUSE';
+                update();
+            } else {
+                isRunning = false;
+                cancelAnimationFrame(animationId);
+                document.getElementById('startBtn').textContent = '▶ START';
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            isRunning = false;
+            cancelAnimationFrame(animationId);
+            document.getElementById('startBtn').textContent = '▶ START';
+            initScenario(currentScenario);
+        });
+
+        document.getElementById('massSlider').addEventListener('input', (e) => {
+            state.mass = parseInt(e.target.value);
+            document.getElementById('massValue').textContent = state.mass + ' kg';
+            if (objects.puck) {
+                objects.puck.radius = 20 + state.mass * 2;
+            }
+            updateDisplays();
+            draw();
+        });
+
+        document.getElementById('frictionSlider').addEventListener('input', (e) => {
+            state.friction = parseInt(e.target.value);
+            document.getElementById('frictionValue').textContent = state.friction * 10 + '%';
+        });
+
+        document.querySelectorAll('.scenario-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                isRunning = false;
+                cancelAnimationFrame(animationId);
+                document.getElementById('startBtn').textContent = '▶ START';
+                initScenario(btn.dataset.scenario);
+            });
+        });
+
+        // Initialize
+        initScenario('frictionless');
+
+        // ============ QUIZ ============
+        let currentQuestion = 0;
+        let score = 0;
+        let answers = new Array(quizData.length).fill(null);
+        let answered = new Array(quizData.length).fill(false);
+
+        function loadQuestion(index) {
+            const q = quizData[index];
+            document.getElementById('questionNumber').textContent = `QUESTION ${String(index + 1).padStart(2, '0')}`;
+            document.getElementById('questionText').textContent = q.question;
+            document.getElementById('questionCount').textContent = `Question ${index + 1} of ${quizData.length}`;
+            document.getElementById('progressBar').style.width = `${((index + 1) / quizData.length) * 100}%`;
+
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+
+            const letters = ['a', 'b', 'c', 'd'];
+            q.options.forEach((opt, i) => {
+                const optDiv = document.createElement('div');
+                optDiv.className = 'option';
+                optDiv.dataset.letter = letters[i];
+
+                if (answered[index]) {
+                    if (letters[i] === q.answer) {
+                        optDiv.classList.add('correct');
+                    } else if (answers[index] === letters[i]) {
+                        optDiv.classList.add('incorrect');
+                    }
+                } else if (answers[index] === letters[i]) {
+                    optDiv.classList.add('selected');
+                }
+
+                optDiv.innerHTML = `
+                    <span class="option-letter">${letters[i].toUpperCase()}</span>
+                    <span>${opt}</span>
+                `;
+
+                if (!answered[index]) {
+                    optDiv.addEventListener('click', () => selectOption(letters[i]));
+                }
+
+                optionsContainer.appendChild(optDiv);
+            });
+
+            const explanationBox = document.getElementById('explanationBox');
+            if (answered[index]) {
+                explanationBox.classList.add('show');
+                document.getElementById('explanationText').innerHTML = q.explanation;
+            } else {
+                explanationBox.classList.remove('show');
+            }
+
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').textContent = index === quizData.length - 1 ? 'Finish' : 'Next →';
+        }
+
+        function selectOption(letter) {
+            if (answered[currentQuestion]) return;
+
+            answers[currentQuestion] = letter;
+            answered[currentQuestion] = true;
+
+            const q = quizData[currentQuestion];
+            if (letter === q.answer) {
+                score++;
+                document.getElementById('scoreCount').textContent = `Score: ${score}`;
+            }
+
+            loadQuestion(currentQuestion);
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                loadQuestion(currentQuestion);
+            } else {
+                showResults();
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion(currentQuestion);
+            }
+        });
+
+        function showResults() {
+            document.getElementById('quizCard').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'block';
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('finalScore').textContent = `${percentage}%`;
+
+            let message = '';
+            if (percentage >= 90) message = '🎉 Outstanding! You\'ve mastered inertia!';
+            else if (percentage >= 70) message = '👏 Great job! You understand the basics well.';
+            else if (percentage >= 50) message = '📚 Good effort! Review the concepts and try again.';
+            else message = '💪 Keep learning! Check the Learn section for help.';
+
+            document.getElementById('resultsMessage').textContent = message;
+        }
+
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            showModal('Restart Quiz', 'Are you sure you want to restart the quiz?', () => {
+                currentQuestion = 0;
+                score = 0;
+                answers = new Array(quizData.length).fill(null);
+                answered = new Array(quizData.length).fill(false);
+                document.getElementById('scoreCount').textContent = 'Score: 0';
+                document.getElementById('quizCard').style.display = 'block';
+                document.getElementById('resultsContainer').style.display = 'none';
+                loadQuestion(0);
+            });
+        });
+
+        // Initialize quiz
+        loadQuestion(0);
+    </script>
+</body>
+</html>
+
