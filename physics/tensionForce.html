@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Lab - Interactive Simulations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #faf8f5;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0ede8;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a68;
+            --text-muted: #8888a0;
+            --accent-primary: #e85d04;
+            --accent-secondary: #dc2f02;
+            --accent-tertiary: #9d0208;
+            --success: #38b000;
+            --warning: #ffaa00;
+            --info: #0077b6;
+            --border: #e0ddd5;
+            --shadow: rgba(26, 26, 46, 0.08);
+            --glass: rgba(255, 255, 255, 0.7);
+            --gradient-warm: linear-gradient(135deg, #e85d04 0%, #dc2f02 50%, #9d0208 100%);
+            --gradient-cool: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
+        }
+
+        .dark {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #252542;
+            --text-primary: #f0f0f5;
+            --text-secondary: #b8b8d0;
+            --text-muted: #6868a0;
+            --accent-primary: #ff7b00;
+            --accent-secondary: #ff5500;
+            --accent-tertiary: #ff3300;
+            --border: #353560;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --glass: rgba(26, 26, 46, 0.8);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(232, 93, 4, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 119, 182, 0.05) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23888' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-warm);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(232, 93, 4, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Main Layout */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .welcome-section h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .welcome-section p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .teacher-note {
+            background: linear-gradient(135deg, rgba(232, 93, 4, 0.08) 0%, rgba(0, 119, 182, 0.08) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            margin-top: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 100%;
+        }
+
+        .teacher-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--gradient-warm);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .teacher-message {
+            text-align: left;
+            font-family: 'Crimson Pro', serif;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Experiment Tabs */
+        .tabs-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: var(--gradient-warm);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(232, 93, 4, 0.3);
+        }
+
+        /* Experiment Container */
+        .experiment-container {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .experiment-container.active {
+            display: block;
+        }
+
+        .experiment-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px var(--shadow);
+        }
+
+        .experiment-header {
+            background: linear-gradient(135deg, rgba(232, 93, 4, 0.05) 0%, rgba(0, 119, 182, 0.05) 100%);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .experiment-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .experiment-header h3 i {
+            color: var(--accent-primary);
+        }
+
+        .experiment-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .experiment-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+        }
+
+        @media (max-width: 900px) {
+            .experiment-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Simulation Canvas Area */
+        .simulation-area {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            position: relative;
+            min-height: 400px;
+        }
+
+        .canvas-container {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            box-shadow: inset 0 2px 10px var(--shadow);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .control-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .control-group-header h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-group-header h4 i {
+            color: var(--accent-primary);
+        }
+
+        /* Sliders */
+        .slider-control {
+            margin-bottom: 1rem;
+        }
+
+        .slider-control:last-child {
+            margin-bottom: 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-label span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--accent-primary);
+            background: rgba(232, 93, 4, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--gradient-warm);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(232, 93, 4, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--gradient-warm);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(232, 93, 4, 0.4);
+        }
+
+        /* Results Display */
+        .results-display {
+            background: linear-gradient(135deg, rgba(0, 119, 182, 0.08) 0%, rgba(0, 180, 216, 0.08) 100%);
+            border: 1px solid var(--info);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--info);
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--gradient-warm);
+            color: white;
+            box-shadow: 0 4px 15px rgba(232, 93, 4, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 93, 4, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* Tooltips */
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: var(--info);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .tooltip-content {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: var(--bg-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            width: max-content;
+            max-width: 250px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            line-height: 1.5;
+        }
+
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: var(--text-primary);
+        }
+
+        .tooltip-trigger:hover .tooltip-content {
+            opacity: 1;
+            visibility: visible;
+            bottom: calc(100% + 15px);
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: linear-gradient(135deg, rgba(56, 176, 0, 0.08) 0%, rgba(56, 176, 0, 0.04) 100%);
+            border: 1px solid var(--success);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-card h5 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--success);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin: 0.75rem 0;
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .tabs-container {
+                gap: 0.5rem;
+            }
+
+            .tab-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .experiment-header {
+                padding: 1rem;
+            }
+
+            .controls-panel, .simulation-area {
+                padding: 1rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .tooltip-content {
+                max-width: 200px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Force Vector Visualization */
+        .force-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        /* Status Indicator */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.equilibrium {
+            background: rgba(56, 176, 0, 0.15);
+            color: var(--success);
+        }
+
+        .status-badge.not-equilibrium {
+            background: rgba(232, 93, 4, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .equilibrium .status-dot {
+            background: var(--success);
+        }
+
+        .not-equilibrium .status-dot {
+            background: var(--accent-primary);
+        }
+
+        /* Projectile specific */
+        .trajectory-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Pendulum specific */
+        .pendulum-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-box {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-box .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .stat-box .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-atom"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Physics Lab</h1>
+                    <span>Interactive Learning</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="welcome-section">
+            <h2>Welcome to Your Physics Laboratory!</h2>
+            <p>Explore the fundamental laws of physics through interactive simulations. Experiment freely—that's how we learn best!</p>
+            <div class="teacher-note">
+                <div class="teacher-avatar">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="teacher-message">
+                    "Don't worry about making mistakes here! Physics is all about exploring and discovering. Try changing the values and observe what happens. I'm here to help you understand the 'why' behind each phenomenon."
+                </div>
+            </div>
+        </section>
+
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="tension" aria-label="Tension Forces Experiment">
+                <i class="fas fa-link"></i>
+                <span>Tension Forces</span>
+            </button>
+            <button class="tab-btn" data-tab="projectile" aria-label="Projectile Motion Experiment">
+                <i class="fas fa-basketball"></i>
+                <span>Projectile Motion</span>
+            </button>
+            <button class="tab-btn" data-tab="pendulum" aria-label="Simple Pendulum Experiment">
+                <i class="fas fa-clock"></i>
+                <span>Pendulum</span>
+            </button>
+        </div>
+
+        <!-- Tension Forces Experiment -->
+        <div class="experiment-container active" id="tension-experiment">
+            <div class="experiment-card">
+                <div class="experiment-header">
+                    <h3><i class="fas fa-link"></i> Tension in Connected Bodies</h3>
+                    <p>Explore how forces distribute through a system of connected weights hanging from a fixed support.</p>
+                </div>
+                <div class="experiment-body">
+                    <div class="simulation-area">
+                        <div class="canvas-container">
+                            <canvas id="tensionCanvas"></canvas>
+                        </div>
+                        <div class="force-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #e85d04;"></div>
+                                <span>Tension T₁</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #0077b6;"></div>
+                                <span>Tension T₂</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #38b000;"></div>
+                                <span>Tension T₃</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <div class="control-group-header">
+                                <h4><i class="fas fa-weight-hanging"></i> Weight Settings</h4>
+                                <span class="tooltip-trigger">?
+                                    <span class="tooltip-content">Adjust the mass of each weight. Remember: Weight (N) = Mass (kg) × Gravity (9.8 m/s²). The tension in each string equals the total weight it supports!</span>
+                                </span>
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Weight P (top)</span>
+                                    <span class="slider-value" id="weightP-value">2 N</span>
+                                </div>
+                                <input type="range" id="weightP" min="1" max="10" value="2" step="0.5">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Weight Q (middle)</span>
+                                    <span class="slider-value" id="weightQ-value">4 N</span>
+                                </div>
+                                <input type="range" id="weightQ" min="1" max="10" value="4" step="0.5">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Weight R (bottom)</span>
+                                    <span class="slider-value" id="weightR-value">5 N</span>
+                                </div>
+                                <input type="range" id="weightR" min="1" max="10" value="5" step="0.5">
+                            </div>
+                        </div>
+
+                        <div class="results-display">
+                            <div class="control-group-header">
+                                <h4><i class="fas fa-calculator"></i> Calculated Tensions</h4>
+                                <span class="tooltip-trigger">?
+                                    <span class="tooltip-content">Each string must support all the weights below it. T₁ supports P+Q+R, T₂ supports Q+R, and T₃ supports only R. This is Newton's Third Law in action!</span>
+                                </span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-arrow-up"></i> T₁ (top string)</span>
+                                <span class="result-value" id="tension1">11.0 N</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-arrow-up"></i> T₂ (middle string)</span>
+                                <span class="result-value" id="tension2">9.0 N</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-arrow-up"></i> T₃ (bottom string)</span>
+                                <span class="result-value" id="tension3">5.0 N</span>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h5><i class="fas fa-lightbulb"></i> Teacher's Tip</h5>
+                            <p>Notice how the top string has the highest tension? It's carrying the weight of ALL three objects! Think of it like a chain of friends holding hands while climbing—the person at the top feels the pull of everyone below.</p>
+                            <div class="formula">T₁ = W_P + W_Q + W_R</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projectile Motion Experiment -->
+        <div class="experiment-container" id="projectile-experiment">
+            <div class="experiment-card">
+                <div class="experiment-header">
+                    <h3><i class="fas fa-basketball"></i> Projectile Motion</h3>
+                    <p>Launch a projectile and observe how initial velocity and angle affect its trajectory.</p>
+                </div>
+                <div class="experiment-body">
+                    <div class="simulation-area">
+                        <div class="canvas-container">
+                            <canvas id="projectileCanvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <div class="control-group-header">
+                                <h4><i class="fas fa-rocket"></i> Launch Parameters</h4>
+                                <span class="tooltip-trigger">?
+                                    <span class="tooltip-content">Velocity determines how fast the projectile moves. The angle determines the direction. For maximum range on flat ground, 45° is optimal!</span>
+                                </span>
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Initial Velocity</span>
+                                    <span class="slider-value" id="velocity-value">30 m/s</span>
+                                </div>
+                                <input type="range" id="velocity" min="10" max="50" value="30">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Launch Angle</span>
+                                    <span class="slider-value" id="angle-value">45°</span>
+                                </div>
+                                <input type="range" id="angle" min="10" max="80" value="45">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Gravity</span>
+                                    <span class="slider-value" id="gravity-value">9.8 m/s²</span>
+                                </div>
+                                <input type="range" id="gravity" min="1" max="20" value="9.8" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="launchBtn">
+                                <i class="fas fa-play"></i> Launch
+                            </button>
+                            <button class="btn btn-secondary" id="resetProjectile">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+
+                        <div class="results-display">
+                            <div class="control-group-header">
+                                <h4><i class="fas fa-chart-line"></i> Flight Data</h4>
+                                <span class="tooltip-trigger">?
+                                    <span class="tooltip-content">Maximum height occurs when vertical velocity becomes zero. Range is the horizontal distance traveled. Time of flight is how long the projectile is in the air.</span>
+                                </span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-arrows-alt-v"></i> Max Height</span>
+                                <span class="result-value" id="maxHeight">22.9 m</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-arrows-alt-h"></i> Range</span>
+                                <span class="result-value" id="range">91.8 m</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label"><i class="fas fa-stopwatch"></i> Time of Flight</span>
+                                <span class="result-value" id="flightTime">4.33 s</span>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h5><i class="fas fa-lightbulb"></i> Teacher's Tip</h5>
+                            <p>The horizontal and vertical motions are independent! Horizontally, the projectile moves at constant velocity. Vertically, gravity constantly accelerates it downward. This creates the beautiful parabolic path.</p>
+                            <div class="formula">Range = (v₀² × sin(2θ)) / g</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pendulum Experiment -->
+        <div class="experiment-container" id="pendulum-experiment">
+            <div class="experiment-card">
+                <div class="experiment-header">
+                    <h3><i class="fas fa-clock"></i> Simple Pendulum</h3>
+                    <p>Discover the elegant physics behind pendulum motion and what determines its period.</p>
+                </div>
+                <div class="experiment-body">
+                    <div class="simulation-area">
+                        <div class="canvas-container">
+                            <canvas id="pendulumCanvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <div class="control-group-header">
+                                <h4><i class="fas fa-ruler"></i> Pendulum Properties</h4>
+                                <span class="tooltip-trigger">?
+                                    <span class="tooltip-content">The period of a simple pendulum depends only on its length and gravity—not on its mass! This is why Galileo could use pendulums to keep time.</span>
+                                </span>
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>String Length</span>
+                                    <span class="slider-value" id="length-value">1.0 m</span>
+                                </div>
+                                <input type="range" id="pendulumLength" min="0.2" max="2" value="1" step="0.1">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Initial Angle</span>
+                                    <span class="slider-value" id="pendulumAngle-value">30°</span>
+                                </div>
+                                <input type="range" id="pendulumAngle" min="5" max="60" value="30">
+                            </div>
+
+                            <div class="slider-control">
+                                <div class="slider-label">
+                                    <span>Bob Mass</span>
+                                    <span class="slider-value" id="mass-value">1.0 kg</span>
+                                </div>
+                                <input type="range" id="pendulumMass" min="0.5" max="3" value="1" step="0.1">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="startPendulum">
+                                <i class="fas fa-play"></i> Start
+                            </button>
+                            <button class="btn btn-secondary" id="resetPendulum">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+
+                        <div class="pendulum-stats">
+                            <div class="stat-box">
+                                <div class="value" id="periodValue">2.01</div>
+                                <div class="label">Period (s)</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="value" id="frequencyValue">0.50</div>
+                                <div class="label">Frequency (Hz)</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="value" id="velocityValue">0.00</div>
+                                <div class="label">Velocity (m/s)</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="value" id="energyValue">0.00</div>
+                                <div class="label">Energy (J)</div>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h5><i class="fas fa-lightbulb"></i> Teacher's Tip</h5>
+                            <p>Here's something fascinating: try changing the mass! Notice how it doesn't affect the period? This is because gravity accelerates all masses equally (ignoring air resistance). The period only depends on length and gravity.</p>
+                            <div class="formula">T = 2π√(L/g)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab-btn');
+        const experiments = document.querySelectorAll('.experiment-container');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                experiments.forEach(e => e.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-experiment`).classList.add('active');
+            });
+        });
+
+        // ==================== TENSION FORCES SIMULATION ====================
+        const tensionCanvas = document.getElementById('tensionCanvas');
+        const tensionCtx = tensionCanvas.getContext('2d');
+
+        function resizeCanvas(canvas) {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth, container.clientHeight);
+            canvas.width = size * 2;
+            canvas.height = size * 2;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+        }
+
+        function drawTensionSystem() {
+            resizeCanvas(tensionCanvas);
+            const ctx = tensionCtx;
+            const w = tensionCanvas.width;
+            const h = tensionCanvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Get values
+            const weightP = parseFloat(document.getElementById('weightP').value);
+            const weightQ = parseFloat(document.getElementById('weightQ').value);
+            const weightR = parseFloat(document.getElementById('weightR').value);
+
+            // Update display values
+            document.getElementById('weightP-value').textContent = weightP + ' N';
+            document.getElementById('weightQ-value').textContent = weightQ + ' N';
+            document.getElementById('weightR-value').textContent = weightR + ' N';
+
+            // Calculate tensions
+            const t3 = weightR;
+            const t2 = weightQ + weightR;
+            const t1 = weightP + weightQ + weightR;
+
+            document.getElementById('tension1').textContent = t1.toFixed(1) + ' N';
+            document.getElementById('tension2').textContent = t2.toFixed(1) + ' N';
+            document.getElementById('tension3').textContent = t3.toFixed(1) + ' N';
+
+            const centerX = w / 2;
+            const startY = h * 0.08;
+            const spacing = h * 0.22;
+            const boxSize = w * 0.12;
+
+            // Draw support (hatched area)
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            ctx.fillRect(centerX - w * 0.15, startY - h * 0.04, w * 0.3, h * 0.04);
+
+            // Draw hatching
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX - w * 0.15 + i * w * 0.025, startY - h * 0.04);
+                ctx.lineTo(centerX - w * 0.15 + i * w * 0.025 + w * 0.025, startY);
+                ctx.stroke();
+            }
+
+            // Draw strings and boxes
+            const boxes = [
+                { y: startY + spacing, weight: weightP, label: 'P', tension: t1, color: '#e85d04' },
+                { y: startY + spacing * 2, weight: weightQ, label: 'Q', tension: t2, color: '#0077b6' },
+                { y: startY + spacing * 3, weight: weightR, label: 'R', tension: t3, color: '#38b000' }
+            ];
+
+            // Draw strings
+            ctx.lineWidth = 4;
+
+            // String 1 (top to P)
+            ctx.strokeStyle = '#e85d04';
+            ctx.beginPath();
+            ctx.moveTo(centerX, startY);
+            ctx.lineTo(centerX, boxes[0].y - boxSize / 2);
+            ctx.stroke();
+
+            // String 2 (P to Q)
+            ctx.strokeStyle = '#0077b6';
+            ctx.beginPath();
+            ctx.moveTo(centerX, boxes[0].y + boxSize / 2);
+            ctx.lineTo(centerX, boxes[1].y - boxSize / 2);
+            ctx.stroke();
+
+            // String 3 (Q to R)
+            ctx.strokeStyle = '#38b000';
+            ctx.beginPath();
+            ctx.moveTo(centerX, boxes[1].y + boxSize / 2);
+            ctx.lineTo(centerX, boxes[2].y - boxSize / 2);
+            ctx.stroke();
+
+            // Draw boxes with weight indicators
+            boxes.forEach((box, index) => {
+                // Box shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(centerX - boxSize / 2 + 4, box.y - boxSize / 2 + 4, boxSize, boxSize);
+
+                // Box
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim();
+                ctx.strokeStyle = box.color;
+                ctx.lineWidth = 3;
+                ctx.fillRect(centerX - boxSize / 2, box.y - boxSize / 2, boxSize, boxSize);
+                ctx.strokeRect(centerX - boxSize / 2, box.y - boxSize / 2, boxSize, boxSize);
+
+                // Label
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+                ctx.font = `bold ${w * 0.05}px 'Space Grotesk', sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(box.label, centerX, box.y);
+
+                // Weight label
+                ctx.font = `${w * 0.035}px 'JetBrains Mono', monospace`;
+                ctx.fillStyle = box.color;
+                ctx.fillText(box.weight + 'N', centerX + boxSize, box.y);
+
+                // Draw force arrows
+                const arrowSize = Math.min(box.weight * 8, 60);
+
+                // Downward weight arrow
+                ctx.strokeStyle = '#dc2f02';
+                ctx.fillStyle = '#dc2f02';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX - boxSize * 0.6, box.y);
+                ctx.lineTo(centerX - boxSize * 0.6, box.y + arrowSize);
+                ctx.stroke();
+
+                // Arrow head
+                ctx.beginPath();
+                ctx.moveTo(centerX - boxSize * 0.6, box.y + arrowSize);
+                ctx.lineTo(centerX - boxSize * 0.6 - 6, box.y + arrowSize - 10);
+                ctx.lineTo(centerX - boxSize * 0.6 + 6, box.y + arrowSize - 10);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // Draw tension labels on strings
+            ctx.font = `bold ${w * 0.03}px 'JetBrains Mono', monospace`;
+            ctx.fillStyle = '#e85d04';
+            ctx.fillText('T₁=' + t1.toFixed(1) + 'N', centerX + w * 0.12, startY + spacing * 0.5);
+
+            ctx.fillStyle = '#0077b6';
+            ctx.fillText('T₂=' + t2.toFixed(1) + 'N', centerX + w * 0.12, startY + spacing * 1.5);
+
+            ctx.fillStyle = '#38b000';
+            ctx.fillText('T₃=' + t3.toFixed(1) + 'N', centerX + w * 0.12, startY + spacing * 2.5);
+        }
+
+        // Tension controls
+        ['weightP', 'weightQ', 'weightR'].forEach(id => {
+            document.getElementById(id).addEventListener('input', drawTensionSystem);
+        });
+
+        // ==================== PROJECTILE MOTION SIMULATION ====================
+        const projectileCanvas = document.getElementById('projectileCanvas');
+        const projectileCtx = projectileCanvas.getContext('2d');
+
+        let projectileAnimation = null;
+        let projectileTime = 0;
+        let trajectoryPoints = [];
+        let isLaunched = false;
+
+        function updateProjectileCalculations() {
+            const v0 = parseFloat(document.getElementById('velocity').value);
+            const angleDeg = parseFloat(document.getElementById('angle').value);
+            const g = parseFloat(document.getElementById('gravity').value);
+            const angleRad = angleDeg * Math.PI / 180;
+
+            document.getElementById('velocity-value').textContent = v0 + ' m/s';
+            document.getElementById('angle-value').textContent = angleDeg + '°';
+            document.getElementById('gravity-value').textContent = g.toFixed(1) + ' m/s²';
+
+            const maxHeight = (v0 * v0 * Math.sin(angleRad) * Math.sin(angleRad)) / (2 * g);
+            const range = (v0 * v0 * Math.sin(2 * angleRad)) / g;
+            const flightTime = (2 * v0 * Math.sin(angleRad)) / g;
+
+            document.getElementById('maxHeight').textContent = maxHeight.toFixed(1) + ' m';
+            document.getElementById('range').textContent = range.toFixed(1) + ' m';
+            document.getElementById('flightTime').textContent = flightTime.toFixed(2) + ' s';
+
+            return { v0, angleDeg, angleRad, g, maxHeight, range, flightTime };
+        }
+
+        function drawProjectile() {
+            resizeCanvas(projectileCanvas);
+            const ctx = projectileCtx;
+            const w = projectileCanvas.width;
+            const h = projectileCanvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const params = updateProjectileCalculations();
+            const groundY = h * 0.85;
+            const originX = w * 0.1;
+            const scale = Math.min((w * 0.8) / params.range, (h * 0.6) / params.maxHeight) * 0.8;
+
+            // Draw ground
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            ctx.fillRect(0, groundY, w, h - groundY);
+
+            // Draw grass pattern
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--success').trim();
+            ctx.lineWidth = 1;
+            for (let i = 0; i < w; i += 15) {
+                ctx.beginPath();
+                ctx.moveTo(i, groundY);
+                ctx.lineTo(i + 5, groundY - 8);
+                ctx.stroke();
+            }
+
+            // Draw trajectory path (theoretical)
+            if (!isLaunched) {
+                ctx.strokeStyle = 'rgba(232, 93, 4, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 5]);
+                ctx.beginPath();
+
+                for (let t = 0; t <= params.flightTime; t += 0.05) {
+                    const x = params.v0 * Math.cos(params.angleRad) * t;
+                    const y = params.v0 * Math.sin(params.angleRad) * t - 0.5 * params.g * t * t;
+
+                    const canvasX = originX + x * scale;
+                    const canvasY = groundY - y * scale;
+
+                    if (t === 0) {
+                        ctx.moveTo(canvasX, canvasY);
+                    } else {
+                        ctx.lineTo(canvasX, canvasY);
+                    }
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw trajectory trace
+            if (trajectoryPoints.length > 0) {
+                ctx.strokeStyle = '#e85d04';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                trajectoryPoints.forEach((point, i) => {
+                    if (i === 0) {
+                        ctx.moveTo(point.x, point.y);
+                    } else {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                });
+                ctx.stroke();
+
+                // Draw dots along trajectory
+                trajectoryPoints.forEach((point, i) => {
+                    if (i % 5 === 0) {
+                        ctx.fillStyle = '#dc2f02';
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+
+            // Calculate current position
+            let ballX, ballY;
+            if (isLaunched && projectileTime <= params.flightTime) {
+                const x = params.v0 * Math.cos(params.angleRad) * projectileTime;
+                const y = params.v0 * Math.sin(params.angleRad) * projectileTime - 0.5 * params.g * projectileTime * projectileTime;
+
+                ballX = originX + x * scale;
+                ballY = groundY - Math.max(0, y) * scale;
+
+                trajectoryPoints.push({ x: ballX, y: ballY });
+            } else {
+                ballX = originX;
+                ballY = groundY;
+            }
+
+            // Draw velocity vector at origin
+            const arrowLength = 60;
+            ctx.strokeStyle = '#0077b6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(originX, groundY);
+            ctx.lineTo(
+                originX + arrowLength * Math.cos(params.angleRad),
+                groundY - arrowLength * Math.sin(params.angleRad)
+            );
+            ctx.stroke();
+
+            // Arrow head
+            ctx.fillStyle = '#0077b6';
+            const arrowHeadX = originX + arrowLength * Math.cos(params.angleRad);
+            const arrowHeadY = groundY - arrowLength * Math.sin(params.angleRad);
+            ctx.beginPath();
+            ctx.moveTo(arrowHeadX, arrowHeadY);
+            ctx.lineTo(
+                arrowHeadX - 12 * Math.cos(params.angleRad - 0.3),
+                arrowHeadY + 12 * Math.sin(params.angleRad - 0.3)
+            );
+            ctx.lineTo(
+                arrowHeadX - 12 * Math.cos(params.angleRad + 0.3),
+                arrowHeadY + 12 * Math.sin(params.angleRad + 0.3)
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw ball
+            const gradient = ctx.createRadialGradient(ballX - 5, ballY - 5, 0, ballX, ballY, 15);
+            gradient.addColorStop(0, '#ff9500');
+            gradient.addColorStop(1, '#e85d04');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#dc2f02';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw angle arc
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(originX, groundY, 30, -params.angleRad, 0);
+            ctx.stroke();
+
+            // Angle label
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+            ctx.font = `${w * 0.025}px 'JetBrains Mono', monospace`;
+            ctx.fillText(params.angleDeg + '°', originX + 40, groundY - 10);
+        }
+
+        function launchProjectile() {
+            if (isLaunched) return;
+
+            isLaunched = true;
+            projectileTime = 0;
+            trajectoryPoints = [];
+
+            const params = updateProjectileCalculations();
+
+            function animate() {
+                projectileTime += 0.03;
+                drawProjectile();
+
+                if (projectileTime <= params.flightTime) {
+                    projectileAnimation = requestAnimationFrame(animate);
+                } else {
+                    isLaunched = false;
+                }
+            }
+
+            animate();
+        }
+
+        function resetProjectile() {
+            if (projectileAnimation) {
+                cancelAnimationFrame(projectileAnimation);
+            }
+            isLaunched = false;
+            projectileTime = 0;
+            trajectoryPoints = [];
+            drawProjectile();
+        }
+
+        document.getElementById('launchBtn').addEventListener('click', launchProjectile);
+        document.getElementById('resetProjectile').addEventListener('click', resetProjectile);
+
+        ['velocity', 'angle', 'gravity'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                if (!isLaunched) {
+                    drawProjectile();
+                }
+            });
+        });
+
+        // ==================== PENDULUM SIMULATION ====================
+        const pendulumCanvas = document.getElementById('pendulumCanvas');
+        const pendulumCtx = pendulumCanvas.getContext('2d');
+
+        let pendulumAnimation = null;
+        let pendulumRunning = false;
+        let currentAngle = 0;
+        let angularVelocity = 0;
+        const g = 9.8;
+
+        function updatePendulumCalculations() {
+            const length = parseFloat(document.getElementById('pendulumLength').value);
+            const initialAngle = parseFloat(document.getElementById('pendulumAngle').value);
+            const mass = parseFloat(document.getElementById('pendulumMass').value);
+
+            document.getElementById('length-value').textContent = length.toFixed(1) + ' m';
+            document.getElementById('pendulumAngle-value').textContent = initialAngle + '°';
+            document.getElementById('mass-value').textContent = mass.toFixed(1) + ' kg';
+
+            const period = 2 * Math.PI * Math.sqrt(length / g);
+            const frequency = 1 / period;
+
+            document.getElementById('periodValue').textContent = period.toFixed(2);
+            document.getElementById('frequencyValue').textContent = frequency.toFixed(2);
+
+            return { length, initialAngle, mass, period, frequency };
+        }
+
+        function drawPendulum() {
+            resizeCanvas(pendulumCanvas);
+            const ctx = pendulumCtx;
+            const w = pendulumCanvas.width;
+            const h = pendulumCanvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const params = updatePendulumCalculations();
+            const pivotX = w / 2;
+            const pivotY = h * 0.15;
+            const lengthScale = h * 0.35;
+            const bobRadius = 15 + params.mass * 8;
+
+            const angleRad = currentAngle * Math.PI / 180;
+            const bobX = pivotX + lengthScale * Math.sin(angleRad);
+            const bobY = pivotY + lengthScale * Math.cos(angleRad);
+
+            // Draw pivot support
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+            ctx.fillRect(pivotX - 40, pivotY - 20, 80, 20);
+
+            // Draw hatching
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 8; i++) {
+                ctx.beginPath();
+                ctx.moveTo(pivotX - 40 + i * 10, pivotY - 20);
+                ctx.lineTo(pivotX - 40 + i * 10 + 10, pivotY);
+                ctx.stroke();
+            }
+
+            // Draw angle arc
+            if (Math.abs(currentAngle) > 1) {
+                ctx.strokeStyle = 'rgba(232, 93, 4, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (currentAngle > 0) {
+                    ctx.arc(pivotX, pivotY, 40, Math.PI / 2 - angleRad, Math.PI / 2);
+                } else {
+                    ctx.arc(pivotX, pivotY, 40, Math.PI / 2, Math.PI / 2 - angleRad);
+                }
+                ctx.stroke();
+            }
+
+            // Draw string
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(pivotX, pivotY);
+            ctx.lineTo(bobX, bobY);
+            ctx.stroke();
+
+            // Draw pivot point
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+            ctx.beginPath();
+            ctx.arc(pivotX, pivotY, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw bob with gradient
+            const gradient = ctx.createRadialGradient(bobX - 5, bobY - 5, 0, bobX, bobY, bobRadius);
+            gradient.addColorStop(0, '#ff7b00');
+            gradient.addColorStop(1, '#e85d04');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(bobX, bobY, bobRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = '#dc2f02';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw equilibrium line
+            ctx.strokeStyle = 'rgba(136, 136, 160, 0.3)';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(pivotX, pivotY);
+            ctx.lineTo(pivotX, pivotY + lengthScale + bobRadius + 20);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Update velocity and energy display
+            const velocity = angularVelocity * params.length;
+            const height = params.length * (1 - Math.cos(angleRad));
+            const kineticEnergy = 0.5 * params.mass * velocity * velocity;
+            const potentialEnergy = params.mass * g * height;
+            const totalEnergy = kineticEnergy + potentialEnergy;
+
+            document.getElementById('velocityValue').textContent = Math.abs(velocity).toFixed(2);
+            document.getElementById('energyValue').textContent = totalEnergy.toFixed(2);
+
+            // Draw energy bar
+            const barWidth = w * 0.6;
+            const barHeight = 20;
+            const barX = (w - barWidth) / 2;
+            const barY = h - 60;
+
+            ctx.fillStyle = 'rgba(136, 136, 160, 0.2)';
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+
+            const maxEnergy = params.mass * g * params.length * (1 - Math.cos(params.initialAngle * Math.PI / 180));
+            const keWidth = (kineticEnergy / maxEnergy) * barWidth || 0;
+            const peWidth = (potentialEnergy / maxEnergy) * barWidth || 0;
+
+            ctx.fillStyle = '#0077b6';
+            ctx.fillRect(barX, barY, keWidth, barHeight);
+
+            ctx.fillStyle = '#38b000';
+            ctx.fillRect(barX + keWidth, barY, peWidth, barHeight);
+
+            // Energy labels
+            ctx.font = `${w * 0.025}px 'Space Grotesk', sans-serif`;
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim();
+            ctx.textAlign = 'center';
+            ctx.fillText('KE (blue) + PE (green) = Total Energy', w / 2, barY + barHeight + 25);
+        }
+
+        function animatePendulum() {
+            if (!pendulumRunning) return;
+
+            const params = updatePendulumCalculations();
+            const dt = 0.016;
+
+            // Simple harmonic motion with damping
+            const angularAcceleration = -(g / params.length) * Math.sin(currentAngle * Math.PI / 180);
+            angularVelocity += angularAcceleration * dt * (180 / Math.PI);
+            angularVelocity *= 0.999; // Small damping
+            currentAngle += angularVelocity * dt;
+
+            drawPendulum();
+            pendulumAnimation = requestAnimationFrame(animatePendulum);
+        }
+
+        function startPendulum() {
+            if (pendulumRunning) {
+                pendulumRunning = false;
+                document.getElementById('startPendulum').innerHTML = '<i class="fas fa-play"></i> Start';
+                if (pendulumAnimation) {
+                    cancelAnimationFrame(pendulumAnimation);
+                }
+            } else {
+                pendulumRunning = true;
+                document.getElementById('startPendulum').innerHTML = '<i class="fas fa-pause"></i> Pause';
+                if (currentAngle === 0) {
+                    currentAngle = parseFloat(document.getElementById('pendulumAngle').value);
+                }
+                animatePendulum();
+            }
+        }
+
+        function resetPendulumSim() {
+            pendulumRunning = false;
+            document.getElementById('startPendulum').innerHTML = '<i class="fas fa-play"></i> Start';
+            if (pendulumAnimation) {
+                cancelAnimationFrame(pendulumAnimation);
+            }
+            currentAngle = parseFloat(document.getElementById('pendulumAngle').value);
+            angularVelocity = 0;
+            drawPendulum();
+        }
+
+        document.getElementById('startPendulum').addEventListener('click', startPendulum);
+        document.getElementById('resetPendulum').addEventListener('click', resetPendulumSim);
+
+        ['pendulumLength', 'pendulumAngle', 'pendulumMass'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                if (!pendulumRunning) {
+                    currentAngle = parseFloat(document.getElementById('pendulumAngle').value);
+                    angularVelocity = 0;
+                    drawPendulum();
+                }
+            });
+        });
+
+        // Initialize all simulations
+        function init() {
+            drawTensionSystem();
+            drawProjectile();
+            currentAngle = parseFloat(document.getElementById('pendulumAngle').value);
+            drawPendulum();
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            drawTensionSystem();
+            if (!isLaunched) drawProjectile();
+            drawPendulum();
+        });
+
+        init();
+    </script>
+</body>
+</html>
+
