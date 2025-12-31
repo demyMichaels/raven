@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html version="1.0" encoding="UTF-8">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoMaster - Interactive Geometry Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f59e0b;
+            --accent: #10b981;
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-elevated: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #475569;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            --gradient-2: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+            --gradient-3: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);
+        }
+
+        .light {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-elevated: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.4;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.1) 0%, transparent 40%);
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.03;
+            background-image:
+                linear-gradient(var(--text-primary) 1px, transparent 1px),
+                linear-gradient(90deg, var(--text-primary) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-tagline {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .logo-tagline {
+                display: block;
+            }
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg-elevated);
+            padding: 0.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .nav-tab {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-tab i {
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        .section-description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 600px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Interactive Canvas Section */
+        .canvas-container {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .tool-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        #geometryCanvas {
+            width: 100%;
+            height: 400px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .canvas-info {
+            padding: 0.75rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Discovery Cards */
+        .discovery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .discovery-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .discovery-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .discovery-card.angles::before { background: var(--gradient-1); }
+        .discovery-card.triangles::before { background: var(--gradient-2); }
+        .discovery-card.parallel::before { background: var(--gradient-3); }
+        .discovery-card.circles::before { background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%); }
+
+        .discovery-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .discovery-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .discovery-card.angles .discovery-icon { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+        .discovery-card.triangles .discovery-icon { background: rgba(245, 158, 11, 0.15); color: var(--secondary); }
+        .discovery-card.parallel .discovery-icon { background: rgba(16, 185, 129, 0.15); color: var(--accent); }
+        .discovery-card.circles .discovery-icon { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+
+        .discovery-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .discovery-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Real World Gallery */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .gallery-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-visual {
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gallery-visual svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .gallery-info {
+            padding: 1rem;
+        }
+
+        .gallery-category {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .gallery-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .gallery-concepts {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Practice Problems */
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .problem-card:hover {
+            border-color: var(--primary);
+        }
+
+        .problem-image {
+            background: #fff;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+        }
+
+        .problem-image img {
+            max-width: 100%;
+            max-height: 160px;
+            object-fit: contain;
+        }
+
+        .problem-content {
+            padding: 1rem;
+        }
+
+        .problem-number {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .problem-topic {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .problem-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .hint-toggle {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .hint-toggle:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .hint-content {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .hint-content.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            color: var(--text-secondary);
+        }
+
+        /* Proof Builder */
+        .proof-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 900px) {
+            .proof-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .proof-visual {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+
+        .proof-visual svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .proof-steps {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        .proof-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .proof-narrative {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .proof-statement {
+            background: var(--bg-elevated);
+            border-left: 3px solid var(--primary);
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .proof-statement:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .proof-statement.revealed {
+            border-left-color: var(--success);
+        }
+
+        .proof-statement .reason {
+            display: none;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .proof-statement.revealed .reason {
+            display: block;
+        }
+
+        /* Interactive Demo */
+        .demo-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .demo-canvas-wrapper {
+            background: var(--bg-elevated);
+            padding: 1rem;
+        }
+
+        #demoCanvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            cursor: grab;
+        }
+
+        #demoCanvas:active {
+            cursor: grabbing;
+        }
+
+        .demo-controls {
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .demo-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+
+        .demo-slider {
+            flex: 1;
+            min-width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bg-elevated);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .demo-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+        }
+
+        .demo-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--primary);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .demo-info {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            background: var(--bg-elevated);
+        }
+
+        .demo-theorem {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-explanation {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .badge-primary { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+        .badge-secondary { background: rgba(245, 158, 11, 0.15); color: var(--secondary); }
+        .badge-accent { background: rgba(16, 185, 129, 0.15); color: var(--accent); }
+
+        /* Progress indicator */
+        .progress-bar {
+            height: 4px;
+            background: var(--bg-elevated);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-1);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Measurement Display */
+        .measurements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+
+        .measurement-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .measurement-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .measurement-value {
+            font-family: 'Space Mono', monospace;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 640px) {
+            .header-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .logo {
+                justify-content: center;
+            }
+
+            .nav-tabs {
+                justify-content: flex-start;
+            }
+
+            .section-title {
+                font-size: 1.4rem;
+            }
+
+            .nav-tab span {
+                display: none;
+            }
+
+            .nav-tab i {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Scroll animations */
+        .animate-in {
+            animation: slideUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="grid-overlay"></div>
+
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shapes"></i>
+                </div>
+                <div>
+                    <div class="logo-text">GeoMaster</div>
+                    <div class="logo-tagline">Interactive Geometry Learning</div>
+                </div>
+            </div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-section="visualize">
+                    <i class="fas fa-draw-polygon"></i>
+                    <span>Visualize</span>
+                </button>
+                <button class="nav-tab" data-section="discover">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Discover</span>
+                </button>
+                <button class="nav-tab" data-section="realworld">
+                    <i class="fas fa-globe"></i>
+                    <span>Real World</span>
+                </button>
+                <button class="nav-tab" data-section="practice">
+                    <i class="fas fa-pencil-ruler"></i>
+                    <span>Practice</span>
+                </button>
+                <button class="nav-tab" data-section="proofs">
+                    <i class="fas fa-book-open"></i>
+                    <span>Proofs</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Section 1: Interactive Visualization -->
+        <section id="visualize" class="section active">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <span class="section-title-icon" style="background: var(--gradient-1);">
+                        <i class="fas fa-draw-polygon"></i>
+                    </span>
+                    Interactive Visualization
+                </h1>
+                <p class="section-description">
+                    Drag points to see how geometric relationships hold. Watch angles and lengths update in real-time!
+                </p>
+            </div>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 class="card-title">Geometry Canvas</h3>
+                    <span class="badge badge-primary"><i class="fas fa-mouse-pointer"></i> Interactive</span>
+                </div>
+                <div class="canvas-container">
+                    <div class="canvas-toolbar">
+                        <button class="tool-btn active" data-tool="select">
+                            <i class="fas fa-mouse-pointer"></i> Select
+                        </button>
+                        <button class="tool-btn" data-tool="point">
+                            <i class="fas fa-circle"></i> Point
+                        </button>
+                        <button class="tool-btn" data-tool="line">
+                            <i class="fas fa-minus"></i> Line
+                        </button>
+                        <button class="tool-btn" data-tool="triangle">
+                            <i class="fas fa-play"></i> Triangle
+                        </button>
+                        <button class="tool-btn" data-tool="circle">
+                            <i class="far fa-circle"></i> Circle
+                        </button>
+                        <button class="tool-btn" data-tool="measure">
+                            <i class="fas fa-ruler"></i> Measure
+                        </button>
+                        <button class="tool-btn" data-tool="clear" style="margin-left: auto; border-color: var(--error); color: var(--error);">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                    <canvas id="geometryCanvas"></canvas>
+                    <div class="measurements" id="measurements">
+                        <div class="measurement-item">
+                            <span class="measurement-label">Points:</span>
+                            <span class="measurement-value" id="pointCount">0</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">Selected Angle:</span>
+                            <span class="measurement-value" id="selectedAngle">—</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">Selected Length:</span>
+                            <span class="measurement-value" id="selectedLength">—</span>
+                        </div>
+                    </div>
+                    <div class="canvas-info">
+                        💡 Tip: Create a triangle by clicking 3 points, then drag vertices to explore angle relationships
+                    </div>
+                </div>
+            </div>
+
+            <!-- Triangle Angle Sum Demo -->
+            <div class="card animate-in delay-1">
+                <div class="card-header">
+                    <h3 class="card-title">Triangle Angle Sum Explorer</h3>
+                    <span class="badge badge-secondary"><i class="fas fa-star"></i> Discovery</span>
+                </div>
+                <div class="demo-container">
+                    <div class="demo-canvas-wrapper">
+                        <canvas id="triangleDemo"></canvas>
+                    </div>
+                    <div class="demo-controls">
+                        <span class="demo-label">Drag vertex A:</span>
+                        <input type="range" class="demo-slider" id="vertexSlider" min="0" max="100" value="50">
+                    </div>
+                    <div class="measurements" id="triangleMeasurements">
+                        <div class="measurement-item">
+                            <span class="measurement-label">∠A =</span>
+                            <span class="measurement-value" id="angleA">60°</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">∠B =</span>
+                            <span class="measurement-value" id="angleB">60°</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">∠C =</span>
+                            <span class="measurement-value" id="angleC">60°</span>
+                        </div>
+                        <div class="measurement-item" style="border-left: 2px solid var(--accent); padding-left: 1rem;">
+                            <span class="measurement-label">Sum =</span>
+                            <span class="measurement-value" id="angleSum" style="color: var(--accent);">180°</span>
+                        </div>
+                    </div>
+                    <div class="demo-info">
+                        <div class="demo-theorem">📐 Triangle Angle Sum Theorem</div>
+                        <div class="demo-explanation">
+                            No matter how you reshape the triangle, the three interior angles always sum to 180°.
+                            Drag the slider to move vertex A and watch the angles change while their sum remains constant!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Discovery-Based Learning -->
+        <section id="discover" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <span class="section-title-icon" style="background: var(--gradient-2);">
+                        <i class="fas fa-lightbulb"></i>
+                    </span>
+                    Discovery Zone
+                </h1>
+                <p class="section-description">
+                    Explore and discover geometric theorems yourself. Measure, observe patterns, and draw your own conclusions!
+                </p>
+            </div>
+
+            <div class="discovery-grid">
+                <div class="discovery-card angles animate-in" onclick="startDiscovery('angles')">
+                    <div class="discovery-icon">
+                        <i class="fas fa-drafting-compass"></i>
+                    </div>
+                    <h3 class="discovery-title">Angle Relationships</h3>
+                    <p class="discovery-desc">
+                        Explore complementary, supplementary, vertical angles, and what happens when parallel lines meet a transversal.
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="discovery-card triangles animate-in delay-1" onclick="startDiscovery('triangles')">
+                    <div class="discovery-icon">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <h3 class="discovery-title">Triangle Properties</h3>
+                    <p class="discovery-desc">
+                        Discover the relationship between sides and angles, similar triangles, and the Pythagorean theorem.
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="discovery-card parallel animate-in delay-2" onclick="startDiscovery('parallel')">
+                    <div class="discovery-icon">
+                        <i class="fas fa-grip-lines"></i>
+                    </div>
+                    <h3 class="discovery-title">Parallel Lines</h3>
+                    <p class="discovery-desc">
+                        Learn about corresponding angles, alternate angles, and co-interior angles through interactive exploration.
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="discovery-card circles animate-in delay-3" onclick="startDiscovery('circles')">
+                    <div class="discovery-icon">
+                        <i class="far fa-circle"></i>
+                    </div>
+                    <h3 class="discovery-title">Circle Theorems</h3>
+                    <p class="discovery-desc">
+                        Explore inscribed angles, central angles, tangent lines, and the magical properties of circles.
+                    </p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Discovery Demo -->
+            <div class="card animate-in delay-4" id="discoveryDemo" style="margin-top: 1rem;">
+                <div class="card-header">
+                    <h3 class="card-title">🔍 Parallel Lines Discovery</h3>
+                    <span class="badge badge-accent"><i class="fas fa-flask"></i> Experiment</span>
+                </div>
+                <div class="demo-container">
+                    <div class="demo-canvas-wrapper">
+                        <canvas id="parallelDemo"></canvas>
+                    </div>
+                    <div class="demo-controls">
+                        <span class="demo-label">Transversal angle:</span>
+                        <input type="range" class="demo-slider" id="transversalSlider" min="20" max="160" value="60">
+                        <span class="demo-value" id="transversalValue">60°</span>
+                    </div>
+                    <div class="measurements">
+                        <div class="measurement-item">
+                            <span class="measurement-label">Angle 1 (top-left):</span>
+                            <span class="measurement-value" id="angle1">60°</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">Angle 2 (top-right):</span>
+                            <span class="measurement-value" id="angle2">120°</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">Angle 5 (bottom-left):</span>
+                            <span class="measurement-value" id="angle5">60°</span>
+                        </div>
+                        <div class="measurement-item">
+                            <span class="measurement-label">Angle 6 (bottom-right):</span>
+                            <span class="measurement-value" id="angle6">120°</span>
+                        </div>
+                    </div>
+                    <div class="demo-info">
+                        <div class="demo-theorem">🎯 What patterns do you notice?</div>
+                        <div class="demo-explanation">
+                            Move the slider and observe the angle measurements. Can you discover which angles are always equal?
+                            These are called <strong>corresponding angles</strong> and <strong>alternate angles</strong>!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Real-World Connections -->
+        <section id="realworld" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <span class="section-title-icon" style="background: var(--gradient-3);">
+                        <i class="fas fa-globe"></i>
+                    </span>
+                    Geometry in the Real World
+                </h1>
+                <p class="section-description">
+                    See how geometry shapes our world—from architecture to nature, art to sports!
+                </p>
+            </div>
+
+            <div class="gallery-grid">
+                <div class="gallery-item animate-in">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Eiffel Tower simplified -->
+                            <polygon points="100,10 60,150 140,150" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                            <line x1="70" y1="100" x2="130" y2="100" stroke="#f59e0b" stroke-width="1.5"/>
+                            <line x1="75" y1="80" x2="125" y2="80" stroke="#f59e0b" stroke-width="1.5"/>
+                            <line x1="85" y1="50" x2="115" y2="50" stroke="#f59e0b" stroke-width="1.5"/>
+                            <circle cx="100" cy="10" r="3" fill="#f59e0b"/>
+                            <text x="100" y="130" text-anchor="middle" fill="#94a3b8" font-size="8">Triangular stability</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Architecture</div>
+                        <div class="gallery-title">Eiffel Tower</div>
+                        <div class="gallery-concepts">Triangles • Structural stability • Symmetry</div>
+                    </div>
+                </div>
+
+                <div class="gallery-item animate-in delay-1">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Honeycomb pattern -->
+                            <g stroke="#f59e0b" stroke-width="1.5" fill="none">
+                                <polygon points="50,40 70,30 90,40 90,60 70,70 50,60"/>
+                                <polygon points="90,40 110,30 130,40 130,60 110,70 90,60"/>
+                                <polygon points="70,70 90,60 110,70 110,90 90,100 70,90"/>
+                                <polygon points="110,70 130,60 150,70 150,90 130,100 110,90"/>
+                                <polygon points="30,60 50,50 70,60 70,80 50,90 30,80"/>
+                                <polygon points="50,90 70,80 90,90 90,110 70,120 50,110"/>
+                            </g>
+                            <text x="100" y="140" text-anchor="middle" fill="#94a3b8" font-size="8">Hexagonal tessellation</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Nature</div>
+                        <div class="gallery-title">Honeycomb</div>
+                        <div class="gallery-concepts">Hexagons • Tessellation • Efficiency</div>
+                    </div>
+                </div>
+
+                <div class="gallery-item animate-in delay-2">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #1a1a2e 0%, #2d132c 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Pool table geometry -->
+                            <rect x="30" y="30" width="140" height="100" rx="5" stroke="#10b981" stroke-width="2" fill="none"/>
+                            <circle cx="50" cy="50" r="6" fill="#fff"/>
+                            <circle cx="150" cy="110" r="6" fill="#ef4444"/>
+                            <line x1="50" y1="50" x2="100" y2="30" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4"/>
+                            <line x1="100" y1="30" x2="150" y2="110" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4"/>
+                            <path d="M 85 35 A 10 10 0 0 1 95 42" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                            <text x="100" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">Angle of incidence = reflection</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Sports</div>
+                        <div class="gallery-title">Pool & Billiards</div>
+                        <div class="gallery-concepts">Reflection • Angles • Trajectories</div>
+                    </div>
+                </div>
+
+                <div class="gallery-item animate-in delay-3">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #1e3a5f 0%, #0d253f 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Golden spiral -->
+                            <rect x="40" y="40" width="80" height="80" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                            <rect x="120" y="40" width="50" height="50" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                            <rect x="120" y="90" width="30" height="30" stroke="#f59e0b" stroke-width="1.5" fill="none"/>
+                            <path d="M 40 120 Q 40 40 120 40 Q 170 40 170 90 Q 170 120 150 120 Q 120 120 120 105" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+                            <text x="100" y="145" text-anchor="middle" fill="#94a3b8" font-size="8">Golden ratio: 1.618...</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Art & Design</div>
+                        <div class="gallery-title">Golden Ratio</div>
+                        <div class="gallery-concepts">Proportion • Fibonacci • Aesthetics</div>
+                    </div>
+                </div>
+
+                <div class="gallery-item animate-in delay-4">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Perspective drawing -->
+                            <circle cx="100" cy="50" r="3" fill="#ef4444"/>
+                            <line x1="100" y1="50" x2="30" y2="130" stroke="#6366f1" stroke-width="1" stroke-dasharray="3"/>
+                            <line x1="100" y1="50" x2="170" y2="130" stroke="#6366f1" stroke-width="1" stroke-dasharray="3"/>
+                            <line x1="100" y1="50" x2="50" y2="130" stroke="#6366f1" stroke-width="1" stroke-dasharray="3"/>
+                            <line x1="100" y1="50" x2="150" y2="130" stroke="#6366f1" stroke-width="1" stroke-dasharray="3"/>
+                            <rect x="55" y="90" width="30" height="40" stroke="#10b981" stroke-width="1.5" fill="none"/>
+                            <rect x="115" y="100" width="20" height="30" stroke="#10b981" stroke-width="1.5" fill="none"/>
+                            <text x="100" y="65" text-anchor="middle" fill="#ef4444" font-size="7">Vanishing point</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Art</div>
+                        <div class="gallery-title">Perspective Drawing</div>
+                        <div class="gallery-concepts">Vanishing points • Parallel lines • Depth</div>
+                    </div>
+                </div>
+
+                <div class="gallery-item animate-in delay-4">
+                    <div class="gallery-visual" style="background: linear-gradient(135deg, #134e4a 0%, #0f766e 100%);">
+                        <svg viewBox="0 0 200 160" fill="none">
+                            <!-- Soccer field geometry -->
+                            <rect x="30" y="30" width="140" height="100" stroke="#fff" stroke-width="2" fill="none"/>
+                            <line x1="100" y1="30" x2="100" y2="130" stroke="#fff" stroke-width="1.5"/>
+                            <circle cx="100" cy="80" r="20" stroke="#fff" stroke-width="1.5" fill="none"/>
+                            <rect x="30" y="55" width="25" height="50" stroke="#fff" stroke-width="1.5" fill="none"/>
+                            <rect x="145" y="55" width="25" height="50" stroke="#fff" stroke-width="1.5" fill="none"/>
+                            <circle cx="100" cy="80" r="2" fill="#fff"/>
+                            <text x="100" y="150" text-anchor="middle" fill="#94a3b8" font-size="8">Rectangles, circles, symmetry</text>
+                        </svg>
+                    </div>
+                    <div class="gallery-info">
+                        <div class="gallery-category">Sports</div>
+                        <div class="gallery-title">Soccer Field</div>
+                        <div class="gallery-concepts">Rectangles • Circles • Symmetry</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Practice Problems -->
+        <section id="practice" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <span class="section-title-icon" style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);">
+                        <i class="fas fa-pencil-ruler"></i>
+                    </span>
+                    Practice Problems
+                </h1>
+                <p class="section-description">
+                    Work through scaffolded problems step-by-step. Click "Show Steps" for guided hints!
+                </p>
+            </div>
+
+            <div class="problems-grid" id="problemsGrid">
+                <!-- Problems will be dynamically inserted -->
+            </div>
+        </section>
+
+        <!-- Section 5: Proof as Storytelling -->
+        <section id="proofs" class="section">
+            <div class="section-header">
+                <h1 class="section-title">
+                    <span class="section-title-icon" style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);">
+                        <i class="fas fa-book-open"></i>
+                    </span>
+                    Proof as Storytelling
+                </h1>
+                <p class="section-description">
+                    Proofs aren't just rigid formulas—they're logical stories! Click each statement to reveal the reasoning.
+                </p>
+            </div>
+
+            <div class="card animate-in">
+                <div class="card-header">
+                    <h3 class="card-title">The Triangle Angle Sum Proof</h3>
+                    <span class="badge badge-primary"><i class="fas fa-theater-masks"></i> Story Mode</span>
+                </div>
+                <div class="proof-container">
+                    <div class="proof-visual">
+                        <svg viewBox="0 0 300 200" fill="none">
+                            <!-- Extended line through B -->
+                            <line x1="20" y1="150" x2="280" y2="150" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="5"/>
+                            <!-- Triangle -->
+                            <polygon points="150,30 60,150 240,150" stroke="var(--primary)" stroke-width="3" fill="rgba(99, 102, 241, 0.1)"/>
+                            <!-- Parallel line through A -->
+                            <line x1="70" y1="30" x2="230" y2="30" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5"/>
+                            <!-- Angle arcs -->
+                            <path d="M 150 50 A 20 20 0 0 1 135 35" stroke="var(--secondary)" stroke-width="2" fill="none"/>
+                            <path d="M 80 150 A 25 25 0 0 0 72 130" stroke="var(--secondary)" stroke-width="2" fill="none"/>
+                            <path d="M 220 150 A 25 25 0 0 1 228 130" stroke="var(--secondary)" stroke-width="2" fill="none"/>
+                            <!-- Labels -->
+                            <text x="150" y="20" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">A</text>
+                            <text x="50" y="165" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">B</text>
+                            <text x="250" y="165" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">C</text>
+                            <text x="150" y="75" text-anchor="middle" fill="var(--secondary)" font-size="14">∠A</text>
+                            <text x="95" y="135" text-anchor="middle" fill="var(--secondary)" font-size="14">∠B</text>
+                            <text x="205" y="135" text-anchor="middle" fill="var(--secondary)" font-size="14">∠C</text>
+                            <!-- Parallel arrows -->
+                            <text x="40" y="25" fill="var(--accent)" font-size="12">∥ to BC</text>
+                        </svg>
+                    </div>
+                    <div class="proof-steps">
+                        <div class="proof-title">
+                            <i class="fas fa-scroll"></i>
+                            The Story of Why Triangle Angles Sum to 180°
+                        </div>
+                        <div class="proof-narrative">
+                            Imagine you're standing at vertex A of a triangle. You want to prove that no matter what triangle you draw, its angles always add up to a straight line (180°). Here's how our mathematical story unfolds...
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Chapter 1:</strong> Draw a line through A parallel to side BC.
+                            <div class="reason">✨ We can always draw a parallel line through any point—this is our setup for the magic!</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Chapter 2:</strong> Look at ∠B. It equals the angle on the left of A (above the triangle).
+                            <div class="reason">🎯 These are alternate interior angles formed by transversal AB crossing parallel lines—they must be equal!</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Chapter 3:</strong> Similarly, ∠C equals the angle on the right of A (above the triangle).
+                            <div class="reason">🎯 Same reasoning! Transversal AC creates another pair of alternate interior angles.</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Chapter 4:</strong> The three angles at point A (∠B copy + ∠A + ∠C copy) form a straight line.
+                            <div class="reason">📏 A straight line measures exactly 180°—and we've placed copies of all three triangle angles along it!</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>The Grand Finale:</strong> Therefore, ∠A + ∠B + ∠C = 180°
+                            <div class="reason">🎉 Since the copies equal the originals, the three interior angles of ANY triangle sum to 180°!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exterior Angle Proof -->
+            <div class="card animate-in delay-1">
+                <div class="card-header">
+                    <h3 class="card-title">The Exterior Angle Theorem</h3>
+                    <span class="badge badge-secondary"><i class="fas fa-theater-masks"></i> Story Mode</span>
+                </div>
+                <div class="proof-container">
+                    <div class="proof-visual">
+                        <svg viewBox="0 0 300 200" fill="none">
+                            <!-- Extended line -->
+                            <line x1="200" y1="150" x2="280" y2="150" stroke="var(--error)" stroke-width="2"/>
+                            <!-- Triangle -->
+                            <polygon points="150,40 60,150 200,150" stroke="var(--primary)" stroke-width="3" fill="rgba(99, 102, 241, 0.1)"/>
+                            <!-- Exterior angle arc -->
+                            <path d="M 220 150 A 25 25 0 0 0 210 125" stroke="var(--error)" stroke-width="2" fill="none"/>
+                            <!-- Interior angle arcs -->
+                            <path d="M 150 60 A 20 20 0 0 1 135 50" stroke="var(--accent)" stroke-width="2" fill="none"/>
+                            <path d="M 85 150 A 25 25 0 0 0 78 130" stroke="var(--secondary)" stroke-width="2" fill="none"/>
+                            <!-- Labels -->
+                            <text x="150" y="30" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">A</text>
+                            <text x="45" y="160" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">B</text>
+                            <text x="200" y="170" text-anchor="middle" fill="var(--text-primary)" font-weight="bold">C</text>
+                            <text x="140" y="70" text-anchor="middle" fill="var(--accent)" font-size="12">∠A</text>
+                            <text x="95" y="140" text-anchor="middle" fill="var(--secondary)" font-size="12">∠B</text>
+                            <text x="245" y="140" text-anchor="middle" fill="var(--error)" font-size="12">∠D (ext)</text>
+                        </svg>
+                    </div>
+                    <div class="proof-steps">
+                        <div class="proof-title">
+                            <i class="fas fa-scroll"></i>
+                            The Mystery of the Exterior Angle
+                        </div>
+                        <div class="proof-narrative">
+                            An exterior angle is formed when we extend one side of a triangle. This proof reveals a beautiful relationship: the exterior angle equals the sum of the two non-adjacent interior angles!
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Setup:</strong> Extend side BC past C to create exterior angle ∠D.
+                            <div class="reason">🔧 This is our exterior angle—it sits outside the triangle at vertex C.</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Observation:</strong> ∠ACB (interior at C) and ∠D form a straight line.
+                            <div class="reason">📐 They're supplementary! ∠ACB + ∠D = 180°</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Recall:</strong> ∠A + ∠B + ∠ACB = 180° (angle sum theorem)
+                            <div class="reason">💡 We just proved this! The interior angles sum to 180°.</div>
+                        </div>
+
+                        <div class="proof-statement" onclick="revealReason(this)">
+                            <strong>Conclusion:</strong> Therefore, ∠D = ∠A + ∠B
+                            <div class="reason">🎉 Since both expressions equal 180° minus ∠ACB, the exterior angle equals the sum of the two remote interior angles!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.add('light');
+        }
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('light');
+            } else {
+                document.documentElement.classList.remove('light');
+            }
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // Practice Problems Data
+        const problems = [
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/d142955d53c918dde3a51bfd011a9b2a7634d7ad9634e4472c4d011825db6bdc?w=305&h=196',
+                topic: 'Similar Triangles',
+                hint: 'Identify the parallel lines and use the properties of similar triangles.',
+                steps: [
+                    'Notice that WU is parallel to YZ (shown by the arrows)',
+                    'This means △XWU ~ △XYZ by AA similarity',
+                    'Set up the proportion: XW/XY = WU/YZ = XU/XZ',
+                    'Solve for the unknown using cross multiplication'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/692dd3f2c1c9df9559a449ca7ff7b322070592ce130fdf46a7910e56f12f9766?w=255&h=211',
+                topic: 'Parallel Lines & Transversals',
+                hint: 'Use the properties of angles formed by parallel lines cut by a transversal.',
+                steps: [
+                    'Identify the parallel lines (PQ ∥ to the base)',
+                    'The 60° angle at P is formed by the transversal',
+                    'Find corresponding and alternate angles',
+                    'Use angle relationships to find unknown angles'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/17a61e0eebda6ee27876f5ceaf7d2130d1aad69182d10b9e2ec7be8087a60667?w=378&h=217',
+                topic: 'Angle Relationships',
+                hint: 'Use the fact that angles on a straight line sum to 180°.',
+                steps: [
+                    'Identify that P-Q-R forms a straight line',
+                    'Angles (3/2)(x+3y)° and 45° and (5x+y)° are related',
+                    'Set up equations using supplementary angles',
+                    'Solve the system of equations for x and y'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/7fc5836f8daafff2f1239aa5cc6167ce3220606ab8b732a849d27a9963dff8b0?w=308&h=177',
+                topic: 'Quadrilateral Angles',
+                hint: 'The sum of interior angles in a quadrilateral is 360°.',
+                steps: [
+                    'Identify this is a quadrilateral PQRS',
+                    'Sum of interior angles = 360°',
+                    'Given: ∠S = 130°, ∠R = 100°',
+                    'Find the remaining angles using angle sum property'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/8c5ae711165e0a0b34ea2459963519fc22bdc4a3a5e3edc84c7c618b2522c023?w=302&h=218',
+                topic: 'Similar Triangles - Proportions',
+                hint: 'Use the proportionality of sides in similar triangles.',
+                steps: [
+                    'Triangle with sides 6cm, 8cm, 12cm shown',
+                    'Identify if triangles are similar',
+                    'Set up proportions between corresponding sides',
+                    'Calculate unknown lengths using cross multiplication'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/c03e8675a4500871f1f7dede9945f8465dc0be2c7556fbd006bd5621a2806d04?w=282&h=163',
+                topic: 'Triangle Angle Sum',
+                hint: 'The sum of angles in a triangle is 180°.',
+                steps: [
+                    'Identify the three angles: 80°, 20°, and 40°',
+                    'Verify: 80° + 20° + 40° = 140° (external angles shown)',
+                    'Find the interior angles using this relationship',
+                    'Apply the triangle angle sum theorem'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/8e58833c8f79db233457d5e7baecf20082276fdb86053fabda85a923805a1cf4?w=305&h=201',
+                topic: 'Exterior Angles',
+                hint: 'An exterior angle equals the sum of the two non-adjacent interior angles.',
+                steps: [
+                    'Identify the exterior angle at R (35°)',
+                    'Identify the angle at P (20°)',
+                    'Use the exterior angle theorem',
+                    'Calculate: exterior = sum of remote interior angles'
+                ]
+            },
+            {
+                image: 'https://pfst.cf2.poecdn.net/base/image/c0eeca0324888bef53e8409eb4355e0a95796dbeeb0f97bafc16827648adb1a8?w=332&h=292',
+                topic: 'Parallel Lines & Transversals',
+                hint: 'When parallel lines are cut by a transversal, corresponding angles are equal.',
+                steps: [
+                    'Identify the parallel lines (marked with arrows)',
+                    'The transversal creates angle 65° at R',
+                    'Find corresponding and alternate angles',
+                    'Use angle relationships to find all angles'
+                ]
+            }
+        ];
+
+        // Generate practice problems
+        function generateProblems() {
+            const grid = document.getElementById('problemsGrid');
+            problems.forEach((problem, index) => {
+                const card = document.createElement('div');
+                card.className = 'problem-card animate-in';
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+                    <div class="problem-image">
+                        <img src="${problem.image}" alt="Problem ${index + 1}">
+                    </div>
+                    <div class="problem-content">
+                        <div class="problem-number">Problem ${index + 1}</div>
+                        <div class="problem-topic">${problem.topic}</div>
+                        <div class="problem-hint">${problem.hint}</div>
+                        <button class="hint-toggle" onclick="toggleHint(this)">
+                            <i class="fas fa-lightbulb"></i> Show Step-by-Step Solution
+                        </button>
+                        <div class="hint-content">
+                            ${problem.steps.map((step, i) => `
+                                <div class="step">
+                                    <span class="step-number">${i + 1}</span>
+                                    <span class="step-text">${step}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleHint(btn) {
+            const content = btn.nextElementSibling;
+            content.classList.toggle('show');
+            btn.innerHTML = content.classList.contains('show')
+                ? '<i class="fas fa-eye-slash"></i> Hide Steps'
+                : '<i class="fas fa-lightbulb"></i> Show Step-by-Step Solution';
+        }
+
+        // Proof storytelling
+        function revealReason(element) {
+            element.classList.toggle('revealed');
+        }
+
+        // Discovery start
+        function startDiscovery(type) {
+            const discoveryDemo = document.getElementById('discoveryDemo');
+            discoveryDemo.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ========== GEOMETRY CANVAS ==========
+        const canvas = document.getElementById('geometryCanvas');
+        const ctx = canvas.getContext('2d');
+        let points = [];
+        let lines = [];
+        let selectedPoint = null;
+        let currentTool = 'select';
+        let lineStart = null;
+        let isDragging = false;
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = 400;
+            draw();
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function findPoint(pos, threshold = 15) {
+            return points.find(p => Math.hypot(p.x - pos.x, p.y - pos.y) < threshold);
+        }
+
+        function draw() {
+            const isDark = !document.documentElement.classList.contains('light');
+            ctx.fillStyle = isDark ? '#1e293b' : '#f1f5f9';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid
+            ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 25) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 25) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+
+            // Draw lines
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 2;
+            lines.forEach(line => {
+                ctx.beginPath();
+                ctx.moveTo(line.start.x, line.start.y);
+                ctx.lineTo(line.end.x, line.end.y);
+                ctx.stroke();
+            });
+
+            // Draw points
+            points.forEach((p, i) => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, selectedPoint === p ? 10 : 7, 0, Math.PI * 2);
+                ctx.fillStyle = selectedPoint === p ? '#f59e0b' : '#6366f1';
+                ctx.fill();
+                ctx.fillStyle = isDark ? '#fff' : '#000';
+                ctx.font = 'bold 12px Outfit';
+                ctx.fillText(String.fromCharCode(65 + i), p.x + 12, p.y - 8);
+            });
+
+            // Update measurements
+            document.getElementById('pointCount').textContent = points.length;
+
+            // Calculate angle if 3 points selected
+            if (points.length >= 3) {
+                const angle = calculateAngle(points[0], points[1], points[2]);
+                document.getElementById('selectedAngle').textContent = `∠ABC = ${angle.toFixed(1)}°`;
+            }
+
+            if (points.length >= 2) {
+                const dist = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+                document.getElementById('selectedLength').textContent = `AB = ${dist.toFixed(1)}px`;
+            }
+        }
+
+        function calculateAngle(p1, p2, p3) {
+            const v1 = { x: p1.x - p2.x, y: p1.y - p2.y };
+            const v2 = { x: p3.x - p2.x, y: p3.y - p2.y };
+            const dot = v1.x * v2.x + v1.y * v2.y;
+            const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            const angle = Math.acos(dot / (mag1 * mag2));
+            return angle * (180 / Math.PI);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e);
+
+            if (currentTool === 'select') {
+                selectedPoint = findPoint(pos);
+                if (selectedPoint) isDragging = true;
+            } else if (currentTool === 'point') {
+                points.push({ x: pos.x, y: pos.y });
+            } else if (currentTool === 'line') {
+                const existing = findPoint(pos);
+                if (existing) {
+                    if (!lineStart) {
+                        lineStart = existing;
+                    } else {
+                        lines.push({ start: lineStart, end: existing });
+                        lineStart = null;
+                    }
+                } else {
+                    const newPoint = { x: pos.x, y: pos.y };
+                    points.push(newPoint);
+                    if (!lineStart) {
+                        lineStart = newPoint;
+                    } else {
+                        lines.push({ start: lineStart, end: newPoint });
+                        lineStart = null;
+                    }
+                }
+            } else if (currentTool === 'triangle' && points.length < 3) {
+                points.push({ x: pos.x, y: pos.y });
+                if (points.length === 3) {
+                    lines.push({ start: points[0], end: points[1] });
+                    lines.push({ start: points[1], end: points[2] });
+                    lines.push({ start: points[2], end: points[0] });
+                }
+            }
+            draw();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && selectedPoint) {
+                const pos = getMousePos(e);
+                selectedPoint.x = pos.x;
+                selectedPoint.y = pos.y;
+                draw();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: e.touches[0].clientX,
+                clientY: e.touches[0].clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: e.touches[0].clientX,
+                clientY: e.touches[0].clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        canvas.addEventListener('touchend', () => {
+            const mouseEvent = new MouseEvent('mouseup');
+            canvas.dispatchEvent(mouseEvent);
+        });
+
+        // Tool buttons
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.tool === 'clear') {
+                    points = [];
+                    lines = [];
+                    selectedPoint = null;
+                    lineStart = null;
+                    document.getElementById('selectedAngle').textContent = '—';
+                    document.getElementById('selectedLength').textContent = '—';
+                    draw();
+                    return;
+                }
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+            });
+        });
+
+        // ========== TRIANGLE DEMO ==========
+        const triangleCanvas = document.getElementById('triangleDemo');
+        const triangleCtx = triangleCanvas.getContext('2d');
+
+        function resizeTriangleCanvas() {
+            const rect = triangleCanvas.parentElement.getBoundingClientRect();
+            triangleCanvas.width = rect.width;
+            triangleCanvas.height = 300;
+            drawTriangleDemo();
+        }
+
+        function drawTriangleDemo() {
+            const slider = document.getElementById('vertexSlider');
+            const t = slider.value / 100;
+
+            const isDark = !document.documentElement.classList.contains('light');
+            triangleCtx.fillStyle = isDark ? '#334155' : '#e2e8f0';
+            triangleCtx.fillRect(0, 0, triangleCanvas.width, triangleCanvas.height);
+
+            const cx = triangleCanvas.width / 2;
+            const cy = triangleCanvas.height / 2;
+
+            // Triangle vertices
+            const A = { x: cx + (t - 0.5) * 200, y: 50 };
+            const B = { x: cx - 120, y: 250 };
+            const C = { x: cx + 120, y: 250 };
+
+            // Draw triangle
+            triangleCtx.beginPath();
+            triangleCtx.moveTo(A.x, A.y);
+            triangleCtx.lineTo(B.x, B.y);
+            triangleCtx.lineTo(C.x, C.y);
+            triangleCtx.closePath();
+            triangleCtx.fillStyle = 'rgba(99, 102, 241, 0.15)';
+            triangleCtx.fill();
+            triangleCtx.strokeStyle = '#6366f1';
+            triangleCtx.lineWidth = 3;
+            triangleCtx.stroke();
+
+            // Draw vertices
+            [A, B, C].forEach((p, i) => {
+                triangleCtx.beginPath();
+                triangleCtx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+                triangleCtx.fillStyle = i === 0 ? '#f59e0b' : '#6366f1';
+                triangleCtx.fill();
+            });
+
+            // Labels
+            triangleCtx.fillStyle = isDark ? '#fff' : '#000';
+            triangleCtx.font = 'bold 16px Outfit';
+            triangleCtx.fillText('A', A.x - 5, A.y - 15);
+            triangleCtx.fillText('B', B.x - 20, B.y + 5);
+            triangleCtx.fillText('C', C.x + 10, C.y + 5);
+
+            // Calculate angles
+            const angleA = calculateAngle(B, A, C);
+            const angleB = calculateAngle(A, B, C);
+            const angleC = calculateAngle(A, C, B);
+
+            document.getElementById('angleA').textContent = angleA.toFixed(1) + '°';
+            document.getElementById('angleB').textContent = angleB.toFixed(1) + '°';
+            document.getElementById('angleC').textContent = angleC.toFixed(1) + '°';
+            document.getElementById('angleSum').textContent = (angleA + angleB + angleC).toFixed(1) + '°';
+        }
+
+        document.getElementById('vertexSlider').addEventListener('input', drawTriangleDemo);
+
+        // ========== PARALLEL LINES DEMO ==========
+        const parallelCanvas = document.getElementById('parallelDemo');
+        const parallelCtx = parallelCanvas.getContext('2d');
+
+        function resizeParallelCanvas() {
+            const rect = parallelCanvas.parentElement.getBoundingClientRect();
+            parallelCanvas.width = rect.width;
+            parallelCanvas.height = 300;
+            drawParallelDemo();
+        }
+
+        function drawParallelDemo() {
+            const slider = document.getElementById('transversalSlider');
+            const angle = parseInt(slider.value);
+
+            const isDark = !document.documentElement.classList.contains('light');
+            parallelCtx.fillStyle = isDark ? '#334155' : '#e2e8f0';
+            parallelCtx.fillRect(0, 0, parallelCanvas.width, parallelCanvas.height);
+
+            const cx = parallelCanvas.width / 2;
+
+            // Draw parallel lines
+            parallelCtx.strokeStyle = '#10b981';
+            parallelCtx.lineWidth = 3;
+
+            // Line 1
+            parallelCtx.beginPath();
+            parallelCtx.moveTo(50, 100);
+            parallelCtx.lineTo(parallelCanvas.width - 50, 100);
+            parallelCtx.stroke();
+
+            // Line 2
+            parallelCtx.beginPath();
+            parallelCtx.moveTo(50, 200);
+            parallelCtx.lineTo(parallelCanvas.width - 50, 200);
+            parallelCtx.stroke();
+
+            // Parallel symbols
+            parallelCtx.strokeStyle = isDark ? '#fff' : '#000';
+            parallelCtx.lineWidth = 1.5;
+            [95, 195].forEach(y => {
+                parallelCtx.beginPath();
+                parallelCtx.moveTo(80, y);
+                parallelCtx.lineTo(90, y + 10);
+                parallelCtx.moveTo(90, y);
+                parallelCtx.lineTo(100, y + 10);
+                parallelCtx.stroke();
+            });
+
+            // Draw transversal
+            const radians = angle * Math.PI / 180;
+            const length = 180;
+
+            parallelCtx.strokeStyle = '#6366f1';
+            parallelCtx.lineWidth = 3;
+            parallelCtx.beginPath();
+            parallelCtx.moveTo(cx - Math.cos(radians) * length, 100 - Math.sin(radians) * length + 50);
+            parallelCtx.lineTo(cx + Math.cos(radians) * length, 200 + Math.sin(radians) * length - 50);
+            parallelCtx.stroke();
+
+            // Draw angle arcs and labels
+            const supplementary = 180 - angle;
+
+            // Update measurements
+            document.getElementById('transversalValue').textContent = angle + '°';
+            document.getElementById('angle1').textContent = angle + '°';
+            document.getElementById('angle2').textContent = supplementary + '°';
+            document.getElementById('angle5').textContent = angle + '°';
+            document.getElementById('angle6').textContent = supplementary + '°';
+
+            // Draw angle labels on canvas
+            parallelCtx.fillStyle = isDark ? '#fff' : '#000';
+            parallelCtx.font = '14px Space Mono';
+            parallelCtx.fillText(`${angle}°`, cx - 40, 90);
+            parallelCtx.fillText(`${supplementary}°`, cx + 10, 90);
+            parallelCtx.fillText(`${angle}°`, cx - 40, 220);
+            parallelCtx.fillText(`${supplementary}°`, cx + 10, 220);
+        }
+
+        document.getElementById('transversalSlider').addEventListener('input', drawParallelDemo);
+
+        // Initialize
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            resizeTriangleCanvas();
+            resizeParallelCanvas();
+        });
+
+        window.addEventListener('load', () => {
+            generateProblems();
+            resizeCanvas();
+            resizeTriangleCanvas();
+            resizeParallelCanvas();
+        });
+    </script>
+</body>
+</html>
+
