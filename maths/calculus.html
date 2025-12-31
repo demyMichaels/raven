@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculus Real-World Applications Gallery</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .application-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .application-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+
+        .simulation-area {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            color: #4a5568;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .control-group input, .control-group select {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #5d5cde;
+        }
+
+        .btn {
+            background: #5d5cde;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #4c4bc7;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 15px;
+        }
+
+        .result-display {
+            background: #edf2f7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .math-formula {
+            background: #2d3748;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #718096;
+        }
+
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                min-width: 100%;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            }
+            
+            .application-card {
+                background: #2d3748;
+                color: white;
+            }
+            
+            .card-title {
+                color: white;
+            }
+            
+            .simulation-area {
+                background: #4a5568;
+            }
+            
+            .result-display {
+                background: #718096;
+                color: white;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Calculus Applications Gallery</h1>
+            <p>Explore real-world applications of differentiation and integration through interactive simulations</p>
+        </div>
+
+        <div class="gallery-grid">
+            <!-- Limits Application -->
+            <div class="application-card" onclick="openModal('limitsModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #ff6b6b;">🎯</div>
+                    <div class="card-title">Limits of Functions</div>
+                </div>
+                <div class="card-subtitle">Approaching Speed Limits & Asymptotic Behavior</div>
+                <p>Explore how functions approach specific values, like a car approaching the speed limit or population growth reaching carrying capacity.</p>
+            </div>
+
+            <!-- Differentiation Application -->
+            <div class="application-card" onclick="openModal('differentiationModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #4ecdc4;">📈</div>
+                    <div class="card-title">Differentiation</div>
+                </div>
+                <div class="card-subtitle">Motion Analysis: Position, Velocity & Acceleration</div>
+                <p>Analyze how position changes to velocity, and velocity changes to acceleration in real motion scenarios.</p>
+            </div>
+
+            <!-- Rate of Change Application -->
+            <div class="application-card" onclick="openModal('rateChangeModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #45b7d1;">⚡</div>
+                    <div class="card-title">Rate of Change</div>
+                </div>
+                <div class="card-subtitle">Population Growth & Temperature Changes</div>
+                <p>Study how quantities change over time, from population dynamics to temperature variations.</p>
+            </div>
+
+            <!-- Optimization Application -->
+            <div class="application-card" onclick="openModal('optimizationModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #f9ca24;">🎯</div>
+                    <div class="card-title">Maxima & Minima</div>
+                </div>
+                <div class="card-subtitle">Business Optimization & Engineering Design</div>
+                <p>Find optimal solutions for profit maximization, cost minimization, and engineering efficiency.</p>
+            </div>
+
+            <!-- Integration Application -->
+            <div class="application-card" onclick="openModal('integrationModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #6c5ce7;">∫</div>
+                    <div class="card-title">Integration</div>
+                </div>
+                <div class="card-subtitle">Distance from Velocity & Work Calculations</div>
+                <p>Calculate total distance traveled from velocity data and work done by variable forces.</p>
+            </div>
+
+            <!-- Area Under Curve Application -->
+            <div class="application-card" onclick="openModal('areaModal')">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #fd79a8;">📊</div>
+                    <div class="card-title">Area Under Curve</div>
+                </div>
+                <div class="card-subtitle">Physics Applications & Economic Analysis</div>
+                <p>Calculate work done, displacement, consumer surplus, and other real-world quantities.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Limits Modal -->
+    <div id="limitsModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('limitsModal')">&times;</button>
+            <h2>🎯 Limits of Functions</h2>
+            <p>Explore how functions approach specific values in real-world scenarios.</p>
+            
+            <div class="simulation-area">
+                <h3>Speed Limit Approach Simulation</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Speed Limit (mph)</label>
+                        <input type="number" id="speedLimit" value="65" min="30" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>Time (minutes)</label>
+                        <input type="range" id="timeSlider" min="0" max="60" value="30">
+                        <span id="timeValue">30</span>
+                    </div>
+                    <button class="btn" onclick="updateLimitsChart()">Update Simulation</button>
+                </div>
+                
+                <div class="math-formula">
+                    f(t) = L(1 - e^(-kt)) where L = speed limit, k = acceleration constant
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="limitsChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="limitsResult">Current speed approaches the limit asymptotically</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Differentiation Modal -->
+    <div id="differentiationModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('differentiationModal')">&times;</button>
+            <h2>📈 Differentiation: Motion Analysis</h2>
+            <p>Analyze position, velocity, and acceleration relationships.</p>
+            
+            <div class="simulation-area">
+                <h3>Projectile Motion Analysis</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Initial Velocity (m/s)</label>
+                        <input type="number" id="initialVelocity" value="20" min="5" max="50">
+                    </div>
+                    <div class="control-group">
+                        <label>Launch Angle (degrees)</label>
+                        <input type="number" id="launchAngle" value="45" min="15" max="75">
+                    </div>
+                    <div class="control-group">
+                        <label>Function Type</label>
+                        <select id="functionType">
+                            <option value="position">Position s(t)</option>
+                            <option value="velocity">Velocity v(t) = s'(t)</option>
+                            <option value="acceleration">Acceleration a(t) = v'(t)</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="updateDifferentiationChart()">Calculate Derivative</button>
+                </div>
+                
+                <div class="math-formula">
+                    <div id="differentiationFormula">s(t) = v₀t - ½gt²</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="differentiationChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="differentiationResult">Position function and its derivatives</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rate of Change Modal -->
+    <div id="rateChangeModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('rateChangeModal')">&times;</button>
+            <h2>⚡ Rate of Change Applications</h2>
+            <p>Study how quantities change over time in various scenarios.</p>
+            
+            <div class="simulation-area">
+                <h3>Population Growth Model</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Growth Rate (%)</label>
+                        <input type="number" id="growthRate" value="2.5" min="0.1" max="10" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label>Initial Population</label>
+                        <input type="number" id="initialPop" value="1000" min="100" max="10000">
+                    </div>
+                    <div class="control-group">
+                        <label>Model Type</label>
+                        <select id="growthModel">
+                            <option value="exponential">Exponential Growth</option>
+                            <option value="logistic">Logistic Growth</option>
+                            <option value="linear">Linear Growth</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="updateRateChangeChart()">Analyze Rate</button>
+                </div>
+                
+                <div class="math-formula">
+                    <div id="rateChangeFormula">P(t) = P₀e^(rt)</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="rateChangeChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="rateChangeResult">Rate of change analysis</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optimization Modal -->
+    <div id="optimizationModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('optimizationModal')">&times;</button>
+            <h2>🎯 Optimization: Maxima & Minima</h2>
+            <p>Find optimal solutions for real-world problems.</p>
+            
+            <div class="simulation-area">
+                <h3>Profit Maximization Problem</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Fixed Costs ($)</label>
+                        <input type="number" id="fixedCosts" value="1000" min="100" max="5000">
+                    </div>
+                    <div class="control-group">
+                        <label>Variable Cost per Unit ($)</label>
+                        <input type="number" id="variableCost" value="10" min="1" max="50">
+                    </div>
+                    <div class="control-group">
+                        <label>Price per Unit ($)</label>
+                        <input type="number" id="pricePerUnit" value="25" min="10" max="100">
+                    </div>
+                    <button class="btn" onclick="findOptimum()">Find Maximum Profit</button>
+                </div>
+                
+                <div class="math-formula">
+                    <div id="optimizationFormula">Profit(x) = Revenue(x) - Cost(x)</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="optimizationChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="optimizationResult">Find critical points using derivatives</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Modal -->
+    <div id="integrationModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('integrationModal')">&times;</button>
+            <h2>∫ Integration Applications</h2>
+            <p>Calculate accumulation and total change using integration.</p>
+            
+            <div class="simulation-area">
+                <h3>Distance from Velocity</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Velocity Function</label>
+                        <select id="velocityFunction">
+                            <option value="constant">Constant: v(t) = c</option>
+                            <option value="linear">Linear: v(t) = at + b</option>
+                            <option value="quadratic">Quadratic: v(t) = at² + bt + c</option>
+                            <option value="sinusoidal">Sinusoidal: v(t) = A sin(ωt)</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Time Interval (0 to t)</label>
+                        <input type="number" id="timeInterval" value="10" min="1" max="20">
+                    </div>
+                    <div class="control-group">
+                        <label>Parameter A</label>
+                        <input type="number" id="paramA" value="5" min="1" max="20">
+                    </div>
+                    <button class="btn" onclick="calculateIntegration()">Calculate Distance</button>
+                </div>
+                
+                <div class="math-formula">
+                    <div id="integrationFormula">Distance = ∫v(t)dt</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="integrationChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="integrationResult">Total distance calculation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Area Under Curve Modal -->
+    <div id="areaModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('areaModal')">&times;</button>
+            <h2>📊 Area Under Curve</h2>
+            <p>Calculate areas for various real-world applications.</p>
+            
+            <div class="simulation-area">
+                <h3>Work Done by Variable Force</h3>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Force Function</label>
+                        <select id="forceFunction">
+                            <option value="spring">Spring Force: F(x) = kx</option>
+                            <option value="gravity">Gravitational: F(r) = k/r²</option>
+                            <option value="friction">Friction: F(v) = μv²</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>From Position</label>
+                        <input type="number" id="fromPos" value="0" min="0" max="10">
+                    </div>
+                    <div class="control-group">
+                        <label>To Position</label>
+                        <input type="number" id="toPos" value="5" min="1" max="20">
+                    </div>
+                    <div class="control-group">
+                        <label>Constant k</label>
+                        <input type="number" id="forceConstant" value="2" min="0.1" max="10" step="0.1">
+                    </div>
+                    <button class="btn" onclick="calculateArea()">Calculate Work</button>
+                </div>
+                
+                <div class="math-formula">
+                    <div id="areaFormula">Work = ∫F(x)dx</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="areaChart"></canvas>
+                </div>
+                
+                <div class="result-display">
+                    <div id="areaResult">Work calculation using definite integration</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global chart instances
+        let charts = {};
+
+        // Modal functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            // Initialize chart when modal opens
+            setTimeout(() => {
+                initializeChart(modalId);
+            }, 100);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Initialize charts
+        function initializeChart(modalId) {
+            switch(modalId) {
+                case 'limitsModal':
+                    updateLimitsChart();
+                    break;
+                case 'differentiationModal':
+                    updateDifferentiationChart();
+                    break;
+                case 'rateChangeModal':
+                    updateRateChangeChart();
+                    break;
+                case 'optimizationModal':
+                    findOptimum();
+                    break;
+                case 'integrationModal':
+                    calculateIntegration();
+                    break;
+                case 'areaModal':
+                    calculateArea();
+                    break;
+            }
+        }
+
+        // Limits simulation
+        function updateLimitsChart() {
+            const speedLimit = parseFloat(document.getElementById('speedLimit').value);
+            const currentTime = parseFloat(document.getElementById('timeSlider').value);
+            
+            document.getElementById('timeValue').textContent = currentTime;
+            
+            const data = [];
+            const labels = [];
+            const k = 0.1; // acceleration constant
+            
+            for (let t = 0; t <= 60; t += 1) {
+                labels.push(t);
+                const speed = speedLimit * (1 - Math.exp(-k * t));
+                data.push(speed);
+            }
+            
+            const currentSpeed = speedLimit * (1 - Math.exp(-k * currentTime));
+            const limitDiff = speedLimit - currentSpeed;
+            
+            if (charts.limits) {
+                charts.limits.destroy();
+            }
+            
+            const ctx = document.getElementById('limitsChart').getContext('2d');
+            charts.limits = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Current Speed (mph)',
+                        data: data,
+                        borderColor: '#5d5cde',
+                        backgroundColor: 'rgba(93, 92, 222, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Speed Limit',
+                        data: Array(labels.length).fill(speedLimit),
+                        borderColor: '#ff6b6b',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Speed (mph)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (minutes)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Speed Approaching Limit Over Time'
+                        }
+                    }
+                }
+            });
+            
+            document.getElementById('limitsResult').innerHTML = `
+                At t = ${currentTime} minutes:<br>
+                Current Speed: ${currentSpeed.toFixed(2)} mph<br>
+                Distance from limit: ${limitDiff.toFixed(2)} mph<br>
+                Limit as t → ∞: ${speedLimit} mph
+            `;
+        }
+
+        // Differentiation simulation
+        function updateDifferentiationChart() {
+            const v0 = parseFloat(document.getElementById('initialVelocity').value);
+            const angle = parseFloat(document.getElementById('launchAngle').value) * Math.PI / 180;
+            const funcType = document.getElementById('functionType').value;
+            const g = 9.81;
+            
+            const vx = v0 * Math.cos(angle);
+            const vy = v0 * Math.sin(angle);
+            const tMax = 2 * vy / g;
+            
+            const data = [];
+            const labels = [];
+            
+            for (let t = 0; t <= tMax; t += 0.1) {
+                labels.push(t.toFixed(1));
+                let value;
+                
+                switch(funcType) {
+                    case 'position':
+                        value = vy * t - 0.5 * g * t * t;
+                        break;
+                    case 'velocity':
+                        value = vy - g * t;
+                        break;
+                    case 'acceleration':
+                        value = -g;
+                        break;
+                }
+                data.push(value);
+            }
+            
+            if (charts.differentiation) {
+                charts.differentiation.destroy();
+            }
+            
+            const ctx = document.getElementById('differentiationChart').getContext('2d');
+            charts.differentiation = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: funcType === 'position' ? 'Height (m)' : 
+                               funcType === 'velocity' ? 'Velocity (m/s)' : 'Acceleration (m/s²)',
+                        data: data,
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: funcType === 'position' ? 'Height (m)' : 
+                                      funcType === 'velocity' ? 'Velocity (m/s)' : 'Acceleration (m/s²)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (s)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const formulas = {
+                position: 's(t) = v₀sin(θ)t - ½gt²',
+                velocity: 'v(t) = ds/dt = v₀sin(θ) - gt',
+                acceleration: 'a(t) = dv/dt = -g'
+            };
+            
+            document.getElementById('differentiationFormula').textContent = formulas[funcType];
+            document.getElementById('differentiationResult').innerHTML = `
+                Initial velocity: ${v0} m/s at ${(angle * 180 / Math.PI).toFixed(1)}°<br>
+                Function: ${formulas[funcType]}<br>
+                Flight time: ${tMax.toFixed(2)} seconds
+            `;
+        }
+
+        // Rate of change simulation
+        function updateRateChangeChart() {
+            const growthRate = parseFloat(document.getElementById('growthRate').value) / 100;
+            const initialPop = parseFloat(document.getElementById('initialPop').value);
+            const model = document.getElementById('growthModel').value;
+            
+            const data = [];
+            const rateData = [];
+            const labels = [];
+            const carryingCapacity = initialPop * 10; // For logistic model
+            
+            for (let t = 0; t <= 20; t += 0.5) {
+                labels.push(t);
+                let population, rate;
+                
+                switch(model) {
+                    case 'exponential':
+                        population = initialPop * Math.exp(growthRate * t);
+                        rate = growthRate * population;
+                        break;
+                    case 'logistic':
+                        population = carryingCapacity / (1 + ((carryingCapacity - initialPop) / initialPop) * Math.exp(-growthRate * t));
+                        rate = growthRate * population * (1 - population / carryingCapacity);
+                        break;
+                    case 'linear':
+                        population = initialPop + growthRate * initialPop * t;
+                        rate = growthRate * initialPop;
+                        break;
+                }
+                
+                data.push(population);
+                rateData.push(rate);
+            }
+            
+            if (charts.rateChange) {
+                charts.rateChange.destroy();
+            }
+            
+            const ctx = document.getElementById('rateChangeChart').getContext('2d');
+            charts.rateChange = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Population',
+                        data: data,
+                        borderColor: '#45b7d1',
+                        backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                        fill: true,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Growth Rate',
+                        data: rateData,
+                        borderColor: '#f39c12',
+                        backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                        fill: false,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Population'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Growth Rate'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (years)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const formulas = {
+                exponential: 'P(t) = P₀e^(rt), dP/dt = rP',
+                logistic: 'P(t) = K/(1 + Ae^(-rt)), dP/dt = rP(1 - P/K)',
+                linear: 'P(t) = P₀ + rt, dP/dt = r'
+            };
+            
+            document.getElementById('rateChangeFormula').textContent = formulas[model];
+            document.getElementById('rateChangeResult').innerHTML = `
+                Model: ${model.charAt(0).toUpperCase() + model.slice(1)} Growth<br>
+                Growth Rate: ${(growthRate * 100).toFixed(1)}% per year<br>
+                Initial Population: ${initialPop.toLocaleString()}
+            `;
+        }
+
+        // Optimization simulation
+        function findOptimum() {
+            const fixedCosts = parseFloat(document.getElementById('fixedCosts').value);
+            const variableCost = parseFloat(document.getElementById('variableCost').value);
+            const price = parseFloat(document.getElementById('pricePerUnit').value);
+            
+            const data = [];
+            const revenueData = [];
+            const costData = [];
+            const labels = [];
+            
+            let maxProfit = -Infinity;
+            let optimalQuantity = 0;
+            
+            for (let x = 0; x <= 200; x += 5) {
+                labels.push(x);
+                const revenue = price * x;
+                const cost = fixedCosts + variableCost * x;
+                const profit = revenue - cost;
+                
+                data.push(profit);
+                revenueData.push(revenue);
+                costData.push(cost);
+                
+                if (profit > maxProfit) {
+                    maxProfit = profit;
+                    optimalQuantity = x;
+                }
+            }
+            
+            if (charts.optimization) {
+                charts.optimization.destroy();
+            }
+            
+            const ctx = document.getElementById('optimizationChart').getContext('2d');
+            charts.optimization = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Profit ($)',
+                        data: data,
+                        borderColor: '#f9ca24',
+                        backgroundColor: 'rgba(249, 202, 36, 0.1)',
+                        fill: true
+                    }, {
+                        label: 'Revenue ($)',
+                        data: revenueData,
+                        borderColor: '#6c5ce7',
+                        fill: false
+                    }, {
+                        label: 'Cost ($)',
+                        data: costData,
+                        borderColor: '#fd79a8',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Amount ($)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Quantity (units)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            document.getElementById('optimizationFormula').textContent = 
+                `Profit(x) = ${price}x - (${fixedCosts} + ${variableCost}x) = ${price - variableCost}x - ${fixedCosts}`;
+            
+            document.getElementById('optimizationResult').innerHTML = `
+                Maximum Profit: $${maxProfit.toFixed(2)}<br>
+                Optimal Quantity: ${optimalQuantity} units<br>
+                Marginal Profit: $${(price - variableCost).toFixed(2)} per unit<br>
+                Break-even: ${(fixedCosts / (price - variableCost)).toFixed(1)} units
+            `;
+        }
+
+        // Integration simulation
+        function calculateIntegration() {
+            const funcType = document.getElementById('velocityFunction').value;
+            const timeInterval = parseFloat(document.getElementById('timeInterval').value);
+            const paramA = parseFloat(document.getElementById('paramA').value);
+            
+            const data = [];
+            const integralData = [];
+            const labels = [];
+            let totalDistance = 0;
+            
+            for (let t = 0; t <= timeInterval; t += 0.2) {
+                labels.push(t.toFixed(1));
+                let velocity;
+                
+                switch(funcType) {
+                    case 'constant':
+                        velocity = paramA;
+                        totalDistance = paramA * t;
+                        break;
+                    case 'linear':
+                        velocity = paramA * t + 2;
+                        totalDistance = 0.5 * paramA * t * t + 2 * t;
+                        break;
+                    case 'quadratic':
+                        velocity = 0.5 * paramA * t * t + 2 * t + 1;
+                        totalDistance = (0.5 * paramA * t * t * t) / 3 + t * t + t;
+                        break;
+                    case 'sinusoidal':
+                        velocity = paramA * Math.sin(0.5 * t);
+                        totalDistance = (paramA / 0.5) * (1 - Math.cos(0.5 * t));
+                        break;
+                }
+                
+                data.push(velocity);
+                integralData.push(totalDistance);
+            }
+            
+            if (charts.integration) {
+                charts.integration.destroy();
+            }
+            
+            const ctx = document.getElementById('integrationChart').getContext('2d');
+            charts.integration = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Velocity (m/s)',
+                        data: data,
+                        borderColor: '#6c5ce7',
+                        backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                        fill: true,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Distance (m)',
+                        data: integralData,
+                        borderColor: '#fd79a8',
+                        backgroundColor: 'rgba(253, 121, 168, 0.1)',
+                        fill: false,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Velocity (m/s)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Distance (m)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (s)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const formulas = {
+                constant: `∫${paramA}dt = ${paramA}t`,
+                linear: `∫(${paramA}t + 2)dt = ${paramA/2}t² + 2t`,
+                quadratic: `∫(${paramA/2}t² + 2t + 1)dt = ${paramA/6}t³ + t² + t`,
+                sinusoidal: `∫${paramA}sin(0.5t)dt = ${-paramA/0.5}cos(0.5t)`
+            };
+            
+            document.getElementById('integrationFormula').textContent = formulas[funcType];
+            document.getElementById('integrationResult').innerHTML = `
+                Total Distance at t=${timeInterval}s: ${integralData[integralData.length-1].toFixed(2)} m<br>
+                Function: ${funcType} velocity<br>
+                Integration represents accumulation of distance
+            `;
+        }
+
+        // Area under curve simulation
+        function calculateArea() {
+            const funcType = document.getElementById('forceFunction').value;
+            const fromPos = parseFloat(document.getElementById('fromPos').value);
+            const toPos = parseFloat(document.getElementById('toPos').value);
+            const k = parseFloat(document.getElementById('forceConstant').value);
+            
+            const data = [];
+            const labels = [];
+            let work = 0;
+            
+            for (let x = fromPos; x <= toPos; x += 0.1) {
+                labels.push(x.toFixed(1));
+                let force;
+                
+                switch(funcType) {
+                    case 'spring':
+                        force = k * x;
+                        break;
+                    case 'gravity':
+                        force = x === 0 ? 0 : k / (x * x);
+                        break;
+                    case 'friction':
+                        force = k * x * x;
+                        break;
+                }
+                data.push(force);
+            }
+            
+            // Calculate work using trapezoidal rule
+            switch(funcType) {
+                case 'spring':
+                    work = 0.5 * k * (toPos * toPos - fromPos * fromPos);
+                    break;
+                case 'gravity':
+                    work = fromPos === 0 ? Infinity : k * (1/fromPos - 1/toPos);
+                    break;
+                case 'friction':
+                    work = (k/3) * (toPos * toPos * toPos - fromPos * fromPos * fromPos);
+                    break;
+            }
+            
+            if (charts.area) {
+                charts.area.destroy();
+            }
+            
+            const ctx = document.getElementById('areaChart').getContext('2d');
+            charts.area = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Force (N)',
+                        data: data,
+                        borderColor: '#fd79a8',
+                        backgroundColor: 'rgba(253, 121, 168, 0.3)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Force (N)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Position (m)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Force vs Position (Area = Work Done)'
+                        }
+                    }
+                }
+            });
+            
+            const formulas = {
+                spring: `W = ∫₀ˣ kx dx = ½kx²`,
+                gravity: `W = ∫ k/r² dr = -k/r`,
+                friction: `W = ∫ kv² dv = ⅓kv³`
+            };
+            
+            document.getElementById('areaFormula').textContent = formulas[funcType];
+            document.getElementById('areaResult').innerHTML = `
+                Work Done: ${isFinite(work) ? work.toFixed(2) + ' J' : 'Infinite (singularity at r=0)'}<br>
+                From: ${fromPos} m to ${toPos} m<br>
+                Force constant k: ${k}<br>
+                Area under curve represents work done
+            `;
+        }
+
+        // Add slider update for limits
+        document.getElementById('timeSlider').addEventListener('input', function() {
+            document.getElementById('timeValue').textContent = this.value;
+            updateLimitsChart();
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        });
+
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</body>
+</html>
