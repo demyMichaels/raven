@@ -2,917 +2,730 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nest Defender</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bird Flight Physics Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --sky-top: #1a0533;
-            --sky-mid: #4a1942;
-            --sky-bottom: #f4a460;
-            --accent-gold: #ffd700;
-            --accent-orange: #ff6b35;
-            --accent-red: #ff3333;
-            --accent-cyan: #00f5ff;
-            --ui-bg: rgba(0, 0, 0, 0.6);
-            --ui-border: rgba(255, 215, 0, 0.3);
-            --text-primary: #ffffff;
-            --text-secondary: #ffd700;
-            --nest-color: #8b4513;
-            --health-green: #00ff88;
-            --health-red: #ff4444;
-            --heat-orange: #ff8c00;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-action: #ef4444;
+            --accent-action-light: #fecaca;
+            --accent-reaction: #10b981;
+            --accent-reaction-light: #d1fae5;
+            --accent-highlight: #0ea5e9;
+            --accent-warm: #f59e0b;
+            --sky-top: #7dd3fc;
+            --sky-mid: #bae6fd;
+            --sky-bottom: #f0f9ff;
+            --cloud: rgba(255,255,255,0.9);
+            --card-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --card-border: rgba(0,0,0,0.04);
+            --glow-action: rgba(239, 68, 68, 0.4);
+            --glow-reaction: rgba(16, 185, 129, 0.4);
         }
 
         .dark {
-            --sky-top: #0a0015;
-            --sky-mid: #1a0533;
-            --sky-bottom: #2d1b4e;
+            --bg-primary: #0c1222;
+            --bg-secondary: #151d2e;
+            --bg-tertiary: #1a2540;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-action: #f87171;
+            --accent-action-light: #7f1d1d;
+            --accent-reaction: #34d399;
+            --accent-reaction-light: #064e3b;
+            --accent-highlight: #38bdf8;
+            --accent-warm: #fbbf24;
+            --sky-top: #0c4a6e;
+            --sky-mid: #164e63;
+            --sky-bottom: #0c1222;
+            --cloud: rgba(255,255,255,0.08);
+            --card-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --card-border: rgba(255,255,255,0.05);
+            --glow-action: rgba(248, 113, 113, 0.5);
+            --glow-reaction: rgba(52, 211, 153, 0.5);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
-        html, body {
-            width: 100%;
-            height: 100%;
+        body {
+            font-family: 'Fraunces', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        header {
+            text-align: center;
+            padding: 24px 0 16px;
+            position: relative;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: clamp(1.6rem, 5vw, 2.4rem);
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .principle-box {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .principle-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-highlight), #6366f1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .principle-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .principle-content {
+            flex: 1;
+        }
+
+        .principle-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-highlight);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 2px;
+        }
+
+        .principle-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .simulation-wrapper {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
             overflow: hidden;
-            touch-action: none;
-            font-family: 'Rajdhani', sans-serif;
-            background: #000;
+            margin-bottom: 16px;
         }
 
-        #game-container {
+        .svg-container {
             width: 100%;
-            height: 100%;
+            height: 420px;
+            display: block;
             position: relative;
             overflow: hidden;
         }
 
-        #game-canvas {
+        #simulation-svg {
             width: 100%;
             height: 100%;
             display: block;
         }
 
-        /* Rotate Screen Overlay */
-        #rotate-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--sky-top) 0%, var(--sky-mid) 50%, #2d1b4e 100%);
+        .legend {
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            z-index: 1000;
-            color: white;
-            padding: 40px;
-            text-align: center;
+            gap: 24px;
+            padding: 14px 20px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--card-border);
+            flex-wrap: wrap;
         }
 
-        #rotate-screen.hidden {
-            display: none;
-        }
-
-        .rotate-icon {
-            font-size: 80px;
-            margin-bottom: 30px;
-            animation: rotatePhone 2s ease-in-out infinite;
-        }
-
-        @keyframes rotatePhone {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-20deg); }
-            75% { transform: rotate(90deg); }
-        }
-
-        .rotate-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--accent-gold);
-            margin-bottom: 15px;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-        }
-
-        .rotate-text {
-            font-size: 18px;
-            color: rgba(255, 255, 255, 0.8);
-            max-width: 280px;
-            line-height: 1.5;
-        }
-
-        /* Start Screen */
-        #start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+        .legend-item {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.action { background: var(--accent-action); box-shadow: 0 0 8px var(--glow-action); }
+        .legend-dot.reaction { background: var(--accent-reaction); box-shadow: 0 0 8px var(--glow-reaction); }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 16px 20px;
             justify-content: center;
-            z-index: 100;
-            background: linear-gradient(180deg,
-                rgba(26, 5, 51, 0.95) 0%,
-                rgba(74, 25, 66, 0.9) 50%,
-                rgba(244, 164, 96, 0.85) 100%);
+            align-items: center;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--card-border);
         }
 
-        #start-screen.hidden {
-            display: none;
-        }
-
-        .game-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(36px, 8vw, 64px);
-            font-weight: 900;
-            color: var(--accent-gold);
-            text-shadow:
-                0 0 10px rgba(255, 215, 0, 0.8),
-                0 0 30px rgba(255, 215, 0, 0.5),
-                0 4px 0 #b8860b;
-            margin-bottom: 10px;
-            letter-spacing: 4px;
-        }
-
-        .game-subtitle {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: clamp(14px, 3vw, 20px);
-            color: rgba(255, 255, 255, 0.7);
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            margin-bottom: 50px;
-        }
-
-        .start-button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            padding: 18px 50px;
-            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-orange) 100%);
+        .btn {
+            font-family: 'Space Mono', monospace;
+            padding: 10px 20px;
             border: none;
-            border-radius: 50px;
-            color: #1a0533;
+            border-radius: 10px;
+            font-size: 13px;
             cursor: pointer;
-            box-shadow:
-                0 6px 20px rgba(255, 107, 53, 0.4),
-                inset 0 2px 0 rgba(255, 255, 255, 0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s ease;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .start-button:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.4);
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-highlight), #6366f1);
+            color: white;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
         }
 
-        .physics-badge {
-            position: absolute;
-            bottom: 30px;
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent-highlight);
+        }
+
+        .btn-secondary.active {
+            background: linear-gradient(135deg, var(--accent-warm), #ea580c);
+            color: white;
+            border-color: transparent;
+        }
+
+        .slider-group {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: var(--ui-bg);
-            padding: 12px 20px;
-            border-radius: 30px;
-            border: 1px solid var(--ui-border);
-        }
-
-        .physics-badge-icon {
-            font-size: 20px;
-        }
-
-        .physics-badge-text {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .physics-badge-text strong {
-            color: var(--accent-cyan);
-        }
-
-        /* Game UI */
-        #game-ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: none;
-        }
-
-        #game-ui.active {
-            display: block;
-        }
-
-        .ui-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 12px 20px;
-        }
-
-        .ui-panel {
-            background: var(--ui-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--ui-border);
-            border-radius: 12px;
-            padding: 10px 16px;
-        }
-
-        .wave-display {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: var(--accent-cyan);
-        }
-
-        .wave-number {
-            font-size: 24px;
-            font-weight: 900;
-            color: white;
-        }
-
-        .score-display {
-            text-align: center;
-        }
-
-        .score-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 2px;
-        }
-
-        .score-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--accent-gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
-        .combo-display {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            color: var(--accent-orange);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .combo-display.active {
-            opacity: 1;
-        }
-
-        /* Weapon Selector */
-        .weapon-selector {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            pointer-events: auto;
-        }
-
-        .weapon-btn {
-            width: 60px;
-            height: 60px;
-            background: var(--ui-bg);
-            backdrop-filter: blur(10px);
-            border: 2px solid var(--ui-border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .weapon-btn.active {
-            border-color: var(--accent-gold);
-            background: rgba(255, 215, 0, 0.15);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .weapon-btn.disabled {
-            opacity: 0.4;
-            pointer-events: none;
-        }
-
-        .weapon-icon {
-            font-size: 24px;
-        }
-
-        .weapon-key {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            position: absolute;
-            bottom: 4px;
-        }
-
-        .weapon-ammo {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--accent-orange);
-            color: white;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 6px;
+            background: var(--bg-tertiary);
+            padding: 8px 14px;
             border-radius: 10px;
+            border: 1px solid var(--card-border);
+        }
+
+        .slider-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .slider-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-highlight);
+            font-weight: 700;
             min-width: 24px;
             text-align: center;
         }
 
-        /* Fire Button */
-        .fire-button {
-            position: absolute;
-            right: 20px;
-            bottom: 20px;
-            width: 90px;
-            height: 90px;
-            background: linear-gradient(135deg, var(--accent-red) 0%, #cc0000 100%);
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            pointer-events: auto;
-            box-shadow:
-                0 6px 25px rgba(255, 51, 51, 0.5),
-                inset 0 3px 0 rgba(255, 255, 255, 0.3),
-                inset 0 -3px 0 rgba(0, 0, 0, 0.3);
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        .fire-button:active {
-            transform: scale(0.9);
-            box-shadow:
-                0 2px 15px rgba(255, 51, 51, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        .fire-button.cooldown {
-            background: linear-gradient(135deg, #666 0%, #444 100%);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .fire-icon {
-            font-size: 36px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        }
-
-        /* Bottom Bar */
-        .ui-bottom {
-            position: absolute;
-            bottom: 0;
-            left: 80px;
-            right: 130px;
-            padding: 12px 20px;
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .stat-bar {
-            flex: 1;
-            max-width: 200px;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .stat-track {
-            height: 8px;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s, background 0.3s;
-        }
-
-        .stat-fill.health {
-            background: linear-gradient(90deg, var(--health-green), #00cc6a);
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-
-        .stat-fill.health.danger {
-            background: linear-gradient(90deg, var(--health-red), #cc0000);
-            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
-        }
-
-        .stat-fill.heat {
-            background: linear-gradient(90deg, var(--accent-gold), var(--heat-orange));
-            box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
-        }
-
-        .stat-fill.heat.danger {
-            background: linear-gradient(90deg, var(--accent-red), #ff0000);
-            animation: heatPulse 0.3s infinite;
-        }
-
-        @keyframes heatPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* Crosshair */
-        .crosshair {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            z-index: 50;
-        }
-
-        .crosshair-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--accent-gold);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-
-        .crosshair-dot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 6px;
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 80px;
             height: 6px;
-            background: var(--accent-gold);
+            border-radius: 3px;
+            background: var(--bg-primary);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
-        }
-
-        .crosshair-line {
-            position: absolute;
-            background: var(--accent-gold);
-            box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
-        }
-
-        .crosshair-line.top {
-            top: 0;
-            left: 50%;
-            width: 2px;
-            height: 12px;
-            transform: translateX(-50%);
-        }
-
-        .crosshair-line.bottom {
-            bottom: 0;
-            left: 50%;
-            width: 2px;
-            height: 12px;
-            transform: translateX(-50%);
-        }
-
-        .crosshair-line.left {
-            left: 0;
-            top: 50%;
-            width: 12px;
-            height: 2px;
-            transform: translateY(-50%);
-        }
-
-        .crosshair-line.right {
-            right: 0;
-            top: 50%;
-            width: 12px;
-            height: 2px;
-            transform: translateY(-50%);
-        }
-
-        /* Game Over Screen */
-        #game-over {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.5s;
-        }
-
-        #game-over.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .game-over-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: clamp(32px, 8vw, 56px);
-            font-weight: 900;
-            color: var(--accent-red);
-            text-shadow: 0 0 30px rgba(255, 51, 51, 0.8);
-            margin-bottom: 30px;
-        }
-
-        .final-score {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .final-score-label {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 4px;
-        }
-
-        .final-score-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--accent-gold);
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-        }
-
-        .high-score {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 18px;
-            color: var(--accent-cyan);
-            margin-bottom: 40px;
-        }
-
-        .stats-row {
-            display: flex;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-item-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
-        }
-
-        .stat-item-label {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            letter-spacing: 2px;
-        }
-
-        .restart-button {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-orange) 100%);
-            border: none;
-            border-radius: 50px;
-            color: #1a0533;
+            background: linear-gradient(135deg, var(--accent-highlight), #6366f1);
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.4);
+            transition: transform 0.2s ease;
         }
 
-        .restart-button:active {
-            transform: scale(0.95);
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
         }
 
-        /* Hit Marker */
-        .hit-marker {
-            position: absolute;
-            pointer-events: none;
-            font-size: 24px;
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            color: var(--accent-gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-            animation: hitFloat 0.8s ease-out forwards;
-            z-index: 60;
-        }
-
-        @keyframes hitFloat {
-            0% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -100%) scale(1.5);
-            }
-        }
-
-        /* Tutorial Overlay */
-        #tutorial {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 150;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        #tutorial.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .tutorial-content {
-            display: flex;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .tutorial-item {
-            text-align: center;
-        }
-
-        .tutorial-icon {
-            font-size: 48px;
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
             margin-bottom: 16px;
         }
 
-        .tutorial-text {
-            font-size: 16px;
-            color: white;
-            max-width: 150px;
+        .info-card {
+            background: var(--bg-secondary);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
         }
 
-        .tutorial-skip {
+        .info-card::before {
+            content: '';
             position: absolute;
-            bottom: 30px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            background: none;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 30px;
-            border-radius: 25px;
-            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
         }
 
-        /* Wave Announcement */
-        .wave-announce {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--accent-gold);
-            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 80;
-            transition: opacity 0.3s;
+        .info-card.action::before {
+            background: linear-gradient(90deg, var(--accent-action), #f97316);
         }
 
-        .wave-announce.active {
-            opacity: 1;
-            animation: waveIn 2s ease-out forwards;
+        .info-card.reaction::before {
+            background: linear-gradient(90deg, var(--accent-reaction), #06b6d4);
         }
 
-        @keyframes waveIn {
-            0% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
-        /* Physics Info Panel */
-        .physics-panel {
-            position: absolute;
-            top: 70px;
-            right: 12px;
-            background: var(--ui-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--ui-border);
+        .card-icon-wrapper {
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
-            padding: 12px;
-            max-width: 180px;
-            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .physics-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 10px;
-            color: var(--accent-cyan);
-            letter-spacing: 2px;
+        .action .card-icon-wrapper {
+            background: var(--accent-action-light);
+        }
+
+        .reaction .card-icon-wrapper {
+            background: var(--accent-reaction-light);
+        }
+
+        .card-icon-wrapper svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .action .card-icon-wrapper svg { color: var(--accent-action); }
+        .reaction .card-icon-wrapper svg { color: var(--accent-reaction); }
+
+        .card-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .action .card-title { color: var(--accent-action); }
+        .reaction .card-title { color: var(--accent-reaction); }
+
+        .card-text {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.65;
+        }
+
+        .card-text strong {
+            color: var(--text-primary);
+        }
+
+        .physics-note {
+            background: var(--bg-tertiary);
+            border-radius: 14px;
+            padding: 16px 20px;
+            border: 1px solid var(--card-border);
+        }
+
+        .physics-note-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 8px;
         }
 
-        .physics-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            margin: 4px 0;
+        .physics-note-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-warm);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
 
-        .physics-label {
-            color: rgba(255, 255, 255, 0.6);
+        .physics-note-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
         }
 
-        .physics-value {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--accent-gold);
+        .physics-note-text code {
+            font-family: 'Space Mono', monospace;
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: var(--accent-highlight);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+
+            .svg-container {
+                height: 360px;
+            }
+
+            .controls {
+                gap: 8px;
+                padding: 14px;
+            }
+
+            .btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .slider-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .principle-box {
+                flex-direction: column;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Rotate Screen Overlay -->
-    <div id="rotate-screen">
-        <div class="rotate-icon">📱</div>
-        <div class="rotate-title">ROTATE DEVICE</div>
-        <div class="rotate-text">Please rotate your device to landscape mode for the best experience</div>
-    </div>
+    <div class="container">
+        <header>
+            <span class="header-icon">🦅</span>
+            <h1>Bird Flight Physics</h1>
+            <p class="subtitle">Newton's Third Law Visualized</p>
+        </header>
 
-    <!-- Game Container -->
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-
-        <!-- Start Screen -->
-        <div id="start-screen">
-            <div class="game-logo">NEST DEFENDER</div>
-            <div class="game-subtitle">Physics Shooter</div>
-            <button class="start-button" id="start-btn">TAP TO PLAY</button>
-            <div class="physics-badge">
-                <span class="physics-badge-icon">⚡</span>
-                <span class="physics-badge-text"><strong>Newton's Laws</strong> in action</span>
+        <div class="principle-box">
+            <div class="principle-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
+                    <path d="M12 5v14M5 12h14M8 8l8 8M16 8l-8 8"/>
+                </svg>
+            </div>
+            <div class="principle-content">
+                <div class="principle-label">Newton's Third Law</div>
+                <div class="principle-text">"For every action, there is an equal and opposite reaction"</div>
             </div>
         </div>
 
-        <!-- Game UI -->
-        <div id="game-ui">
-            <div class="ui-top">
-                <div class="ui-panel wave-display">
-                    <div>WAVE</div>
-                    <div class="wave-number" id="wave-num">1</div>
+        <div class="simulation-wrapper">
+            <div class="svg-container">
+                <svg id="simulation-svg" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid slice">
+                    <defs>
+                        <!-- Sky gradient -->
+                        <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" class="sky-top"/>
+                            <stop offset="50%" class="sky-mid"/>
+                            <stop offset="100%" class="sky-bottom"/>
+                        </linearGradient>
+
+                        <!-- Action force gradient -->
+                        <linearGradient id="actionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" class="action-start"/>
+                            <stop offset="100%" class="action-end"/>
+                        </linearGradient>
+
+                        <!-- Reaction force gradient -->
+                        <linearGradient id="reactionGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" class="reaction-start"/>
+                            <stop offset="100%" class="reaction-end"/>
+                        </linearGradient>
+
+                        <!-- Bird body gradient -->
+                        <linearGradient id="birdBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" class="bird-body-light"/>
+                            <stop offset="100%" class="bird-body-dark"/>
+                        </linearGradient>
+
+                        <!-- Wing gradient -->
+                        <linearGradient id="wingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" class="wing-light"/>
+                            <stop offset="100%" class="wing-dark"/>
+                        </linearGradient>
+
+                        <!-- Glow filters -->
+                        <filter id="actionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="4" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+
+                        <filter id="reactionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur stdDeviation="5" result="blur"/>
+                            <feMerge>
+                                <feMergeNode in="blur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+
+                        <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+                        </filter>
+
+                        <!-- Cloud filter -->
+                        <filter id="cloudBlur">
+                            <feGaussianBlur stdDeviation="2"/>
+                        </filter>
+
+                        <!-- Arrow marker -->
+                        <marker id="actionArrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                            <path d="M0,0 L12,6 L0,12 L3,6 Z" class="action-arrow-fill"/>
+                        </marker>
+
+                        <marker id="reactionArrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                            <path d="M0,0 L12,6 L0,12 L3,6 Z" class="reaction-arrow-fill"/>
+                        </marker>
+
+                        <!-- Air particle -->
+                        <radialGradient id="particleGradient">
+                            <stop offset="0%" class="particle-center"/>
+                            <stop offset="100%" class="particle-edge"/>
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Background -->
+                    <rect width="100%" height="100%" fill="url(#skyGradient)"/>
+
+                    <!-- Clouds group -->
+                    <g id="clouds" opacity="0.7">
+                        <g class="cloud" transform="translate(120, 60)">
+                            <ellipse cx="0" cy="0" rx="45" ry="22" class="cloud-fill"/>
+                            <ellipse cx="35" cy="-8" rx="35" ry="18" class="cloud-fill"/>
+                            <ellipse cx="65" cy="0" rx="40" ry="20" class="cloud-fill"/>
+                            <ellipse cx="30" cy="10" rx="30" ry="15" class="cloud-fill"/>
+                        </g>
+                        <g class="cloud" transform="translate(600, 80)">
+                            <ellipse cx="0" cy="0" rx="50" ry="24" class="cloud-fill"/>
+                            <ellipse cx="40" cy="-10" rx="38" ry="20" class="cloud-fill"/>
+                            <ellipse cx="75" cy="0" rx="42" ry="22" class="cloud-fill"/>
+                        </g>
+                        <g class="cloud" transform="translate(380, 340)">
+                            <ellipse cx="0" cy="0" rx="35" ry="18" class="cloud-fill"/>
+                            <ellipse cx="28" cy="-6" rx="28" ry="14" class="cloud-fill"/>
+                            <ellipse cx="50" cy="2" rx="30" ry="16" class="cloud-fill"/>
+                        </g>
+                    </g>
+
+                    <!-- Air flow lines (decorative) -->
+                    <g id="airFlowLines" opacity="0.3">
+                    </g>
+
+                    <!-- Particles container -->
+                    <g id="particles"></g>
+
+                    <!-- Force arrows container -->
+                    <g id="forceArrows"></g>
+
+                    <!-- Bird group -->
+                    <g id="bird" filter="url(#softShadow)">
+                        <!-- Tail -->
+                        <path id="tail" d="M-45,0 Q-65,-15 -75,-20 L-65,0 L-75,20 Q-65,15 -45,0" fill="url(#wingGradient)"/>
+
+                        <!-- Left wing -->
+                        <g id="leftWing" transform-origin="0 0">
+                            <path d="M0,0 Q-35,-8 -80,-5 Q-95,0 -80,8 Q-35,12 0,0" fill="url(#wingGradient)"/>
+                            <path d="M-10,0 Q-45,0 -75,2" stroke-width="1.5" class="wing-detail" fill="none"/>
+                            <path d="M-20,2 L-65,4" stroke-width="1" class="wing-detail" fill="none" opacity="0.5"/>
+                        </g>
+
+                        <!-- Right wing -->
+                        <g id="rightWing" transform-origin="0 0">
+                            <path d="M0,0 Q35,-8 80,-5 Q95,0 80,8 Q35,12 0,0" fill="url(#wingGradient)"/>
+                            <path d="M10,0 Q45,0 75,2" stroke-width="1.5" class="wing-detail" fill="none"/>
+                            <path d="M20,2 L65,4" stroke-width="1" class="wing-detail" fill="none" opacity="0.5"/>
+                        </g>
+
+                        <!-- Body -->
+                        <ellipse cx="0" cy="0" rx="38" ry="20" fill="url(#birdBodyGradient)"/>
+
+                        <!-- Belly highlight -->
+                        <ellipse cx="5" cy="6" rx="22" ry="10" class="belly-highlight" opacity="0.4"/>
+
+                        <!-- Head -->
+                        <circle cx="32" cy="-6" r="18" fill="url(#birdBodyGradient)"/>
+
+                        <!-- Eye white -->
+                        <ellipse cx="38" cy="-10" rx="7" ry="6" fill="white"/>
+
+                        <!-- Eye pupil -->
+                        <circle cx="40" cy="-10" r="4" fill="#1a1a2e"/>
+
+                        <!-- Eye highlight -->
+                        <circle cx="41" cy="-11" r="1.5" fill="white"/>
+
+                        <!-- Beak -->
+                        <path d="M48,-6 L68,-3 L48,2 Q52,-2 48,-6" class="beak-fill"/>
+
+                        <!-- Beak detail -->
+                        <path d="M50,-2 L62,-1" stroke-width="1" class="beak-detail" fill="none"/>
+                    </g>
+
+                    <!-- Labels container -->
+                    <g id="labels" font-family="'Space Mono', monospace"></g>
+
+                    <!-- Info overlay -->
+                    <g id="infoOverlay" opacity="0">
+                        <rect x="20" y="20" width="200" height="60" rx="10" class="info-bg"/>
+                        <text x="35" y="45" font-size="12" class="info-text">Wing downstroke creates lift</text>
+                        <text x="35" y="62" font-size="10" class="info-subtext">Air pushed down → Bird pushed up</text>
+                    </g>
+                </svg>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot action"></div>
+                    <span>Action: Wing pushes air down</span>
                 </div>
-                <div class="ui-panel score-display">
-                    <div class="score-label">SCORE</div>
-                    <div class="score-value" id="score-value">0</div>
-                    <div class="combo-display" id="combo-display">x2 COMBO</div>
-                </div>
-                <div class="ui-panel physics-panel">
-                    <div class="physics-title">⚡ PHYSICS</div>
-                    <div class="physics-row">
-                        <span class="physics-label">Recoil:</span>
-                        <span class="physics-value" id="recoil-val">0 N·s</span>
-                    </div>
-                    <div class="physics-row">
-                        <span class="physics-label">Bullet V:</span>
-                        <span class="physics-value" id="bullet-vel">850 m/s</span>
-                    </div>
-                    <div class="physics-row">
-                        <span class="physics-label">Bird Lift:</span>
-                        <span class="physics-value" id="bird-lift">0 N</span>
-                    </div>
+                <div class="legend-item">
+                    <div class="legend-dot reaction"></div>
+                    <span>Reaction: Air lifts bird up</span>
                 </div>
             </div>
-
-            <div class="weapon-selector">
-                <div class="weapon-btn active" data-weapon="0">
-                    <span class="weapon-icon">🔫</span>
-                    <span class="weapon-ammo" id="ammo-0">∞</span>
-                </div>
-                <div class="weapon-btn" data-weapon="1">
-                    <span class="weapon-icon">💥</span>
-                    <span class="weapon-ammo" id="ammo-1">12</span>
-                </div>
-                <div class="weapon-btn" data-weapon="2">
-                    <span class="weapon-icon">⚡</span>
-                    <span class="weapon-ammo" id="ammo-2">50</span>
-                </div>
-            </div>
-
-            <div class="fire-button" id="fire-btn">
-                <span class="fire-icon">🎯</span>
-            </div>
-
-            <div class="ui-bottom">
-                <div class="stat-bar">
-                    <div class="stat-label">
-                        <span>🏠 NEST</span>
-                        <span id="health-text">100%</span>
-                    </div>
-                    <div class="stat-track">
-                        <div class="stat-fill health" id="health-bar" style="width: 100%"></div>
-                    </div>
-                </div>
-                <div class="stat-bar">
-                    <div class="stat-label">
-                        <span>🔥 HEAT</span>
-                        <span id="heat-text">0%</span>
-                    </div>
-                    <div class="stat-track">
-                        <div class="stat-fill heat" id="heat-bar" style="width: 0%"></div>
-                    </div>
+            <div class="controls">
+                <button class="btn btn-primary" id="playPause">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" id="playPauseIcon">
+                        <rect x="6" y="4" width="4" height="16"/>
+                        <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                    <span id="playPauseText">Pause</span>
+                </button>
+                <button class="btn btn-secondary" id="slowMo">
+                    <span>🐌</span>
+                    <span id="slowMoText">Slow Motion</span>
+                </button>
+                <button class="btn btn-secondary" id="showFlow">
+                    <span>💨</span>
+                    <span>Air Flow</span>
+                </button>
+                <div class="slider-group">
+                    <span class="slider-label">Power</span>
+                    <input type="range" id="flapStrength" min="1" max="10" value="6">
+                    <span class="slider-value" id="strengthValue">6</span>
                 </div>
             </div>
-
-            <div class="crosshair" id="crosshair">
-                <div class="crosshair-ring"></div>
-                <div class="crosshair-dot"></div>
-                <div class="crosshair-line top"></div>
-                <div class="crosshair-line bottom"></div>
-                <div class="crosshair-line left"></div>
-                <div class="crosshair-line right"></div>
-            </div>
-
-            <div class="wave-announce" id="wave-announce">WAVE 1</div>
         </div>
 
-        <!-- Tutorial -->
-        <div id="tutorial">
-            <div class="tutorial-content">
-                <div class="tutorial-item">
-                    <div class="tutorial-icon">👆</div>
-                    <div class="tutorial-text">Drag anywhere to aim</div>
+        <div class="cards-grid">
+            <div class="info-card action">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <path d="M12 5v14M7 14l5 5 5-5"/>
+                        </svg>
+                    </div>
+                    <div class="card-title">Action Force</div>
                 </div>
-                <div class="tutorial-item">
-                    <div class="tutorial-icon">🎯</div>
-                    <div class="tutorial-text">Tap FIRE to shoot</div>
-                </div>
-                <div class="tutorial-item">
-                    <div class="tutorial-icon">🐦</div>
-                    <div class="tutorial-text">Shoot birds before they reach the nest!</div>
-                </div>
+                <p class="card-text">
+                    During the <strong>downstroke</strong>, the bird's wings push air molecules <strong>downward</strong>. The powerful flight muscles generate this force, accelerating the air beneath the wings.
+                </p>
             </div>
-            <button class="tutorial-skip" id="skip-tutorial">TAP TO START</button>
+            <div class="info-card reaction">
+                <div class="card-header">
+                    <div class="card-icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <path d="M12 19V5M7 10l5-5 5 5"/>
+                        </svg>
+                    </div>
+                    <div class="card-title">Reaction Force</div>
+                </div>
+                <p class="card-text">
+                    The air responds by pushing back <strong>upward</strong> on the wings with an <strong>equal and opposite force</strong>. This reaction creates the lift that keeps the bird airborne!
+                </p>
+            </div>
         </div>
 
-        <!-- Game Over -->
-        <div id="game-over">
-            <div class="game-over-title">NEST DESTROYED</div>
-            <div class="final-score">
-                <div class="final-score-label">FINAL SCORE</div>
-                <div class="final-score-value" id="final-score">0</div>
+        <div class="physics-note">
+            <div class="physics-note-header">
+                <span>⚡</span>
+                <span class="physics-note-title">Physics Insight</span>
             </div>
-            <div class="high-score" id="high-score">NEW HIGH SCORE!</div>
-            <div class="stats-row">
-                <div class="stat-item">
-                    <div class="stat-item-value" id="birds-killed">0</div>
-                    <div class="stat-item-label">BIRDS</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-item-value" id="waves-survived">0</div>
-                    <div class="stat-item-label">WAVES</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-item-value" id="accuracy">0%</div>
-                    <div class="stat-item-label">ACCURACY</div>
-                </div>
-            </div>
-            <button class="restart-button" id="restart-btn">PLAY AGAIN</button>
+            <p class="physics-note-text">
+                The force equation <code>F = ma</code> applies to both the air and the bird. When wings accelerate air downward, the reaction force accelerates the bird upward. A stronger wing beat (higher <code>a</code>) produces greater lift force!
+            </p>
         </div>
     </div>
 
@@ -925,1224 +738,413 @@
             event.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
         });
 
-        // ==================== GAME CONSTANTS ====================
-        const GRAVITY = 0.15;
-        const NEST_X_PERCENT = 0.12;
+        // SVG Namespace
+        const SVG_NS = "http://www.w3.org/2000/svg";
 
-        const WEAPONS = [
-            {
-                name: "Pistol",
-                fireRate: 400,
-                bulletSpeed: 18,
-                bulletSize: 4,
-                damage: 1,
-                heatPerShot: 5,
-                recoilImpulse: 8,
-                bulletMass: 0.015,
-                bulletVelocity: 260,
-                spread: 0.02,
-                ammo: Infinity,
-                color: '#00f5ff'
-            },
-            {
-                name: "Shotgun",
-                fireRate: 800,
-                bulletSpeed: 14,
-                bulletSize: 3,
-                damage: 1,
-                heatPerShot: 15,
-                recoilImpulse: 22,
-                bulletMass: 0.032,
-                bulletVelocity: 400,
-                spread: 0.15,
-                pelletsPerShot: 5,
-                ammo: 12,
-                color: '#ff6b35'
-            },
-            {
-                name: "Rifle",
-                fireRate: 150,
-                bulletSpeed: 25,
-                bulletSize: 3,
-                damage: 2,
-                heatPerShot: 8,
-                recoilImpulse: 35,
-                bulletMass: 0.00933,
-                bulletVelocity: 850,
-                spread: 0.01,
-                ammo: 50,
-                color: '#ffd700'
-            }
-        ];
+        // Get SVG elements
+        const svg = document.getElementById('simulation-svg');
+        const birdGroup = document.getElementById('bird');
+        const leftWing = document.getElementById('leftWing');
+        const rightWing = document.getElementById('rightWing');
+        const particlesGroup = document.getElementById('particles');
+        const forceArrowsGroup = document.getElementById('forceArrows');
+        const labelsGroup = document.getElementById('labels');
+        const airFlowLines = document.getElementById('airFlowLines');
 
-        const BIRD_TYPES = [
-            {
-                name: "Sparrow",
-                size: 20,
-                speed: 2,
-                health: 1,
-                damage: 5,
-                points: 10,
-                flapSpeed: 0.15,
-                color: '#8b6914',
-                wingColor: '#a67c00'
-            },
-            {
-                name: "Crow",
-                size: 28,
-                speed: 2.5,
-                health: 2,
-                damage: 10,
-                points: 25,
-                flapSpeed: 0.12,
-                color: '#2c2c2c',
-                wingColor: '#1a1a1a'
-            },
-            {
-                name: "Hawk",
-                size: 35,
-                speed: 3.5,
-                health: 3,
-                damage: 20,
-                points: 50,
-                flapSpeed: 0.1,
-                color: '#8b4513',
-                wingColor: '#654321'
-            },
-            {
-                name: "Eagle",
-                size: 45,
-                speed: 2,
-                health: 5,
-                damage: 30,
-                points: 100,
-                flapSpeed: 0.08,
-                color: '#4a3728',
-                wingColor: '#2d2118'
-            }
-        ];
-
-        // ==================== GAME STATE ====================
-        let canvas, ctx;
-        let gameState = 'start';
-        let score = 0;
-        let highScore = 0;
-        let wave = 1;
-        let nestHealth = 100;
-        let heat = 0;
-        let currentWeapon = 0;
-        let weaponAmmo = [Infinity, 12, 50];
-        let lastFireTime = 0;
-        let combo = 0;
-        let comboTimer = 0;
-        let birdsKilled = 0;
-        let shotsFired = 0;
-        let shotsHit = 0;
-
-        let crosshairX = 0;
-        let crosshairY = 0;
-        let recoilOffsetX = 0;
-        let recoilOffsetY = 0;
-
-        let birds = [];
-        let bullets = [];
+        // State
+        let isPlaying = true;
+        let isSlowMo = false;
+        let showAirFlow = false;
+        let flapStrength = 6;
+        let time = 0;
         let particles = [];
-        let feathers = [];
+        let flowLines = [];
 
-        let waveTimer = 0;
-        let birdsToSpawn = 0;
-        let waveComplete = false;
+        // Bird state
+        const bird = {
+            x: 400,
+            y: 200,
+            baseY: 200,
+            wingAngle: 0,
+            flapPhase: 0,
+            velocity: 0
+        };
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let isTouching = false;
+        // Update colors based on theme
+        function updateThemeColors() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const style = document.createElement('style');
+            style.id = 'theme-styles';
 
-        // ==================== INITIALIZATION ====================
-        function init() {
-            canvas = document.getElementById('game-canvas');
-            ctx = canvas.getContext('2d');
+            const existing = document.getElementById('theme-styles');
+            if (existing) existing.remove();
 
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
-
-            checkOrientation();
-            window.addEventListener('orientationchange', checkOrientation);
-            window.addEventListener('resize', checkOrientation);
-
-            setupEventListeners();
-
-            crosshairX = canvas.width / 2;
-            crosshairY = canvas.height / 2;
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-
-        function checkOrientation() {
-            const rotateScreen = document.getElementById('rotate-screen');
-            if (window.innerWidth < window.innerHeight) {
-                rotateScreen.classList.remove('hidden');
+            if (isDark) {
+                style.textContent = `
+                    .sky-top { stop-color: #0c4a6e; }
+                    .sky-mid { stop-color: #164e63; }
+                    .sky-bottom { stop-color: #0c1222; }
+                    .cloud-fill { fill: rgba(255,255,255,0.08); }
+                    .bird-body-light { stop-color: #fcd34d; }
+                    .bird-body-dark { stop-color: #f59e0b; }
+                    .wing-light { stop-color: #d97706; }
+                    .wing-dark { stop-color: #b45309; }
+                    .wing-detail { stroke: #fcd34d; }
+                    .belly-highlight { fill: #fef3c7; }
+                    .beak-fill { fill: #fb923c; }
+                    .beak-detail { stroke: #fed7aa; }
+                    .action-start { stop-color: #f87171; }
+                    .action-end { stop-color: #dc2626; }
+                    .reaction-start { stop-color: #34d399; }
+                    .reaction-end { stop-color: #059669; }
+                    .action-arrow-fill { fill: #f87171; }
+                    .reaction-arrow-fill { fill: #34d399; }
+                    .particle-center { stop-color: rgba(147, 197, 253, 0.8); }
+                    .particle-edge { stop-color: rgba(147, 197, 253, 0); }
+                    .flow-line { stroke: rgba(147, 197, 253, 0.4); }
+                    .label-text { fill: #f1f5f9; }
+                    .label-subtext { fill: #94a3b8; }
+                    .info-bg { fill: rgba(21, 29, 46, 0.9); stroke: rgba(255,255,255,0.1); }
+                    .info-text { fill: #f1f5f9; }
+                    .info-subtext { fill: #94a3b8; }
+                `;
             } else {
-                rotateScreen.classList.add('hidden');
+                style.textContent = `
+                    .sky-top { stop-color: #7dd3fc; }
+                    .sky-mid { stop-color: #bae6fd; }
+                    .sky-bottom { stop-color: #f0f9ff; }
+                    .cloud-fill { fill: rgba(255,255,255,0.9); }
+                    .bird-body-light { stop-color: #fcd34d; }
+                    .bird-body-dark { stop-color: #f59e0b; }
+                    .wing-light { stop-color: #f59e0b; }
+                    .wing-dark { stop-color: #d97706; }
+                    .wing-detail { stroke: #fcd34d; }
+                    .belly-highlight { fill: #fef3c7; }
+                    .beak-fill { fill: #ea580c; }
+                    .beak-detail { stroke: #fdba74; }
+                    .action-start { stop-color: #ef4444; }
+                    .action-end { stop-color: #b91c1c; }
+                    .reaction-start { stop-color: #10b981; }
+                    .reaction-end { stop-color: #047857; }
+                    .action-arrow-fill { fill: #ef4444; }
+                    .reaction-arrow-fill { fill: #10b981; }
+                    .particle-center { stop-color: rgba(59, 130, 246, 0.7); }
+                    .particle-edge { stop-color: rgba(59, 130, 246, 0); }
+                    .flow-line { stroke: rgba(59, 130, 246, 0.3); }
+                    .label-text { fill: #0f172a; }
+                    .label-subtext { fill: #475569; }
+                    .info-bg { fill: rgba(255, 255, 255, 0.95); stroke: rgba(0,0,0,0.1); }
+                    .info-text { fill: #0f172a; }
+                    .info-subtext { fill: #475569; }
+                `;
             }
+            document.head.appendChild(style);
         }
 
-        // ==================== EVENT LISTENERS ====================
-        function setupEventListeners() {
-            // Start button
-            document.getElementById('start-btn').addEventListener('click', showTutorial);
-            document.getElementById('start-btn').addEventListener('touchend', (e) => {
-                e.preventDefault();
-                showTutorial();
-            });
+        // Create SVG element helper
+        function createSVGElement(tag, attrs = {}) {
+            const el = document.createElementNS(SVG_NS, tag);
+            for (const [key, value] of Object.entries(attrs)) {
+                el.setAttribute(key, value);
+            }
+            return el;
+        }
 
-            // Tutorial skip
-            document.getElementById('skip-tutorial').addEventListener('click', startGame);
-            document.getElementById('skip-tutorial').addEventListener('touchend', (e) => {
-                e.preventDefault();
-                startGame();
-            });
+        // Create particle
+        function createParticle(x, y, vx, vy) {
+            const particle = {
+                x, y, vx, vy,
+                life: 1,
+                size: Math.random() * 6 + 3,
+                element: createSVGElement('circle', {
+                    r: Math.random() * 6 + 3,
+                    fill: 'url(#particleGradient)'
+                })
+            };
+            particlesGroup.appendChild(particle.element);
+            particles.push(particle);
+        }
 
-            // Restart button
-            document.getElementById('restart-btn').addEventListener('click', restartGame);
-            document.getElementById('restart-btn').addEventListener('touchend', (e) => {
-                e.preventDefault();
-                restartGame();
-            });
+        // Create air flow line
+        function createFlowLines() {
+            airFlowLines.innerHTML = '';
+            flowLines = [];
 
-            // Fire button
-            const fireBtn = document.getElementById('fire-btn');
-            fireBtn.addEventListener('mousedown', fire);
-            fireBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                fire();
-            });
-
-            // Weapon selection
-            document.querySelectorAll('.weapon-btn').forEach(btn => {
-                btn.addEventListener('click', () => selectWeapon(parseInt(btn.dataset.weapon)));
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    selectWeapon(parseInt(btn.dataset.weapon));
+            for (let i = 0; i < 12; i++) {
+                const line = createSVGElement('path', {
+                    class: 'flow-line',
+                    fill: 'none',
+                    'stroke-width': '2',
+                    'stroke-linecap': 'round',
+                    'stroke-dasharray': '8 4',
+                    opacity: '0'
                 });
-            });
-
-            // Crosshair aiming (touch)
-            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-            // Crosshair aiming (mouse)
-            canvas.addEventListener('mousedown', handleMouseDown);
-            canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('mouseup', handleMouseUp);
-        }
-
-        function handleTouchStart(e) {
-            if (gameState !== 'playing') return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            isTouching = true;
-        }
-
-        function handleTouchMove(e) {
-            if (gameState !== 'playing' || !isTouching) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-
-            crosshairX = Math.max(100, Math.min(canvas.width - 20, crosshairX + deltaX * 1.5));
-            crosshairY = Math.max(20, Math.min(canvas.height - 20, crosshairY + deltaY * 1.5));
-
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-
-            updateCrosshairPosition();
-        }
-
-        function handleTouchEnd(e) {
-            isTouching = false;
-        }
-
-        function handleMouseDown(e) {
-            if (gameState !== 'playing') return;
-            touchStartX = e.clientX;
-            touchStartY = e.clientY;
-            isTouching = true;
-        }
-
-        function handleMouseMove(e) {
-            if (gameState !== 'playing' || !isTouching) return;
-            const deltaX = e.clientX - touchStartX;
-            const deltaY = e.clientY - touchStartY;
-
-            crosshairX = Math.max(100, Math.min(canvas.width - 20, crosshairX + deltaX * 1.5));
-            crosshairY = Math.max(20, Math.min(canvas.height - 20, crosshairY + deltaY * 1.5));
-
-            touchStartX = e.clientX;
-            touchStartY = e.clientY;
-
-            updateCrosshairPosition();
-        }
-
-        function handleMouseUp() {
-            isTouching = false;
-        }
-
-        function updateCrosshairPosition() {
-            const crosshair = document.getElementById('crosshair');
-            crosshair.style.left = (crosshairX + recoilOffsetX) + 'px';
-            crosshair.style.top = (crosshairY + recoilOffsetY) + 'px';
-        }
-
-        // ==================== GAME FLOW ====================
-        function showTutorial() {
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('tutorial').classList.add('active');
-        }
-
-        function startGame() {
-            document.getElementById('tutorial').classList.remove('active');
-            document.getElementById('game-ui').classList.add('active');
-            gameState = 'playing';
-            startWave(1);
-        }
-
-        function restartGame() {
-            score = 0;
-            wave = 1;
-            nestHealth = 100;
-            heat = 0;
-            currentWeapon = 0;
-            weaponAmmo = [Infinity, 12, 50];
-            combo = 0;
-            birdsKilled = 0;
-            shotsFired = 0;
-            shotsHit = 0;
-
-            birds = [];
-            bullets = [];
-            particles = [];
-            feathers = [];
-
-            crosshairX = canvas.width / 2;
-            crosshairY = canvas.height / 2;
-            recoilOffsetX = 0;
-            recoilOffsetY = 0;
-
-            updateUI();
-            document.getElementById('game-over').classList.remove('active');
-            document.getElementById('health-bar').classList.remove('danger');
-
-            gameState = 'playing';
-            startWave(1);
-        }
-
-        function gameOver() {
-            gameState = 'gameover';
-
-            if (score > highScore) {
-                highScore = score;
-                document.getElementById('high-score').style.display = 'block';
-            } else {
-                document.getElementById('high-score').style.display = 'none';
-            }
-
-            document.getElementById('final-score').textContent = score.toLocaleString();
-            document.getElementById('birds-killed').textContent = birdsKilled;
-            document.getElementById('waves-survived').textContent = wave - 1;
-            document.getElementById('accuracy').textContent = shotsFired > 0
-                ? Math.round((shotsHit / shotsFired) * 100) + '%'
-                : '0%';
-
-            document.getElementById('game-over').classList.add('active');
-        }
-
-        // ==================== WAVE SYSTEM ====================
-        function startWave(waveNum) {
-            wave = waveNum;
-            birdsToSpawn = 5 + wave * 3;
-            waveTimer = 0;
-            waveComplete = false;
-
-            // Announce wave
-            const announce = document.getElementById('wave-announce');
-            announce.textContent = 'WAVE ' + wave;
-            announce.classList.add('active');
-            setTimeout(() => announce.classList.remove('active'), 2000);
-
-            document.getElementById('wave-num').textContent = wave;
-
-            // Replenish some ammo each wave
-            weaponAmmo[1] = Math.min(weaponAmmo[1] + 4, 12);
-            weaponAmmo[2] = Math.min(weaponAmmo[2] + 15, 50);
-            updateAmmoDisplay();
-        }
-
-        function spawnBird() {
-            const typeIndex = getRandomBirdType();
-            const birdType = BIRD_TYPES[typeIndex];
-
-            const side = Math.random() < 0.7 ? 'right' : (Math.random() < 0.5 ? 'top' : 'bottom');
-            let x, y, angle;
-
-            const nestX = canvas.width * NEST_X_PERCENT;
-            const nestY = canvas.height * 0.7;
-
-            if (side === 'right') {
-                x = canvas.width + 50;
-                y = Math.random() * (canvas.height - 100) + 50;
-            } else if (side === 'top') {
-                x = canvas.width * 0.5 + Math.random() * (canvas.width * 0.5);
-                y = -50;
-            } else {
-                x = canvas.width * 0.5 + Math.random() * (canvas.width * 0.5);
-                y = canvas.height + 50;
-            }
-
-            angle = Math.atan2(nestY - y, nestX - x);
-
-            birds.push({
-                x: x,
-                y: y,
-                vx: Math.cos(angle) * birdType.speed,
-                vy: Math.sin(angle) * birdType.speed,
-                type: typeIndex,
-                health: birdType.health,
-                size: birdType.size,
-                flapPhase: Math.random() * Math.PI * 2,
-                wingAngle: 0,
-                targetAngle: angle
-            });
-        }
-
-        function getRandomBirdType() {
-            const rand = Math.random();
-            if (wave < 3) {
-                return 0; // Only sparrows
-            } else if (wave < 5) {
-                return rand < 0.7 ? 0 : 1;
-            } else if (wave < 8) {
-                if (rand < 0.5) return 0;
-                if (rand < 0.8) return 1;
-                return 2;
-            } else {
-                if (rand < 0.3) return 0;
-                if (rand < 0.55) return 1;
-                if (rand < 0.85) return 2;
-                return 3;
-            }
-        }
-
-        // ==================== SHOOTING ====================
-        function fire() {
-            if (gameState !== 'playing') return;
-
-            const now = Date.now();
-            const weapon = WEAPONS[currentWeapon];
-
-            if (now - lastFireTime < weapon.fireRate) return;
-            if (heat >= 100) return;
-            if (weaponAmmo[currentWeapon] <= 0) return;
-
-            lastFireTime = now;
-            shotsFired++;
-
-            if (weaponAmmo[currentWeapon] !== Infinity) {
-                weaponAmmo[currentWeapon]--;
-                updateAmmoDisplay();
-            }
-
-            // Add heat
-            heat = Math.min(100, heat + weapon.heatPerShot);
-
-            // Calculate direction from nest to crosshair
-            const nestX = canvas.width * NEST_X_PERCENT;
-            const nestY = canvas.height * 0.7;
-            const targetX = crosshairX + recoilOffsetX;
-            const targetY = crosshairY + recoilOffsetY;
-            const angle = Math.atan2(targetY - nestY, targetX - nestX);
-
-            // Fire bullets
-            const pelletsToFire = weapon.pelletsPerShot || 1;
-            for (let i = 0; i < pelletsToFire; i++) {
-                const spreadAngle = angle + (Math.random() - 0.5) * weapon.spread;
-                bullets.push({
-                    x: nestX + 30,
-                    y: nestY - 20,
-                    vx: Math.cos(spreadAngle) * weapon.bulletSpeed,
-                    vy: Math.sin(spreadAngle) * weapon.bulletSpeed,
-                    size: weapon.bulletSize,
-                    damage: weapon.damage,
-                    color: weapon.color,
-                    life: 100
+                airFlowLines.appendChild(line);
+                flowLines.push({
+                    element: line,
+                    offset: i * 60,
+                    x: 100 + i * 60,
+                    phase: Math.random() * Math.PI * 2
                 });
             }
-
-            // Apply recoil to crosshair
-            recoilOffsetX -= Math.cos(angle) * weapon.recoilImpulse * 0.5;
-            recoilOffsetY -= Math.sin(angle) * weapon.recoilImpulse * 0.5;
-
-            // Update physics display
-            document.getElementById('recoil-val').textContent = weapon.recoilImpulse + ' N·s';
-            document.getElementById('bullet-vel').textContent = weapon.bulletVelocity + ' m/s';
-
-            // Muzzle flash particles
-            for (let i = 0; i < 8; i++) {
-                const pAngle = angle + (Math.random() - 0.5) * 0.5;
-                particles.push({
-                    x: nestX + 35,
-                    y: nestY - 20,
-                    vx: Math.cos(pAngle) * (5 + Math.random() * 5),
-                    vy: Math.sin(pAngle) * (5 + Math.random() * 5),
-                    size: 3 + Math.random() * 3,
-                    life: 1,
-                    color: weapon.color
-                });
-            }
-
-            // Haptic feedback (if supported)
-            if (navigator.vibrate) {
-                navigator.vibrate(20);
-            }
         }
 
-        function selectWeapon(index) {
-            if (weaponAmmo[index] <= 0 && weaponAmmo[index] !== Infinity) return;
+        // Update flow lines
+        function updateFlowLines(deltaTime) {
+            if (!showAirFlow) {
+                flowLines.forEach(fl => fl.element.setAttribute('opacity', '0'));
+                return;
+            }
 
-            currentWeapon = index;
-            document.querySelectorAll('.weapon-btn').forEach((btn, i) => {
-                btn.classList.toggle('active', i === index);
+            const speed = isSlowMo ? 0.3 : 1;
+            flowLines.forEach((fl, i) => {
+                fl.phase += deltaTime * 0.002 * speed;
+
+                const baseY = 180 + Math.sin(fl.phase + i * 0.5) * 30;
+                const waveY = Math.sin(fl.phase * 2) * 15;
+
+                const startX = fl.x;
+                const endX = fl.x + 50;
+                const midX = (startX + endX) / 2;
+
+                const d = `M${startX},${baseY} Q${midX},${baseY + waveY} ${endX},${baseY}`;
+                fl.element.setAttribute('d', d);
+                fl.element.setAttribute('opacity', (0.3 + Math.sin(fl.phase) * 0.2).toString());
             });
         }
 
-        function updateAmmoDisplay() {
-            document.getElementById('ammo-0').textContent = '∞';
-            document.getElementById('ammo-1').textContent = weaponAmmo[1];
-            document.getElementById('ammo-2').textContent = weaponAmmo[2];
+        // Update particles
+        function updateParticles(deltaTime) {
+            const speed = isSlowMo ? 0.3 : 1;
 
-            document.querySelectorAll('.weapon-btn').forEach((btn, i) => {
-                if (i > 0) {
-                    btn.classList.toggle('disabled', weaponAmmo[i] <= 0);
-                }
-            });
-        }
-
-        // ==================== UPDATE LOGIC ====================
-        function update(deltaTime) {
-            if (gameState !== 'playing') return;
-
-            // Spawn birds
-            waveTimer += deltaTime;
-            if (birdsToSpawn > 0 && waveTimer > 1000 / (1 + wave * 0.2)) {
-                spawnBird();
-                birdsToSpawn--;
-                waveTimer = 0;
-            }
-
-            // Check wave complete
-            if (birdsToSpawn === 0 && birds.length === 0 && !waveComplete) {
-                waveComplete = true;
-                setTimeout(() => {
-                    if (gameState === 'playing') {
-                        startWave(wave + 1);
-                    }
-                }, 2000);
-            }
-
-            // Update birds
-            updateBirds(deltaTime);
-
-            // Update bullets
-            updateBullets();
-
-            // Update particles
-            updateParticles();
-
-            // Update feathers
-            updateFeathers();
-
-            // Cool down heat
-            heat = Math.max(0, heat - 0.3);
-
-            // Recover recoil
-            recoilOffsetX *= 0.9;
-            recoilOffsetY *= 0.9;
-
-            // Update combo timer
-            if (combo > 0) {
-                comboTimer -= deltaTime;
-                if (comboTimer <= 0) {
-                    combo = 0;
-                    document.getElementById('combo-display').classList.remove('active');
-                }
-            }
-
-            // Check collision
-            checkCollisions();
-
-            // Update UI
-            updateUI();
-            updateCrosshairPosition();
-        }
-
-        function updateBirds(deltaTime) {
-            const nestX = canvas.width * NEST_X_PERCENT;
-            const nestY = canvas.height * 0.7;
-
-            for (let i = birds.length - 1; i >= 0; i--) {
-                const bird = birds[i];
-                const birdType = BIRD_TYPES[bird.type];
-
-                // Wing flapping physics (Newton's Third Law)
-                bird.flapPhase += birdType.flapSpeed;
-                bird.wingAngle = Math.sin(bird.flapPhase) * 40;
-
-                // Calculate lift from wing flap
-                const flapForce = Math.sin(bird.flapPhase);
-                if (flapForce > 0) {
-                    bird.vy -= flapForce * 0.15;
-                }
-
-                // Apply gravity
-                bird.vy += GRAVITY * 0.3;
-
-                // Steer toward nest
-                const angleToNest = Math.atan2(nestY - bird.y, nestX - bird.x);
-                bird.targetAngle = angleToNest;
-
-                const angleDiff = angleToNest - Math.atan2(bird.vy, bird.vx);
-                bird.vx += Math.cos(angleToNest) * 0.05;
-                bird.vy += Math.sin(angleToNest) * 0.05;
-
-                // Limit speed
-                const speed = Math.sqrt(bird.vx * bird.vx + bird.vy * bird.vy);
-                if (speed > birdType.speed * 1.5) {
-                    bird.vx = (bird.vx / speed) * birdType.speed * 1.5;
-                    bird.vy = (bird.vy / speed) * birdType.speed * 1.5;
-                }
-
-                // Update position
-                bird.x += bird.vx;
-                bird.y += bird.vy;
-
-                // Check if bird reached nest
-                const distToNest = Math.sqrt(
-                    Math.pow(bird.x - nestX, 2) +
-                    Math.pow(bird.y - nestY, 2)
-                );
-
-                if (distToNest < 50) {
-                    nestHealth -= birdType.damage;
-                    createFeathers(bird.x, bird.y, bird.type, 3);
-                    birds.splice(i, 1);
-
-                    if (nestHealth <= 0) {
-                        nestHealth = 0;
-                        gameOver();
-                    }
-                }
-
-                // Remove if off screen (left side)
-                if (bird.x < -100) {
-                    birds.splice(i, 1);
-                }
-            }
-
-            // Update bird lift display
-            if (birds.length > 0) {
-                const avgLift = Math.abs(Math.sin(birds[0].flapPhase) * 2.5).toFixed(1);
-                document.getElementById('bird-lift').textContent = avgLift + ' N';
-            }
-        }
-
-        function updateBullets() {
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const bullet = bullets[i];
-                bullet.x += bullet.vx;
-                bullet.y += bullet.vy;
-                bullet.vy += GRAVITY * 0.02; // Bullet drop
-                bullet.life--;
-
-                // Remove if off screen or dead
-                if (bullet.x < 0 || bullet.x > canvas.width + 50 ||
-                    bullet.y < 0 || bullet.y > canvas.height + 50 ||
-                    bullet.life <= 0) {
-                    bullets.splice(i, 1);
-                }
-            }
-        }
-
-        function updateParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vx *= 0.95;
-                p.vy *= 0.95;
-                p.vy += 0.1;
-                p.life -= 0.03;
-                p.size *= 0.97;
+                p.x += p.vx * deltaTime * 0.05 * speed;
+                p.y += p.vy * deltaTime * 0.05 * speed;
+                p.life -= deltaTime * 0.002 * speed;
+
+                p.element.setAttribute('cx', p.x);
+                p.element.setAttribute('cy', p.y);
+                p.element.setAttribute('opacity', p.life * 0.8);
+                p.element.setAttribute('r', p.size * p.life);
 
                 if (p.life <= 0) {
+                    p.element.remove();
                     particles.splice(i, 1);
                 }
             }
         }
 
-        function updateFeathers() {
-            for (let i = feathers.length - 1; i >= 0; i--) {
-                const f = feathers[i];
-                f.x += f.vx;
-                f.y += f.vy;
-                f.vy += 0.05;
-                f.vx *= 0.99;
-                f.rotation += f.rotSpeed;
-                f.life -= 0.01;
+        // Draw force arrows
+        function drawForceArrows() {
+            forceArrowsGroup.innerHTML = '';
+            labelsGroup.innerHTML = '';
 
-                if (f.life <= 0 || f.y > canvas.height) {
-                    feathers.splice(i, 1);
-                }
-            }
-        }
+            const forceMagnitude = (Math.sin(bird.flapPhase) + 1) * 0.5 * flapStrength * 6;
 
-        function checkCollisions() {
-            for (let i = bullets.length - 1; i >= 0; i--) {
-                const bullet = bullets[i];
+            if (forceMagnitude > 8) {
+                const arrowOpacity = Math.min(1, (forceMagnitude - 8) / 20);
 
-                for (let j = birds.length - 1; j >= 0; j--) {
-                    const bird = birds[j];
-                    const birdType = BIRD_TYPES[bird.type];
-
-                    const dist = Math.sqrt(
-                        Math.pow(bullet.x - bird.x, 2) +
-                        Math.pow(bullet.y - bird.y, 2)
-                    );
-
-                    if (dist < birdType.size) {
-                        bird.health -= bullet.damage;
-                        shotsHit++;
-
-                        // Hit particles
-                        for (let k = 0; k < 5; k++) {
-                            particles.push({
-                                x: bullet.x,
-                                y: bullet.y,
-                                vx: (Math.random() - 0.5) * 6,
-                                vy: (Math.random() - 0.5) * 6,
-                                size: 4,
-                                life: 1,
-                                color: '#ff0000'
-                            });
-                        }
-
-                        bullets.splice(i, 1);
-
-                        if (bird.health <= 0) {
-                            // Bird killed
-                            birdsKilled++;
-                            combo++;
-                            comboTimer = 2000;
-
-                            const points = birdType.points * (1 + Math.floor(combo / 3) * 0.5);
-                            score += Math.floor(points);
-
-                            // Show hit marker
-                            showHitMarker(bird.x, bird.y, Math.floor(points));
-
-                            // Create feathers
-                            createFeathers(bird.x, bird.y, bird.type, 8);
-
-                            // Death particles
-                            for (let k = 0; k < 15; k++) {
-                                particles.push({
-                                    x: bird.x,
-                                    y: bird.y,
-                                    vx: (Math.random() - 0.5) * 8,
-                                    vy: (Math.random() - 0.5) * 8,
-                                    size: 5 + Math.random() * 5,
-                                    life: 1,
-                                    color: birdType.color
-                                });
-                            }
-
-                            birds.splice(j, 1);
-
-                            // Update combo display
-                            if (combo >= 2) {
-                                document.getElementById('combo-display').textContent = 'x' + combo + ' COMBO';
-                                document.getElementById('combo-display').classList.add('active');
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
-
-        function createFeathers(x, y, birdTypeIndex, count) {
-            const birdType = BIRD_TYPES[birdTypeIndex];
-            for (let i = 0; i < count; i++) {
-                feathers.push({
-                    x: x,
-                    y: y,
-                    vx: (Math.random() - 0.5) * 5,
-                    vy: (Math.random() - 0.5) * 5 - 2,
-                    rotation: Math.random() * Math.PI * 2,
-                    rotSpeed: (Math.random() - 0.5) * 0.2,
-                    size: 8 + Math.random() * 8,
-                    color: Math.random() < 0.5 ? birdType.color : birdType.wingColor,
-                    life: 1
+                // Left action arrow (downward)
+                const leftActionArrow = createSVGElement('line', {
+                    x1: bird.x - 55,
+                    y1: bird.y + 15,
+                    x2: bird.x - 55,
+                    y2: bird.y + 15 + forceMagnitude,
+                    stroke: 'url(#actionGradient)',
+                    'stroke-width': '4',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#actionArrowhead)',
+                    filter: 'url(#actionGlow)',
+                    opacity: arrowOpacity
                 });
+                forceArrowsGroup.appendChild(leftActionArrow);
+
+                // Right action arrow (downward)
+                const rightActionArrow = createSVGElement('line', {
+                    x1: bird.x + 55,
+                    y1: bird.y + 15,
+                    x2: bird.x + 55,
+                    y2: bird.y + 15 + forceMagnitude,
+                    stroke: 'url(#actionGradient)',
+                    'stroke-width': '4',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#actionArrowhead)',
+                    filter: 'url(#actionGlow)',
+                    opacity: arrowOpacity
+                });
+                forceArrowsGroup.appendChild(rightActionArrow);
+
+                // Reaction arrow (upward - centered, larger)
+                const reactionArrow = createSVGElement('line', {
+                    x1: bird.x,
+                    y1: bird.y - 30,
+                    x2: bird.x,
+                    y2: bird.y - 30 - forceMagnitude * 1.3,
+                    stroke: 'url(#reactionGradient)',
+                    'stroke-width': '6',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#reactionArrowhead)',
+                    filter: 'url(#reactionGlow)',
+                    opacity: arrowOpacity
+                });
+                forceArrowsGroup.appendChild(reactionArrow);
+
+                // Labels with background
+                if (arrowOpacity > 0.5) {
+                    // Action label
+                    const actionLabelBg = createSVGElement('rect', {
+                        x: bird.x - 55 - 38,
+                        y: bird.y + forceMagnitude + 25,
+                        width: 76,
+                        height: 22,
+                        rx: 4,
+                        fill: 'var(--accent-action)',
+                        opacity: arrowOpacity * 0.9
+                    });
+                    labelsGroup.appendChild(actionLabelBg);
+
+                    const actionLabel = createSVGElement('text', {
+                        x: bird.x - 55,
+                        y: bird.y + forceMagnitude + 40,
+                        'text-anchor': 'middle',
+                        'font-size': '11',
+                        'font-weight': 'bold',
+                        fill: 'white',
+                        opacity: arrowOpacity
+                    });
+                    actionLabel.textContent = 'ACTION ↓';
+                    labelsGroup.appendChild(actionLabel);
+
+                    // Reaction label
+                    const reactionLabelBg = createSVGElement('rect', {
+                        x: bird.x - 48,
+                        y: bird.y - forceMagnitude * 1.3 - 55,
+                        width: 96,
+                        height: 22,
+                        rx: 4,
+                        fill: 'var(--accent-reaction)',
+                        opacity: arrowOpacity * 0.9
+                    });
+                    labelsGroup.appendChild(reactionLabelBg);
+
+                    const reactionLabel = createSVGElement('text', {
+                        x: bird.x,
+                        y: bird.y - forceMagnitude * 1.3 - 40,
+                        'text-anchor': 'middle',
+                        'font-size': '11',
+                        'font-weight': 'bold',
+                        fill: 'white',
+                        opacity: arrowOpacity
+                    });
+                    reactionLabel.textContent = 'REACTION ↑';
+                    labelsGroup.appendChild(reactionLabel);
+                }
             }
         }
 
-        function showHitMarker(x, y, points) {
-            const marker = document.createElement('div');
-            marker.className = 'hit-marker';
-            marker.textContent = '+' + points;
-            marker.style.left = x + 'px';
-            marker.style.top = y + 'px';
-            document.getElementById('game-container').appendChild(marker);
+        // Update bird animation
+        function updateBird(deltaTime) {
+            const speed = isSlowMo ? 0.25 : 1;
+            const flapSpeed = 0.006 * speed * (flapStrength / 5);
 
-            setTimeout(() => marker.remove(), 800);
-        }
+            bird.flapPhase += deltaTime * flapSpeed;
+            bird.wingAngle = Math.sin(bird.flapPhase) * 35; // degrees
 
-        function updateUI() {
-            document.getElementById('score-value').textContent = score.toLocaleString();
+            // Bird bobbing motion
+            const lift = Math.sin(bird.flapPhase) * flapStrength * 0.7;
+            bird.velocity += (lift - bird.velocity * 0.1) * 0.08 * speed;
+            bird.y = bird.baseY - bird.velocity * 2.5;
 
-            const healthPercent = Math.max(0, nestHealth);
-            document.getElementById('health-bar').style.width = healthPercent + '%';
-            document.getElementById('health-text').textContent = Math.round(healthPercent) + '%';
-            if (healthPercent < 30) {
-                document.getElementById('health-bar').classList.add('danger');
-            } else {
-                document.getElementById('health-bar').classList.remove('danger');
+            // Update bird position and wing rotation
+            birdGroup.setAttribute('transform', `translate(${bird.x}, ${bird.y})`);
+            leftWing.setAttribute('transform', `rotate(${-bird.wingAngle})`);
+            rightWing.setAttribute('transform', `rotate(${bird.wingAngle})`);
+
+            // Create particles on downstroke
+            if (Math.sin(bird.flapPhase) > 0.2 && particles.length < 40) {
+                const particleSpeed = flapStrength * 1.5;
+                // Left wing particles
+                createParticle(
+                    bird.x - 45 + Math.random() * 30,
+                    bird.y + 15,
+                    (Math.random() - 0.5) * 1.5,
+                    particleSpeed + Math.random() * 2
+                );
+                // Right wing particles
+                createParticle(
+                    bird.x + 15 + Math.random() * 30,
+                    bird.y + 15,
+                    (Math.random() - 0.5) * 1.5,
+                    particleSpeed + Math.random() * 2
+                );
             }
-
-            document.getElementById('heat-bar').style.width = heat + '%';
-            document.getElementById('heat-text').textContent = Math.round(heat) + '%';
-            if (heat >= 80) {
-                document.getElementById('heat-bar').classList.add('danger');
-                document.getElementById('fire-btn').classList.add('cooldown');
-            } else {
-                document.getElementById('heat-bar').classList.remove('danger');
-                document.getElementById('fire-btn').classList.remove('cooldown');
-            }
         }
 
-        // ==================== RENDERING ====================
-        function render() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw sky gradient
-            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            const isDark = document.documentElement.classList.contains('dark');
-            if (isDark) {
-                skyGradient.addColorStop(0, '#0a0015');
-                skyGradient.addColorStop(0.5, '#1a0533');
-                skyGradient.addColorStop(1, '#2d1b4e');
-            } else {
-                skyGradient.addColorStop(0, '#1a0533');
-                skyGradient.addColorStop(0.4, '#4a1942');
-                skyGradient.addColorStop(0.7, '#c85a3b');
-                skyGradient.addColorStop(1, '#f4a460');
-            }
-            ctx.fillStyle = skyGradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw sun/moon
-            drawCelestialBody();
-
-            // Draw clouds
-            drawClouds();
-
-            // Draw distant mountains
-            drawMountains();
-
-            // Draw nest
-            drawNest();
-
-            // Draw feathers
-            drawFeathers();
-
-            // Draw birds
-            drawBirds();
-
-            // Draw bullets
-            drawBullets();
-
-            // Draw particles
-            drawParticles();
-
-            // Draw turret/gun
-            drawTurret();
-        }
-
-        function drawCelestialBody() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const x = canvas.width * 0.75;
-            const y = canvas.height * 0.2;
-
-            ctx.save();
-            if (isDark) {
-                // Moon
-                ctx.fillStyle = '#e0e0e0';
-                ctx.shadowBlur = 30;
-                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-                ctx.beginPath();
-                ctx.arc(x, y, 40, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Moon craters
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'rgba(180, 180, 180, 0.5)';
-                ctx.beginPath();
-                ctx.arc(x - 15, y - 10, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x + 10, y + 15, 5, 0, Math.PI * 2);
-                ctx.fill();
-            } else {
-                // Sun
-                ctx.fillStyle = '#ffdd44';
-                ctx.shadowBlur = 60;
-                ctx.shadowColor = 'rgba(255, 200, 50, 0.8)';
-                ctx.beginPath();
-                ctx.arc(x, y, 50, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        function drawClouds() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-
-            // Cloud 1
-            drawCloud(canvas.width * 0.2, canvas.height * 0.15, 1);
-            // Cloud 2
-            drawCloud(canvas.width * 0.6, canvas.height * 0.25, 0.8);
-            // Cloud 3
-            drawCloud(canvas.width * 0.85, canvas.height * 0.1, 0.6);
-        }
-
-        function drawCloud(x, y, scale) {
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(scale, scale);
-
-            ctx.beginPath();
-            ctx.arc(0, 0, 40, 0, Math.PI * 2);
-            ctx.arc(50, -10, 35, 0, Math.PI * 2);
-            ctx.arc(90, 0, 40, 0, Math.PI * 2);
-            ctx.arc(45, 15, 30, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawMountains() {
-            const isDark = document.documentElement.classList.contains('dark');
-
-            // Far mountains
-            ctx.fillStyle = isDark ? 'rgba(30, 20, 50, 0.8)' : 'rgba(80, 50, 80, 0.6)';
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height);
-            ctx.lineTo(0, canvas.height * 0.7);
-            ctx.lineTo(canvas.width * 0.15, canvas.height * 0.55);
-            ctx.lineTo(canvas.width * 0.3, canvas.height * 0.65);
-            ctx.lineTo(canvas.width * 0.45, canvas.height * 0.5);
-            ctx.lineTo(canvas.width * 0.6, canvas.height * 0.6);
-            ctx.lineTo(canvas.width * 0.75, canvas.height * 0.52);
-            ctx.lineTo(canvas.width * 0.9, canvas.height * 0.62);
-            ctx.lineTo(canvas.width, canvas.height * 0.55);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.closePath();
-            ctx.fill();
-
-            // Near mountains/hills
-            ctx.fillStyle = isDark ? 'rgba(20, 15, 35, 0.9)' : 'rgba(60, 35, 60, 0.8)';
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height);
-            ctx.lineTo(0, canvas.height * 0.75);
-            ctx.lineTo(canvas.width * 0.2, canvas.height * 0.68);
-            ctx.lineTo(canvas.width * 0.4, canvas.height * 0.72);
-            ctx.lineTo(canvas.width * 0.55, canvas.height * 0.65);
-            ctx.lineTo(canvas.width * 0.7, canvas.height * 0.7);
-            ctx.lineTo(canvas.width * 0.85, canvas.height * 0.66);
-            ctx.lineTo(canvas.width, canvas.height * 0.72);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.closePath();
-            ctx.fill();
-
-            // Ground
-            ctx.fillStyle = isDark ? '#0f0a1a' : '#2a1a2a';
-            ctx.fillRect(0, canvas.height * 0.78, canvas.width, canvas.height * 0.22);
-        }
-
-        function drawNest() {
-            const nestX = canvas.width * NEST_X_PERCENT;
-            const nestY = canvas.height * 0.7;
-
-            ctx.save();
-            ctx.translate(nestX, nestY);
-
-            // Tree trunk
-            ctx.fillStyle = '#3d2817';
-            ctx.fillRect(-15, 0, 30, canvas.height * 0.3);
-
-            // Branches
-            ctx.strokeStyle = '#3d2817';
-            ctx.lineWidth = 8;
-            ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.lineTo(-40, -30);
-            ctx.moveTo(0, -10);
-            ctx.lineTo(35, -25);
-            ctx.stroke();
-
-            // Nest base
-            ctx.fillStyle = '#654321';
-            ctx.beginPath();
-            ctx.ellipse(0, -15, 45, 20, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Nest detail (straw texture)
-            ctx.strokeStyle = '#8b7355';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 12; i++) {
-                const angle = (i / 12) * Math.PI * 2;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(angle) * 20, -15 + Math.sin(angle) * 8);
-                ctx.lineTo(Math.cos(angle) * 45, -15 + Math.sin(angle) * 20);
-                ctx.stroke();
-            }
-
-            // Eggs
-            ctx.fillStyle = '#f5f5dc';
-            ctx.beginPath();
-            ctx.ellipse(-12, -20, 8, 10, -0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(8, -18, 8, 10, 0.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.ellipse(-2, -22, 7, 9, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Health indicator glow
-            if (nestHealth < 50) {
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = nestHealth < 25 ? 'rgba(255, 0, 0, 0.8)' : 'rgba(255, 150, 0, 0.6)';
-                ctx.strokeStyle = nestHealth < 25 ? '#ff0000' : '#ff9900';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.ellipse(0, -15, 50, 25, 0, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        function drawTurret() {
-            const nestX = canvas.width * NEST_X_PERCENT;
-            const nestY = canvas.height * 0.7;
-            const targetX = crosshairX + recoilOffsetX;
-            const targetY = crosshairY + recoilOffsetY;
-            const angle = Math.atan2(targetY - (nestY - 20), targetX - (nestX + 20));
-
-            ctx.save();
-            ctx.translate(nestX + 20, nestY - 20);
-            ctx.rotate(angle);
-
-            // Gun barrel
-            const weapon = WEAPONS[currentWeapon];
-            ctx.fillStyle = '#444';
-            ctx.fillRect(0, -6, 40, 12);
-
-            // Gun detail
-            ctx.fillStyle = weapon.color;
-            ctx.fillRect(35, -4, 8, 8);
-
-            // Muzzle
-            ctx.fillStyle = '#222';
-            ctx.fillRect(40, -5, 5, 10);
-
-            ctx.restore();
-
-            // Gun base
-            ctx.save();
-            ctx.translate(nestX + 15, nestY - 15);
-
-            ctx.fillStyle = '#555';
-            ctx.beginPath();
-            ctx.arc(0, 0, 15, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#777';
-            ctx.beginPath();
-            ctx.arc(0, 0, 10, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawBirds() {
-            birds.forEach(bird => {
-                const birdType = BIRD_TYPES[bird.type];
-                const direction = bird.vx < 0 ? -1 : 1;
-
-                ctx.save();
-                ctx.translate(bird.x, bird.y);
-                ctx.scale(direction, 1);
-
-                // Body
-                ctx.fillStyle = birdType.color;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, birdType.size * 0.6, birdType.size * 0.35, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Head
-                ctx.beginPath();
-                ctx.arc(birdType.size * 0.4, -birdType.size * 0.1, birdType.size * 0.25, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Beak
-                ctx.fillStyle = '#ff8c00';
-                ctx.beginPath();
-                ctx.moveTo(birdType.size * 0.6, -birdType.size * 0.1);
-                ctx.lineTo(birdType.size * 0.85, -birdType.size * 0.05);
-                ctx.lineTo(birdType.size * 0.6, birdType.size * 0.05);
-                ctx.closePath();
-                ctx.fill();
-
-                // Eye
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(birdType.size * 0.45, -birdType.size * 0.15, birdType.size * 0.08, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(birdType.size * 0.47, -birdType.size * 0.15, birdType.size * 0.04, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Wings
-                ctx.save();
-                ctx.rotate(bird.wingAngle * Math.PI / 180);
-                ctx.fillStyle = birdType.wingColor;
-                ctx.beginPath();
-                ctx.ellipse(-birdType.size * 0.1, -birdType.size * 0.2, birdType.size * 0.5, birdType.size * 0.2, -0.3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-
-                // Tail
-                ctx.fillStyle = birdType.wingColor;
-                ctx.beginPath();
-                ctx.moveTo(-birdType.size * 0.5, 0);
-                ctx.lineTo(-birdType.size * 0.9, -birdType.size * 0.15);
-                ctx.lineTo(-birdType.size * 0.85, 0);
-                ctx.lineTo(-birdType.size * 0.9, birdType.size * 0.15);
-                ctx.closePath();
-                ctx.fill();
-
-                ctx.restore();
-            });
-        }
-
-        function drawBullets() {
-            bullets.forEach(bullet => {
-                ctx.save();
-                ctx.translate(bullet.x, bullet.y);
-
-                // Bullet glow
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = bullet.color;
-
-                // Bullet trail
-                ctx.strokeStyle = bullet.color + '80';
-                ctx.lineWidth = bullet.size;
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(-bullet.vx * 2, -bullet.vy * 2);
-                ctx.stroke();
-
-                // Bullet
-                ctx.fillStyle = bullet.color;
-                ctx.beginPath();
-                ctx.arc(0, 0, bullet.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.restore();
-            });
-        }
-
-        function drawParticles() {
-            particles.forEach(p => {
-                ctx.save();
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            });
-        }
-
-        function drawFeathers() {
-            feathers.forEach(f => {
-                ctx.save();
-                ctx.translate(f.x, f.y);
-                ctx.rotate(f.rotation);
-                ctx.globalAlpha = f.life;
-                ctx.fillStyle = f.color;
-
-                // Feather shape
-                ctx.beginPath();
-                ctx.ellipse(0, 0, f.size, f.size * 0.3, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Feather line
-                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(-f.size, 0);
-                ctx.lineTo(f.size, 0);
-                ctx.stroke();
-
-                ctx.restore();
-            });
-        }
-
-        // ==================== GAME LOOP ====================
+        // Animation loop
         let lastTime = 0;
+        function animate(currentTime) {
+            const deltaTime = Math.min(currentTime - lastTime, 50); // Cap delta
+            lastTime = currentTime;
 
-        function gameLoop(timestamp) {
-            const deltaTime = timestamp - lastTime;
-            lastTime = timestamp;
-
-            if (gameState === 'playing') {
-                update(deltaTime);
+            if (isPlaying) {
+                updateBird(deltaTime);
+                updateParticles(deltaTime);
+                updateFlowLines(deltaTime);
+                drawForceArrows();
             }
 
-            render();
-
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(animate);
         }
 
-        // ==================== START ====================
-        window.addEventListener('load', init);
+        // Event listeners
+        document.getElementById('playPause').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            const icon = document.getElementById('playPauseIcon');
+            const text = document.getElementById('playPauseText');
+
+            if (isPlaying) {
+                icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+                text.textContent = 'Pause';
+            } else {
+                icon.innerHTML = '<path d="M8,5 L19,12 L8,19 Z"/>';
+                text.textContent = 'Play';
+            }
+        });
+
+        document.getElementById('slowMo').addEventListener('click', function() {
+            isSlowMo = !isSlowMo;
+            const text = document.getElementById('slowMoText');
+            this.classList.toggle('active');
+
+            if (isSlowMo) {
+                this.querySelector('span:first-child').textContent = '🚀';
+                text.textContent = 'Normal';
+            } else {
+                this.querySelector('span:first-child').textContent = '🐌';
+                text.textContent = 'Slow Motion';
+            }
+        });
+
+        document.getElementById('showFlow').addEventListener('click', function() {
+            showAirFlow = !showAirFlow;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('flapStrength').addEventListener('input', function() {
+            flapStrength = parseInt(this.value);
+            document.getElementById('strengthValue').textContent = flapStrength;
+        });
+
+        // Handle theme changes
+        const observer = new MutationObserver(updateThemeColors);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        // Initialize
+        updateThemeColors();
+        createFlowLines();
+        birdGroup.setAttribute('transform', `translate(${bird.x}, ${bird.y})`);
+        animate(0);
     </script>
 </body>
 </html>
-

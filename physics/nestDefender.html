@@ -1,0 +1,2148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Nest Defender</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-top: #1a0533;
+            --sky-mid: #4a1942;
+            --sky-bottom: #f4a460;
+            --accent-gold: #ffd700;
+            --accent-orange: #ff6b35;
+            --accent-red: #ff3333;
+            --accent-cyan: #00f5ff;
+            --ui-bg: rgba(0, 0, 0, 0.6);
+            --ui-border: rgba(255, 215, 0, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #ffd700;
+            --nest-color: #8b4513;
+            --health-green: #00ff88;
+            --health-red: #ff4444;
+            --heat-orange: #ff8c00;
+        }
+
+        .dark {
+            --sky-top: #0a0015;
+            --sky-mid: #1a0533;
+            --sky-bottom: #2d1b4e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: none;
+            font-family: 'Rajdhani', sans-serif;
+            background: #000;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Rotate Screen Overlay */
+        #rotate-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--sky-top) 0%, var(--sky-mid) 50%, #2d1b4e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        #rotate-screen.hidden {
+            display: none;
+        }
+
+        .rotate-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: rotatePhone 2s ease-in-out infinite;
+        }
+
+        @keyframes rotatePhone {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-20deg); }
+            75% { transform: rotate(90deg); }
+        }
+
+        .rotate-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .rotate-text {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 280px;
+            line-height: 1.5;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            background: linear-gradient(180deg,
+                rgba(26, 5, 51, 0.95) 0%,
+                rgba(74, 25, 66, 0.9) 50%,
+                rgba(244, 164, 96, 0.85) 100%);
+        }
+
+        #start-screen.hidden {
+            display: none;
+        }
+
+        .game-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(36px, 8vw, 64px);
+            font-weight: 900;
+            color: var(--accent-gold);
+            text-shadow:
+                0 0 10px rgba(255, 215, 0, 0.8),
+                0 0 30px rgba(255, 215, 0, 0.5),
+                0 4px 0 #b8860b;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+        }
+
+        .game-subtitle {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: clamp(14px, 3vw, 20px);
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+        }
+
+        .start-button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 18px 50px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-orange) 100%);
+            border: none;
+            border-radius: 50px;
+            color: #1a0533;
+            cursor: pointer;
+            box-shadow:
+                0 6px 20px rgba(255, 107, 53, 0.4),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .start-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 10px rgba(255, 107, 53, 0.4);
+        }
+
+        .physics-badge {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--ui-bg);
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--ui-border);
+        }
+
+        .physics-badge-icon {
+            font-size: 20px;
+        }
+
+        .physics-badge-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .physics-badge-text strong {
+            color: var(--accent-cyan);
+        }
+
+        /* Game UI */
+        #game-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+        }
+
+        #game-ui.active {
+            display: block;
+        }
+
+        .ui-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 20px;
+        }
+
+        .ui-panel {
+            background: var(--ui-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--ui-border);
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+
+        .wave-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: var(--accent-cyan);
+        }
+
+        .wave-number {
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+        }
+
+        .score-display {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .combo-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            color: var(--accent-orange);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .combo-display.active {
+            opacity: 1;
+        }
+
+        /* Weapon Selector */
+        .weapon-selector {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: auto;
+        }
+
+        .weapon-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--ui-bg);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--ui-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .weapon-btn.active {
+            border-color: var(--accent-gold);
+            background: rgba(255, 215, 0, 0.15);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .weapon-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .weapon-icon {
+            font-size: 24px;
+        }
+
+        .weapon-key {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            position: absolute;
+            bottom: 4px;
+        }
+
+        .weapon-ammo {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--accent-orange);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Fire Button */
+        .fire-button {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--accent-red) 0%, #cc0000 100%);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow:
+                0 6px 25px rgba(255, 51, 51, 0.5),
+                inset 0 3px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .fire-button:active {
+            transform: scale(0.9);
+            box-shadow:
+                0 2px 15px rgba(255, 51, 51, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .fire-button.cooldown {
+            background: linear-gradient(135deg, #666 0%, #444 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .fire-icon {
+            font-size: 36px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Bottom Bar */
+        .ui-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 80px;
+            right: 130px;
+            padding: 12px 20px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-bar {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-track {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .stat-fill.health {
+            background: linear-gradient(90deg, var(--health-green), #00cc6a);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .stat-fill.health.danger {
+            background: linear-gradient(90deg, var(--health-red), #cc0000);
+            box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        .stat-fill.heat {
+            background: linear-gradient(90deg, var(--accent-gold), var(--heat-orange));
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+        }
+
+        .stat-fill.heat.danger {
+            background: linear-gradient(90deg, var(--accent-red), #ff0000);
+            animation: heatPulse 0.3s infinite;
+        }
+
+        @keyframes heatPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Crosshair */
+        .crosshair {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+        }
+
+        .crosshair-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--accent-gold);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .crosshair-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        }
+
+        .crosshair-line {
+            position: absolute;
+            background: var(--accent-gold);
+            box-shadow: 0 0 6px rgba(255, 215, 0, 0.5);
+        }
+
+        .crosshair-line.top {
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            transform: translateX(-50%);
+        }
+
+        .crosshair-line.bottom {
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            transform: translateX(-50%);
+        }
+
+        .crosshair-line.left {
+            left: 0;
+            top: 50%;
+            width: 12px;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .crosshair-line.right {
+            right: 0;
+            top: 50%;
+            width: 12px;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        /* Game Over Screen */
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        #game-over.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .game-over-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(32px, 8vw, 56px);
+            font-weight: 900;
+            color: var(--accent-red);
+            text-shadow: 0 0 30px rgba(255, 51, 51, 0.8);
+            margin-bottom: 30px;
+        }
+
+        .final-score {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .final-score-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 4px;
+        }
+
+        .final-score-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .high-score {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 18px;
+            color: var(--accent-cyan);
+            margin-bottom: 40px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .stat-item-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .restart-button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-orange) 100%);
+            border: none;
+            border-radius: 50px;
+            color: #1a0533;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .restart-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Hit Marker */
+        .hit-marker {
+            position: absolute;
+            pointer-events: none;
+            font-size: 24px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            animation: hitFloat 0.8s ease-out forwards;
+            z-index: 60;
+        }
+
+        @keyframes hitFloat {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -100%) scale(1.5);
+            }
+        }
+
+        /* Tutorial Overlay */
+        #tutorial {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        #tutorial.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .tutorial-content {
+            display: flex;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .tutorial-item {
+            text-align: center;
+        }
+
+        .tutorial-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .tutorial-text {
+            font-size: 16px;
+            color: white;
+            max-width: 150px;
+        }
+
+        .tutorial-skip {
+            position: absolute;
+            bottom: 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        /* Wave Announcement */
+        .wave-announce {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 48px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 80;
+            transition: opacity 0.3s;
+        }
+
+        .wave-announce.active {
+            opacity: 1;
+            animation: waveIn 2s ease-out forwards;
+        }
+
+        @keyframes waveIn {
+            0% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        }
+
+        /* Physics Info Panel */
+        .physics-panel {
+            position: absolute;
+            top: 70px;
+            right: 12px;
+            background: var(--ui-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--ui-border);
+            border-radius: 12px;
+            padding: 12px;
+            max-width: 180px;
+            pointer-events: auto;
+        }
+
+        .physics-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .physics-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin: 4px 0;
+        }
+
+        .physics-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .physics-value {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--accent-gold);
+        }
+    </style>
+</head>
+<body>
+    <!-- Rotate Screen Overlay -->
+    <div id="rotate-screen">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-title">ROTATE DEVICE</div>
+        <div class="rotate-text">Please rotate your device to landscape mode for the best experience</div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <div class="game-logo">NEST DEFENDER</div>
+            <div class="game-subtitle">Physics Shooter</div>
+            <button class="start-button" id="start-btn">TAP TO PLAY</button>
+            <div class="physics-badge">
+                <span class="physics-badge-icon">⚡</span>
+                <span class="physics-badge-text"><strong>Newton's Laws</strong> in action</span>
+            </div>
+        </div>
+
+        <!-- Game UI -->
+        <div id="game-ui">
+            <div class="ui-top">
+                <div class="ui-panel wave-display">
+                    <div>WAVE</div>
+                    <div class="wave-number" id="wave-num">1</div>
+                </div>
+                <div class="ui-panel score-display">
+                    <div class="score-label">SCORE</div>
+                    <div class="score-value" id="score-value">0</div>
+                    <div class="combo-display" id="combo-display">x2 COMBO</div>
+                </div>
+                <div class="ui-panel physics-panel">
+                    <div class="physics-title">⚡ PHYSICS</div>
+                    <div class="physics-row">
+                        <span class="physics-label">Recoil:</span>
+                        <span class="physics-value" id="recoil-val">0 N·s</span>
+                    </div>
+                    <div class="physics-row">
+                        <span class="physics-label">Bullet V:</span>
+                        <span class="physics-value" id="bullet-vel">850 m/s</span>
+                    </div>
+                    <div class="physics-row">
+                        <span class="physics-label">Bird Lift:</span>
+                        <span class="physics-value" id="bird-lift">0 N</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="weapon-selector">
+                <div class="weapon-btn active" data-weapon="0">
+                    <span class="weapon-icon">🔫</span>
+                    <span class="weapon-ammo" id="ammo-0">∞</span>
+                </div>
+                <div class="weapon-btn" data-weapon="1">
+                    <span class="weapon-icon">💥</span>
+                    <span class="weapon-ammo" id="ammo-1">12</span>
+                </div>
+                <div class="weapon-btn" data-weapon="2">
+                    <span class="weapon-icon">⚡</span>
+                    <span class="weapon-ammo" id="ammo-2">50</span>
+                </div>
+            </div>
+
+            <div class="fire-button" id="fire-btn">
+                <span class="fire-icon">🎯</span>
+            </div>
+
+            <div class="ui-bottom">
+                <div class="stat-bar">
+                    <div class="stat-label">
+                        <span>🏠 NEST</span>
+                        <span id="health-text">100%</span>
+                    </div>
+                    <div class="stat-track">
+                        <div class="stat-fill health" id="health-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-label">
+                        <span>🔥 HEAT</span>
+                        <span id="heat-text">0%</span>
+                    </div>
+                    <div class="stat-track">
+                        <div class="stat-fill heat" id="heat-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crosshair" id="crosshair">
+                <div class="crosshair-ring"></div>
+                <div class="crosshair-dot"></div>
+                <div class="crosshair-line top"></div>
+                <div class="crosshair-line bottom"></div>
+                <div class="crosshair-line left"></div>
+                <div class="crosshair-line right"></div>
+            </div>
+
+            <div class="wave-announce" id="wave-announce">WAVE 1</div>
+        </div>
+
+        <!-- Tutorial -->
+        <div id="tutorial">
+            <div class="tutorial-content">
+                <div class="tutorial-item">
+                    <div class="tutorial-icon">👆</div>
+                    <div class="tutorial-text">Drag anywhere to aim</div>
+                </div>
+                <div class="tutorial-item">
+                    <div class="tutorial-icon">🎯</div>
+                    <div class="tutorial-text">Tap FIRE to shoot</div>
+                </div>
+                <div class="tutorial-item">
+                    <div class="tutorial-icon">🐦</div>
+                    <div class="tutorial-text">Shoot birds before they reach the nest!</div>
+                </div>
+            </div>
+            <button class="tutorial-skip" id="skip-tutorial">TAP TO START</button>
+        </div>
+
+        <!-- Game Over -->
+        <div id="game-over">
+            <div class="game-over-title">NEST DESTROYED</div>
+            <div class="final-score">
+                <div class="final-score-label">FINAL SCORE</div>
+                <div class="final-score-value" id="final-score">0</div>
+            </div>
+            <div class="high-score" id="high-score">NEW HIGH SCORE!</div>
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-item-value" id="birds-killed">0</div>
+                    <div class="stat-item-label">BIRDS</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-value" id="waves-survived">0</div>
+                    <div class="stat-item-label">WAVES</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-value" id="accuracy">0%</div>
+                    <div class="stat-item-label">ACCURACY</div>
+                </div>
+            </div>
+            <button class="restart-button" id="restart-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            event.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+        });
+
+        // ==================== GAME CONSTANTS ====================
+        const GRAVITY = 0.15;
+        const NEST_X_PERCENT = 0.12;
+
+        const WEAPONS = [
+            {
+                name: "Pistol",
+                fireRate: 400,
+                bulletSpeed: 18,
+                bulletSize: 4,
+                damage: 1,
+                heatPerShot: 5,
+                recoilImpulse: 8,
+                bulletMass: 0.015,
+                bulletVelocity: 260,
+                spread: 0.02,
+                ammo: Infinity,
+                color: '#00f5ff'
+            },
+            {
+                name: "Shotgun",
+                fireRate: 800,
+                bulletSpeed: 14,
+                bulletSize: 3,
+                damage: 1,
+                heatPerShot: 15,
+                recoilImpulse: 22,
+                bulletMass: 0.032,
+                bulletVelocity: 400,
+                spread: 0.15,
+                pelletsPerShot: 5,
+                ammo: 12,
+                color: '#ff6b35'
+            },
+            {
+                name: "Rifle",
+                fireRate: 150,
+                bulletSpeed: 25,
+                bulletSize: 3,
+                damage: 2,
+                heatPerShot: 8,
+                recoilImpulse: 35,
+                bulletMass: 0.00933,
+                bulletVelocity: 850,
+                spread: 0.01,
+                ammo: 50,
+                color: '#ffd700'
+            }
+        ];
+
+        const BIRD_TYPES = [
+            {
+                name: "Sparrow",
+                size: 20,
+                speed: 2,
+                health: 1,
+                damage: 5,
+                points: 10,
+                flapSpeed: 0.15,
+                color: '#8b6914',
+                wingColor: '#a67c00'
+            },
+            {
+                name: "Crow",
+                size: 28,
+                speed: 2.5,
+                health: 2,
+                damage: 10,
+                points: 25,
+                flapSpeed: 0.12,
+                color: '#2c2c2c',
+                wingColor: '#1a1a1a'
+            },
+            {
+                name: "Hawk",
+                size: 35,
+                speed: 3.5,
+                health: 3,
+                damage: 20,
+                points: 50,
+                flapSpeed: 0.1,
+                color: '#8b4513',
+                wingColor: '#654321'
+            },
+            {
+                name: "Eagle",
+                size: 45,
+                speed: 2,
+                health: 5,
+                damage: 30,
+                points: 100,
+                flapSpeed: 0.08,
+                color: '#4a3728',
+                wingColor: '#2d2118'
+            }
+        ];
+
+        // ==================== GAME STATE ====================
+        let canvas, ctx;
+        let gameState = 'start';
+        let score = 0;
+        let highScore = 0;
+        let wave = 1;
+        let nestHealth = 100;
+        let heat = 0;
+        let currentWeapon = 0;
+        let weaponAmmo = [Infinity, 12, 50];
+        let lastFireTime = 0;
+        let combo = 0;
+        let comboTimer = 0;
+        let birdsKilled = 0;
+        let shotsFired = 0;
+        let shotsHit = 0;
+
+        let crosshairX = 0;
+        let crosshairY = 0;
+        let recoilOffsetX = 0;
+        let recoilOffsetY = 0;
+
+        let birds = [];
+        let bullets = [];
+        let particles = [];
+        let feathers = [];
+
+        let waveTimer = 0;
+        let birdsToSpawn = 0;
+        let waveComplete = false;
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let isTouching = false;
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            checkOrientation();
+            window.addEventListener('orientationchange', checkOrientation);
+            window.addEventListener('resize', checkOrientation);
+
+            setupEventListeners();
+
+            crosshairX = canvas.width / 2;
+            crosshairY = canvas.height / 2;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function checkOrientation() {
+            const rotateScreen = document.getElementById('rotate-screen');
+            if (window.innerWidth < window.innerHeight) {
+                rotateScreen.classList.remove('hidden');
+            } else {
+                rotateScreen.classList.add('hidden');
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Start button
+            document.getElementById('start-btn').addEventListener('click', showTutorial);
+            document.getElementById('start-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                showTutorial();
+            });
+
+            // Tutorial skip
+            document.getElementById('skip-tutorial').addEventListener('click', startGame);
+            document.getElementById('skip-tutorial').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                startGame();
+            });
+
+            // Restart button
+            document.getElementById('restart-btn').addEventListener('click', restartGame);
+            document.getElementById('restart-btn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                restartGame();
+            });
+
+            // Fire button
+            const fireBtn = document.getElementById('fire-btn');
+            fireBtn.addEventListener('mousedown', fire);
+            fireBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                fire();
+            });
+
+            // Weapon selection
+            document.querySelectorAll('.weapon-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectWeapon(parseInt(btn.dataset.weapon)));
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    selectWeapon(parseInt(btn.dataset.weapon));
+                });
+            });
+
+            // Crosshair aiming (touch)
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            // Crosshair aiming (mouse)
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleTouchStart(e) {
+            if (gameState !== 'playing') return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            isTouching = true;
+        }
+
+        function handleTouchMove(e) {
+            if (gameState !== 'playing' || !isTouching) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            crosshairX = Math.max(100, Math.min(canvas.width - 20, crosshairX + deltaX * 1.5));
+            crosshairY = Math.max(20, Math.min(canvas.height - 20, crosshairY + deltaY * 1.5));
+
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+
+            updateCrosshairPosition();
+        }
+
+        function handleTouchEnd(e) {
+            isTouching = false;
+        }
+
+        function handleMouseDown(e) {
+            if (gameState !== 'playing') return;
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
+            isTouching = true;
+        }
+
+        function handleMouseMove(e) {
+            if (gameState !== 'playing' || !isTouching) return;
+            const deltaX = e.clientX - touchStartX;
+            const deltaY = e.clientY - touchStartY;
+
+            crosshairX = Math.max(100, Math.min(canvas.width - 20, crosshairX + deltaX * 1.5));
+            crosshairY = Math.max(20, Math.min(canvas.height - 20, crosshairY + deltaY * 1.5));
+
+            touchStartX = e.clientX;
+            touchStartY = e.clientY;
+
+            updateCrosshairPosition();
+        }
+
+        function handleMouseUp() {
+            isTouching = false;
+        }
+
+        function updateCrosshairPosition() {
+            const crosshair = document.getElementById('crosshair');
+            crosshair.style.left = (crosshairX + recoilOffsetX) + 'px';
+            crosshair.style.top = (crosshairY + recoilOffsetY) + 'px';
+        }
+
+        // ==================== GAME FLOW ====================
+        function showTutorial() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('tutorial').classList.add('active');
+        }
+
+        function startGame() {
+            document.getElementById('tutorial').classList.remove('active');
+            document.getElementById('game-ui').classList.add('active');
+            gameState = 'playing';
+            startWave(1);
+        }
+
+        function restartGame() {
+            score = 0;
+            wave = 1;
+            nestHealth = 100;
+            heat = 0;
+            currentWeapon = 0;
+            weaponAmmo = [Infinity, 12, 50];
+            combo = 0;
+            birdsKilled = 0;
+            shotsFired = 0;
+            shotsHit = 0;
+
+            birds = [];
+            bullets = [];
+            particles = [];
+            feathers = [];
+
+            crosshairX = canvas.width / 2;
+            crosshairY = canvas.height / 2;
+            recoilOffsetX = 0;
+            recoilOffsetY = 0;
+
+            updateUI();
+            document.getElementById('game-over').classList.remove('active');
+            document.getElementById('health-bar').classList.remove('danger');
+
+            gameState = 'playing';
+            startWave(1);
+        }
+
+        function gameOver() {
+            gameState = 'gameover';
+
+            if (score > highScore) {
+                highScore = score;
+                document.getElementById('high-score').style.display = 'block';
+            } else {
+                document.getElementById('high-score').style.display = 'none';
+            }
+
+            document.getElementById('final-score').textContent = score.toLocaleString();
+            document.getElementById('birds-killed').textContent = birdsKilled;
+            document.getElementById('waves-survived').textContent = wave - 1;
+            document.getElementById('accuracy').textContent = shotsFired > 0
+                ? Math.round((shotsHit / shotsFired) * 100) + '%'
+                : '0%';
+
+            document.getElementById('game-over').classList.add('active');
+        }
+
+        // ==================== WAVE SYSTEM ====================
+        function startWave(waveNum) {
+            wave = waveNum;
+            birdsToSpawn = 5 + wave * 3;
+            waveTimer = 0;
+            waveComplete = false;
+
+            // Announce wave
+            const announce = document.getElementById('wave-announce');
+            announce.textContent = 'WAVE ' + wave;
+            announce.classList.add('active');
+            setTimeout(() => announce.classList.remove('active'), 2000);
+
+            document.getElementById('wave-num').textContent = wave;
+
+            // Replenish some ammo each wave
+            weaponAmmo[1] = Math.min(weaponAmmo[1] + 4, 12);
+            weaponAmmo[2] = Math.min(weaponAmmo[2] + 15, 50);
+            updateAmmoDisplay();
+        }
+
+        function spawnBird() {
+            const typeIndex = getRandomBirdType();
+            const birdType = BIRD_TYPES[typeIndex];
+
+            const side = Math.random() < 0.7 ? 'right' : (Math.random() < 0.5 ? 'top' : 'bottom');
+            let x, y, angle;
+
+            const nestX = canvas.width * NEST_X_PERCENT;
+            const nestY = canvas.height * 0.7;
+
+            if (side === 'right') {
+                x = canvas.width + 50;
+                y = Math.random() * (canvas.height - 100) + 50;
+            } else if (side === 'top') {
+                x = canvas.width * 0.5 + Math.random() * (canvas.width * 0.5);
+                y = -50;
+            } else {
+                x = canvas.width * 0.5 + Math.random() * (canvas.width * 0.5);
+                y = canvas.height + 50;
+            }
+
+            angle = Math.atan2(nestY - y, nestX - x);
+
+            birds.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * birdType.speed,
+                vy: Math.sin(angle) * birdType.speed,
+                type: typeIndex,
+                health: birdType.health,
+                size: birdType.size,
+                flapPhase: Math.random() * Math.PI * 2,
+                wingAngle: 0,
+                targetAngle: angle
+            });
+        }
+
+        function getRandomBirdType() {
+            const rand = Math.random();
+            if (wave < 3) {
+                return 0; // Only sparrows
+            } else if (wave < 5) {
+                return rand < 0.7 ? 0 : 1;
+            } else if (wave < 8) {
+                if (rand < 0.5) return 0;
+                if (rand < 0.8) return 1;
+                return 2;
+            } else {
+                if (rand < 0.3) return 0;
+                if (rand < 0.55) return 1;
+                if (rand < 0.85) return 2;
+                return 3;
+            }
+        }
+
+        // ==================== SHOOTING ====================
+        function fire() {
+            if (gameState !== 'playing') return;
+
+            const now = Date.now();
+            const weapon = WEAPONS[currentWeapon];
+
+            if (now - lastFireTime < weapon.fireRate) return;
+            if (heat >= 100) return;
+            if (weaponAmmo[currentWeapon] <= 0) return;
+
+            lastFireTime = now;
+            shotsFired++;
+
+            if (weaponAmmo[currentWeapon] !== Infinity) {
+                weaponAmmo[currentWeapon]--;
+                updateAmmoDisplay();
+            }
+
+            // Add heat
+            heat = Math.min(100, heat + weapon.heatPerShot);
+
+            // Calculate direction from nest to crosshair
+            const nestX = canvas.width * NEST_X_PERCENT;
+            const nestY = canvas.height * 0.7;
+            const targetX = crosshairX + recoilOffsetX;
+            const targetY = crosshairY + recoilOffsetY;
+            const angle = Math.atan2(targetY - nestY, targetX - nestX);
+
+            // Fire bullets
+            const pelletsToFire = weapon.pelletsPerShot || 1;
+            for (let i = 0; i < pelletsToFire; i++) {
+                const spreadAngle = angle + (Math.random() - 0.5) * weapon.spread;
+                bullets.push({
+                    x: nestX + 30,
+                    y: nestY - 20,
+                    vx: Math.cos(spreadAngle) * weapon.bulletSpeed,
+                    vy: Math.sin(spreadAngle) * weapon.bulletSpeed,
+                    size: weapon.bulletSize,
+                    damage: weapon.damage,
+                    color: weapon.color,
+                    life: 100
+                });
+            }
+
+            // Apply recoil to crosshair
+            recoilOffsetX -= Math.cos(angle) * weapon.recoilImpulse * 0.5;
+            recoilOffsetY -= Math.sin(angle) * weapon.recoilImpulse * 0.5;
+
+            // Update physics display
+            document.getElementById('recoil-val').textContent = weapon.recoilImpulse + ' N·s';
+            document.getElementById('bullet-vel').textContent = weapon.bulletVelocity + ' m/s';
+
+            // Muzzle flash particles
+            for (let i = 0; i < 8; i++) {
+                const pAngle = angle + (Math.random() - 0.5) * 0.5;
+                particles.push({
+                    x: nestX + 35,
+                    y: nestY - 20,
+                    vx: Math.cos(pAngle) * (5 + Math.random() * 5),
+                    vy: Math.sin(pAngle) * (5 + Math.random() * 5),
+                    size: 3 + Math.random() * 3,
+                    life: 1,
+                    color: weapon.color
+                });
+            }
+
+            // Haptic feedback (if supported)
+            if (navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+        }
+
+        function selectWeapon(index) {
+            if (weaponAmmo[index] <= 0 && weaponAmmo[index] !== Infinity) return;
+
+            currentWeapon = index;
+            document.querySelectorAll('.weapon-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+
+        function updateAmmoDisplay() {
+            document.getElementById('ammo-0').textContent = '∞';
+            document.getElementById('ammo-1').textContent = weaponAmmo[1];
+            document.getElementById('ammo-2').textContent = weaponAmmo[2];
+
+            document.querySelectorAll('.weapon-btn').forEach((btn, i) => {
+                if (i > 0) {
+                    btn.classList.toggle('disabled', weaponAmmo[i] <= 0);
+                }
+            });
+        }
+
+        // ==================== UPDATE LOGIC ====================
+        function update(deltaTime) {
+            if (gameState !== 'playing') return;
+
+            // Spawn birds
+            waveTimer += deltaTime;
+            if (birdsToSpawn > 0 && waveTimer > 1000 / (1 + wave * 0.2)) {
+                spawnBird();
+                birdsToSpawn--;
+                waveTimer = 0;
+            }
+
+            // Check wave complete
+            if (birdsToSpawn === 0 && birds.length === 0 && !waveComplete) {
+                waveComplete = true;
+                setTimeout(() => {
+                    if (gameState === 'playing') {
+                        startWave(wave + 1);
+                    }
+                }, 2000);
+            }
+
+            // Update birds
+            updateBirds(deltaTime);
+
+            // Update bullets
+            updateBullets();
+
+            // Update particles
+            updateParticles();
+
+            // Update feathers
+            updateFeathers();
+
+            // Cool down heat
+            heat = Math.max(0, heat - 0.3);
+
+            // Recover recoil
+            recoilOffsetX *= 0.9;
+            recoilOffsetY *= 0.9;
+
+            // Update combo timer
+            if (combo > 0) {
+                comboTimer -= deltaTime;
+                if (comboTimer <= 0) {
+                    combo = 0;
+                    document.getElementById('combo-display').classList.remove('active');
+                }
+            }
+
+            // Check collision
+            checkCollisions();
+
+            // Update UI
+            updateUI();
+            updateCrosshairPosition();
+        }
+
+        function updateBirds(deltaTime) {
+            const nestX = canvas.width * NEST_X_PERCENT;
+            const nestY = canvas.height * 0.7;
+
+            for (let i = birds.length - 1; i >= 0; i--) {
+                const bird = birds[i];
+                const birdType = BIRD_TYPES[bird.type];
+
+                // Wing flapping physics (Newton's Third Law)
+                bird.flapPhase += birdType.flapSpeed;
+                bird.wingAngle = Math.sin(bird.flapPhase) * 40;
+
+                // Calculate lift from wing flap
+                const flapForce = Math.sin(bird.flapPhase);
+                if (flapForce > 0) {
+                    bird.vy -= flapForce * 0.15;
+                }
+
+                // Apply gravity
+                bird.vy += GRAVITY * 0.3;
+
+                // Steer toward nest
+                const angleToNest = Math.atan2(nestY - bird.y, nestX - bird.x);
+                bird.targetAngle = angleToNest;
+
+                const angleDiff = angleToNest - Math.atan2(bird.vy, bird.vx);
+                bird.vx += Math.cos(angleToNest) * 0.05;
+                bird.vy += Math.sin(angleToNest) * 0.05;
+
+                // Limit speed
+                const speed = Math.sqrt(bird.vx * bird.vx + bird.vy * bird.vy);
+                if (speed > birdType.speed * 1.5) {
+                    bird.vx = (bird.vx / speed) * birdType.speed * 1.5;
+                    bird.vy = (bird.vy / speed) * birdType.speed * 1.5;
+                }
+
+                // Update position
+                bird.x += bird.vx;
+                bird.y += bird.vy;
+
+                // Check if bird reached nest
+                const distToNest = Math.sqrt(
+                    Math.pow(bird.x - nestX, 2) +
+                    Math.pow(bird.y - nestY, 2)
+                );
+
+                if (distToNest < 50) {
+                    nestHealth -= birdType.damage;
+                    createFeathers(bird.x, bird.y, bird.type, 3);
+                    birds.splice(i, 1);
+
+                    if (nestHealth <= 0) {
+                        nestHealth = 0;
+                        gameOver();
+                    }
+                }
+
+                // Remove if off screen (left side)
+                if (bird.x < -100) {
+                    birds.splice(i, 1);
+                }
+            }
+
+            // Update bird lift display
+            if (birds.length > 0) {
+                const avgLift = Math.abs(Math.sin(birds[0].flapPhase) * 2.5).toFixed(1);
+                document.getElementById('bird-lift').textContent = avgLift + ' N';
+            }
+        }
+
+        function updateBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+                bullet.vy += GRAVITY * 0.02; // Bullet drop
+                bullet.life--;
+
+                // Remove if off screen or dead
+                if (bullet.x < 0 || bullet.x > canvas.width + 50 ||
+                    bullet.y < 0 || bullet.y > canvas.height + 50 ||
+                    bullet.life <= 0) {
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.95;
+                p.vy *= 0.95;
+                p.vy += 0.1;
+                p.life -= 0.03;
+                p.size *= 0.97;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function updateFeathers() {
+            for (let i = feathers.length - 1; i >= 0; i--) {
+                const f = feathers[i];
+                f.x += f.vx;
+                f.y += f.vy;
+                f.vy += 0.05;
+                f.vx *= 0.99;
+                f.rotation += f.rotSpeed;
+                f.life -= 0.01;
+
+                if (f.life <= 0 || f.y > canvas.height) {
+                    feathers.splice(i, 1);
+                }
+            }
+        }
+
+        function checkCollisions() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const bullet = bullets[i];
+
+                for (let j = birds.length - 1; j >= 0; j--) {
+                    const bird = birds[j];
+                    const birdType = BIRD_TYPES[bird.type];
+
+                    const dist = Math.sqrt(
+                        Math.pow(bullet.x - bird.x, 2) +
+                        Math.pow(bullet.y - bird.y, 2)
+                    );
+
+                    if (dist < birdType.size) {
+                        bird.health -= bullet.damage;
+                        shotsHit++;
+
+                        // Hit particles
+                        for (let k = 0; k < 5; k++) {
+                            particles.push({
+                                x: bullet.x,
+                                y: bullet.y,
+                                vx: (Math.random() - 0.5) * 6,
+                                vy: (Math.random() - 0.5) * 6,
+                                size: 4,
+                                life: 1,
+                                color: '#ff0000'
+                            });
+                        }
+
+                        bullets.splice(i, 1);
+
+                        if (bird.health <= 0) {
+                            // Bird killed
+                            birdsKilled++;
+                            combo++;
+                            comboTimer = 2000;
+
+                            const points = birdType.points * (1 + Math.floor(combo / 3) * 0.5);
+                            score += Math.floor(points);
+
+                            // Show hit marker
+                            showHitMarker(bird.x, bird.y, Math.floor(points));
+
+                            // Create feathers
+                            createFeathers(bird.x, bird.y, bird.type, 8);
+
+                            // Death particles
+                            for (let k = 0; k < 15; k++) {
+                                particles.push({
+                                    x: bird.x,
+                                    y: bird.y,
+                                    vx: (Math.random() - 0.5) * 8,
+                                    vy: (Math.random() - 0.5) * 8,
+                                    size: 5 + Math.random() * 5,
+                                    life: 1,
+                                    color: birdType.color
+                                });
+                            }
+
+                            birds.splice(j, 1);
+
+                            // Update combo display
+                            if (combo >= 2) {
+                                document.getElementById('combo-display').textContent = 'x' + combo + ' COMBO';
+                                document.getElementById('combo-display').classList.add('active');
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        function createFeathers(x, y, birdTypeIndex, count) {
+            const birdType = BIRD_TYPES[birdTypeIndex];
+            for (let i = 0; i < count; i++) {
+                feathers.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5 - 2,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.2,
+                    size: 8 + Math.random() * 8,
+                    color: Math.random() < 0.5 ? birdType.color : birdType.wingColor,
+                    life: 1
+                });
+            }
+        }
+
+        function showHitMarker(x, y, points) {
+            const marker = document.createElement('div');
+            marker.className = 'hit-marker';
+            marker.textContent = '+' + points;
+            marker.style.left = x + 'px';
+            marker.style.top = y + 'px';
+            document.getElementById('game-container').appendChild(marker);
+
+            setTimeout(() => marker.remove(), 800);
+        }
+
+        function updateUI() {
+            document.getElementById('score-value').textContent = score.toLocaleString();
+
+            const healthPercent = Math.max(0, nestHealth);
+            document.getElementById('health-bar').style.width = healthPercent + '%';
+            document.getElementById('health-text').textContent = Math.round(healthPercent) + '%';
+            if (healthPercent < 30) {
+                document.getElementById('health-bar').classList.add('danger');
+            } else {
+                document.getElementById('health-bar').classList.remove('danger');
+            }
+
+            document.getElementById('heat-bar').style.width = heat + '%';
+            document.getElementById('heat-text').textContent = Math.round(heat) + '%';
+            if (heat >= 80) {
+                document.getElementById('heat-bar').classList.add('danger');
+                document.getElementById('fire-btn').classList.add('cooldown');
+            } else {
+                document.getElementById('heat-bar').classList.remove('danger');
+                document.getElementById('fire-btn').classList.remove('cooldown');
+            }
+        }
+
+        // ==================== RENDERING ====================
+        function render() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                skyGradient.addColorStop(0, '#0a0015');
+                skyGradient.addColorStop(0.5, '#1a0533');
+                skyGradient.addColorStop(1, '#2d1b4e');
+            } else {
+                skyGradient.addColorStop(0, '#1a0533');
+                skyGradient.addColorStop(0.4, '#4a1942');
+                skyGradient.addColorStop(0.7, '#c85a3b');
+                skyGradient.addColorStop(1, '#f4a460');
+            }
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw sun/moon
+            drawCelestialBody();
+
+            // Draw clouds
+            drawClouds();
+
+            // Draw distant mountains
+            drawMountains();
+
+            // Draw nest
+            drawNest();
+
+            // Draw feathers
+            drawFeathers();
+
+            // Draw birds
+            drawBirds();
+
+            // Draw bullets
+            drawBullets();
+
+            // Draw particles
+            drawParticles();
+
+            // Draw turret/gun
+            drawTurret();
+        }
+
+        function drawCelestialBody() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const x = canvas.width * 0.75;
+            const y = canvas.height * 0.2;
+
+            ctx.save();
+            if (isDark) {
+                // Moon
+                ctx.fillStyle = '#e0e0e0';
+                ctx.shadowBlur = 30;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Moon craters
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(180, 180, 180, 0.5)';
+                ctx.beginPath();
+                ctx.arc(x - 15, y - 10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x + 10, y + 15, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // Sun
+                ctx.fillStyle = '#ffdd44';
+                ctx.shadowBlur = 60;
+                ctx.shadowColor = 'rgba(255, 200, 50, 0.8)';
+                ctx.beginPath();
+                ctx.arc(x, y, 50, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawClouds() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+
+            // Cloud 1
+            drawCloud(canvas.width * 0.2, canvas.height * 0.15, 1);
+            // Cloud 2
+            drawCloud(canvas.width * 0.6, canvas.height * 0.25, 0.8);
+            // Cloud 3
+            drawCloud(canvas.width * 0.85, canvas.height * 0.1, 0.6);
+        }
+
+        function drawCloud(x, y, scale) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            ctx.beginPath();
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+            ctx.arc(50, -10, 35, 0, Math.PI * 2);
+            ctx.arc(90, 0, 40, 0, Math.PI * 2);
+            ctx.arc(45, 15, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawMountains() {
+            const isDark = document.documentElement.classList.contains('dark');
+
+            // Far mountains
+            ctx.fillStyle = isDark ? 'rgba(30, 20, 50, 0.8)' : 'rgba(80, 50, 80, 0.6)';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(0, canvas.height * 0.7);
+            ctx.lineTo(canvas.width * 0.15, canvas.height * 0.55);
+            ctx.lineTo(canvas.width * 0.3, canvas.height * 0.65);
+            ctx.lineTo(canvas.width * 0.45, canvas.height * 0.5);
+            ctx.lineTo(canvas.width * 0.6, canvas.height * 0.6);
+            ctx.lineTo(canvas.width * 0.75, canvas.height * 0.52);
+            ctx.lineTo(canvas.width * 0.9, canvas.height * 0.62);
+            ctx.lineTo(canvas.width, canvas.height * 0.55);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Near mountains/hills
+            ctx.fillStyle = isDark ? 'rgba(20, 15, 35, 0.9)' : 'rgba(60, 35, 60, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(0, canvas.height * 0.75);
+            ctx.lineTo(canvas.width * 0.2, canvas.height * 0.68);
+            ctx.lineTo(canvas.width * 0.4, canvas.height * 0.72);
+            ctx.lineTo(canvas.width * 0.55, canvas.height * 0.65);
+            ctx.lineTo(canvas.width * 0.7, canvas.height * 0.7);
+            ctx.lineTo(canvas.width * 0.85, canvas.height * 0.66);
+            ctx.lineTo(canvas.width, canvas.height * 0.72);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = isDark ? '#0f0a1a' : '#2a1a2a';
+            ctx.fillRect(0, canvas.height * 0.78, canvas.width, canvas.height * 0.22);
+        }
+
+        function drawNest() {
+            const nestX = canvas.width * NEST_X_PERCENT;
+            const nestY = canvas.height * 0.7;
+
+            ctx.save();
+            ctx.translate(nestX, nestY);
+
+            // Tree trunk
+            ctx.fillStyle = '#3d2817';
+            ctx.fillRect(-15, 0, 30, canvas.height * 0.3);
+
+            // Branches
+            ctx.strokeStyle = '#3d2817';
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.lineTo(-40, -30);
+            ctx.moveTo(0, -10);
+            ctx.lineTo(35, -25);
+            ctx.stroke();
+
+            // Nest base
+            ctx.fillStyle = '#654321';
+            ctx.beginPath();
+            ctx.ellipse(0, -15, 45, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nest detail (straw texture)
+            ctx.strokeStyle = '#8b7355';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(angle) * 20, -15 + Math.sin(angle) * 8);
+                ctx.lineTo(Math.cos(angle) * 45, -15 + Math.sin(angle) * 20);
+                ctx.stroke();
+            }
+
+            // Eggs
+            ctx.fillStyle = '#f5f5dc';
+            ctx.beginPath();
+            ctx.ellipse(-12, -20, 8, 10, -0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(8, -18, 8, 10, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(-2, -22, 7, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Health indicator glow
+            if (nestHealth < 50) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = nestHealth < 25 ? 'rgba(255, 0, 0, 0.8)' : 'rgba(255, 150, 0, 0.6)';
+                ctx.strokeStyle = nestHealth < 25 ? '#ff0000' : '#ff9900';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(0, -15, 50, 25, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawTurret() {
+            const nestX = canvas.width * NEST_X_PERCENT;
+            const nestY = canvas.height * 0.7;
+            const targetX = crosshairX + recoilOffsetX;
+            const targetY = crosshairY + recoilOffsetY;
+            const angle = Math.atan2(targetY - (nestY - 20), targetX - (nestX + 20));
+
+            ctx.save();
+            ctx.translate(nestX + 20, nestY - 20);
+            ctx.rotate(angle);
+
+            // Gun barrel
+            const weapon = WEAPONS[currentWeapon];
+            ctx.fillStyle = '#444';
+            ctx.fillRect(0, -6, 40, 12);
+
+            // Gun detail
+            ctx.fillStyle = weapon.color;
+            ctx.fillRect(35, -4, 8, 8);
+
+            // Muzzle
+            ctx.fillStyle = '#222';
+            ctx.fillRect(40, -5, 5, 10);
+
+            ctx.restore();
+
+            // Gun base
+            ctx.save();
+            ctx.translate(nestX + 15, nestY - 15);
+
+            ctx.fillStyle = '#555';
+            ctx.beginPath();
+            ctx.arc(0, 0, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#777';
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawBirds() {
+            birds.forEach(bird => {
+                const birdType = BIRD_TYPES[bird.type];
+                const direction = bird.vx < 0 ? -1 : 1;
+
+                ctx.save();
+                ctx.translate(bird.x, bird.y);
+                ctx.scale(direction, 1);
+
+                // Body
+                ctx.fillStyle = birdType.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, birdType.size * 0.6, birdType.size * 0.35, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Head
+                ctx.beginPath();
+                ctx.arc(birdType.size * 0.4, -birdType.size * 0.1, birdType.size * 0.25, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Beak
+                ctx.fillStyle = '#ff8c00';
+                ctx.beginPath();
+                ctx.moveTo(birdType.size * 0.6, -birdType.size * 0.1);
+                ctx.lineTo(birdType.size * 0.85, -birdType.size * 0.05);
+                ctx.lineTo(birdType.size * 0.6, birdType.size * 0.05);
+                ctx.closePath();
+                ctx.fill();
+
+                // Eye
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(birdType.size * 0.45, -birdType.size * 0.15, birdType.size * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(birdType.size * 0.47, -birdType.size * 0.15, birdType.size * 0.04, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Wings
+                ctx.save();
+                ctx.rotate(bird.wingAngle * Math.PI / 180);
+                ctx.fillStyle = birdType.wingColor;
+                ctx.beginPath();
+                ctx.ellipse(-birdType.size * 0.1, -birdType.size * 0.2, birdType.size * 0.5, birdType.size * 0.2, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Tail
+                ctx.fillStyle = birdType.wingColor;
+                ctx.beginPath();
+                ctx.moveTo(-birdType.size * 0.5, 0);
+                ctx.lineTo(-birdType.size * 0.9, -birdType.size * 0.15);
+                ctx.lineTo(-birdType.size * 0.85, 0);
+                ctx.lineTo(-birdType.size * 0.9, birdType.size * 0.15);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+
+        function drawBullets() {
+            bullets.forEach(bullet => {
+                ctx.save();
+                ctx.translate(bullet.x, bullet.y);
+
+                // Bullet glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = bullet.color;
+
+                // Bullet trail
+                ctx.strokeStyle = bullet.color + '80';
+                ctx.lineWidth = bullet.size;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-bullet.vx * 2, -bullet.vy * 2);
+                ctx.stroke();
+
+                // Bullet
+                ctx.fillStyle = bullet.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, bullet.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawFeathers() {
+            feathers.forEach(f => {
+                ctx.save();
+                ctx.translate(f.x, f.y);
+                ctx.rotate(f.rotation);
+                ctx.globalAlpha = f.life;
+                ctx.fillStyle = f.color;
+
+                // Feather shape
+                ctx.beginPath();
+                ctx.ellipse(0, 0, f.size, f.size * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Feather line
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(-f.size, 0);
+                ctx.lineTo(f.size, 0);
+                ctx.stroke();
+
+                ctx.restore();
+            });
+        }
+
+        // ==================== GAME LOOP ====================
+        let lastTime = 0;
+
+        function gameLoop(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (gameState === 'playing') {
+                update(deltaTime);
+            }
+
+            render();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ==================== START ====================
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
+
