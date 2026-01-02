@@ -1,0 +1,1920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redox Chemistry Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --accent-oxidation: #f43f5e;
+            --accent-reduction: #22d3ee;
+            --accent-neutral: #a78bfa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --electron-glow: #fbbf24;
+        }
+
+        .light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--accent-neutral) 0%, transparent 70%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral), var(--accent-oxidation));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            padding: 0 10px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--accent-neutral);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral));
+            color: white;
+            border-color: transparent;
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-neutral);
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+        button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(167, 139, 250, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-neutral);
+            box-shadow: none;
+        }
+
+        /* Oxidation Calculator Styles */
+        .compound-display {
+            text-align: center;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .compound-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .compound-formula sub {
+            font-size: 0.6em;
+            vertical-align: sub;
+        }
+
+        .compound-formula sup {
+            font-size: 0.5em;
+            vertical-align: super;
+        }
+
+        .calculation-steps {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            animation: slideIn 0.3s ease forwards;
+            opacity: 0;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-neutral);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .highlight-ox {
+            color: var(--accent-oxidation);
+            font-weight: 600;
+        }
+
+        .highlight-red {
+            color: var(--accent-reduction);
+            font-weight: 600;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(167, 139, 250, 0.1));
+            border: 1px solid var(--accent-neutral);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Enhanced Electron Transfer Animation */
+        .reaction-container {
+            position: relative;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .transfer-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin-bottom: 20px;
+        }
+
+        #transfer-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .transfer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent-neutral);
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+
+        .control-btn.active {
+            background: var(--accent-neutral);
+            border-color: var(--accent-neutral);
+            color: white;
+        }
+
+        .animation-stage {
+            text-align: center;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stage-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .stage-dot.active {
+            background: var(--accent-neutral);
+            box-shadow: 0 0 10px var(--accent-neutral);
+        }
+
+        .stage-dot.completed {
+            background: var(--accent-reduction);
+        }
+
+        .stage-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .reaction-equation {
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            padding: 15px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .reaction-equation .arrow {
+            color: var(--accent-neutral);
+            margin: 0 10px;
+        }
+
+        .reaction-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-box {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .info-box.oxidizing {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid var(--accent-oxidation);
+        }
+
+        .info-box.reducing {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid var(--accent-reduction);
+        }
+
+        .info-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .legend-box {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-electron {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--electron-glow);
+            box-shadow: 0 0 8px var(--electron-glow);
+        }
+
+        .legend-nucleus {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-neutral), #7c3aed);
+        }
+
+        .legend-shell {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px dashed var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        /* Reaction Analyzer */
+        .reaction-input {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-input input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .analysis-result {
+            margin-top: 20px;
+        }
+
+        .species-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .species-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .species-card.ox-agent {
+            border-color: var(--accent-oxidation);
+            background: rgba(244, 63, 94, 0.05);
+        }
+
+        .species-card.red-agent {
+            border-color: var(--accent-reduction);
+            background: rgba(34, 211, 238, 0.05);
+        }
+
+        .species-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .species-role {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .species-role.oxidized {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-oxidation);
+        }
+
+        .species-role.reduced {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-reduction);
+        }
+
+        .species-change {
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Quick Reference */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .rule-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--accent-neutral);
+        }
+
+        .rule-element {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .rule-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .mnemonic-box {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(34, 211, 238, 0.1));
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .mnemonic-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .mnemonic-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .mnemonic-text span {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 8px;
+            margin: 5px;
+        }
+
+        .mnemonic-text .oil {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-oxidation);
+        }
+
+        .mnemonic-text .rig {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-reduction);
+        }
+
+        /* Preset buttons */
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-neutral);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .reaction-info {
+                grid-template-columns: 1fr;
+            }
+
+            .transfer-canvas-wrapper {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-tabs {
+                gap: 6px;
+            }
+
+            .nav-tab {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .transfer-canvas-wrapper {
+                height: 260px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Redox Chemistry Simulator</h1>
+            <p class="subtitle">Visualize oxidation states, electron transfer & redox reactions</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="calculator">Oxidation Calculator</button>
+            <button class="nav-tab" data-tab="transfer">Electron Transfer</button>
+            <button class="nav-tab" data-tab="analyzer">Reaction Analyzer</button>
+            <button class="nav-tab" data-tab="reference">Quick Reference</button>
+        </nav>
+
+        <!-- Oxidation State Calculator -->
+        <div id="calculator" class="panel active">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-neutral);">🧮</span>
+                    Calculate Oxidation State
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Enter a compound formula to calculate the oxidation state of any element.
+                    Use standard notation: KMnO4, H2SO4, Fe2O3, etc.
+                </p>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="setCompound('KMnO4', 'Mn')">KMnO₄</button>
+                    <button class="preset-btn" onclick="setCompound('KClO3', 'Cl')">KClO₃</button>
+                    <button class="preset-btn" onclick="setCompound('H2SO4', 'S')">H₂SO₄</button>
+                    <button class="preset-btn" onclick="setCompound('Na2Cr2O7', 'Cr')">Na₂Cr₂O₇</button>
+                    <button class="preset-btn" onclick="setCompound('H2O2', 'O')">H₂O₂</button>
+                    <button class="preset-btn" onclick="setCompound('Fe2O3', 'Fe')">Fe₂O₃</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Compound Formula</label>
+                    <input type="text" id="compound-input" placeholder="e.g., KMnO4, H2SO4, Fe2O3">
+                </div>
+
+                <div class="input-group">
+                    <label>Element to Find</label>
+                    <input type="text" id="element-input" placeholder="e.g., Mn, S, Fe">
+                </div>
+
+                <button onclick="calculateOxidationState()">Calculate Oxidation State</button>
+
+                <div id="calc-result" style="display: none;">
+                    <div class="compound-display">
+                        <div class="compound-formula" id="formula-display"></div>
+                        <div style="color: var(--text-secondary);">Finding oxidation state of <span id="target-element" class="highlight-ox"></span></div>
+                    </div>
+
+                    <div class="calculation-steps" id="calc-steps"></div>
+
+                    <div class="result-box">
+                        <div class="result-value" id="final-result"></div>
+                        <div class="result-label">Oxidation State</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Electron Transfer Visualization -->
+        <div id="transfer" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--electron-glow);">⚡</span>
+                    Electron Transfer Visualization
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Watch electrons flow between species in redox reactions. Select a reaction and observe the step-by-step electron transfer.
+                </p>
+
+                <div class="input-group">
+                    <label>Select Reaction</label>
+                    <select id="reaction-select" onchange="initializeTransfer()">
+                        <option value="">Choose a reaction...</option>
+                        <option value="zn-cu">Zn + Cu²⁺ → Zn²⁺ + Cu (Displacement)</option>
+                        <option value="na-cl">2Na + Cl₂ → 2NaCl (Ionic Bond Formation)</option>
+                        <option value="fe-o">4Fe + 3O₂ → 2Fe₂O₃ (Rusting)</option>
+                        <option value="mg-hcl">Mg + 2HCl → MgCl₂ + H₂</option>
+                    </select>
+                </div>
+
+                <div id="transfer-container" class="reaction-container" style="display: none;">
+                    <div class="reaction-equation" id="reaction-equation"></div>
+
+                    <div class="animation-stage">
+                        <div class="stage-indicator" id="stage-indicator"></div>
+                        <div class="stage-text" id="stage-text">Select a reaction to begin</div>
+                    </div>
+
+                    <div class="transfer-controls">
+                        <button class="control-btn" id="play-btn" onclick="toggleAnimation()">
+                            <span id="play-icon">▶</span> Play
+                        </button>
+                        <button class="control-btn" onclick="stepAnimation()">
+                            ⏭ Step
+                        </button>
+                        <button class="control-btn" onclick="resetAnimation()">
+                            ↺ Reset
+                        </button>
+                        <button class="control-btn" id="speed-btn" onclick="toggleSpeed()">
+                            🐢 Normal
+                        </button>
+                    </div>
+
+                    <div class="transfer-canvas-wrapper">
+                        <canvas id="transfer-canvas"></canvas>
+                    </div>
+
+                    <div class="legend-box">
+                        <div class="legend-item">
+                            <div class="legend-nucleus"></div>
+                            <span>Atom nucleus</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-electron"></div>
+                            <span>Electron (e⁻)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-shell"></div>
+                            <span>Electron shell</span>
+                        </div>
+                    </div>
+
+                    <div class="reaction-info" id="reaction-info" style="margin-top: 20px;">
+                        <div class="info-box reducing">
+                            <div class="info-title">Reducing Agent (gets oxidized)</div>
+                            <div class="info-value" id="reducing-agent">-</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;" id="reducing-detail">Loses electrons</div>
+                        </div>
+                        <div class="info-box oxidizing">
+                            <div class="info-title">Oxidizing Agent (gets reduced)</div>
+                            <div class="info-value" id="oxidizing-agent">-</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;" id="oxidizing-detail">Gains electrons</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transfer-placeholder" class="reaction-container" style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🔬</div>
+                    <div style="color: var(--text-secondary); font-size: 1.1rem;">Select a reaction above to visualize electron transfer</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reaction Analyzer -->
+        <div id="analyzer" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-reduction);">🔬</span>
+                    Reaction Analyzer
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Enter a chemical reaction to identify oxidizing and reducing agents, or select from examples.
+                </p>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="analyzePreset('Zn + CuSO4 -> ZnSO4 + Cu')">Zn + CuSO₄</button>
+                    <button class="preset-btn" onclick="analyzePreset('2Fe3+ + 2I- -> 2Fe2+ + I2')">Fe³⁺ + I⁻</button>
+                    <button class="preset-btn" onclick="analyzePreset('Cl2 + 2KBr -> 2KCl + Br2')">Cl₂ + KBr</button>
+                    <button class="preset-btn" onclick="analyzePreset('2Na + Cl2 -> 2NaCl')">Na + Cl₂</button>
+                    <button class="preset-btn" onclick="analyzePreset('H2S + Cl2 -> 2HCl + S')">H₂S + Cl₂</button>
+                </div>
+
+                <div class="reaction-input">
+                    <input type="text" id="reaction-input" placeholder="e.g., Zn + Cu2+ -> Zn2+ + Cu">
+                    <button onclick="analyzeReaction()">Analyze</button>
+                </div>
+
+                <div id="analysis-result" class="analysis-result" style="display: none;">
+                    <h3 style="margin-bottom: 15px;">Analysis Result</h3>
+
+                    <div class="compound-display" style="margin-bottom: 15px;">
+                        <div class="compound-formula" id="analyzed-reaction" style="font-size: 1.3rem;"></div>
+                    </div>
+
+                    <div id="redox-check" style="padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
+
+                    <div class="species-grid" id="species-analysis"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div id="reference" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-oxidation);">📚</span>
+                    Oxidation State Rules
+                </h2>
+
+                <div class="rules-grid">
+                    <div class="rule-card">
+                        <div class="rule-element">Free Elements</div>
+                        <div class="rule-text">Oxidation state = <strong>0</strong><br>Examples: Na, Fe, O₂, Cl₂, S₈</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Hydrogen (H)</div>
+                        <div class="rule-text">Usually <strong>+1</strong><br>Exception: Metal hydrides (NaH) = <strong>-1</strong></div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Oxygen (O)</div>
+                        <div class="rule-text">Usually <strong>-2</strong><br>Peroxides (H₂O₂) = <strong>-1</strong><br>With F (OF₂) = <strong>+2</strong></div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Halogens</div>
+                        <div class="rule-text">F always <strong>-1</strong><br>Cl, Br, I usually <strong>-1</strong> (negative when with metals)</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Alkali Metals (Group 1)</div>
+                        <div class="rule-text">Always <strong>+1</strong><br>Li, Na, K, Rb, Cs</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Alkaline Earth (Group 2)</div>
+                        <div class="rule-text">Always <strong>+2</strong><br>Mg, Ca, Sr, Ba</div>
+                    </div>
+                </div>
+
+                <div class="mnemonic-box">
+                    <div class="mnemonic-title">Remember the mnemonic:</div>
+                    <div class="mnemonic-text">
+                        <span class="oil">OIL</span> - <span class="rig">RIG</span>
+                    </div>
+                    <p style="margin-top: 15px; color: var(--text-secondary);">
+                        <span class="highlight-ox">Oxidation Is Loss</span> of electrons &nbsp;|&nbsp;
+                        <span class="highlight-red">Reduction Is Gain</span> of electrons
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-reduction);">⚗️</span>
+                    Key Concepts
+                </h2>
+
+                <div class="rules-grid">
+                    <div class="rule-card" style="border-color: var(--accent-oxidation);">
+                        <div class="rule-element" style="color: var(--accent-oxidation);">Oxidizing Agent</div>
+                        <div class="rule-text">
+                            • Causes oxidation in another substance<br>
+                            • <strong>Gets reduced itself</strong> (gains electrons)<br>
+                            • Oxidation number decreases<br>
+                            • Examples: KMnO₄, K₂Cr₂O₇, HNO₃, Cl₂
+                        </div>
+                    </div>
+                    <div class="rule-card" style="border-color: var(--accent-reduction);">
+                        <div class="rule-element" style="color: var(--accent-reduction);">Reducing Agent</div>
+                        <div class="rule-text">
+                            • Causes reduction in another substance<br>
+                            • <strong>Gets oxidized itself</strong> (loses electrons)<br>
+                            • Oxidation number increases<br>
+                            • Examples: H₂, C, Zn, Na, H₂S
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 20px; background: var(--bg-secondary); border-radius: 12px;">
+                    <h4 style="margin-bottom: 15px;">📐 Calculating Unknown Oxidation States</h4>
+                    <ol style="color: var(--text-secondary); padding-left: 20px; line-height: 1.8;">
+                        <li>Sum of all oxidation states = charge on species (0 for neutral compounds)</li>
+                        <li>Assign known oxidation states first (O = -2, H = +1, alkali metals = +1, etc.)</li>
+                        <li>Set up equation and solve for unknown element</li>
+                        <li>Example: KMnO₄ → (+1) + x + 4(-2) = 0 → x = +7</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.add('light');
+        }
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('light');
+            } else {
+                document.documentElement.classList.remove('light');
+            }
+        });
+
+        // Tab navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+
+                // Reinitialize canvas when transfer tab is shown
+                if (tab.dataset.tab === 'transfer' && currentReaction) {
+                    setTimeout(() => initializeTransfer(), 100);
+                }
+            });
+        });
+
+        // Oxidation state rules database
+        const oxidationRules = {
+            'H': { default: 1, exceptions: { 'hydride': -1 } },
+            'O': { default: -2, exceptions: { 'peroxide': -1, 'superoxide': -0.5, 'OF2': 2 } },
+            'F': { default: -1 },
+            'Li': { default: 1 }, 'Na': { default: 1 }, 'K': { default: 1 }, 'Rb': { default: 1 }, 'Cs': { default: 1 },
+            'Be': { default: 2 }, 'Mg': { default: 2 }, 'Ca': { default: 2 }, 'Sr': { default: 2 }, 'Ba': { default: 2 },
+            'Al': { default: 3 },
+            'Ag': { default: 1 },
+            'Zn': { default: 2 },
+            'Cl': { default: -1 }, 'Br': { default: -1 }, 'I': { default: -1 }
+        };
+
+        function parseFormula(formula) {
+            const elements = [];
+            const regex = /([A-Z][a-z]?)(\d*)/g;
+            let match;
+            while ((match = regex.exec(formula)) !== null) {
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2]) : 1;
+                elements.push({ element, count });
+            }
+            return elements;
+        }
+
+        function formatFormula(formula) {
+            return formula.replace(/(\d+)/g, '<sub>$1</sub>')
+                         .replace(/(\+|\-)(\d*)/g, '<sup>$1$2</sup>');
+        }
+
+        function setCompound(compound, element) {
+            document.getElementById('compound-input').value = compound;
+            document.getElementById('element-input').value = element;
+            calculateOxidationState();
+        }
+
+        function calculateOxidationState() {
+            const compound = document.getElementById('compound-input').value.trim();
+            const targetElement = document.getElementById('element-input').value.trim();
+
+            if (!compound || !targetElement) {
+                showModal('Error', 'Please enter both compound formula and target element.');
+                return;
+            }
+
+            const elements = parseFormula(compound);
+            const targetData = elements.find(e => e.element === targetElement);
+
+            if (!targetData) {
+                showModal('Error', `Element "${targetElement}" not found in the compound.`);
+                return;
+            }
+
+            let totalCharge = 0;
+            if (compound.includes('+')) {
+                const chargeMatch = compound.match(/(\d*)\+/);
+                totalCharge = chargeMatch && chargeMatch[1] ? parseInt(chargeMatch[1]) : 1;
+            } else if (compound.includes('-')) {
+                const chargeMatch = compound.match(/(\d*)\-/);
+                totalCharge = -(chargeMatch && chargeMatch[1] ? parseInt(chargeMatch[1]) : 1);
+            }
+
+            let knownSum = 0;
+            const steps = [];
+            let stepDelay = 0;
+
+            elements.forEach(({ element, count }) => {
+                if (element !== targetElement && oxidationRules[element]) {
+                    let oxState = oxidationRules[element].default;
+
+                    if (element === 'O' && compound.includes('O2') && compound.includes('H2')) {
+                        oxState = -1;
+                    }
+
+                    const contribution = oxState * count;
+                    knownSum += contribution;
+                    steps.push({
+                        text: `${element}: (${oxState > 0 ? '+' : ''}${oxState}) × ${count} = ${contribution > 0 ? '+' : ''}${contribution}`,
+                        delay: stepDelay
+                    });
+                    stepDelay += 100;
+                }
+            });
+
+            const unknownTotal = totalCharge - knownSum;
+            const unknownOxState = unknownTotal / targetData.count;
+
+            steps.push({
+                text: `Total charge = ${totalCharge}`,
+                delay: stepDelay
+            });
+            stepDelay += 100;
+
+            steps.push({
+                text: `Sum of known = ${knownSum > 0 ? '+' : ''}${knownSum}`,
+                delay: stepDelay
+            });
+            stepDelay += 100;
+
+            steps.push({
+                text: `${targetElement} contribution = ${totalCharge} - (${knownSum > 0 ? '+' : ''}${knownSum}) = ${unknownTotal > 0 ? '+' : ''}${unknownTotal}`,
+                delay: stepDelay
+            });
+            stepDelay += 100;
+
+            if (targetData.count > 1) {
+                steps.push({
+                    text: `${targetElement} per atom = ${unknownTotal > 0 ? '+' : ''}${unknownTotal} ÷ ${targetData.count} = ${unknownOxState > 0 ? '+' : ''}${unknownOxState}`,
+                    delay: stepDelay
+                });
+            }
+
+            document.getElementById('calc-result').style.display = 'block';
+            document.getElementById('formula-display').innerHTML = formatFormula(compound);
+            document.getElementById('target-element').textContent = targetElement;
+
+            const stepsContainer = document.getElementById('calc-steps');
+            stepsContainer.innerHTML = '';
+
+            steps.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'step';
+                stepEl.style.animationDelay = `${step.delay}ms`;
+                stepEl.innerHTML = `
+                    <span class="step-number">${index + 1}</span>
+                    <span class="step-content">${step.text}</span>
+                `;
+                stepsContainer.appendChild(stepEl);
+            });
+
+            const resultEl = document.getElementById('final-result');
+            resultEl.textContent = unknownOxState > 0 ? `+${unknownOxState}` : unknownOxState.toString();
+            resultEl.style.color = unknownOxState > 0 ? 'var(--accent-oxidation)' : 'var(--accent-reduction)';
+        }
+
+        // ====== ENHANCED ELECTRON TRANSFER VISUALIZATION ======
+
+        const reactions = {
+            'zn-cu': {
+                equation: 'Zn + Cu²⁺ → Zn²⁺ + Cu',
+                leftAtom: { symbol: 'Zn', color: '#94a3b8', electrons: 2, initialOx: 0, finalOx: '+2' },
+                rightAtom: { symbol: 'Cu', color: '#f97316', electrons: 0, initialOx: '+2', finalOx: 0 },
+                electronCount: 2,
+                reducing: 'Zn',
+                oxidizing: 'Cu²⁺',
+                reducingDetail: 'Zn → Zn²⁺ + 2e⁻ (loses 2 electrons)',
+                oxidizingDetail: 'Cu²⁺ + 2e⁻ → Cu (gains 2 electrons)',
+                stages: [
+                    'Initial state: Zinc atom (neutral) and Copper ion (Cu²⁺)',
+                    'Zinc loses 2 electrons from its outer shell...',
+                    'Electrons transfer through the solution...',
+                    'Copper ion gains 2 electrons...',
+                    'Final: Zinc ion (Zn²⁺) and Copper atom (neutral)'
+                ]
+            },
+            'na-cl': {
+                equation: '2Na + Cl₂ → 2NaCl',
+                leftAtom: { symbol: 'Na', color: '#fbbf24', electrons: 1, initialOx: 0, finalOx: '+1' },
+                rightAtom: { symbol: 'Cl', color: '#22c55e', electrons: 0, initialOx: 0, finalOx: '-1' },
+                electronCount: 1,
+                reducing: 'Na',
+                oxidizing: 'Cl₂',
+                reducingDetail: 'Na → Na⁺ + e⁻ (loses 1 electron)',
+                oxidizingDetail: 'Cl + e⁻ → Cl⁻ (gains 1 electron)',
+                stages: [
+                    'Initial state: Sodium atom and Chlorine atom',
+                    'Sodium loses 1 electron from its outer shell...',
+                    'Electron transfers to chlorine...',
+                    'Chlorine gains 1 electron...',
+                    'Final: Sodium ion (Na⁺) and Chloride ion (Cl⁻)'
+                ]
+            },
+            'fe-o': {
+                equation: '4Fe + 3O₂ → 2Fe₂O₃',
+                leftAtom: { symbol: 'Fe', color: '#a1a1aa', electrons: 3, initialOx: 0, finalOx: '+3' },
+                rightAtom: { symbol: 'O', color: '#ef4444', electrons: 0, initialOx: 0, finalOx: '-2' },
+                electronCount: 3,
+                reducing: 'Fe',
+                oxidizing: 'O₂',
+                reducingDetail: 'Fe → Fe³⁺ + 3e⁻ (loses 3 electrons)',
+                oxidizingDetail: 'O + 2e⁻ → O²⁻ (gains 2 electrons)',
+                stages: [
+                    'Initial state: Iron atom and Oxygen atom',
+                    'Iron loses 3 electrons from its outer shell...',
+                    'Electrons transfer to oxygen...',
+                    'Oxygen gains electrons...',
+                    'Final: Iron(III) ion and Oxide ion (rust formation!)'
+                ]
+            },
+            'mg-hcl': {
+                equation: 'Mg + 2HCl → MgCl₂ + H₂',
+                leftAtom: { symbol: 'Mg', color: '#8b5cf6', electrons: 2, initialOx: 0, finalOx: '+2' },
+                rightAtom: { symbol: 'H', color: '#06b6d4', electrons: 0, initialOx: '+1', finalOx: 0 },
+                electronCount: 2,
+                reducing: 'Mg',
+                oxidizing: 'H⁺ (from HCl)',
+                reducingDetail: 'Mg → Mg²⁺ + 2e⁻ (loses 2 electrons)',
+                oxidizingDetail: '2H⁺ + 2e⁻ → H₂ (gains 2 electrons)',
+                stages: [
+                    'Initial state: Magnesium atom and Hydrogen ion (H⁺)',
+                    'Magnesium loses 2 electrons from its outer shell...',
+                    'Electrons transfer to hydrogen ions...',
+                    'Hydrogen ions gain electrons...',
+                    'Final: Magnesium ion (Mg²⁺) and Hydrogen gas (H₂)'
+                ]
+            }
+        };
+
+        let canvas, ctx;
+        let currentReaction = null;
+        let animationId = null;
+        let isPlaying = false;
+        let animationSpeed = 1;
+        let currentStage = 0;
+        let animationProgress = 0;
+
+        // Animation state
+        let leftAtomState = { x: 0, y: 0, electrons: [], pulsePhase: 0 };
+        let rightAtomState = { x: 0, y: 0, electrons: [], pulsePhase: 0 };
+        let transferringElectrons = [];
+
+        function getThemeColors() {
+            const isLight = document.documentElement.classList.contains('light');
+            return {
+                bg: isLight ? '#e2e8f0' : '#111827',
+                text: isLight ? '#0f172a' : '#f1f5f9',
+                textSecondary: isLight ? '#475569' : '#94a3b8',
+                border: isLight ? '#cbd5e1' : '#334155',
+                electronGlow: '#fbbf24',
+                reduction: '#22d3ee',
+                oxidation: '#f43f5e',
+                neutral: '#a78bfa'
+            };
+        }
+
+        function initializeTransfer() {
+            const select = document.getElementById('reaction-select');
+            const reactionKey = select.value;
+
+            if (!reactionKey) {
+                document.getElementById('transfer-container').style.display = 'none';
+                document.getElementById('transfer-placeholder').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('transfer-container').style.display = 'block';
+            document.getElementById('transfer-placeholder').style.display = 'none';
+
+            currentReaction = reactions[reactionKey];
+            canvas = document.getElementById('transfer-canvas');
+            ctx = canvas.getContext('2d');
+
+            // Set canvas size
+            const wrapper = canvas.parentElement;
+            canvas.width = wrapper.clientWidth * window.devicePixelRatio;
+            canvas.height = wrapper.clientHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            canvas.style.width = wrapper.clientWidth + 'px';
+            canvas.style.height = wrapper.clientHeight + 'px';
+
+            // Update UI
+            document.getElementById('reaction-equation').innerHTML = currentReaction.equation;
+            document.getElementById('reducing-agent').textContent = currentReaction.reducing;
+            document.getElementById('oxidizing-agent').textContent = currentReaction.oxidizing;
+            document.getElementById('reducing-detail').textContent = currentReaction.reducingDetail;
+            document.getElementById('oxidizing-detail').textContent = currentReaction.oxidizingDetail;
+
+            // Update stage indicators
+            const stageIndicator = document.getElementById('stage-indicator');
+            stageIndicator.innerHTML = currentReaction.stages.map((_, i) =>
+                `<div class="stage-dot" data-stage="${i}"></div>`
+            ).join('');
+
+            resetAnimation();
+        }
+
+        function resetAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            isPlaying = false;
+            currentStage = 0;
+            animationProgress = 0;
+            updatePlayButton();
+            updateStageDisplay();
+
+            if (!currentReaction || !canvas) return;
+
+            const w = canvas.width / window.devicePixelRatio;
+            const h = canvas.height / window.devicePixelRatio;
+
+            // Initialize atom positions
+            leftAtomState = {
+                x: w * 0.25,
+                y: h * 0.5,
+                electrons: [],
+                pulsePhase: 0,
+                baseRadius: Math.min(w, h) * 0.12
+            };
+
+            rightAtomState = {
+                x: w * 0.75,
+                y: h * 0.5,
+                electrons: [],
+                pulsePhase: Math.PI,
+                baseRadius: Math.min(w, h) * 0.12
+            };
+
+            // Initialize electrons around left atom
+            const electronCount = currentReaction.leftAtom.electrons;
+            for (let i = 0; i < electronCount; i++) {
+                const angle = (i / electronCount) * Math.PI * 2 - Math.PI / 2;
+                leftAtomState.electrons.push({
+                    angle: angle,
+                    orbitRadius: leftAtomState.baseRadius * 1.5,
+                    phase: i * 0.5
+                });
+            }
+
+            transferringElectrons = [];
+
+            draw();
+        }
+
+        function draw() {
+            if (!ctx || !currentReaction) return;
+
+            const colors = getThemeColors();
+            const w = canvas.width / window.devicePixelRatio;
+            const h = canvas.height / window.devicePixelRatio;
+
+            // Clear canvas
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw connection path
+            drawConnectionPath(w, h, colors);
+
+            // Draw atoms
+            drawAtom(leftAtomState, currentReaction.leftAtom, colors, 'left');
+            drawAtom(rightAtomState, currentReaction.rightAtom, colors, 'right');
+
+            // Draw transferring electrons
+            transferringElectrons.forEach(e => {
+                drawElectron(e.x, e.y, colors, e.trail);
+            });
+
+            // Draw labels
+            drawLabels(w, h, colors);
+        }
+
+        function drawConnectionPath(w, h, colors) {
+            const startX = leftAtomState.x + leftAtomState.baseRadius * 1.8;
+            const endX = rightAtomState.x - rightAtomState.baseRadius * 1.8;
+            const y = h * 0.5;
+
+            // Draw dashed path
+            ctx.beginPath();
+            ctx.setLineDash([8, 8]);
+            ctx.strokeStyle = colors.border;
+            ctx.lineWidth = 2;
+            ctx.moveTo(startX, y);
+
+            // Curved path
+            const controlY = y - 40;
+            ctx.quadraticCurveTo((startX + endX) / 2, controlY, endX, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Arrow at end if electrons are transferring
+            if (currentStage >= 1 && currentStage < 4) {
+                const arrowSize = 10;
+                ctx.beginPath();
+                ctx.fillStyle = colors.electronGlow;
+                ctx.moveTo(endX, y);
+                ctx.lineTo(endX - arrowSize, y - arrowSize / 2);
+                ctx.lineTo(endX - arrowSize, y + arrowSize / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Label
+                ctx.fillStyle = colors.electronGlow;
+                ctx.font = 'bold 14px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${currentReaction.electronCount}e⁻`, (startX + endX) / 2, controlY - 10);
+            }
+        }
+
+        function drawAtom(atomState, atomData, colors, side) {
+            const { x, y, baseRadius, pulsePhase } = atomState;
+
+            // Determine current oxidation state based on stage
+            let currentOxState = atomData.initialOx;
+            let glowColor = colors.neutral;
+            let isChanging = false;
+
+            if (side === 'left') {
+                if (currentStage >= 4) {
+                    currentOxState = atomData.finalOx;
+                    glowColor = colors.oxidation;
+                } else if (currentStage >= 1) {
+                    isChanging = true;
+                    glowColor = colors.oxidation;
+                }
+            } else {
+                if (currentStage >= 4) {
+                    currentOxState = atomData.finalOx;
+                    glowColor = colors.reduction;
+                } else if (currentStage >= 3) {
+                    isChanging = true;
+                    glowColor = colors.reduction;
+                }
+            }
+
+            // Pulsing effect
+            const pulseScale = 1 + Math.sin(pulsePhase) * 0.05;
+            const radius = baseRadius * pulseScale;
+
+            // Outer glow
+            if (isChanging || currentStage === 0 || currentStage === 4) {
+                const gradient = ctx.createRadialGradient(x, y, radius * 0.8, x, y, radius * 2);
+                gradient.addColorStop(0, glowColor + '40');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Electron shells (orbits)
+            const shellRadii = [baseRadius * 1.3, baseRadius * 1.6, baseRadius * 1.9];
+            shellRadii.forEach((r, i) => {
+                ctx.beginPath();
+                ctx.strokeStyle = colors.border + '60';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+
+            // Nucleus
+            const nucleusGradient = ctx.createRadialGradient(x - radius * 0.2, y - radius * 0.2, 0, x, y, radius);
+            nucleusGradient.addColorStop(0, atomData.color);
+            nucleusGradient.addColorStop(0.7, atomData.color);
+            nucleusGradient.addColorStop(1, shadeColor(atomData.color, -30));
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = nucleusGradient;
+            ctx.fill();
+
+            // Nucleus border
+            ctx.strokeStyle = shadeColor(atomData.color, -40);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Symbol
+            ctx.fillStyle = colors.text;
+            ctx.font = `bold ${radius * 0.7}px JetBrains Mono`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(atomData.symbol, x, y);
+
+            // Oxidation state badge
+            const badgeX = x + radius * 0.8;
+            const badgeY = y - radius * 0.8;
+            ctx.fillStyle = colors.bg;
+            ctx.beginPath();
+            ctx.roundRect(badgeX - 18, badgeY - 12, 36, 24, 6);
+            ctx.fill();
+            ctx.strokeStyle = isChanging ? glowColor : colors.border;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.fillStyle = isChanging ? glowColor : colors.text;
+            ctx.font = 'bold 14px JetBrains Mono';
+            const oxText = typeof currentOxState === 'number' ?
+                (currentOxState === 0 ? '0' : (currentOxState > 0 ? '+' + currentOxState : currentOxState.toString())) :
+                currentOxState;
+            ctx.fillText(oxText, badgeX, badgeY);
+
+            // Draw orbiting electrons
+            atomState.electrons.forEach((e, i) => {
+                const ex = x + Math.cos(e.angle) * e.orbitRadius;
+                const ey = y + Math.sin(e.angle) * e.orbitRadius;
+                drawElectron(ex, ey, colors);
+            });
+        }
+
+        function drawElectron(x, y, colors, trail = null) {
+            // Trail effect
+            if (trail && trail.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(trail[0].x, trail[0].y);
+                trail.forEach((p, i) => {
+                    ctx.lineTo(p.x, p.y);
+                });
+                ctx.lineTo(x, y);
+                const trailGradient = ctx.createLinearGradient(
+                    trail[0].x, trail[0].y, x, y
+                );
+                trailGradient.addColorStop(0, 'transparent');
+                trailGradient.addColorStop(1, colors.electronGlow + '80');
+                ctx.strokeStyle = trailGradient;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+
+            // Glow
+            const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
+            glowGradient.addColorStop(0, colors.electronGlow);
+            glowGradient.addColorStop(0.5, colors.electronGlow + '60');
+            glowGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.beginPath();
+            ctx.arc(x, y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = colors.electronGlow;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // e⁻ label
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 8px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('e⁻', x, y);
+        }
+
+        function drawLabels(w, h, colors) {
+            // Left atom label
+            ctx.fillStyle = colors.textSecondary;
+            ctx.font = '14px Space Grotesk';
+            ctx.textAlign = 'center';
+
+            const leftLabel = currentStage < 4 ? 'Reducing Agent' : 'Oxidized';
+            const rightLabel = currentStage < 4 ? 'Oxidizing Agent' : 'Reduced';
+
+            ctx.fillText(leftLabel, leftAtomState.x, h - 30);
+            ctx.fillText('(loses e⁻)', leftAtomState.x, h - 12);
+
+            ctx.fillText(rightLabel, rightAtomState.x, h - 30);
+            ctx.fillText('(gains e⁻)', rightAtomState.x, h - 12);
+        }
+
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+            const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        function updateStageDisplay() {
+            if (!currentReaction) return;
+
+            const stageText = document.getElementById('stage-text');
+            stageText.textContent = currentReaction.stages[currentStage] || '';
+
+            document.querySelectorAll('.stage-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === currentStage) dot.classList.add('active');
+                else if (i < currentStage) dot.classList.add('completed');
+            });
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('play-btn');
+            const icon = document.getElementById('play-icon');
+            if (isPlaying) {
+                icon.textContent = '⏸';
+                btn.innerHTML = '<span id="play-icon">⏸</span> Pause';
+            } else {
+                icon.textContent = '▶';
+                btn.innerHTML = '<span id="play-icon">▶</span> Play';
+            }
+        }
+
+        function toggleAnimation() {
+            if (!currentReaction) return;
+
+            isPlaying = !isPlaying;
+            updatePlayButton();
+
+            if (isPlaying) {
+                if (currentStage >= currentReaction.stages.length - 1) {
+                    resetAnimation();
+                    isPlaying = true;
+                    updatePlayButton();
+                }
+                animate();
+            }
+        }
+
+        function stepAnimation() {
+            if (!currentReaction) return;
+
+            isPlaying = false;
+            updatePlayButton();
+
+            if (currentStage < currentReaction.stages.length - 1) {
+                currentStage++;
+                animationProgress = 0;
+                updateStageDisplay();
+                executeStageTransition();
+            }
+        }
+
+        function toggleSpeed() {
+            const btn = document.getElementById('speed-btn');
+            if (animationSpeed === 1) {
+                animationSpeed = 2;
+                btn.textContent = '🐇 Fast';
+            } else {
+                animationSpeed = 1;
+                btn.textContent = '🐢 Normal';
+            }
+        }
+
+        function executeStageTransition() {
+            if (currentStage === 1 || currentStage === 2) {
+                // Start electron transfer
+                startElectronTransfer();
+            } else if (currentStage === 3) {
+                // Electrons arriving
+                completeElectronTransfer();
+            } else if (currentStage === 4) {
+                // Final state - electrons now on right atom
+                finalizeTransfer();
+            }
+            draw();
+        }
+
+        function startElectronTransfer() {
+            // Move electrons from left atom to transferring state
+            const electronsToTransfer = Math.min(leftAtomState.electrons.length, currentReaction.electronCount);
+            for (let i = 0; i < electronsToTransfer; i++) {
+                const e = leftAtomState.electrons.pop();
+                if (e) {
+                    const startX = leftAtomState.x + Math.cos(e.angle) * e.orbitRadius;
+                    const startY = leftAtomState.y + Math.sin(e.angle) * e.orbitRadius;
+                    transferringElectrons.push({
+                        x: startX,
+                        y: startY,
+                        startX,
+                        startY,
+                        endX: rightAtomState.x,
+                        endY: rightAtomState.y,
+                        progress: 0,
+                        trail: []
+                    });
+                }
+            }
+        }
+
+        function completeElectronTransfer() {
+            // Snap electrons to right atom
+            transferringElectrons.forEach((e, i) => {
+                e.progress = 1;
+                e.x = rightAtomState.x;
+                e.y = rightAtomState.y;
+            });
+        }
+
+        function finalizeTransfer() {
+            // Add electrons to right atom's orbit
+            transferringElectrons.forEach((e, i) => {
+                const angle = (i / transferringElectrons.length) * Math.PI * 2 - Math.PI / 2;
+                rightAtomState.electrons.push({
+                    angle: angle,
+                    orbitRadius: rightAtomState.baseRadius * 1.5,
+                    phase: i * 0.5
+                });
+            });
+            transferringElectrons = [];
+        }
+
+        let lastTime = 0;
+        function animate(time = 0) {
+            if (!isPlaying || !currentReaction) return;
+
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            // Update pulse phases
+            leftAtomState.pulsePhase += 0.03 * animationSpeed;
+            rightAtomState.pulsePhase += 0.03 * animationSpeed;
+
+            // Update orbiting electrons
+            leftAtomState.electrons.forEach(e => {
+                e.angle += 0.02 * animationSpeed;
+            });
+            rightAtomState.electrons.forEach(e => {
+                e.angle += 0.02 * animationSpeed;
+            });
+
+            // Update transferring electrons
+            if (currentStage >= 1 && currentStage < 4) {
+                transferringElectrons.forEach(e => {
+                    if (e.progress < 1) {
+                        e.progress += 0.008 * animationSpeed;
+                        e.progress = Math.min(1, e.progress);
+
+                        // Curved path
+                        const t = e.progress;
+                        const controlX = (e.startX + e.endX) / 2;
+                        const controlY = Math.min(e.startY, e.endY) - 60;
+
+                        // Quadratic bezier
+                        e.x = (1 - t) * (1 - t) * e.startX + 2 * (1 - t) * t * controlX + t * t * e.endX;
+                        e.y = (1 - t) * (1 - t) * e.startY + 2 * (1 - t) * t * controlY + t * t * e.endY;
+
+                        // Update trail
+                        e.trail.push({ x: e.x, y: e.y });
+                        if (e.trail.length > 15) e.trail.shift();
+                    }
+                });
+
+                // Check if all electrons transferred
+                const allTransferred = transferringElectrons.every(e => e.progress >= 1);
+                if (allTransferred && currentStage === 2) {
+                    animationProgress += 0.01 * animationSpeed;
+                    if (animationProgress >= 1) {
+                        currentStage = 3;
+                        updateStageDisplay();
+                        animationProgress = 0;
+                    }
+                }
+            }
+
+            // Auto-advance stages
+            animationProgress += 0.005 * animationSpeed;
+            if (animationProgress >= 1 && currentStage < currentReaction.stages.length - 1) {
+                currentStage++;
+                animationProgress = 0;
+                updateStageDisplay();
+                executeStageTransition();
+            }
+
+            if (currentStage >= currentReaction.stages.length - 1 && animationProgress >= 1) {
+                isPlaying = false;
+                updatePlayButton();
+            }
+
+            draw();
+            if (isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        // Reaction Analyzer
+        function analyzePreset(reaction) {
+            document.getElementById('reaction-input').value = reaction;
+            analyzeReaction();
+        }
+
+        function analyzeReaction() {
+            const input = document.getElementById('reaction-input').value.trim();
+
+            if (!input) {
+                showModal('Error', 'Please enter a reaction to analyze.');
+                return;
+            }
+
+            const formattedReaction = input
+                .replace(/->/g, '→')
+                .replace(/(\d+)(?=[A-Z])/g, '$1')
+                .replace(/([A-Za-z])(\d+)/g, '$1<sub>$2</sub>')
+                .replace(/(\d+)([+-])/g, '<sup>$1$2</sup>')
+                .replace(/([+-])(?!\d)/g, '<sup>$1</sup>');
+
+            document.getElementById('analyzed-reaction').innerHTML = formattedReaction;
+            document.getElementById('analysis-result').style.display = 'block';
+
+            const knownRedoxPatterns = [
+                { pattern: /Zn.*Cu/i, isRedox: true, species: [
+                    { name: 'Zn', change: '0 → +2', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cu²⁺', change: '+2 → 0', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Fe.*I/i, isRedox: true, species: [
+                    { name: 'I⁻', change: '-1 → 0', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Fe³⁺', change: '+3 → +2', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Cl2.*Br/i, isRedox: true, species: [
+                    { name: 'Br⁻', change: '-1 → 0', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Na.*Cl2/i, isRedox: true, species: [
+                    { name: 'Na', change: '0 → +1', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /H2S.*Cl2/i, isRedox: true, species: [
+                    { name: 'S²⁻', change: '-2 → 0', role: 'oxidized', agent: 'Reducing agent (H₂S)' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Fe2\+.*Cl2/i, isRedox: true, species: [
+                    { name: 'Fe²⁺', change: '+2 → +3', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /CaCO3/i, isRedox: false }
+            ];
+
+            let matchedPattern = knownRedoxPatterns.find(p => p.pattern.test(input));
+
+            const checkBox = document.getElementById('redox-check');
+            const speciesGrid = document.getElementById('species-analysis');
+
+            if (matchedPattern) {
+                if (matchedPattern.isRedox) {
+                    checkBox.style.background = 'rgba(34, 211, 238, 0.1)';
+                    checkBox.style.border = '1px solid var(--accent-reduction)';
+                    checkBox.innerHTML = '<strong style="color: var(--accent-reduction);">✓ This is a REDOX reaction</strong><br><span style="color: var(--text-secondary);">Electron transfer occurs between species.</span>';
+
+                    speciesGrid.innerHTML = matchedPattern.species.map(s => `
+                        <div class="species-card ${s.role === 'oxidized' ? 'red-agent' : 'ox-agent'}">
+                            <div class="species-name">${formatFormula(s.name)}</div>
+                            <span class="species-role ${s.role}">${s.role.toUpperCase()}</span>
+                            <div class="species-change">${s.change}</div>
+                            <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">${s.agent}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    checkBox.style.background = 'rgba(167, 139, 250, 0.1)';
+                    checkBox.style.border = '1px solid var(--accent-neutral)';
+                    checkBox.innerHTML = '<strong style="color: var(--accent-neutral);">✗ This is NOT a redox reaction</strong><br><span style="color: var(--text-secondary);">No electron transfer - decomposition or double displacement.</span>';
+                    speciesGrid.innerHTML = '';
+                }
+            } else {
+                checkBox.style.background = 'rgba(167, 139, 250, 0.1)';
+                checkBox.style.border = '1px solid var(--accent-neutral)';
+                checkBox.innerHTML = '<strong style="color: var(--accent-neutral);">Analysis</strong><br><span style="color: var(--text-secondary);">Enter a standard reaction format to get detailed analysis. Try the preset examples above.</span>';
+                speciesGrid.innerHTML = '';
+            }
+        }
+
+        // Custom modal function
+        function showModal(title, message) {
+            const existing = document.querySelector('.custom-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                animation: fadeIn 0.2s ease;
+            `;
+            modal.innerHTML = `
+                <div style="
+                    background: var(--bg-card);
+                    padding: 24px;
+                    border-radius: 16px;
+                    max-width: 400px;
+                    width: 90%;
+                    border: 1px solid var(--border);
+                ">
+                    <h3 style="margin-bottom: 12px; color: var(--accent-neutral);">${title}</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">${message}</p>
+                    <button onclick="this.closest('.custom-modal').remove()" style="width: 100%;">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (currentReaction && canvas) {
+                initializeTransfer();
+            }
+        });
+
+        // Enter key support for inputs
+        document.getElementById('compound-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') calculateOxidationState();
+        });
+        document.getElementById('element-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') calculateOxidationState();
+        });
+        document.getElementById('reaction-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') analyzeReaction();
+        });
+
+        // Polyfill for roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>
+
