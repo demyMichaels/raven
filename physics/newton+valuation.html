@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valuation Flight Dynamics</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #faf9f7;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f3f1ed;
+            --bg-card: rgba(255,255,255,0.85);
+            --text-primary: #1a1815;
+            --text-secondary: #5c574f;
+            --text-muted: #9c978f;
+            --accent-pe: #e63946;
+            --accent-pe-light: #ffd6d9;
+            --accent-pb: #2a9d8f;
+            --accent-pb-light: #c7ebe6;
+            --accent-ps: #e9c46a;
+            --accent-ps-light: #fdf6e0;
+            --accent-div: #264653;
+            --accent-div-light: #c7d6db;
+            --accent-mcap: #9c6ade;
+            --accent-mcap-light: #ebe0fa;
+            --sky-top: #a8dadc;
+            --sky-mid: #e0f4f5;
+            --sky-bottom: #faf9f7;
+            --gold-primary: #d4a853;
+            --gold-secondary: #c69c3f;
+            --card-shadow: 0 8px 32px rgba(26,24,21,0.08);
+            --card-border: rgba(26,24,21,0.06);
+            --glow-action: rgba(230, 57, 70, 0.5);
+            --glow-reaction: rgba(42, 157, 143, 0.5);
+        }
+
+        .dark {
+            --bg-primary: #0d0f14;
+            --bg-secondary: #161920;
+            --bg-tertiary: #1e222b;
+            --bg-card: rgba(22,25,32,0.9);
+            --text-primary: #f4f3f1;
+            --text-secondary: #a8a5a0;
+            --text-muted: #6b6860;
+            --accent-pe: #ff6b6b;
+            --accent-pe-light: #3d1f22;
+            --accent-pb: #4ecdc4;
+            --accent-pb-light: #1a3634;
+            --accent-ps: #ffd93d;
+            --accent-ps-light: #3d3520;
+            --accent-div: #6bcfff;
+            --accent-div-light: #1a3040;
+            --accent-mcap: #b892ff;
+            --accent-mcap-light: #2d2340;
+            --sky-top: #1a3040;
+            --sky-mid: #141c24;
+            --sky-bottom: #0d0f14;
+            --gold-primary: #f0c674;
+            --gold-secondary: #dbb654;
+            --card-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            --card-border: rgba(255,255,255,0.06);
+            --glow-action: rgba(255, 107, 107, 0.6);
+            --glow-reaction: rgba(78, 205, 196, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Instrument Serif', Georgia, serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0 24px;
+            position: relative;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-secondary));
+            color: #1a1815;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: clamp(2rem, 6vw, 3.2rem);
+            font-weight: 400;
+            font-style: italic;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        h1 span {
+            color: var(--accent-mcap);
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .search-section {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+        }
+
+        .search-input-wrapper::before {
+            content: '$';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--accent-mcap);
+            font-weight: 700;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 36px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            background: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-mcap);
+            background: var(--bg-secondary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+            text-transform: none;
+            font-weight: 400;
+        }
+
+        .btn-search {
+            padding: 14px 28px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: linear-gradient(135deg, var(--accent-mcap), #7c4dff);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(156, 106, 222, 0.3);
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(156, 106, 222, 0.4);
+        }
+
+        .btn-search:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .simulation-wrapper {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .company-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 10;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            padding: 12px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        .company-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-mcap);
+            letter-spacing: 0.02em;
+        }
+
+        .company-mcap {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .physics-label {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 380px;
+            display: block;
+        }
+
+        #simulation-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .legend-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 14px 20px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--card-border);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.action { background: var(--accent-pe); box-shadow: 0 0 10px var(--glow-action); }
+        .legend-dot.reaction { background: var(--accent-pb); box-shadow: 0 0 10px var(--glow-reaction); }
+
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--card-border);
+            flex-wrap: wrap;
+        }
+
+        .btn-control {
+            font-family: 'JetBrains Mono', monospace;
+            padding: 10px 18px;
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-control:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent-mcap);
+        }
+
+        .btn-control.active {
+            background: var(--accent-mcap);
+            color: white;
+            border-color: var(--accent-mcap);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .metric-card.pe::before { background: linear-gradient(90deg, var(--accent-pe), #ff8a94); }
+        .metric-card.pb::before { background: linear-gradient(90deg, var(--accent-pb), #6be0d8); }
+        .metric-card.ps::before { background: linear-gradient(90deg, var(--accent-ps), #ffeb80); }
+        .metric-card.div::before { background: linear-gradient(90deg, var(--accent-div), #4a8fa8); }
+        .metric-card.mcap::before { background: linear-gradient(90deg, var(--accent-mcap), #c9a8ff); }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+
+        .metric-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .pe .metric-icon { background: var(--accent-pe-light); }
+        .pb .metric-icon { background: var(--accent-pb-light); }
+        .ps .metric-icon { background: var(--accent-ps-light); }
+        .div .metric-icon { background: var(--accent-div-light); }
+        .mcap .metric-icon { background: var(--accent-mcap-light); }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .metric-physics {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-mcap);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        .error-state {
+            background: var(--accent-pe-light);
+            border: 1px solid var(--accent-pe);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-pe);
+        }
+
+        .formula-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        .formula-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .formula-icon {
+            font-size: 1.2rem;
+        }
+
+        .formula-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold-primary);
+        }
+
+        .formula-content {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .formula-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-tertiary);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            color: var(--accent-mcap);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 12px;
+            }
+
+            .svg-container {
+                height: 320px;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .search-input-wrapper {
+                width: 100%;
+            }
+
+            .btn-search {
+                width: 100%;
+            }
+
+            .company-overlay {
+                top: 10px;
+                left: 10px;
+                padding: 10px 14px;
+            }
+
+            .company-symbol {
+                font-size: 1.1rem;
+            }
+
+            .physics-label {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-badge">
+                <span>⚡</span>
+                <span>Newton × Finance</span>
+            </div>
+            <h1>Valuation <span>Flight</span> Dynamics</h1>
+            <p class="subtitle">Where Physics Meets Market Forces</p>
+        </header>
+
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <div class="search-input-wrapper">
+                    <input type="text" class="search-input" id="symbolInput" placeholder="Enter stock symbol" value="AAPL" maxlength="10">
+                </div>
+                <button type="submit" class="btn-search" id="fetchBtn">
+                    <span id="fetchBtnText">Analyze Flight</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="errorContainer"></div>
+
+        <div id="simulationContainer" style="display: none;">
+            <div class="simulation-wrapper">
+                <div class="company-overlay" id="companyOverlay">
+                    <div class="company-symbol" id="displaySymbol">AAPL</div>
+                    <div class="company-mcap" id="displayMcap">Market Cap: --</div>
+                </div>
+                <div class="physics-label">Newton's 3rd Law</div>
+                <div class="svg-container">
+                    <svg id="simulation-svg" viewBox="0 0 800 380" preserveAspectRatio="xMidYMid slice">
+                        <defs>
+                            <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" class="sky-top"/>
+                                <stop offset="60%" class="sky-mid"/>
+                                <stop offset="100%" class="sky-bottom"/>
+                            </linearGradient>
+                            <linearGradient id="actionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" class="action-start"/>
+                                <stop offset="100%" class="action-end"/>
+                            </linearGradient>
+                            <linearGradient id="reactionGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" class="reaction-start"/>
+                                <stop offset="100%" class="reaction-end"/>
+                            </linearGradient>
+                            <linearGradient id="birdBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" class="bird-body-light"/>
+                                <stop offset="100%" class="bird-body-dark"/>
+                            </linearGradient>
+                            <linearGradient id="wingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" class="wing-light"/>
+                                <stop offset="100%" class="wing-dark"/>
+                            </linearGradient>
+                            <filter id="actionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="5" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="reactionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="6" result="blur"/>
+                                <feMerge>
+                                    <feMergeNode in="blur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feDropShadow dx="0" dy="5" stdDeviation="8" flood-opacity="0.2"/>
+                            </filter>
+                            <marker id="actionArrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                                <path d="M0,0 L12,6 L0,12 L3,6 Z" class="action-arrow-fill"/>
+                            </marker>
+                            <marker id="reactionArrowhead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                                <path d="M0,0 L12,6 L0,12 L3,6 Z" class="reaction-arrow-fill"/>
+                            </marker>
+                            <radialGradient id="particleGradient">
+                                <stop offset="0%" class="particle-center"/>
+                                <stop offset="100%" class="particle-edge"/>
+                            </radialGradient>
+                            <radialGradient id="dividendParticle">
+                                <stop offset="0%" class="dividend-center"/>
+                                <stop offset="100%" class="dividend-edge"/>
+                            </radialGradient>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#skyGradient)"/>
+                        <g id="clouds" opacity="0.6">
+                            <g class="cloud" transform="translate(100, 50)">
+                                <ellipse cx="0" cy="0" rx="40" ry="20" class="cloud-fill"/>
+                                <ellipse cx="30" cy="-6" rx="32" ry="16" class="cloud-fill"/>
+                                <ellipse cx="55" cy="0" rx="36" ry="18" class="cloud-fill"/>
+                            </g>
+                            <g class="cloud" transform="translate(580, 70)">
+                                <ellipse cx="0" cy="0" rx="45" ry="22" class="cloud-fill"/>
+                                <ellipse cx="38" cy="-8" rx="35" ry="18" class="cloud-fill"/>
+                                <ellipse cx="70" cy="0" rx="40" ry="20" class="cloud-fill"/>
+                            </g>
+                            <g class="cloud" transform="translate(350, 300)">
+                                <ellipse cx="0" cy="0" rx="30" ry="15" class="cloud-fill"/>
+                                <ellipse cx="24" cy="-5" rx="24" ry="12" class="cloud-fill"/>
+                                <ellipse cx="45" cy="2" rx="26" ry="14" class="cloud-fill"/>
+                            </g>
+                        </g>
+                        <g id="particles"></g>
+                        <g id="forceArrows"></g>
+                        <g id="bird" filter="url(#softShadow)">
+                            <path id="tail" d="M-45,0 Q-65,-15 -75,-20 L-65,0 L-75,20 Q-65,15 -45,0" fill="url(#wingGradient)"/>
+                            <g id="leftWing" transform-origin="0 0">
+                                <path d="M0,0 Q-35,-8 -80,-5 Q-95,0 -80,8 Q-35,12 0,0" fill="url(#wingGradient)"/>
+                                <path d="M-10,0 Q-45,0 -75,2" stroke-width="1.5" class="wing-detail" fill="none"/>
+                            </g>
+                            <g id="rightWing" transform-origin="0 0">
+                                <path d="M0,0 Q35,-8 80,-5 Q95,0 80,8 Q35,12 0,0" fill="url(#wingGradient)"/>
+                                <path d="M10,0 Q45,0 75,2" stroke-width="1.5" class="wing-detail" fill="none"/>
+                            </g>
+                            <ellipse cx="0" cy="0" rx="38" ry="20" fill="url(#birdBodyGradient)"/>
+                            <ellipse cx="5" cy="6" rx="22" ry="10" class="belly-highlight" opacity="0.4"/>
+                            <circle cx="32" cy="-6" r="18" fill="url(#birdBodyGradient)"/>
+                            <ellipse cx="38" cy="-10" rx="7" ry="6" fill="white"/>
+                            <circle cx="40" cy="-10" r="4" fill="#1a1815"/>
+                            <circle cx="41" cy="-11" r="1.5" fill="white"/>
+                            <path d="M48,-6 L68,-3 L48,2 Q52,-2 48,-6" class="beak-fill"/>
+                        </g>
+                        <g id="labels" font-family="'JetBrains Mono', monospace"></g>
+                    </svg>
+                </div>
+                <div class="legend-bar">
+                    <div class="legend-item">
+                        <div class="legend-dot action"></div>
+                        <span>P/E Force: Market Expectations Push Down</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot reaction"></div>
+                        <span>P/B Reaction: Intrinsic Value Lifts Up</span>
+                    </div>
+                </div>
+                <div class="controls-bar">
+                    <button class="btn-control" id="playPause">
+                        <span id="playIcon">⏸</span>
+                        <span id="playText">Pause</span>
+                    </button>
+                    <button class="btn-control" id="slowMo">
+                        <span>🐌</span>
+                        <span>Slow Motion</span>
+                    </button>
+                    <button class="btn-control" id="showDividends">
+                        <span>✨</span>
+                        <span>Dividend Glow</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-card pe">
+                    <div class="metric-header">
+                        <span class="metric-label">P/E Ratio</span>
+                        <div class="metric-icon">📈</div>
+                    </div>
+                    <div class="metric-value" id="peValue">--</div>
+                    <div class="metric-physics">→ Wing Flap Strength</div>
+                </div>
+                <div class="metric-card pb">
+                    <div class="metric-header">
+                        <span class="metric-label">P/B Ratio</span>
+                        <div class="metric-icon">📊</div>
+                    </div>
+                    <div class="metric-value" id="pbValue">--</div>
+                    <div class="metric-physics">→ Flight Altitude</div>
+                </div>
+                <div class="metric-card ps">
+                    <div class="metric-header">
+                        <span class="metric-label">P/S Ratio</span>
+                        <div class="metric-icon">💨</div>
+                    </div>
+                    <div class="metric-value" id="psValue">--</div>
+                    <div class="metric-physics">→ Air Resistance</div>
+                </div>
+                <div class="metric-card div">
+                    <div class="metric-header">
+                        <span class="metric-label">Dividend Yield</span>
+                        <div class="metric-icon">💰</div>
+                    </div>
+                    <div class="metric-value" id="divValue">--</div>
+                    <div class="metric-physics">→ Energy Particles</div>
+                </div>
+                <div class="metric-card mcap">
+                    <div class="metric-header">
+                        <span class="metric-label">Market Cap</span>
+                        <div class="metric-icon">🦅</div>
+                    </div>
+                    <div class="metric-value" id="mcapValue">--</div>
+                    <div class="metric-physics">→ Bird Size & Mass</div>
+                </div>
+            </div>
+
+            <div class="formula-card">
+                <div class="formula-header">
+                    <span class="formula-icon">⚡</span>
+                    <span class="formula-title">Physics × Finance Mapping</span>
+                </div>
+                <div class="formula-content">
+                    Just as <code>F = ma</code> governs bird flight, valuation metrics shape a company's "financial flight".
+                    High <code>P/E</code> creates strong expectations (downward force), while solid <code>P/B</code> provides
+                    intrinsic lift (reaction force). <code>Dividend yield</code> releases energy particles, and <code>Market Cap</code>
+                    determines the scale of motion.
+                </div>
+            </div>
+        </div>
+
+        <div id="emptyState" class="empty-state">
+            <div class="empty-icon">🦅</div>
+            <p class="empty-text">Enter a stock symbol above to visualize its valuation metrics through the physics of flight</p>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            event.matches ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark');
+        });
+
+        // API Configuration
+        const API_KEY = 'EJZR1AIMCPUJLWBJ';
+
+        // SVG Namespace
+        const SVG_NS = "http://www.w3.org/2000/svg";
+
+        // Elements
+        const svg = document.getElementById('simulation-svg');
+        const birdGroup = document.getElementById('bird');
+        const leftWing = document.getElementById('leftWing');
+        const rightWing = document.getElementById('rightWing');
+        const particlesGroup = document.getElementById('particles');
+        const forceArrowsGroup = document.getElementById('forceArrows');
+        const labelsGroup = document.getElementById('labels');
+
+        // State
+        let isPlaying = true;
+        let isSlowMo = false;
+        let showDividendGlow = false;
+        let particles = [];
+        let valuationData = null;
+
+        // Physics parameters derived from valuation
+        let physics = {
+            flapStrength: 5,
+            altitude: 180,
+            airResistance: 0.1,
+            dividendEnergy: 0,
+            birdScale: 1
+        };
+
+        // Bird state
+        const bird = {
+            x: 400,
+            y: 180,
+            baseY: 180,
+            wingAngle: 0,
+            flapPhase: 0,
+            velocity: 0
+        };
+
+        // Theme colors
+        function updateThemeColors() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const style = document.createElement('style');
+            style.id = 'theme-styles';
+            const existing = document.getElementById('theme-styles');
+            if (existing) existing.remove();
+
+            if (isDark) {
+                style.textContent = `
+                    .sky-top { stop-color: #1a3040; }
+                    .sky-mid { stop-color: #141c24; }
+                    .sky-bottom { stop-color: #0d0f14; }
+                    .cloud-fill { fill: rgba(255,255,255,0.06); }
+                    .bird-body-light { stop-color: #f0c674; }
+                    .bird-body-dark { stop-color: #dbb654; }
+                    .wing-light { stop-color: #c69c3f; }
+                    .wing-dark { stop-color: #a07d2e; }
+                    .wing-detail { stroke: #f0c674; }
+                    .belly-highlight { fill: #fef3c7; }
+                    .beak-fill { fill: #e9a033; }
+                    .action-start { stop-color: #ff6b6b; }
+                    .action-end { stop-color: #cc4545; }
+                    .reaction-start { stop-color: #4ecdc4; }
+                    .reaction-end { stop-color: #2ea89f; }
+                    .action-arrow-fill { fill: #ff6b6b; }
+                    .reaction-arrow-fill { fill: #4ecdc4; }
+                    .particle-center { stop-color: rgba(78, 205, 196, 0.9); }
+                    .particle-edge { stop-color: rgba(78, 205, 196, 0); }
+                    .dividend-center { stop-color: rgba(240, 198, 116, 1); }
+                    .dividend-edge { stop-color: rgba(240, 198, 116, 0); }
+                `;
+            } else {
+                style.textContent = `
+                    .sky-top { stop-color: #a8dadc; }
+                    .sky-mid { stop-color: #e0f4f5; }
+                    .sky-bottom { stop-color: #faf9f7; }
+                    .cloud-fill { fill: rgba(255,255,255,0.85); }
+                    .bird-body-light { stop-color: #f0c674; }
+                    .bird-body-dark { stop-color: #d4a853; }
+                    .wing-light { stop-color: #d4a853; }
+                    .wing-dark { stop-color: #b8923f; }
+                    .wing-detail { stroke: #f0c674; }
+                    .belly-highlight { fill: #fef3c7; }
+                    .beak-fill { fill: #c69c3f; }
+                    .action-start { stop-color: #e63946; }
+                    .action-end { stop-color: #b82d38; }
+                    .reaction-start { stop-color: #2a9d8f; }
+                    .reaction-end { stop-color: #1f7a6f; }
+                    .action-arrow-fill { fill: #e63946; }
+                    .reaction-arrow-fill { fill: #2a9d8f; }
+                    .particle-center { stop-color: rgba(42, 157, 143, 0.8); }
+                    .particle-edge { stop-color: rgba(42, 157, 143, 0); }
+                    .dividend-center { stop-color: rgba(212, 168, 83, 1); }
+                    .dividend-edge { stop-color: rgba(212, 168, 83, 0); }
+                `;
+            }
+            document.head.appendChild(style);
+        }
+
+        // Helper to create SVG elements
+        function createSVGElement(tag, attrs = {}) {
+            const el = document.createElementNS(SVG_NS, tag);
+            for (const [key, value] of Object.entries(attrs)) {
+                el.setAttribute(key, value);
+            }
+            return el;
+        }
+
+        // Format large numbers
+        function formatMarketCap(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '--';
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            return num.toLocaleString();
+        }
+
+        // Format percentage
+        function formatPercent(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '--';
+            return (num * 100).toFixed(2) + '%';
+        }
+
+        // Format ratio
+        function formatRatio(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '--';
+            return num.toFixed(2);
+        }
+
+        // Fetch company data
+        async function fetchCompanyData(symbol) {
+            const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data['Error Message'] || Object.keys(data).length === 0) {
+                throw new Error(`Could not find data for symbol: ${symbol}`);
+            }
+
+            if (data['Note']) {
+                throw new Error('API rate limit reached. Please wait a moment and try again.');
+            }
+
+            return {
+                symbol: symbol.toUpperCase(),
+                PE_Ratio: data.PERatio,
+                PB_Ratio: data.PriceToBookRatio,
+                PS_Ratio: data.PriceToSalesRatioTTM,
+                Dividend_Yield: data.DividendYield,
+                Market_Capitalization: data.MarketCapitalization
+            };
+        }
+
+        // Map valuation to physics
+        function mapValuationToPhysics(data) {
+            const pe = parseFloat(data.PE_Ratio) || 20;
+            const pb = parseFloat(data.PB_Ratio) || 3;
+            const ps = parseFloat(data.PS_Ratio) || 5;
+            const divYield = parseFloat(data.Dividend_Yield) || 0;
+            const mcap = parseFloat(data.Market_Capitalization) || 1e11;
+
+            // P/E -> Flap strength (higher P/E = stronger expectations = more flapping)
+            physics.flapStrength = Math.min(10, Math.max(2, pe / 5));
+
+            // P/B -> Altitude (lower P/B = more value = stable altitude)
+            physics.altitude = 120 + Math.min(100, pb * 20);
+            bird.baseY = physics.altitude;
+
+            // P/S -> Air resistance (higher P/S = more drag)
+            physics.airResistance = Math.min(0.3, ps / 50);
+
+            // Dividend yield -> Energy particles (higher yield = more particles)
+            physics.dividendEnergy = Math.min(1, divYield * 20);
+
+            // Market cap -> Bird scale
+            const logMcap = Math.log10(mcap);
+            physics.birdScale = Math.min(1.3, Math.max(0.7, logMcap / 12));
+        }
+
+        // Update UI with valuation data
+        function updateUI(data) {
+            document.getElementById('displaySymbol').textContent = data.symbol;
+            document.getElementById('displayMcap').textContent = 'Market Cap: $' + formatMarketCap(data.Market_Capitalization);
+            document.getElementById('peValue').textContent = formatRatio(data.PE_Ratio);
+            document.getElementById('pbValue').textContent = formatRatio(data.PB_Ratio);
+            document.getElementById('psValue').textContent = formatRatio(data.PS_Ratio);
+            document.getElementById('divValue').textContent = formatPercent(data.Dividend_Yield);
+            document.getElementById('mcapValue').textContent = '$' + formatMarketCap(data.Market_Capitalization);
+        }
+
+        // Create particle
+        function createParticle(x, y, vx, vy, isDividend = false) {
+            const particle = {
+                x, y, vx, vy,
+                life: 1,
+                size: Math.random() * 6 + 3,
+                isDividend,
+                element: createSVGElement('circle', {
+                    r: Math.random() * 6 + 3,
+                    fill: isDividend ? 'url(#dividendParticle)' : 'url(#particleGradient)'
+                })
+            };
+            particlesGroup.appendChild(particle.element);
+            particles.push(particle);
+        }
+
+        // Update particles
+        function updateParticles(deltaTime) {
+            const speed = isSlowMo ? 0.3 : 1;
+            const resistance = 1 - physics.airResistance;
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx * deltaTime * 0.05 * speed * resistance;
+                p.y += p.vy * deltaTime * 0.05 * speed;
+                p.life -= deltaTime * 0.002 * speed;
+
+                p.element.setAttribute('cx', p.x);
+                p.element.setAttribute('cy', p.y);
+                p.element.setAttribute('opacity', p.life * (p.isDividend ? 1 : 0.8));
+                p.element.setAttribute('r', p.size * p.life * (p.isDividend ? 1.5 : 1));
+
+                if (p.life <= 0) {
+                    p.element.remove();
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        // Draw force arrows
+        function drawForceArrows() {
+            forceArrowsGroup.innerHTML = '';
+            labelsGroup.innerHTML = '';
+
+            const forceMagnitude = (Math.sin(bird.flapPhase) + 1) * 0.5 * physics.flapStrength * 6;
+
+            if (forceMagnitude > 8) {
+                const arrowOpacity = Math.min(1, (forceMagnitude - 8) / 20);
+                const scale = physics.birdScale;
+
+                // Action arrows (P/E force - pushing down)
+                const leftAction = createSVGElement('line', {
+                    x1: bird.x - 50 * scale,
+                    y1: bird.y + 15,
+                    x2: bird.x - 50 * scale,
+                    y2: bird.y + 15 + forceMagnitude,
+                    stroke: 'url(#actionGradient)',
+                    'stroke-width': '4',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#actionArrowhead)',
+                    filter: 'url(#actionGlow)',
+                    opacity: arrowOpacity
+                });
+                forceArrowsGroup.appendChild(leftAction);
+
+                const rightAction = createSVGElement('line', {
+                    x1: bird.x + 50 * scale,
+                    y1: bird.y + 15,
+                    x2: bird.x + 50 * scale,
+                    y2: bird.y + 15 + forceMagnitude,
+                    stroke: 'url(#actionGradient)',
+                    'stroke-width': '4',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#actionArrowhead)',
+                    filter: 'url(#actionGlow)',
+                    opacity: arrowOpacity
+                });
+                forceArrowsGroup.appendChild(rightAction);
+
+                // Reaction arrow (P/B force - lifting up)
+                const reactionForce = forceMagnitude * (1.2 + (1 / Math.max(1, parseFloat(valuationData?.PB_Ratio) || 3)) * 0.3);
+                const reaction = createSVGElement('line', {
+                    x1: bird.x,
+                    y1: bird.y - 28,
+                    x2: bird.x,
+                    y2: bird.y - 28 - reactionForce,
+                    stroke: 'url(#reactionGradient)',
+                    'stroke-width': '6',
+                    'stroke-linecap': 'round',
+                    'marker-end': 'url(#reactionArrowhead)',
+                    filter: 'url(#reactionGlow)',
+                    opacity: arrowOpacity
+                });
+                forceArrowsGroup.appendChild(reaction);
+
+                // Labels
+                if (arrowOpacity > 0.5) {
+                    const actionBg = createSVGElement('rect', {
+                        x: bird.x - 50 * scale - 30,
+                        y: bird.y + forceMagnitude + 22,
+                        width: 60,
+                        height: 18,
+                        rx: 4,
+                        fill: 'var(--accent-pe)',
+                        opacity: arrowOpacity * 0.9
+                    });
+                    labelsGroup.appendChild(actionBg);
+
+                    const actionLabel = createSVGElement('text', {
+                        x: bird.x - 50 * scale,
+                        y: bird.y + forceMagnitude + 35,
+                        'text-anchor': 'middle',
+                        'font-size': '10',
+                        'font-weight': 'bold',
+                        fill: 'white',
+                        opacity: arrowOpacity
+                    });
+                    actionLabel.textContent = 'P/E ↓';
+                    labelsGroup.appendChild(actionLabel);
+
+                    const reactionBg = createSVGElement('rect', {
+                        x: bird.x - 30,
+                        y: bird.y - reactionForce - 48,
+                        width: 60,
+                        height: 18,
+                        rx: 4,
+                        fill: 'var(--accent-pb)',
+                        opacity: arrowOpacity * 0.9
+                    });
+                    labelsGroup.appendChild(reactionBg);
+
+                    const reactionLabel = createSVGElement('text', {
+                        x: bird.x,
+                        y: bird.y - reactionForce - 35,
+                        'text-anchor': 'middle',
+                        'font-size': '10',
+                        'font-weight': 'bold',
+                        fill: 'white',
+                        opacity: arrowOpacity
+                    });
+                    reactionLabel.textContent = 'P/B ↑';
+                    labelsGroup.appendChild(reactionLabel);
+                }
+            }
+        }
+
+        // Update bird
+        function updateBird(deltaTime) {
+            const speed = isSlowMo ? 0.25 : 1;
+            const flapSpeed = 0.006 * speed * (physics.flapStrength / 5);
+
+            bird.flapPhase += deltaTime * flapSpeed;
+            bird.wingAngle = Math.sin(bird.flapPhase) * 35 * physics.birdScale;
+
+            const lift = Math.sin(bird.flapPhase) * physics.flapStrength * 0.7;
+            bird.velocity += (lift - bird.velocity * 0.1) * 0.08 * speed;
+            bird.y = bird.baseY - bird.velocity * 2.5;
+
+            const scale = physics.birdScale;
+            birdGroup.setAttribute('transform', `translate(${bird.x}, ${bird.y}) scale(${scale})`);
+            leftWing.setAttribute('transform', `rotate(${-bird.wingAngle})`);
+            rightWing.setAttribute('transform', `rotate(${bird.wingAngle})`);
+
+            // Create lift particles
+            if (Math.sin(bird.flapPhase) > 0.2 && particles.length < 50) {
+                const particleSpeed = physics.flapStrength * 1.5;
+                createParticle(
+                    bird.x - 40 * scale + Math.random() * 25,
+                    bird.y + 15,
+                    (Math.random() - 0.5) * 1.5,
+                    particleSpeed + Math.random() * 2
+                );
+                createParticle(
+                    bird.x + 15 * scale + Math.random() * 25,
+                    bird.y + 15,
+                    (Math.random() - 0.5) * 1.5,
+                    particleSpeed + Math.random() * 2
+                );
+            }
+
+            // Dividend energy particles
+            if (showDividendGlow && physics.dividendEnergy > 0 && Math.random() < physics.dividendEnergy * 0.3) {
+                createParticle(
+                    bird.x + (Math.random() - 0.5) * 60 * scale,
+                    bird.y + (Math.random() - 0.5) * 30,
+                    (Math.random() - 0.5) * 3,
+                    (Math.random() - 0.5) * 3,
+                    true
+                );
+            }
+        }
+
+        // Animation loop
+        let lastTime = 0;
+        function animate(currentTime) {
+            const deltaTime = Math.min(currentTime - lastTime, 50);
+            lastTime = currentTime;
+
+            if (isPlaying && valuationData) {
+                updateBird(deltaTime);
+                updateParticles(deltaTime);
+                drawForceArrows();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        document.getElementById('searchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const symbol = document.getElementById('symbolInput').value.trim().toUpperCase();
+            if (!symbol) return;
+
+            const btn = document.getElementById('fetchBtn');
+            const btnText = document.getElementById('fetchBtnText');
+            const errorContainer = document.getElementById('errorContainer');
+            const simulationContainer = document.getElementById('simulationContainer');
+            const emptyState = document.getElementById('emptyState');
+
+            btn.disabled = true;
+            btnText.textContent = 'Analyzing...';
+            errorContainer.innerHTML = '';
+
+            try {
+                valuationData = await fetchCompanyData(symbol);
+                mapValuationToPhysics(valuationData);
+                updateUI(valuationData);
+                simulationContainer.style.display = 'block';
+                emptyState.style.display = 'none';
+            } catch (error) {
+                errorContainer.innerHTML = `<div class="error-state">${error.message}</div>`;
+                simulationContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'Analyze Flight';
+            }
+        });
+
+        document.getElementById('playPause').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            document.getElementById('playIcon').textContent = isPlaying ? '⏸' : '▶';
+            document.getElementById('playText').textContent = isPlaying ? 'Pause' : 'Play';
+        });
+
+        document.getElementById('slowMo').addEventListener('click', function() {
+            isSlowMo = !isSlowMo;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('showDividends').addEventListener('click', function() {
+            showDividendGlow = !showDividendGlow;
+            this.classList.toggle('active');
+        });
+
+        // Theme observer
+        const observer = new MutationObserver(updateThemeColors);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        // Initialize
+        updateThemeColors();
+        birdGroup.setAttribute('transform', `translate(${bird.x}, ${bird.y})`);
+        animate(0);
+    </script>
+</body>
+</html>
+
