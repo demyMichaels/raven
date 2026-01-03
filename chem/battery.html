@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mg-H₂ Solid-State Battery Visualization</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #121820;
+            --bg-tertiary: #1a2332;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-blue: #58a6ff;
+            --accent-cyan: #39d5ff;
+            --accent-purple: #a371f7;
+            --accent-green: #3fb950;
+            --accent-yellow: #d29922;
+            --accent-orange: #f0883e;
+            --accent-red: #f85149;
+            --accent-pink: #db61a2;
+            --border-color: #30363d;
+            --glow-blue: rgba(88, 166, 255, 0.4);
+            --glow-cyan: rgba(57, 213, 255, 0.4);
+
+            /* Particle colors */
+            --mg-color: #7dd3fc;
+            --mg-glow: rgba(125, 211, 252, 0.6);
+            --h-color: #fef3c7;
+            --h-glow: rgba(254, 243, 199, 0.8);
+            --h2-color: #ffffff;
+            --li-color: #c084fc;
+            --li-glow: rgba(192, 132, 252, 0.5);
+            --s-color: #fbbf24;
+            --s-glow: rgba(251, 191, 36, 0.5);
+            --p-color: #f97316;
+            --mgh2-color: #2dd4bf;
+            --mgh2-glow: rgba(45, 212, 191, 0.5);
+            --electron-color: #60a5fa;
+            --proton-color: #f472b6;
+        }
+
+        .dark {
+            --bg-primary: #0a0e14;
+            --bg-secondary: #121820;
+            --bg-tertiary: #1a2332;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(88, 166, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        /* Level Navigation */
+        .level-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 25px;
+            padding: 0 10px;
+        }
+
+        .level-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .level-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .level-btn.active {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(163, 113, 247, 0.2));
+            border-color: var(--accent-blue);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 20px var(--glow-blue);
+        }
+
+        /* Main visualization area */
+        .viz-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .viz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .viz-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        .viz-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .control-btn.active {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-cyan);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/10;
+            min-height: 400px;
+            background: radial-gradient(ellipse at center, var(--bg-tertiary) 0%, var(--bg-primary) 100%);
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Metrics Panel */
+        .metrics-panel {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(10, 14, 20, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+        }
+
+        .metric {
+            margin-bottom: 12px;
+        }
+
+        .metric:last-child {
+            margin-bottom: 0;
+        }
+
+        .metric-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .metric-bar {
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .timeline-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .timeline-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 40px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 0 10px;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(88, 166, 255, 0.2), rgba(57, 213, 255, 0.3));
+            border-radius: 8px;
+            transition: width 0.1s linear;
+        }
+
+        .timeline-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+        }
+
+        .timeline-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .marker-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-marker:hover .marker-dot,
+        .timeline-marker.active .marker-dot {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--glow-cyan);
+        }
+
+        .marker-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            white-space: nowrap;
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Info panels */
+        .info-panel {
+            margin-top: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .info-header {
+            padding: 15px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        .info-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-card-title::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: var(--accent-cyan);
+            border-radius: 2px;
+        }
+
+        .info-card p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .formula {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.8rem;
+            color: var(--accent-yellow);
+            border-left: 3px solid var(--accent-yellow);
+        }
+
+        /* Step indicators */
+        .step-nav {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .step-btn {
+            padding: 6px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .step-btn:hover, .step-btn.active {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-cyan);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            header {
+                padding: 20px 10px;
+            }
+
+            .metrics-panel {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin: 15px;
+                width: calc(100% - 30px);
+            }
+
+            .canvas-wrapper {
+                aspect-ratio: 4/3;
+            }
+
+            .timeline-markers {
+                display: none;
+            }
+
+            .info-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px var(--glow-cyan); }
+            50% { box-shadow: 0 0 20px var(--glow-cyan); }
+        }
+
+        .charging .viz-title::after {
+            content: ' [CHARGING]';
+            color: var(--accent-green);
+            animation: pulse 1s infinite;
+        }
+
+        .discharging .viz-title::after {
+            content: ' [DISCHARGING]';
+            color: var(--accent-orange);
+            animation: pulse 1s infinite;
+        }
+
+        /* Speed control */
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .speed-slider {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg-primary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .speed-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            min-width: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+        <header>
+            <h1>Mg-H₂ Solid-State Battery</h1>
+            <p class="subtitle">Atomic-Scale Electrochemical Visualization</p>
+        </header>
+
+        <nav class="level-nav">
+            <button class="level-btn active" data-level="1">L1: Macro Assembly</button>
+            <button class="level-btn" data-level="2">L2: Atomic Animation</button>
+            <button class="level-btn" data-level="3">L3: Interface Detail</button>
+            <button class="level-btn" data-level="4">L4: Time-Lapse</button>
+            <button class="level-btn" data-level="5">L5: Degradation</button>
+        </nav>
+
+        <div class="viz-container" id="vizContainer">
+            <div class="viz-header">
+                <span class="viz-title" id="vizTitle">Level 1: Structural Schematic</span>
+                <div class="viz-controls">
+                    <button class="control-btn" id="playBtn">
+                        <span id="playIcon">▶</span> <span id="playText">Play</span>
+                    </button>
+                    <button class="control-btn" id="chargeBtn">⚡ Charge</button>
+                    <button class="control-btn" id="dischargeBtn">🔋 Discharge</button>
+                    <div class="speed-control">
+                        <span class="speed-label">1x</span>
+                        <input type="range" class="speed-slider" id="speedSlider" min="0.5" max="3" step="0.5" value="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas"></canvas>
+                <div class="metrics-panel" id="metricsPanel">
+                    <div class="metric">
+                        <div class="metric-label">H₂ Pressure</div>
+                        <div class="metric-value" id="pressureValue">50.0 bar</div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="pressureBar" style="width: 50%"></div></div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Current Density</div>
+                        <div class="metric-value" id="currentValue">0.0 mA/cm²</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">State of Charge</div>
+                        <div class="metric-value" id="socValue">0%</div>
+                        <div class="metric-bar"><div class="metric-bar-fill" id="socBar" style="width: 0%"></div></div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">Temperature</div>
+                        <div class="metric-value" id="tempValue">300°C</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-label">α-Mg / β-MgH₂</div>
+                        <div class="metric-value" id="phaseValue">100% / 0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <span class="timeline-label" id="timelineLabel">Animation Progress</span>
+                    <span class="timeline-time" id="timelineTime">t = 0.00s</span>
+                </div>
+                <div class="timeline-track">
+                    <div class="timeline-progress" id="timelineProgress" style="width: 0%"></div>
+                    <div class="timeline-markers" id="timelineMarkers"></div>
+                </div>
+            </div>
+
+            <div class="legend" id="legendContainer">
+                <div class="legend-item"><div class="legend-dot" style="background: var(--mg-color)"></div><span class="legend-label">Mg</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--mgh2-color)"></div><span class="legend-label">MgH₂</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--h2-color)"></div><span class="legend-label">H₂</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--h-color)"></div><span class="legend-label">H⁺</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--li-color)"></div><span class="legend-label">Li⁺</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--s-color)"></div><span class="legend-label">S²⁻</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--p-color)"></div><span class="legend-label">P⁵⁺</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--electron-color)"></div><span class="legend-label">e⁻</span></div>
+            </div>
+        </div>
+
+        <div class="info-panel" id="infoPanel">
+            <div class="info-header" id="infoHeader">System Parameters & Reactions</div>
+            <div class="info-content" id="infoContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            document.documentElement.classList.toggle('dark', event.matches);
+        });
+
+        // Main visualization engine
+        class BatteryVisualization {
+            constructor() {
+                this.canvas = document.getElementById('mainCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentLevel = 1;
+                this.isPlaying = false;
+                this.isCharging = false;
+                this.isDischarging = false;
+                this.animationTime = 0;
+                this.speed = 1;
+                this.soc = 0;
+                this.particles = [];
+                this.protons = [];
+                this.electrons = [];
+                this.h2Molecules = [];
+                this.cycleCount = 1;
+
+                this.setupCanvas();
+                this.setupEventListeners();
+                this.initParticles();
+                this.updateInfoPanel();
+                this.animate();
+            }
+
+            setupCanvas() {
+                const resize = () => {
+                    const rect = this.canvas.parentElement.getBoundingClientRect();
+                    const dpr = window.devicePixelRatio || 1;
+                    this.canvas.width = rect.width * dpr;
+                    this.canvas.height = rect.height * dpr;
+                    this.ctx.scale(dpr, dpr);
+                    this.width = rect.width;
+                    this.height = rect.height;
+                };
+                resize();
+                window.addEventListener('resize', resize);
+            }
+
+            setupEventListeners() {
+                document.querySelectorAll('.level-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentLevel = parseInt(btn.dataset.level);
+                        this.updateLevelDisplay();
+                        this.initParticles();
+                        this.updateInfoPanel();
+                    });
+                });
+
+                document.getElementById('playBtn').addEventListener('click', () => this.togglePlay());
+                document.getElementById('chargeBtn').addEventListener('click', () => this.startCharging());
+                document.getElementById('dischargeBtn').addEventListener('click', () => this.startDischarging());
+
+                document.getElementById('speedSlider').addEventListener('input', (e) => {
+                    this.speed = parseFloat(e.target.value);
+                    e.target.previousElementSibling.textContent = this.speed + 'x';
+                });
+            }
+
+            togglePlay() {
+                this.isPlaying = !this.isPlaying;
+                document.getElementById('playIcon').textContent = this.isPlaying ? '⏸' : '▶';
+                document.getElementById('playText').textContent = this.isPlaying ? 'Pause' : 'Play';
+            }
+
+            startCharging() {
+                this.isCharging = true;
+                this.isDischarging = false;
+                this.isPlaying = true;
+                document.getElementById('playIcon').textContent = '⏸';
+                document.getElementById('playText').textContent = 'Pause';
+                document.getElementById('vizContainer').classList.add('charging');
+                document.getElementById('vizContainer').classList.remove('discharging');
+            }
+
+            startDischarging() {
+                this.isDischarging = true;
+                this.isCharging = false;
+                this.isPlaying = true;
+                document.getElementById('playIcon').textContent = '⏸';
+                document.getElementById('playText').textContent = 'Pause';
+                document.getElementById('vizContainer').classList.add('discharging');
+                document.getElementById('vizContainer').classList.remove('charging');
+            }
+
+            initParticles() {
+                this.particles = [];
+                this.protons = [];
+                this.electrons = [];
+                this.h2Molecules = [];
+
+                // Initialize based on level
+                if (this.currentLevel >= 2) {
+                    this.initAtomicParticles();
+                }
+                if (this.currentLevel >= 4) {
+                    this.initH2Molecules();
+                }
+            }
+
+            initAtomicParticles() {
+                const centerX = this.width * 0.5;
+                const anodeY = this.height * 0.75;
+                const electrolyteY = this.height * 0.5;
+
+                // Mg lattice particles (hcp structure approximation)
+                for (let i = 0; i < 50; i++) {
+                    const row = Math.floor(i / 10);
+                    const col = i % 10;
+                    this.particles.push({
+                        type: 'Mg',
+                        x: centerX - 100 + col * 22 + (row % 2) * 11,
+                        y: anodeY - 30 + row * 19,
+                        radius: 8,
+                        phase: 'alpha', // alpha-Mg or beta-MgH2
+                        hydrogenContent: 0
+                    });
+                }
+
+                // Li+ ions in electrolyte
+                for (let i = 0; i < 30; i++) {
+                    this.particles.push({
+                        type: 'Li',
+                        x: centerX - 120 + Math.random() * 240,
+                        y: electrolyteY - 40 + Math.random() * 80,
+                        radius: 5,
+                        vx: (Math.random() - 0.5) * 0.5,
+                        vy: (Math.random() - 0.5) * 0.3
+                    });
+                }
+
+                // PS4 tetrahedra centers
+                for (let i = 0; i < 15; i++) {
+                    const x = centerX - 100 + (i % 5) * 50;
+                    const y = electrolyteY - 25 + Math.floor(i / 5) * 35;
+                    this.particles.push({
+                        type: 'PS4',
+                        x: x,
+                        y: y,
+                        radius: 12
+                    });
+                }
+            }
+
+            initH2Molecules() {
+                const cathodeY = this.height * 0.2;
+                for (let i = 0; i < 20; i++) {
+                    this.h2Molecules.push({
+                        x: this.width * 0.3 + Math.random() * this.width * 0.4,
+                        y: cathodeY - 50 + Math.random() * 80,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2,
+                        rotation: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            updateLevelDisplay() {
+                const titles = {
+                    1: 'Level 1: Structural Schematic (Macro Assembly)',
+                    2: 'Level 2: Atomic-Scale Animation',
+                    3: 'Level 3: Interface Phenomena',
+                    4: 'Level 4: Cross-Sectional Time-Lapse',
+                    5: 'Level 5: Material Degradation'
+                };
+                document.getElementById('vizTitle').textContent = titles[this.currentLevel];
+            }
+
+            updateInfoPanel() {
+                const content = document.getElementById('infoContent');
+                const infos = {
+                    1: `
+                        <div class="info-card">
+                            <div class="info-card-title">Cell Configuration</div>
+                            <p>Stainless steel pressure vessel housing three main regions: H₂ gas cathode chamber (10-100 bar), Li₇P₃S₁₁ solid electrolyte (~1mm), and porous Mg/MgH₂ anode (2-5mm, 30-50% porosity).</p>
+                            <div class="formula">H₂(g) ↔ 2H⁺ + 2e⁻ (Cathode)</div>
+                            <div class="formula">Mg + 2H⁺ + 2e⁻ ↔ MgH₂ (Anode)</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-title">Operating Conditions</div>
+                            <p><strong>Temperature:</strong> 250-350°C<br>
+                            <strong>Pressure:</strong> 1-100 bar H₂<br>
+                            <strong>Voltage:</strong> ~0.2-0.5 V<br>
+                            <strong>Theoretical Capacity:</strong> 2038 mAh/g</p>
+                        </div>
+                    `,
+                    2: `
+                        <div class="info-card">
+                            <div class="info-card-title">Charging: H₂ Oxidation</div>
+                            <div class="formula">H₂(g) + 2□<sub>Li</sub> → 2H⁺(Li site) + 2e⁻</div>
+                            <p>H₂ approaches Li vacancy, H-H bond breaks, protons occupy Li sites, electrons enter external circuit.</p>
+                            <div class="step-nav" id="chargeSteps">
+                                <button class="step-btn active">2.1 Oxidation</button>
+                                <button class="step-btn">2.2 Migration</button>
+                                <button class="step-btn">2.3 Hydrogenation</button>
+                                <button class="step-btn">2.4 Phase Change</button>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-title">Proton Transport</div>
+                            <p>Grotthuss-type hopping mechanism in thiophosphate. Proton hops between S atoms: S-H···S → S···H-S</p>
+                            <div class="formula">E<sub>a</sub> ≈ 0.3-0.5 eV (activation barrier)</div>
+                        </div>
+                    `,
+                    3: `
+                        <div class="info-card">
+                            <div class="info-card-title">Triple Phase Boundary</div>
+                            <p>Critical junction where gas (H₂), solid electrolyte, and electronic conductor meet. TPB length maximized by porous current collector design.</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-title">Rate-Limiting Steps</div>
+                            <p>1. Surface reaction kinetics at Mg/MgH₂<br>
+                            2. H diffusion in Mg (D<sub>H</sub> ≈ 10⁻¹⁴ m²/s @ 300°C)<br>
+                            3. Nucleation of phases<br>
+                            4. Proton conductivity (σ<sub>H⁺</sub> ≈ 10⁻³ S/cm)</p>
+                        </div>
+                    `,
+                    4: `
+                        <div class="info-card">
+                            <div class="info-card-title">Timescale Hierarchy</div>
+                            <p><strong>t+10ms:</strong> H⁺ migration (1 μm)<br>
+                            <strong>t+100ms:</strong> MgH₂ front advances (10 nm)<br>
+                            <strong>t+1s:</strong> Measurable ΔP in chamber<br>
+                            <strong>t+10s:</strong> Significant Mg layer forms<br>
+                            <strong>t+100s:</strong> 90% equilibrium</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-title">Phase Transformation</div>
+                            <div class="formula">Mg hcp (a=3.21Å, c=5.21Å) → MgH₂ rutile (P4₂/mnm)</div>
+                            <p>Volume expansion ~30%, electronic transition from metallic Mg to insulating MgH₂ (E<sub>g</sub> ≈ 1.6 eV).</p>
+                        </div>
+                    `,
+                    5: `
+                        <div class="info-card">
+                            <div class="info-card-title">Degradation Mechanisms</div>
+                            <p><strong>Cycle 1:</strong> Clean interfaces<br>
+                            <strong>Cycle 10:</strong> Mg particle pulverization<br>
+                            <strong>Cycle 100:</strong> Mg coarsening, porosity loss<br>
+                            <strong>Cycle 500:</strong> Electrolyte cracking<br>
+                            <strong>Cycle 1000:</strong> Significant capacity fade</p>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-card-title">Cycle Count</div>
+                            <p>Current cycle: <strong id="cycleDisplay">${this.cycleCount}</strong></p>
+                            <p>Volume change stress accumulates with each charge/discharge cycle, leading to mechanical fatigue at interfaces.</p>
+                        </div>
+                    `
+                };
+                content.innerHTML = infos[this.currentLevel];
+            }
+
+            updateMetrics() {
+                const socVal = document.getElementById('socValue');
+                const socBar = document.getElementById('socBar');
+                const pressureVal = document.getElementById('pressureValue');
+                const pressureBar = document.getElementById('pressureBar');
+                const currentVal = document.getElementById('currentValue');
+                const tempVal = document.getElementById('tempValue');
+                const phaseVal = document.getElementById('phaseValue');
+
+                socVal.textContent = Math.round(this.soc) + '%';
+                socBar.style.width = this.soc + '%';
+
+                // Pressure inversely related to SOC during charging
+                const pressure = this.isCharging ? 50 - this.soc * 0.4 : 50 + this.soc * 0.4;
+                pressureVal.textContent = pressure.toFixed(1) + ' bar';
+                pressureBar.style.width = pressure + '%';
+
+                // Current density
+                const current = (this.isCharging || this.isDischarging) && this.isPlaying ?
+                    (Math.random() * 2 + 8).toFixed(1) : '0.0';
+                currentVal.textContent = current + ' mA/cm²';
+
+                // Temperature fluctuation
+                const temp = 300 + (this.isPlaying ? Math.sin(this.animationTime * 0.5) * 5 : 0);
+                tempVal.textContent = Math.round(temp) + '°C';
+
+                // Phase fractions
+                const alphaMg = 100 - this.soc;
+                const betaMgH2 = this.soc;
+                phaseVal.textContent = `${Math.round(alphaMg)}% / ${Math.round(betaMgH2)}%`;
+
+                // Timeline
+                document.getElementById('timelineProgress').style.width = this.soc + '%';
+                document.getElementById('timelineTime').textContent = `t = ${(this.animationTime / 60).toFixed(2)}s`;
+            }
+
+            drawLevel1() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+                const centerX = w * 0.5;
+
+                // Draw macro assembly
+                const regions = [
+                    { name: 'H₂ GAS CHAMBER', y: h * 0.12, height: h * 0.18, color: 'rgba(59, 130, 246, 0.15)', borderColor: '#3b82f6' },
+                    { name: 'SOLID ELECTROLYTE', y: h * 0.32, height: h * 0.16, color: 'rgba(251, 191, 36, 0.15)', borderColor: '#fbbf24' },
+                    { name: 'Mg/MgH₂ ANODE', y: h * 0.50, height: h * 0.22, color: 'rgba(45, 212, 191, 0.15)', borderColor: '#2dd4bf' }
+                ];
+
+                const regionWidth = Math.min(w * 0.7, 500);
+                const startX = centerX - regionWidth / 2;
+
+                // Draw casing
+                ctx.strokeStyle = '#6b7280';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(startX - 20, h * 0.08, regionWidth + 40, h * 0.68);
+                ctx.fillStyle = 'rgba(107, 114, 128, 0.1)';
+                ctx.fillRect(startX - 20, h * 0.08, regionWidth + 40, h * 0.68);
+
+                // Draw regions
+                regions.forEach((region, i) => {
+                    // Fill
+                    ctx.fillStyle = region.color;
+                    ctx.fillRect(startX, region.y, regionWidth, region.height);
+
+                    // Border
+                    ctx.strokeStyle = region.borderColor;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(startX, region.y, regionWidth, region.height);
+
+                    // Label
+                    ctx.fillStyle = '#e6edf3';
+                    ctx.font = 'bold 14px "JetBrains Mono", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(region.name, centerX, region.y + region.height / 2 + 5);
+                });
+
+                // Draw terminals and circuit
+                ctx.strokeStyle = '#f97316';
+                ctx.lineWidth = 3;
+
+                // Negative terminal (top)
+                ctx.beginPath();
+                ctx.moveTo(startX - 40, h * 0.05);
+                ctx.lineTo(startX - 40, h * 0.12);
+                ctx.stroke();
+                ctx.fillStyle = '#f97316';
+                ctx.fillRect(startX - 55, h * 0.02, 30, 20);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('−', startX - 40, h * 0.04 + 5);
+
+                // Positive terminal (bottom)
+                ctx.strokeStyle = '#22c55e';
+                ctx.beginPath();
+                ctx.moveTo(startX - 40, h * 0.72);
+                ctx.lineTo(startX - 40, h * 0.80);
+                ctx.stroke();
+                ctx.fillStyle = '#22c55e';
+                ctx.fillRect(startX - 55, h * 0.78, 30, 20);
+                ctx.fillStyle = '#fff';
+                ctx.fillText('+', startX - 40, h * 0.80 + 5);
+
+                // External circuit
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(startX - 40, h * 0.05);
+                ctx.lineTo(startX - 80, h * 0.05);
+                ctx.lineTo(startX - 80, h * 0.80);
+                ctx.lineTo(startX - 40, h * 0.80);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Draw current collector indicators
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '11px "JetBrains Mono", monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Current Collector (perforated)', startX + 10, h * 0.10);
+                ctx.fillText('Li₇P₃S₁₁ (~1mm)', startX + 10, h * 0.31);
+                ctx.fillText('30-50% porosity', startX + 10, h * 0.49);
+
+                // Draw pressure indicator
+                ctx.fillStyle = '#60a5fa';
+                ctx.textAlign = 'right';
+                ctx.fillText('+10-100 bar', startX + regionWidth - 10, h * 0.20);
+
+                // Animated H2 molecules in gas chamber (simplified)
+                if (this.isPlaying) {
+                    for (let i = 0; i < 8; i++) {
+                        const x = startX + 30 + ((this.animationTime * 20 + i * 60) % (regionWidth - 60));
+                        const y = h * 0.15 + Math.sin(this.animationTime + i) * 15;
+                        this.drawH2Molecule(x, y, 4, this.animationTime + i);
+                    }
+                }
+
+                // Animated charging/discharging arrows
+                if (this.isCharging || this.isDischarging) {
+                    const arrowY = [h * 0.25, h * 0.40, h * 0.55];
+                    const direction = this.isCharging ? 1 : -1;
+
+                    arrowY.forEach((y, i) => {
+                        const offset = (this.animationTime * 30 * direction) % 40;
+                        ctx.fillStyle = this.isCharging ? '#22c55e' : '#f97316';
+
+                        for (let j = 0; j < 5; j++) {
+                            const arrowX = centerX - 80 + j * 40 + offset;
+                            ctx.beginPath();
+                            if (this.isCharging) {
+                                ctx.moveTo(arrowX, y);
+                                ctx.lineTo(arrowX - 8, y - 6);
+                                ctx.lineTo(arrowX - 8, y + 6);
+                            } else {
+                                ctx.moveTo(arrowX, y);
+                                ctx.lineTo(arrowX + 8, y - 6);
+                                ctx.lineTo(arrowX + 8, y + 6);
+                            }
+                            ctx.fill();
+                        }
+                    });
+                }
+            }
+
+            drawLevel2() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+                const centerX = w * 0.5;
+
+                // Draw region backgrounds
+                this.drawRegionBackgrounds();
+
+                // Draw crystal structures
+                this.drawMgLattice(centerX, h * 0.72, this.soc / 100);
+                this.drawElectrolyteStructure(centerX, h * 0.45);
+                this.drawCathodeRegion(centerX, h * 0.18);
+
+                // Draw migrating particles during charging/discharging
+                if (this.isPlaying && (this.isCharging || this.isDischarging)) {
+                    this.drawMigratingParticles();
+                }
+            }
+
+            drawRegionBackgrounds() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // Cathode region (gas)
+                const cathodeGrad = ctx.createLinearGradient(0, 0, 0, h * 0.32);
+                cathodeGrad.addColorStop(0, 'rgba(59, 130, 246, 0.05)');
+                cathodeGrad.addColorStop(1, 'rgba(59, 130, 246, 0.15)');
+                ctx.fillStyle = cathodeGrad;
+                ctx.fillRect(0, 0, w, h * 0.32);
+
+                // Electrolyte region
+                const electrolyteGrad = ctx.createLinearGradient(0, h * 0.32, 0, h * 0.58);
+                electrolyteGrad.addColorStop(0, 'rgba(251, 191, 36, 0.1)');
+                electrolyteGrad.addColorStop(0.5, 'rgba(251, 191, 36, 0.2)');
+                electrolyteGrad.addColorStop(1, 'rgba(251, 191, 36, 0.1)');
+                ctx.fillStyle = electrolyteGrad;
+                ctx.fillRect(0, h * 0.32, w, h * 0.26);
+
+                // Anode region
+                const anodeGrad = ctx.createLinearGradient(0, h * 0.58, 0, h);
+                anodeGrad.addColorStop(0, 'rgba(45, 212, 191, 0.15)');
+                anodeGrad.addColorStop(1, 'rgba(45, 212, 191, 0.05)');
+                ctx.fillStyle = anodeGrad;
+                ctx.fillRect(0, h * 0.58, w, h * 0.42);
+
+                // Region labels
+                ctx.font = '11px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'left';
+                ctx.fillText('CATHODE (H₂ Gas)', 10, 20);
+                ctx.fillText('ELECTROLYTE (Li₇P₃S₁₁)', 10, h * 0.35);
+                ctx.fillText('ANODE (Mg/MgH₂)', 10, h * 0.62);
+            }
+
+            drawMgLattice(centerX, centerY, hydrogenFraction) {
+                const ctx = this.ctx;
+                const spacing = 22;
+                const rows = 5;
+                const cols = 10;
+                const startX = centerX - (cols * spacing) / 2;
+                const startY = centerY - (rows * spacing) / 2;
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const x = startX + col * spacing + (row % 2) * (spacing / 2);
+                        const y = startY + row * spacing * 0.866;
+
+                        // Determine if this atom is hydrogenated based on position and SOC
+                        const distFromLeft = col / cols;
+                        const isHydrogenated = distFromLeft < hydrogenFraction;
+
+                        if (isHydrogenated) {
+                            // MgH2 - rutile structure representation
+                            this.drawMgH2Unit(x, y, 8);
+                        } else {
+                            // Pure Mg
+                            this.drawAtom(x, y, 8, '#7dd3fc', 'rgba(125, 211, 252, 0.4)');
+                        }
+                    }
+                }
+
+                // Draw phase boundary if partially charged
+                if (hydrogenFraction > 0 && hydrogenFraction < 1) {
+                    const boundaryX = startX + hydrogenFraction * cols * spacing;
+                    ctx.strokeStyle = '#f97316';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(boundaryX, startY - 15);
+                    ctx.lineTo(boundaryX, startY + rows * spacing * 0.866 + 15);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Phase labels
+                    ctx.font = '10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = '#2dd4bf';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('β-MgH₂', boundaryX - 40, startY - 20);
+                    ctx.fillStyle = '#7dd3fc';
+                    ctx.fillText('α-Mg', boundaryX + 40, startY - 20);
+                }
+            }
+
+            drawMgH2Unit(x, y, size) {
+                const ctx = this.ctx;
+
+                // Central Mg in MgH2
+                this.drawAtom(x, y, size, '#2dd4bf', 'rgba(45, 212, 191, 0.4)');
+
+                // H atoms in tetrahedral sites
+                const hPositions = [
+                    { dx: -size * 0.7, dy: -size * 0.5 },
+                    { dx: size * 0.7, dy: size * 0.5 }
+                ];
+
+                hPositions.forEach(pos => {
+                    this.drawAtom(x + pos.dx, y + pos.dy, size * 0.4, '#fef3c7', 'rgba(254, 243, 199, 0.6)');
+                });
+
+                // Bonds
+                ctx.strokeStyle = 'rgba(254, 243, 199, 0.3)';
+                ctx.lineWidth = 1;
+                hPositions.forEach(pos => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + pos.dx, y + pos.dy);
+                    ctx.stroke();
+                });
+            }
+
+            drawElectrolyteStructure(centerX, centerY) {
+                const ctx = this.ctx;
+
+                // Draw PS4 tetrahedra
+                for (let i = 0; i < 8; i++) {
+                    const x = centerX - 140 + i * 40;
+                    const y = centerY + Math.sin(i * 0.8) * 15;
+                    this.drawPS4Tetrahedron(x, y);
+                }
+
+                // Draw Li+ ions with slight animation
+                for (let i = 0; i < 15; i++) {
+                    const baseX = centerX - 150 + (i % 5) * 75;
+                    const baseY = centerY - 30 + Math.floor(i / 5) * 30;
+                    const offsetX = Math.sin(this.animationTime * 2 + i) * 3;
+                    const offsetY = Math.cos(this.animationTime * 2 + i * 0.7) * 2;
+
+                    this.drawAtom(baseX + offsetX, baseY + offsetY, 5, '#c084fc', 'rgba(192, 132, 252, 0.4)');
+                }
+            }
+
+            drawPS4Tetrahedron(x, y) {
+                const ctx = this.ctx;
+                const size = 12;
+
+                // P center (orange)
+                this.drawAtom(x, y, 6, '#f97316', 'rgba(249, 115, 22, 0.4)');
+
+                // S corners (yellow) - tetrahedron vertices
+                const sPositions = [
+                    { dx: 0, dy: -size },
+                    { dx: -size * 0.866, dy: size * 0.5 },
+                    { dx: size * 0.866, dy: size * 0.5 },
+                    { dx: 0, dy: size * 0.3 } // front vertex
+                ];
+
+                // Draw bonds first
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.4)';
+                ctx.lineWidth = 1.5;
+                sPositions.forEach(pos => {
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + pos.dx, y + pos.dy);
+                    ctx.stroke();
+                });
+
+                // Draw S atoms
+                sPositions.forEach(pos => {
+                    this.drawAtom(x + pos.dx, y + pos.dy, 4, '#fbbf24', 'rgba(251, 191, 36, 0.4)');
+                });
+            }
+
+            drawCathodeRegion(centerX, centerY) {
+                // Draw H2 molecules with Brownian motion
+                for (let i = 0; i < 12; i++) {
+                    const baseX = centerX - 120 + (i % 6) * 48;
+                    const baseY = centerY - 30 + Math.floor(i / 6) * 40;
+                    const offsetX = Math.sin(this.animationTime * 1.5 + i * 2) * 8;
+                    const offsetY = Math.cos(this.animationTime * 1.2 + i * 1.5) * 6;
+                    const rotation = this.animationTime * 0.5 + i;
+
+                    this.drawH2Molecule(baseX + offsetX, baseY + offsetY, 5, rotation);
+                }
+
+                // Draw current collector (dashed line)
+                const ctx = this.ctx;
+                ctx.strokeStyle = '#6b7280';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([8, 4]);
+                ctx.beginPath();
+                ctx.moveTo(centerX - 150, centerY + 50);
+                ctx.lineTo(centerX + 150, centerY + 50);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.font = '9px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#6b7280';
+                ctx.textAlign = 'center';
+                ctx.fillText('Current Collector', centerX, centerY + 65);
+            }
+
+            drawMigratingParticles() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+                const centerX = w * 0.5;
+
+                // Generate protons and electrons for animation
+                const numParticles = 8;
+                const direction = this.isCharging ? 1 : -1;
+
+                for (let i = 0; i < numParticles; i++) {
+                    const phase = (this.animationTime * 0.8 + i * 0.5) % 3;
+                    const x = centerX - 80 + (i % 4) * 50;
+
+                    if (this.isCharging) {
+                        // Protons moving down (cathode to anode)
+                        if (phase < 1) {
+                            // In cathode region
+                            const y = h * 0.25 + phase * h * 0.08;
+                            this.drawProton(x, y);
+                        } else if (phase < 2) {
+                            // In electrolyte
+                            const y = h * 0.35 + (phase - 1) * h * 0.20;
+                            this.drawProton(x + Math.sin(phase * 10) * 5, y);
+                        } else {
+                            // Approaching anode
+                            const y = h * 0.55 + (phase - 2) * h * 0.10;
+                            this.drawProton(x, y);
+                        }
+
+                        // Electrons in external circuit (simplified)
+                        const electronY = h * 0.1 + phase * h * 0.25;
+                        this.drawElectron(centerX + 180, electronY);
+                    } else {
+                        // Discharging - reverse direction
+                        if (phase < 1) {
+                            const y = h * 0.65 - phase * h * 0.08;
+                            this.drawProton(x, y);
+                        } else if (phase < 2) {
+                            const y = h * 0.55 - (phase - 1) * h * 0.20;
+                            this.drawProton(x + Math.sin(phase * 10) * 5, y);
+                        } else {
+                            const y = h * 0.35 - (phase - 2) * h * 0.10;
+                            this.drawProton(x, y);
+                        }
+
+                        const electronY = h * 0.8 - phase * h * 0.25;
+                        this.drawElectron(centerX + 180, electronY);
+                    }
+                }
+            }
+
+            drawLevel3() {
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // Focus on interface phenomena
+                this.drawRegionBackgrounds();
+
+                // Triple Phase Boundary visualization
+                this.drawTriplePhaseBoundary(w * 0.3, h * 0.3);
+
+                // Solid-solid interface at anode
+                this.drawSolidSolidInterface(w * 0.7, h * 0.65);
+
+                // Energy barrier visualization
+                this.drawEnergyLandscape(w * 0.5, h * 0.85);
+            }
+
+            drawTriplePhaseBoundary(x, y) {
+                const ctx = this.ctx;
+
+                // Title
+                ctx.font = 'bold 12px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#e6edf3';
+                ctx.textAlign = 'center';
+                ctx.fillText('TRIPLE PHASE BOUNDARY', x, y - 80);
+
+                // Draw three phase regions
+                const radius = 60;
+
+                // Gas phase (top)
+                ctx.beginPath();
+                ctx.arc(x, y - radius * 0.5, radius, Math.PI, 0);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+                ctx.fill();
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Electrolyte (bottom left)
+                ctx.beginPath();
+                ctx.arc(x - radius * 0.5, y + radius * 0.3, radius * 0.8, 0, Math.PI);
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
+                ctx.fill();
+                ctx.strokeStyle = '#fbbf24';
+                ctx.stroke();
+
+                // Conductor (bottom right)
+                ctx.beginPath();
+                ctx.arc(x + radius * 0.5, y + radius * 0.3, radius * 0.8, 0, Math.PI);
+                ctx.fillStyle = 'rgba(107, 114, 128, 0.3)';
+                ctx.fill();
+                ctx.strokeStyle = '#6b7280';
+                ctx.stroke();
+
+                // TPB point (center)
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#f97316';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Animated reaction at TPB
+                if (this.isPlaying) {
+                    const pulseSize = 12 + Math.sin(this.animationTime * 4) * 4;
+                    ctx.beginPath();
+                    ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(249, 115, 22, 0.5)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Labels
+                ctx.font = '10px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.fillText('H₂ Gas', x, y - radius - 10);
+                ctx.fillText('Electrolyte', x - radius, y + radius * 0.8);
+                ctx.fillText('e⁻ Conductor', x + radius, y + radius * 0.8);
+                ctx.fillStyle = '#f97316';
+                ctx.fillText('TPB', x, y + 25);
+            }
+
+            drawSolidSolidInterface(x, y) {
+                const ctx = this.ctx;
+
+                // Title
+                ctx.font = 'bold 12px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#e6edf3';
+                ctx.textAlign = 'center';
+                ctx.fillText('Mg/MgH₂ INTERFACE', x, y - 100);
+
+                // Draw Mg particle with MgH2 shell
+                const outerRadius = 50;
+                const innerRadius = outerRadius * (1 - this.soc / 100 * 0.6);
+
+                // MgH2 outer shell
+                ctx.beginPath();
+                ctx.arc(x, y, outerRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(45, 212, 191, 0.3)';
+                ctx.fill();
+                ctx.strokeStyle = '#2dd4bf';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Mg core
+                ctx.beginPath();
+                ctx.arc(x, y, innerRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(125, 211, 252, 0.4)';
+                ctx.fill();
+                ctx.strokeStyle = '#7dd3fc';
+                ctx.stroke();
+
+                // Volume change indicator
+                const expansion = this.soc / 100 * 0.3;
+                ctx.setLineDash([3, 3]);
+                ctx.strokeStyle = '#f97316';
+                ctx.beginPath();
+                ctx.arc(x, y, outerRadius * (1 + expansion), 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Labels
+                ctx.font = '9px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#7dd3fc';
+                ctx.fillText('α-Mg', x, y);
+                ctx.fillStyle = '#2dd4bf';
+                ctx.fillText('β-MgH₂', x, y - outerRadius - 10);
+                ctx.fillStyle = '#f97316';
+                ctx.fillText('+' + Math.round(expansion * 100) + '% vol', x + outerRadius + 30, y);
+
+                // Stress indicators
+                if (this.isPlaying && this.soc > 20) {
+                    const stressLines = 6;
+                    for (let i = 0; i < stressLines; i++) {
+                        const angle = (i / stressLines) * Math.PI * 2 + this.animationTime * 0.5;
+                        const startR = innerRadius + 5;
+                        const endR = outerRadius - 5;
+
+                        ctx.beginPath();
+                        ctx.moveTo(x + Math.cos(angle) * startR, y + Math.sin(angle) * startR);
+                        ctx.lineTo(x + Math.cos(angle) * endR, y + Math.sin(angle) * endR);
+                        ctx.strokeStyle = 'rgba(248, 81, 73, 0.5)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            drawEnergyLandscape(x, y) {
+                const ctx = this.ctx;
+                const width = 250;
+                const height = 60;
+
+                // Title
+                ctx.font = '10px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.fillText('Activation Energy Landscape (Ea ≈ 0.3-0.5 eV)', x, y - height - 15);
+
+                // Draw energy curve
+                ctx.beginPath();
+                ctx.moveTo(x - width / 2, y);
+
+                // Energy profile with barrier
+                for (let i = 0; i <= 100; i++) {
+                    const px = x - width / 2 + (i / 100) * width;
+                    const normalized = i / 100;
+                    let py;
+
+                    if (normalized < 0.3) {
+                        py = y - 10;
+                    } else if (normalized < 0.5) {
+                        const t = (normalized - 0.3) / 0.2;
+                        py = y - 10 - Math.sin(t * Math.PI) * height * 0.8;
+                    } else if (normalized < 0.7) {
+                        const t = (normalized - 0.5) / 0.2;
+                        py = y - height * 0.8 - 10 + Math.sin(t * Math.PI) * height * 0.8;
+                    } else {
+                        py = y - 20;
+                    }
+
+                    ctx.lineTo(px, py);
+                }
+
+                ctx.strokeStyle = '#a371f7';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Animated particle crossing barrier
+                if (this.isPlaying) {
+                    const progress = (this.animationTime * 0.3) % 1;
+                    const particleX = x - width / 2 + progress * width;
+                    let particleY;
+
+                    if (progress < 0.3) {
+                        particleY = y - 10;
+                    } else if (progress < 0.5) {
+                        const t = (progress - 0.3) / 0.2;
+                        particleY = y - 10 - Math.sin(t * Math.PI) * height * 0.8;
+                    } else if (progress < 0.7) {
+                        const t = (progress - 0.5) / 0.2;
+                        particleY = y - height * 0.8 - 10 + Math.sin(t * Math.PI) * height * 0.8;
+                    } else {
+                        particleY = y - 20;
+                    }
+
+                    this.drawProton(particleX, particleY - 5);
+                }
+
+                // Labels
+                ctx.font = '8px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'left';
+                ctx.fillText('Reactants', x - width / 2, y + 15);
+                ctx.textAlign = 'right';
+                ctx.fillText('Products', x + width / 2, y + 15);
+                ctx.textAlign = 'center';
+                ctx.fillText('Transition State', x, y - height - 5);
+            }
+
+            drawLevel4() {
+                this.drawRegionBackgrounds();
+
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // Time-lapse cross-sectional view
+                this.drawCrossSectionView(w * 0.5, h * 0.45);
+            }
+
+            drawCrossSectionView(centerX, centerY) {
+                const ctx = this.ctx;
+                const w = this.width;
+
+                // Draw time progression markers
+                const timeMarkers = ['t=0', 't+10ms', 't+100ms', 't+1s', 't+10s', 't+100s'];
+                const markerSpacing = Math.min(w * 0.12, 80);
+                const startX = centerX - (timeMarkers.length - 1) * markerSpacing / 2;
+
+                timeMarkers.forEach((label, i) => {
+                    const x = startX + i * markerSpacing;
+                    const progress = i / (timeMarkers.length - 1);
+                    const isActive = progress <= this.soc / 100;
+
+                    // Draw particle slice at this time
+                    this.drawParticleSlice(x, centerY, progress, isActive);
+
+                    // Time label
+                    ctx.font = '9px "JetBrains Mono", monospace';
+                    ctx.fillStyle = isActive ? '#22c55e' : '#64748b';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(label, x, centerY + 80);
+                });
+
+                // Draw connecting arrows
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(startX, centerY + 65);
+                ctx.lineTo(startX + (timeMarkers.length - 1) * markerSpacing, centerY + 65);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Arrow head
+                const endX = startX + (timeMarkers.length - 1) * markerSpacing;
+                ctx.beginPath();
+                ctx.moveTo(endX, centerY + 65);
+                ctx.lineTo(endX - 8, centerY + 60);
+                ctx.lineTo(endX - 8, centerY + 70);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+            }
+
+            drawParticleSlice(x, y, progress, isActive) {
+                const ctx = this.ctx;
+                const radius = 35;
+
+                // Outer shell (MgH2 formation progress)
+                const shellThickness = radius * progress * 0.6;
+
+                // Background
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = isActive ? 'rgba(45, 212, 191, 0.3)' : 'rgba(45, 212, 191, 0.1)';
+                ctx.fill();
+                ctx.strokeStyle = isActive ? '#2dd4bf' : '#2dd4bf50';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Core (remaining Mg)
+                const coreRadius = radius - shellThickness;
+                if (coreRadius > 0) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = isActive ? 'rgba(125, 211, 252, 0.5)' : 'rgba(125, 211, 252, 0.2)';
+                    ctx.fill();
+                    ctx.strokeStyle = isActive ? '#7dd3fc' : '#7dd3fc50';
+                    ctx.stroke();
+                }
+
+                // Phase boundary
+                if (progress > 0 && progress < 1) {
+                    ctx.setLineDash([2, 2]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = isActive ? '#f97316' : '#f9731650';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Progress percentage
+                ctx.font = 'bold 10px "JetBrains Mono", monospace';
+                ctx.fillStyle = isActive ? '#e6edf3' : '#64748b';
+                ctx.textAlign = 'center';
+                ctx.fillText(Math.round(progress * 100) + '%', x, y + 4);
+            }
+
+            drawLevel5() {
+                this.drawRegionBackgrounds();
+
+                const ctx = this.ctx;
+                const w = this.width;
+                const h = this.height;
+
+                // Degradation visualization
+                this.drawDegradationTimeline(w * 0.5, h * 0.35);
+                this.drawCapacityFadeCurve(w * 0.5, h * 0.75);
+            }
+
+            drawDegradationTimeline(centerX, centerY) {
+                const ctx = this.ctx;
+                const w = this.width;
+
+                const cycles = [1, 10, 100, 500, 1000];
+                const descriptions = [
+                    'Clean interfaces',
+                    'Particle pulverization',
+                    'Coarsening',
+                    'Electrolyte cracks',
+                    'Capacity fade'
+                ];
+
+                const spacing = Math.min(w * 0.15, 100);
+                const startX = centerX - (cycles.length - 1) * spacing / 2;
+
+                // Title
+                ctx.font = 'bold 14px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#e6edf3';
+                ctx.textAlign = 'center';
+                ctx.fillText('MATERIAL DEGRADATION OVER CYCLES', centerX, centerY - 100);
+
+                cycles.forEach((cycle, i) => {
+                    const x = startX + i * spacing;
+                    const isReached = this.cycleCount >= cycle;
+
+                    // Draw degraded particle
+                    this.drawDegradedParticle(x, centerY, i, isReached);
+
+                    // Cycle number
+                    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+                    ctx.fillStyle = isReached ? '#f97316' : '#64748b';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Cycle ' + cycle, x, centerY + 60);
+
+                    // Description
+                    ctx.font = '8px "JetBrains Mono", monospace';
+                    ctx.fillStyle = isReached ? '#94a3b8' : '#4b5563';
+                    ctx.fillText(descriptions[i], x, centerY + 75);
+                });
+
+                // Connecting line
+                ctx.strokeStyle = '#374151';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(startX, centerY + 45);
+                ctx.lineTo(startX + (cycles.length - 1) * spacing, centerY + 45);
+                ctx.stroke();
+            }
+
+            drawDegradedParticle(x, y, degradationLevel, isActive) {
+                const ctx = this.ctx;
+                const baseRadius = 30;
+
+                if (degradationLevel === 0) {
+                    // Clean particle
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = isActive ? 'rgba(45, 212, 191, 0.4)' : 'rgba(45, 212, 191, 0.15)';
+                    ctx.fill();
+                    ctx.strokeStyle = isActive ? '#2dd4bf' : '#2dd4bf50';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (degradationLevel === 1) {
+                    // Pulverized - multiple small particles
+                    for (let i = 0; i < 4; i++) {
+                        const angle = (i / 4) * Math.PI * 2 + 0.3;
+                        const dist = 12;
+                        const px = x + Math.cos(angle) * dist;
+                        const py = y + Math.sin(angle) * dist;
+
+                        ctx.beginPath();
+                        ctx.arc(px, py, baseRadius * 0.35, 0, Math.PI * 2);
+                        ctx.fillStyle = isActive ? 'rgba(45, 212, 191, 0.4)' : 'rgba(45, 212, 191, 0.15)';
+                        ctx.fill();
+                        ctx.strokeStyle = isActive ? '#2dd4bf' : '#2dd4bf50';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+
+                    // Cracks
+                    if (isActive) {
+                        ctx.strokeStyle = '#f8514950';
+                        ctx.lineWidth = 1;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.beginPath();
+                            ctx.moveTo(x - 10 + i * 10, y - 15);
+                            ctx.lineTo(x - 5 + i * 8, y + 15);
+                            ctx.stroke();
+                        }
+                    }
+                } else if (degradationLevel === 2) {
+                    // Coarsened - irregular shape
+                    ctx.beginPath();
+                    for (let i = 0; i <= 12; i++) {
+                        const angle = (i / 12) * Math.PI * 2;
+                        const r = baseRadius * (0.7 + Math.sin(i * 3 + 0.5) * 0.3);
+                        const px = x + Math.cos(angle) * r;
+                        const py = y + Math.sin(angle) * r;
+                        if (i === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = isActive ? 'rgba(45, 212, 191, 0.3)' : 'rgba(45, 212, 191, 0.1)';
+                    ctx.fill();
+                    ctx.strokeStyle = isActive ? '#2dd4bf' : '#2dd4bf50';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                } else if (degradationLevel === 3) {
+                    // Electrolyte cracks
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = isActive ? 'rgba(251, 191, 36, 0.2)' : 'rgba(251, 191, 36, 0.1)';
+                    ctx.fill();
+                    ctx.strokeStyle = isActive ? '#fbbf24' : '#fbbf2450';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Crack lines
+                    ctx.strokeStyle = isActive ? '#f85149' : '#f8514950';
+                    ctx.lineWidth = 2;
+                    const cracks = [
+                        [[-20, -15], [5, 0], [20, 10]],
+                        [[-15, 10], [0, 5], [18, -5]],
+                        [[10, -20], [5, 5], [-10, 18]]
+                    ];
+                    cracks.forEach(crack => {
+                        ctx.beginPath();
+                        crack.forEach((pt, i) => {
+                            if (i === 0) ctx.moveTo(x + pt[0], y + pt[1]);
+                            else ctx.lineTo(x + pt[0], y + pt[1]);
+                        });
+                        ctx.stroke();
+                    });
+                } else {
+                    // Severe degradation
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.8, 0, Math.PI * 2);
+                    ctx.fillStyle = isActive ? 'rgba(248, 81, 73, 0.2)' : 'rgba(248, 81, 73, 0.1)';
+                    ctx.fill();
+                    ctx.strokeStyle = isActive ? '#f85149' : '#f8514950';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // X mark
+                    ctx.strokeStyle = isActive ? '#f85149' : '#f8514950';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x - 15, y - 15);
+                    ctx.lineTo(x + 15, y + 15);
+                    ctx.moveTo(x + 15, y - 15);
+                    ctx.lineTo(x - 15, y + 15);
+                    ctx.stroke();
+                }
+            }
+
+            drawCapacityFadeCurve(centerX, centerY) {
+                const ctx = this.ctx;
+                const width = Math.min(this.width * 0.7, 400);
+                const height = 80;
+                const startX = centerX - width / 2;
+
+                // Axes
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(startX, centerY - height);
+                ctx.lineTo(startX, centerY);
+                ctx.lineTo(startX + width, centerY);
+                ctx.stroke();
+
+                // Capacity fade curve
+                ctx.beginPath();
+                ctx.moveTo(startX, centerY - height * 0.95);
+
+                for (let i = 0; i <= 100; i++) {
+                    const x = startX + (i / 100) * width;
+                    // Typical capacity fade curve
+                    const cycle = i * 10;
+                    const capacity = 100 * Math.exp(-cycle / 2000) * (1 - 0.1 * (1 - Math.exp(-cycle / 100)));
+                    const y = centerY - (capacity / 100) * height;
+                    ctx.lineTo(x, y);
+                }
+
+                ctx.strokeStyle = '#a371f7';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Current cycle marker
+                const currentX = startX + (this.cycleCount / 1000) * width;
+                const currentCapacity = 100 * Math.exp(-this.cycleCount / 2000) * (1 - 0.1 * (1 - Math.exp(-this.cycleCount / 100)));
+                const currentY = centerY - (currentCapacity / 100) * height;
+
+                ctx.beginPath();
+                ctx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#22c55e';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Labels
+                ctx.font = '9px "JetBrains Mono", monospace';
+                ctx.fillStyle = '#94a3b8';
+                ctx.textAlign = 'center';
+                ctx.fillText('Cycle Number', centerX, centerY + 20);
+
+                ctx.save();
+                ctx.translate(startX - 15, centerY - height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('Capacity (%)', 0, 0);
+                ctx.restore();
+
+                // Current values
+                ctx.fillStyle = '#22c55e';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Cycle ${this.cycleCount}: ${Math.round(currentCapacity)}% capacity`, startX, centerY - height - 10);
+            }
+
+            drawAtom(x, y, radius, color, glowColor) {
+                const ctx = this.ctx;
+
+                // Glow
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 1.5);
+                gradient.addColorStop(0, glowColor);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+
+                // Highlight
+                ctx.beginPath();
+                ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+            }
+
+            drawH2Molecule(x, y, atomRadius, rotation) {
+                const ctx = this.ctx;
+                const bondLength = atomRadius * 2;
+
+                const dx = Math.cos(rotation) * bondLength / 2;
+                const dy = Math.sin(rotation) * bondLength / 2;
+
+                // Bond
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - dx, y - dy);
+                ctx.lineTo(x + dx, y + dy);
+                ctx.stroke();
+
+                // Atoms
+                this.drawAtom(x - dx, y - dy, atomRadius, '#ffffff', 'rgba(255, 255, 255, 0.3)');
+                this.drawAtom(x + dx, y + dy, atomRadius, '#ffffff', 'rgba(255, 255, 255, 0.3)');
+            }
+
+            drawProton(x, y) {
+                const ctx = this.ctx;
+                const radius = 4;
+
+                // Glow
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+                gradient.addColorStop(0, 'rgba(244, 114, 182, 0.8)');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#f472b6';
+                ctx.fill();
+
+                // + symbol
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 6px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('+', x, y);
+            }
+
+            drawElectron(x, y) {
+                const ctx = this.ctx;
+                const radius = 3;
+
+                // Trail
+                ctx.strokeStyle = 'rgba(96, 165, 250, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y - 15);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+
+                // Glow
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+                gradient.addColorStop(0, 'rgba(96, 165, 250, 0.8)');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#60a5fa';
+                ctx.fill();
+
+                // - symbol
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 5px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('−', x, y);
+            }
+
+            update(deltaTime) {
+                if (!this.isPlaying) return;
+
+                this.animationTime += deltaTime * 0.06 * this.speed;
+
+                // Update SOC based on charging/discharging
+                if (this.isCharging && this.soc < 100) {
+                    this.soc = Math.min(100, this.soc + deltaTime * 0.02 * this.speed);
+                } else if (this.isDischarging && this.soc > 0) {
+                    this.soc = Math.max(0, this.soc - deltaTime * 0.02 * this.speed);
+                }
+
+                // Stop at endpoints
+                if ((this.isCharging && this.soc >= 100) || (this.isDischarging && this.soc <= 0)) {
+                    if (this.currentLevel === 5) {
+                        // Increment cycle count
+                        this.cycleCount++;
+                        // Reset for next cycle
+                        if (this.isCharging) {
+                            this.isCharging = false;
+                            this.isDischarging = true;
+                        } else {
+                            this.isDischarging = false;
+                            this.isCharging = true;
+                        }
+                        // Update info panel to show new cycle count
+                        if (document.getElementById('cycleDisplay')) {
+                            document.getElementById('cycleDisplay').textContent = this.cycleCount;
+                        }
+                    } else {
+                        this.isPlaying = false;
+                        this.isCharging = false;
+                        this.isDischarging = false;
+                        document.getElementById('playIcon').textContent = '▶';
+                        document.getElementById('playText').textContent = 'Play';
+                        document.getElementById('vizContainer').classList.remove('charging', 'discharging');
+                    }
+                }
+
+                this.updateMetrics();
+            }
+
+            draw() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.width, this.height);
+
+                switch (this.currentLevel) {
+                    case 1:
+                        this.drawLevel1();
+                        break;
+                    case 2:
+                        this.drawLevel2();
+                        break;
+                    case 3:
+                        this.drawLevel3();
+                        break;
+                    case 4:
+                        this.drawLevel4();
+                        break;
+                    case 5:
+                        this.drawLevel5();
+                        break;
+                }
+            }
+
+            animate() {
+                const now = performance.now();
+                const deltaTime = now - (this.lastTime || now);
+                this.lastTime = now;
+
+                this.update(deltaTime);
+                this.draw();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // Initialize visualization
+        document.addEventListener('DOMContentLoaded', () => {
+            new BatteryVisualization();
+        });
+
+        // Fallback if DOMContentLoaded already fired
+        if (document.readyState !== 'loading') {
+            new BatteryVisualization();
+        }
+    </script>
+</body>
+</html>
