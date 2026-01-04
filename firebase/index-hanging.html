@@ -615,9 +615,6 @@ input:focus, select:focus {
     <div class="spinner w-16 h-16 border-4 border-white/30 border-t-white mb-6"></div>
     <p class="text-white text-lg font-medium">Loading Raven...</p>
     <p class="text-white/60 text-sm mt-2" id="loadingStatus">Connecting to servers...</p>
-    <button id="retryBtn" onclick="retryConnection()" class="mt-6 px-6 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-all hidden">
-        Retry Connection
-    </button>
 </div>
 
 <!-- Toast Container -->
@@ -1289,6 +1286,7 @@ input:focus, select:focus {
 
 <script>
 // ============ FIREBASE CONFIGURATION ============
+// IMPORTANT: Replace these with your actual Firebase config from Firebase Console
 const firebaseConfig = {
     apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
     authDomain: "raven-bddf7.firebaseapp.com",
@@ -1297,21 +1295,13 @@ const firebaseConfig = {
     messagingSenderId: "515918066242",
     appId: "1:515918066242:web:3aba4c8d6007310371f3db",
     measurementId: "G-GGK7G5S0WB"
-};
+  };
 
 // Initialize Firebase
-let auth, db, analytics;
-let firebaseInitialized = false;
-
-try {
-    firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    db = firebase.firestore();
-    firebaseInitialized = true;
-    console.log('Firebase initialized successfully');
-} catch (e) {
-    console.error('Firebase init error:', e);
-}
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let analytics = null;
 
 // Try to initialize analytics (may fail in some environments)
 try {
@@ -1320,24 +1310,23 @@ try {
     console.log('Analytics not available:', e.message);
 }
 
-// Enable offline persistence with better error handling
-if (db) {
-    db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-        if (err.code === 'failed-precondition') {
-            console.log('Multiple tabs open, persistence only in one tab');
-        } else if (err.code === 'unimplemented') {
-            console.log('Browser does not support persistence');
-        }
-    });
-}
+// Enable offline persistence
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    if (err.code === 'failed-precondition') {
+        console.log('Multiple tabs open, persistence only in one tab');
+    } else if (err.code === 'unimplemented') {
+        console.log('Browser does not support persistence');
+    }
+});
+
 
 
 // ============ APP CONFIGURATION ============
 const PAYSTACK_KEY = 'pk_test_7537e70ed589ef3d0364e04aa86b5b2070153cd5';
 const REFERRAL_REWARD = 500;
 const PREMIUM_PRICE = 2000;
+//what is the role of the base url
 const BASE_URL = 'https://examtutor.xyz/firebase/index.html';
-const LOAD_TIMEOUT = 15000; // 15 seconds timeout
 
 const TIERS = {
     bronze: { min: 0, max: 4, reward: 500, name: 'Bronze' },
@@ -1345,7 +1334,7 @@ const TIERS = {
     gold: { min: 15, max: 29, reward: 750, name: 'Gold' },
     diamond: { min: 30, max: Infinity, reward: 1000, name: 'Diamond' }
 };
-
+// this will be replaced with original code
 const SUBJECTS = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
     'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
@@ -1359,7 +1348,6 @@ let userReferrals = [];
 let unsubscribeUser = null;
 let unsubscribeReferrals = null;
 let isOnline = navigator.onLine;
-let loadTimeoutId = null;
 
 
 // ============ INITIALIZATION ============
@@ -1368,12 +1356,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSubjectSelection();
     checkReferralCode();
     setupConnectionListener();
-
-    if (firebaseInitialized) {
-        setupAuthListener();
-    } else {
-        handleFirebaseError('Firebase failed to initialize. Please check your internet connection.');
-    }
+    setupAuthListener();
 });
 
 function initDarkMode() {
@@ -1409,57 +1392,12 @@ function updateLoadingStatus(message) {
     if (el) el.textContent = message;
 }
 
-function showRetryButton() {
-    const btn = document.getElementById('retryBtn');
-    if (btn) btn.classList.remove('hidden');
-}
-
-function hideRetryButton() {
-    const btn = document.getElementById('retryBtn');
-    if (btn) btn.classList.add('hidden');
-}
-
-function retryConnection() {
-    hideRetryButton();
-    updateLoadingStatus('Retrying connection...');
-
-    if (currentUser) {
-        loadUserData(currentUser);
-    } else {
-        setupAuthListener();
-    }
-}
-
-function handleFirebaseError(message) {
-    updateLoadingStatus(message);
-    showRetryButton();
-    console.error('Firebase error:', message);
-}
-
-// Helper function to add timeout to promises
-function withTimeout(promise, ms, errorMessage) {
-    return Promise.race([
-        promise,
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(errorMessage)), ms)
-        )
-    ]);
-}
-
 
 // ============ FIREBASE AUTH ============
 function setupAuthListener() {
     updateLoadingStatus('Checking authentication...');
 
-    // Set a timeout for the entire auth process
-    loadTimeoutId = setTimeout(() => {
-        updateLoadingStatus('Connection is slow. Please check your internet.');
-        showRetryButton();
-    }, LOAD_TIMEOUT);
-
     auth.onAuthStateChanged(async (user) => {
-        clearTimeout(loadTimeoutId);
-
         if (user) {
             currentUser = user;
             updateLoadingStatus('Loading your data...');
@@ -1484,7 +1422,7 @@ async function signInWithGoogle() {
         const provider = new firebase.auth.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
 
-        await auth.signInWithPopup(provider);
+        const result = await auth.signInWithPopup(provider);
 
         if (analytics) {
             analytics.logEvent('login', { method: 'google' });
@@ -1508,27 +1446,21 @@ async function signInWithGoogle() {
 async function loadUserData(user) {
     try {
         const userRef = db.collection('users').doc(user.uid);
-
-        // Add timeout to the Firestore read
-        const userDoc = await withTimeout(
-            userRef.get(),
-            10000,
-            'Connection timeout. Please check your internet connection.'
-        );
+        const userDoc = await userRef.get();
 
         if (userDoc.exists) {
             currentUserData = userDoc.data();
 
-            // Update last login (don't await - fire and forget)
-            userRef.update({
+            // Update last login and activity tracking
+            await userRef.update({
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
                 lastActive: firebase.firestore.FieldValue.serverTimestamp(),
                 loginCount: firebase.firestore.FieldValue.increment(1)
-            }).catch(e => console.log('Update login count failed:', e));
+            });
 
             // Check if profile is complete
             if (currentUserData.profileComplete) {
-                setupRealtimeListeners();
+                await setupRealtimeListeners();
                 loginSuccess();
             } else {
                 document.getElementById('authLoading').classList.add('hidden');
@@ -1561,24 +1493,19 @@ async function loadUserData(user) {
                 correctAnswers: 0
             };
 
-            await withTimeout(
-                userRef.set(newUserData),
-                10000,
-                'Failed to create user profile. Please try again.'
-            );
-
+            await userRef.set(newUserData);
             currentUserData = newUserData;
 
             if (analytics) {
                 analytics.logEvent('sign_up', { method: 'google' });
             }
 
-            // Track new user in analytics collection (fire and forget)
-            db.collection('analytics').doc('users').set({
+            // Track new user in analytics collection
+            await db.collection('analytics').doc('users').set({
                 totalUsers: firebase.firestore.FieldValue.increment(1),
                 newUsersToday: firebase.firestore.FieldValue.increment(1),
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).catch(e => console.log('Analytics update failed:', e));
+            }, { merge: true });
 
             document.getElementById('authLoading').classList.add('hidden');
             showProfileSetup();
@@ -1586,22 +1513,12 @@ async function loadUserData(user) {
     } catch (error) {
         console.error('Error loading user data:', error);
         document.getElementById('authLoading').classList.add('hidden');
-
-        // Check if it's a permission error
-        if (error.code === 'permission-denied') {
-            handleFirebaseError('Access denied. Please check Firestore security rules.');
-        } else if (error.message.includes('timeout')) {
-            handleFirebaseError(error.message);
-        } else {
-            showToast('Error loading data: ' + error.message, 'error');
-            showSection('landing');
-        }
+        showToast('Error loading data. Please try again.', 'error');
+        showSection('landing');
     }
 }
 
-function setupRealtimeListeners() {
-    if (!currentUserData) return;
-
+async function setupRealtimeListeners() {
     // Listen to user data changes
     if (unsubscribeUser) unsubscribeUser();
 
@@ -1613,39 +1530,23 @@ function setupRealtimeListeners() {
             }
         }, (error) => {
             console.error('User listener error:', error);
-            // Don't break the app - just log the error
         });
 
     // Listen to referrals changes
-    // NOTE: This query requires a composite index in Firestore
-    // If you see an error, create the index in Firebase Console
     if (unsubscribeReferrals) unsubscribeReferrals();
 
-    try {
-        unsubscribeReferrals = db.collection('referrals')
-            .where('referrerCode', '==', currentUserData.referralCode || '')
-            .orderBy('createdAt', 'desc')
-            .onSnapshot((snapshot) => {
-                userReferrals = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                updateReferralDisplay();
-            }, (error) => {
-                console.error('Referrals listener error:', error);
-                // If the error is about missing index, show a helpful message
-                if (error.code === 'failed-precondition' && error.message.includes('index')) {
-                    console.warn('FIRESTORE INDEX REQUIRED: Create a composite index for referrals collection on (referrerCode ASC, createdAt DESC)');
-                }
-                // Set empty referrals to prevent UI from breaking
-                userReferrals = [];
-                updateReferralDisplay();
-            });
-    } catch (error) {
-        console.error('Failed to setup referrals listener:', error);
-        userReferrals = [];
-        updateReferralDisplay();
-    }
+    unsubscribeReferrals = db.collection('referrals')
+        .where('referrerCode', '==', currentUserData.referralCode)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            userReferrals = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            updateReferralDisplay();
+        }, (error) => {
+            console.error('Referrals listener error:', error);
+        });
 }
 
 function generateReferralCode() {
@@ -1775,15 +1676,15 @@ async function handleProfileSubmit(e) {
 
         await db.collection('users').doc(currentUser.uid).update(updateData);
 
-        // Update analytics (fire and forget)
-        db.collection('analytics').doc('users').set({
+        // Update analytics
+        await db.collection('analytics').doc('users').set({
             profilesCompleted: firebase.firestore.FieldValue.increment(1),
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(e => console.log('Analytics update failed:', e));
+        }, { merge: true });
 
         currentUserData = { ...currentUserData, ...updateData };
 
-        setupRealtimeListeners();
+        await setupRealtimeListeners();
         loginSuccess();
         showToast('Welcome to Raven! 🎓', 'success');
 
@@ -1811,7 +1712,7 @@ function loginSuccess() {
     updateReferralDisplay();
     showSection('dashboard');
 
-    // Track active session (fire and forget)
+    // Track active session
     trackUserActivity();
 
     // Clear pending referral
@@ -2103,6 +2004,7 @@ async function handlePaymentSuccess(transaction) {
             if (!referrerQuery.empty) {
                 const referrerDoc = referrerQuery.docs[0];
                 const referrerId = referrerDoc.id;
+                const referrerData = referrerDoc.data();
 
                 // Calculate tier-based reward
                 const existingReferrals = await db.collection('referrals')
@@ -2446,4 +2348,3 @@ setInterval(() => {
 
 </body>
 </html>
-
