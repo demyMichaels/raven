@@ -223,29 +223,6 @@ select.form-control {
     margin-bottom: 20px;
 }
 
-/* Mini spinner for logout button */
-.mini-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-    vertical-align: middle;
-    margin-right: 8px;
-}
-
-.logout-btn .mini-spinner {
-    border-color: rgba(107, 114, 128, 0.3);
-    border-top-color: var(--text-secondary);
-}
-
-.logout-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
@@ -341,7 +318,7 @@ select.form-control {
     border: 1px solid var(--border-color);
 }
 
-.logout-btn:hover:not(:disabled) {
+.logout-btn:hover {
     background: rgba(239, 68, 68, 0.1);
     color: var(--error-color);
     border-color: var(--error-color);
@@ -380,53 +357,6 @@ select.form-control {
 
 .online .status-dot { background: var(--success-color); }
 .offline .status-dot { background: var(--error-color); }
-
-/* Success/Error toast notifications */
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 12px 20px;
-    border-radius: 10px;
-    background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    animation: slideIn 0.3s ease-out;
-    max-width: 300px;
-}
-
-.toast-success {
-    border-left: 4px solid var(--success-color);
-}
-
-.toast-error {
-    border-left: 4px solid var(--error-color);
-}
-
-.toast-icon {
-    font-size: 20px;
-}
-
-.toast-success .toast-icon { color: var(--success-color); }
-.toast-error .toast-icon { color: var(--error-color); }
-
-.toast-message {
-    flex: 1;
-    font-size: 14px;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes slideOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
-}
 
 #firestoreHelp {
     margin-top: 20px;
@@ -559,8 +489,8 @@ select.form-control {
     <div id="dashboardScreen" class="container hidden">
         <div class="card dashboard-card">
             <div id="userAvatar" class="avatar">U</div>
-            <h1>Welcome back, <span id="dashboardUserName">User</span>!</h1>
-            <p>Ready to continue your JAMB preparation</p>
+            <h1>Welcome, <span id="dashboardUserName">User</span>!</h1>
+            <p>Your JAMB preparation journey starts here</p>
             
             <div class="user-info">
                 <div class="info-row">
@@ -585,26 +515,9 @@ select.form-control {
                 </div>
             </div>
             
-            <div style="margin-top: 30px;">
-                <button onclick="startPractice()" class="btn btn-primary" style="margin-bottom: 10px;">
-                    Start Practice Session
-                </button>
-                <button onclick="showProgress()" class="btn" style="margin-bottom: 10px; background: var(--bg-primary); border: 1px solid var(--border-color);">
-                    View Progress
-                </button>
-                <button onclick="logout()" class="btn logout-btn" id="logoutButton">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    Logout
-                </button>
-            </div>
-            
-            <p style="margin-top: 20px; font-size: 12px; color: var(--text-secondary);">
-                Last login: <span id="lastLoginTime">-</span>
-            </p>
+            <button onclick="logout()" class="btn logout-btn">
+                Logout
+            </button>
         </div>
     </div>
 
@@ -618,54 +531,6 @@ const SUBJECTS = [
     'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
     'Agricultural Science', 'CRS', 'History'
 ];
-
-// ============ CONSOLE WARNING SUPPRESSION ============
-(() => {
-    const originalWarn = console.warn;
-    console.warn = function(...args) {
-        const message = args[0] || '';
-        // Filter out Cross-Origin-Opener-Policy warnings
-        if (typeof message === 'string' && 
-            (message.includes('Cross-Origin-Opener-Policy') || 
-             message.includes('would block the window.closed') ||
-             message.includes('would block the window.close'))) {
-            return; // Don't log these warnings
-        }
-        originalWarn.apply(console, args);
-    };
-})();
-
-// ============ TOAST NOTIFICATIONS ============
-function showToast(message, type = 'success', duration = 3000) {
-    // Remove existing toasts
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    // Set icon based on type
-    const icon = type === 'success' ? '✓' : '⚠';
-    
-    toast.innerHTML = `
-        <span class="toast-icon">${icon}</span>
-        <span class="toast-message">${message}</span>
-    `;
-    
-    // Add to document
-    document.body.appendChild(toast);
-    
-    // Auto-remove after duration
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => toast.remove(), 300);
-    }, duration);
-    
-    return toast;
-}
 
 // ============ SCREEN MANAGEMENT ============
 function showScreen(screenId) {
@@ -703,29 +568,15 @@ function setupAuthListener() {
     updateLoading('Checking authentication...');
     
     window.onAuthStateChanged(window.auth, async (user) => {
-        console.log('Auth state changed. User:', user ? user.email : 'No user');
-        
-        // Check if we're currently on the loading screen (meaning logout just happened)
-        const isOnLoadingScreen = !document.getElementById('loadingScreen').classList.contains('hidden');
-        const isOnLoginScreen = !document.getElementById('loginScreen').classList.contains('hidden');
-        
-        // If user exists and we're not on login/loading screen, load their data
-        if (user && !isOnLoginScreen && !isOnLoadingScreen) {
+        if (user) {
             console.log('User authenticated:', user.email);
             currentUser = user;
             await loadUserData(user);
-        } 
-        // If user doesn't exist and we're not showing login or loading screens
-        else if (!user && !isOnLoginScreen && !isOnLoadingScreen) {
+        } else {
             console.log('No user, showing login screen');
             currentUser = null;
             currentUserData = null;
             showScreen('loginScreen');
-        }
-        // If we're already on login screen, do nothing
-        else if (!user && isOnLoginScreen) {
-            // Already on login screen, no action needed
-            console.log('Already on login screen');
         }
     });
 }
@@ -734,7 +585,7 @@ async function signInWithGoogle() {
     const btn = document.getElementById('googleSignInBtn');
     const originalText = btn.innerHTML;
     
-    btn.innerHTML = '<div class="spinner mini-spinner"></div> Signing in...';
+    btn.innerHTML = 'Signing in...';
     btn.disabled = true;
     hideError('loginError');
     
@@ -742,36 +593,11 @@ async function signInWithGoogle() {
         const provider = new window.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         
-        // Use try-catch specifically for the popup call
-        let result;
-        try {
-            result = await window.signInWithPopup(window.auth, provider);
-        } catch (popupError) {
-            // Suppress Cross-Origin-Opener-Policy warnings
-            if (popupError.message.includes('Cross-Origin-Opener-Policy') || 
-                popupError.message.includes('window.closed') ||
-                popupError.name === 'SecurityError') {
-                // These are just warnings, not actual errors
-                console.log('Popup closed (security policy warning suppressed)');
-                // Re-throw only if it's a real auth error
-                if (!popupError.code || !popupError.code.startsWith('auth/')) {
-                    throw popupError;
-                }
-            } else {
-                throw popupError;
-            }
-        }
-        
+        await window.signInWithPopup(window.auth, provider);
         console.log('Google sign-in successful');
         
     } catch (error) {
         console.error('Sign in error:', error);
-        
-        // Filter out security warnings from error messages
-        let displayMessage = error.message;
-        if (displayMessage.includes('Cross-Origin-Opener-Policy')) {
-            displayMessage = 'Authentication popup was blocked by browser security settings. Please try again.';
-        }
         
         if (error.code === 'auth/popup-closed-by-user') {
             showError('Sign in cancelled', 'loginError');
@@ -779,14 +605,8 @@ async function signInWithGoogle() {
             showError('Please allow popups for this site', 'loginError');
         } else if (error.code === 'auth/network-request-failed') {
             showError('Network error. Check your internet connection.', 'loginError');
-        } else if (error.code && error.code.startsWith('auth/')) {
-            showError('Sign in failed: ' + displayMessage, 'loginError');
         } else {
-            // Don't show security warnings to users
-            if (!displayMessage.includes('Cross-Origin-Opener-Policy') &&
-                !displayMessage.includes('window.closed')) {
-                showError('Sign in failed: ' + displayMessage, 'loginError');
-            }
+            showError('Sign in failed: ' + error.message, 'loginError');
         }
         
         btn.innerHTML = originalText;
@@ -813,8 +633,6 @@ async function loadUserData(user) {
                     lastLogin: Date.now(),
                     loginCount: (currentUserData.loginCount || 0) + 1
                 });
-                currentUserData.lastLogin = Date.now();
-                currentUserData.loginCount = (currentUserData.loginCount || 0) + 1;
             } catch (updateError) {
                 console.warn('Could not update login count:', updateError);
             }
@@ -926,7 +744,7 @@ async function handleProfileSubmit(e) {
     
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
-    submitBtn.innerHTML = '<div class="spinner mini-spinner"></div> Saving...';
+    submitBtn.textContent = 'Saving...';
     submitBtn.disabled = true;
     hideError('profileError');
     
@@ -948,12 +766,11 @@ async function handleProfileSubmit(e) {
         currentUserData = { ...currentUserData, ...updateData };
         
         showDashboard();
-        showToast('Profile setup complete! Welcome to Raven!', 'success');
         
     } catch (error) {
         console.error('Profile save error:', error);
         showError('Error saving profile: ' + error.message, 'profileError');
-        submitBtn.innerHTML = originalText;
+        submitBtn.textContent = originalText;
         submitBtn.disabled = false;
     }
 }
@@ -978,19 +795,7 @@ function showDashboard() {
     document.getElementById('dashboardTargetScore').textContent = currentUserData.targetScore || '-';
     document.getElementById('dashboardSubjects').textContent = currentUserData.subjects?.join(', ') || '-';
     
-    // Update last login time
-    const lastLoginEl = document.getElementById('lastLoginTime');
-    if (currentUserData.lastLogin) {
-        const lastLogin = new Date(currentUserData.lastLogin);
-        lastLoginEl.textContent = lastLogin.toLocaleDateString() + ' ' + lastLogin.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    }
-    
     showScreen('dashboardScreen');
-    
-    // Show welcome back toast
-    setTimeout(() => {
-        showToast(`Welcome back, ${currentUserData.name?.split(' ')[0] || 'there'}!`, 'success');
-    }, 500);
 }
 
 function getInitials(name) {
@@ -999,68 +804,35 @@ function getInitials(name) {
 
 // ============ LOGOUT ============
 async function logout() {
-    // Get logout button and show loading state
-    const logoutBtn = document.getElementById('logoutButton') || document.querySelector('.logout-btn');
-    const originalBtnText = logoutBtn ? logoutBtn.innerHTML : 'Logout';
+    // Show loading screen immediately to prevent flickering
+    showScreen('loadingScreen');
+    updateLoading('Signing out...');
     
-    if (logoutBtn) {
-        logoutBtn.innerHTML = '<div class="spinner mini-spinner"></div> Logging out...';
-        logoutBtn.disabled = true;
-    }
+    // Clear user data immediately
+    currentUser = null;
+    currentUserData = null;
+    selectedSubjects = [];
     
     try {
-        // Add a small delay for better UX
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Add a small delay to show the loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
         
         // Sign out from Firebase
         await window.signOut(window.auth);
         
-        // Clear local data
-        currentUser = null;
-        currentUserData = null;
-        selectedSubjects = [];
-        
         console.log('User signed out successfully');
         
-        // Show success message then switch to login screen
-        showScreen('loadingScreen');
-        updateLoading('Successfully logged out!');
+        // Show login screen immediately
+        showScreen('loginScreen');
         
-        // Brief delay to show success message
-        setTimeout(() => {
-            showScreen('loginScreen');
-            showToast('You have been logged out successfully', 'success');
-            
-            // Reset logout button if still exists
-            if (logoutBtn) {
-                logoutBtn.innerHTML = originalBtnText;
-                logoutBtn.disabled = false;
-            }
-        }, 800);
+        // Clear any previous errors
+        hideError('loginError');
         
     } catch (error) {
         console.error('Logout error:', error);
-        
-        // Reset button on error
-        if (logoutBtn) {
-            logoutBtn.innerHTML = originalBtnText;
-            logoutBtn.disabled = false;
-        }
-        
-        // Show error message in dashboard
-        showToast('Logout failed. Please try again.', 'error');
+        showError('Logout failed: ' + error.message, 'loginError');
+        showScreen('loginScreen');
     }
-}
-
-// ============ DASHBOARD ACTIONS ============
-function startPractice() {
-    showToast('Practice session starting soon!', 'success');
-    // Add your practice logic here
-}
-
-function showProgress() {
-    showToast('Progress tracking coming soon!', 'success');
-    // Add your progress logic here
 }
 
 // ============ INITIALIZATION ============
@@ -1080,4 +852,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
-</html>
+</html>`
