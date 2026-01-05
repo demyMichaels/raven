@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raven — Learn by Doing, Not Just Reading</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0f;
+            --bg-primary: #0f0f17;
+            --bg-card: #16161f;
+            --bg-elevated: #1c1c28;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent-raven: #7c3aed;
+            --accent-glow: #a78bfa;
+            --accent-warm: #f59e0b;
+            --accent-success: #10b981;
+            --accent-coral: #f472b6;
+            --border: rgba(124, 58, 237, 0.15);
+            --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #f472b6 100%);
+            --gradient-warm: linear-gradient(135deg, #f59e0b 0%, #f472b6 100%);
+            --shadow-glow: 0 0 60px rgba(124, 58, 237, 0.3);
+        }
+
+        .light {
+            --bg-deep: #faf9f7;
+            --bg-primary: #ffffff;
+            --bg-card: #f5f4f0;
+            --bg-elevated: #eae8e3;
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a5a;
+            --text-muted: #8888a0;
+            --border: rgba(124, 58, 237, 0.1);
+            --shadow-glow: 0 0 60px rgba(124, 58, 237, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .floating-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-raven);
+            top: -200px;
+            right: -100px;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-coral);
+            bottom: 20%;
+            left: -150px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 24px;
+            backdrop-filter: blur(20px);
+            background: rgba(15, 15, 23, 0.8);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .light nav {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-hero);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-glow);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient-hero);
+            color: white;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent-raven);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-content {
+            animation: fadeUp 0.8s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(124, 58, 237, 0.15);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--accent-glow);
+            margin-bottom: 24px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 600;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        h1 .highlight {
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            max-width: 500px;
+            line-height: 1.7;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat {
+            text-align: left;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-warm);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Interactive Demo Preview */
+        .hero-demo {
+            position: relative;
+            animation: fadeUp 0.8s ease 0.2s both;
+        }
+
+        .demo-window {
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .demo-header {
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .demo-dot.red { background: #ff5f57; }
+        .demo-dot.yellow { background: #febc2e; }
+        .demo-dot.green { background: #28c840; }
+
+        .demo-title {
+            margin-left: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .demo-body {
+            padding: 20px;
+            position: relative;
+        }
+
+        .demo-canvas-wrap {
+            background: var(--bg-deep);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .try-badge {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: var(--accent-warm);
+            color: #000;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            animation: bounce 2s infinite;
+            z-index: 10;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .demo-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mini-control {
+            background: var(--bg-elevated);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .mini-control label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .mini-control input[type="range"] {
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border);
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .mini-control input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-raven);
+            cursor: pointer;
+        }
+
+        /* Problem Section */
+        .problem-section {
+            padding: 100px 24px;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(180deg, transparent, var(--bg-primary) 20%);
+        }
+
+        .section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent-raven);
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .problem-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .problem-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-hero);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 58, 237, 0.3);
+        }
+
+        .problem-card:hover::before {
+            opacity: 1;
+        }
+
+        .problem-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(124, 58, 237, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .problem-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .problem-card p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Solution / Features Section */
+        .features-section {
+            padding: 100px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-showcase {
+            margin-top: 60px;
+        }
+
+        .feature-row {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 60px;
+            align-items: center;
+            margin-bottom: 80px;
+        }
+
+        .feature-row:nth-child(even) {
+            direction: rtl;
+        }
+
+        .feature-row:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .feature-content h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-content p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: var(--accent-success);
+            font-weight: bold;
+        }
+
+        .simulation-frame {
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .sim-header {
+            padding: 16px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sim-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sim-title-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--gradient-hero);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .sim-body {
+            padding: 20px;
+        }
+
+        .sim-canvas-wrap {
+            background: var(--bg-deep);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sim-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .sim-control {
+            background: var(--bg-elevated);
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .sim-control label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .sim-control label span {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-warm);
+        }
+
+        .sim-control input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .sim-control input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gradient-hero);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+        }
+
+        .sim-results {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .sim-result {
+            background: var(--bg-deep);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .sim-result-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .sim-result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+
+        .sim-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .sim-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sim-btn-play {
+            background: var(--accent-success);
+            color: white;
+        }
+
+        .sim-btn-reset {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .sim-btn:hover {
+            transform: scale(1.02);
+        }
+
+        /* Social Proof */
+        .social-section {
+            padding: 100px 24px;
+            background: var(--bg-primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .testimonial-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+        }
+
+        .testimonial-quote {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--gradient-hero);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+        }
+
+        .author-info {
+            flex: 1;
+        }
+
+        .author-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .author-role {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stars {
+            color: var(--accent-warm);
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 120px 24px;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .cta-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-hero);
+        }
+
+        .cta-card h2 {
+            margin-bottom: 16px;
+        }
+
+        .cta-card p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-note {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-description {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-ctas {
+                justify-content: center;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .problem-grid,
+            .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-row,
+            .feature-row:nth-child(even) {
+                grid-template-columns: 1fr;
+                direction: ltr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .sim-controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sim-results {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero-stats {
+                flex-direction: column;
+                gap: 20px;
+                align-items: center;
+            }
+
+            .demo-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Canvas Styling */
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .katex { font-size: 0.95em; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-inner">
+            <a href="#" class="logo">
+                <span class="logo-icon">🪶</span>
+                Raven
+            </a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#testimonials">Reviews</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#cta" class="btn btn-primary">Start Free Trial</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-inner">
+            <div class="hero-content">
+                <div class="badge">
+                    <span class="badge-dot"></span>
+                    Learning reimagined
+                </div>
+                <h1>Physics clicks when you <span class="highlight">see it happen</span></h1>
+                <p class="hero-description">
+                    Raven transforms abstract formulas into living simulations. Watch concepts come alive,
+                    tweak variables in real-time, and build intuition that sticks — not just memorize.
+                </p>
+                <div class="hero-ctas">
+                    <a href="#cta" class="btn btn-primary">Try Raven Free →</a>
+                    <a href="#features" class="btn btn-ghost">See How It Works</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">40%</div>
+                        <div class="stat-label">Better retention</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">2.5x</div>
+                        <div class="stat-label">Faster learning</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">50K+</div>
+                        <div class="stat-label">Students learning</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Hero Demo -->
+            <div class="hero-demo">
+                <div class="demo-window">
+                    <div class="demo-header">
+                        <span class="demo-dot red"></span>
+                        <span class="demo-dot yellow"></span>
+                        <span class="demo-dot green"></span>
+                        <span class="demo-title">Pendulum Equilibrium — Live Demo</span>
+                    </div>
+                    <div class="demo-body">
+                        <span class="try-badge">🎮 Try me!</span>
+                        <div class="demo-canvas-wrap">
+                            <canvas id="heroPendulum" width="340" height="200"></canvas>
+                        </div>
+                        <div class="demo-controls">
+                            <div class="mini-control">
+                                <label>Weight <span id="heroWeightVal">0.15 N</span></label>
+                                <input type="range" id="heroWeight" min="0.05" max="0.3" step="0.01" value="0.15">
+                            </div>
+                            <div class="mini-control">
+                                <label>Angle <span id="heroAngleVal">45°</span></label>
+                                <input type="range" id="heroAngle" min="15" max="75" step="1" value="45">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="section-inner">
+            <span class="section-label">The Problem</span>
+            <h2>Traditional learning is broken</h2>
+            <p style="color: var(--text-secondary); max-width: 600px; font-size: 1.05rem;">
+                Students struggle with physics because they're forced to imagine invisible forces
+                from static diagrams. That's like learning to swim by reading about water.
+            </p>
+
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">📖</div>
+                    <h3>Static Textbooks</h3>
+                    <p>Diagrams freeze motion. Students memorize formulas without understanding the physics behind them.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">🧠</div>
+                    <h3>Abstract Concepts</h3>
+                    <p>Forces, acceleration, and tension are invisible. Without seeing them, students never build true intuition.</p>
+                </div>
+                <div class="problem-card">
+                    <div class="problem-icon">😴</div>
+                    <h3>Passive Learning</h3>
+                    <p>Lectures and videos are one-way. Students can't experiment, make mistakes, or discover on their own.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-inner">
+            <span class="section-label">The Solution</span>
+            <h2>Learning by doing, not just watching</h2>
+
+            <div class="feature-showcase">
+                <!-- Feature 1: Atwood Machine -->
+                <div class="feature-row">
+                    <div class="feature-content">
+                        <h3>See forces in action</h3>
+                        <p>
+                            The Atwood Machine isn't just a textbook diagram anymore. Watch masses accelerate,
+                            see tension change in real-time, and understand how friction affects motion.
+                        </p>
+                        <ul class="feature-list">
+                            <li>Drag sliders to change mass and see instant effects</li>
+                            <li>Watch forces update as the simulation runs</li>
+                            <li>Equations solve themselves as you experiment</li>
+                        </ul>
+                    </div>
+                    <div class="simulation-frame">
+                        <div class="sim-header">
+                            <div class="sim-title">
+                                <span class="sim-title-icon">⚙️</span>
+                                Atwood Machine with Friction
+                            </div>
+                        </div>
+                        <div class="sim-body">
+                            <div class="sim-canvas-wrap">
+                                <canvas id="atwoodSim" width="380" height="220"></canvas>
+                            </div>
+                            <div class="sim-controls-grid">
+                                <div class="sim-control">
+                                    <label>Mass on Table (m₁) <span id="atM1Val">2.0 kg</span></label>
+                                    <input type="range" id="atM1" min="0.5" max="8" step="0.1" value="2">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Hanging Mass (m₂) <span id="atM2Val">4.0 kg</span></label>
+                                    <input type="range" id="atM2" min="0.5" max="8" step="0.1" value="4">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Friction (μ) <span id="atMuVal">0.20</span></label>
+                                    <input type="range" id="atMu" min="0" max="1" step="0.01" value="0.2">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Gravity (g) <span id="atGVal">9.8 m/s²</span></label>
+                                    <input type="range" id="atG" min="1" max="20" step="0.1" value="9.8">
+                                </div>
+                            </div>
+                            <div class="sim-results">
+                                <div class="sim-result">
+                                    <div class="sim-result-label">Acceleration</div>
+                                    <div class="sim-result-value" id="atAccel">4.53 m/s²</div>
+                                </div>
+                                <div class="sim-result">
+                                    <div class="sim-result-label">Tension</div>
+                                    <div class="sim-result-value" id="atTension">21.07 N</div>
+                                </div>
+                                <div class="sim-result">
+                                    <div class="sim-result-label">Friction</div>
+                                    <div class="sim-result-value" id="atFriction">3.92 N</div>
+                                </div>
+                            </div>
+                            <div class="sim-actions">
+                                <button class="sim-btn sim-btn-play" id="atPlay">▶ Start</button>
+                                <button class="sim-btn sim-btn-reset" id="atReset">↺ Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Inclined Plane -->
+                <div class="feature-row">
+                    <div class="feature-content">
+                        <h3>Discover critical angles</h3>
+                        <p>
+                            Why does a block slide at some angles but not others? Experiment with the inclined plane
+                            to discover the critical angle yourself — learning that sticks forever.
+                        </p>
+                        <ul class="feature-list">
+                            <li>Find the exact angle where sliding begins</li>
+                            <li>See how friction coefficient changes everything</li>
+                            <li>Understand the math through visual discovery</li>
+                        </ul>
+                    </div>
+                    <div class="simulation-frame">
+                        <div class="sim-header">
+                            <div class="sim-title">
+                                <span class="sim-title-icon">📐</span>
+                                Inclined Plane Dynamics
+                            </div>
+                        </div>
+                        <div class="sim-body">
+                            <div class="sim-canvas-wrap">
+                                <canvas id="inclineSim" width="380" height="220"></canvas>
+                            </div>
+                            <div class="sim-controls-grid">
+                                <div class="sim-control">
+                                    <label>Block Mass <span id="incMassVal">2.0 kg</span></label>
+                                    <input type="range" id="incMass" min="0.5" max="8" step="0.1" value="2">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Angle (θ) <span id="incAngleVal">30°</span></label>
+                                    <input type="range" id="incAngle" min="5" max="60" step="1" value="30">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Friction (μ) <span id="incMuVal">0.30</span></label>
+                                    <input type="range" id="incMu" min="0" max="1.2" step="0.01" value="0.3">
+                                </div>
+                                <div class="sim-control">
+                                    <label>Gravity <span id="incGVal">9.8 m/s²</span></label>
+                                    <input type="range" id="incG" min="1" max="20" step="0.1" value="9.8">
+                                </div>
+                            </div>
+                            <div class="sim-results">
+                                <div class="sim-result">
+                                    <div class="sim-result-label">Acceleration</div>
+                                    <div class="sim-result-value" id="incAccel">2.35 m/s²</div>
+                                </div>
+                                <div class="sim-result">
+                                    <div class="sim-result-label">Critical θ</div>
+                                    <div class="sim-result-value" id="incCritical">16.7°</div>
+                                </div>
+                                <div class="sim-result">
+                                    <div class="sim-result-label">State</div>
+                                    <div class="sim-result-value" id="incState">Sliding</div>
+                                </div>
+                            </div>
+                            <div class="sim-actions">
+                                <button class="sim-btn sim-btn-play" id="incPlay">▶ Start</button>
+                                <button class="sim-btn sim-btn-reset" id="incReset">↺ Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section id="testimonials" class="social-section">
+        <div class="section-inner">
+            <span class="section-label">What People Say</span>
+            <h2>Loved by students and parents alike</h2>
+
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "I finally understand tension! Seeing the forces move as I change the mass made everything click.
+                        My physics grade went from C to A-."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SM</div>
+                        <div class="author-info">
+                            <div class="author-name">Sarah M.</div>
+                            <div class="author-role">High School Junior</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "As a parent, I was skeptical about another learning app. But when my son started explaining
+                        physics concepts to ME, I knew Raven was different."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">DK</div>
+                        <div class="author-info">
+                            <div class="author-name">David K.</div>
+                            <div class="author-role">Parent of 10th Grader</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="testimonial-quote">
+                        "I use Raven in my classroom now. Students who struggled with free-body diagrams finally
+                        get it when they see the simulation respond to their inputs."
+                    </p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">RP</div>
+                        <div class="author-info">
+                            <div class="author-name">Dr. Rachel P.</div>
+                            <div class="author-role">AP Physics Teacher</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="cta-section">
+        <div class="cta-card">
+            <span class="section-label">Get Started</span>
+            <h2>Make physics stick, not slip away</h2>
+            <p>
+                Join thousands of students who've transformed their understanding of physics.
+                Start your free 14-day trial today — no credit card required.
+            </p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-primary" style="padding: 16px 32px; font-size: 1.05rem;">
+                    Start Free Trial →
+                </a>
+                <a href="#" class="btn btn-ghost" style="padding: 16px 32px;">
+                    Schedule a Demo
+                </a>
+            </div>
+            <p class="cta-note">✓ 14-day free trial &nbsp;&nbsp; ✓ No credit card required &nbsp;&nbsp; ✓ Cancel anytime</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 Raven Learning. Making physics visual, fun, and sticky.</p>
+    </footer>
+
+    <script>
+        // Dark/Light mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.add('light');
+        }
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+            document.documentElement.classList.toggle('light', event.matches);
+        });
+
+        // Helper: draw arrow
+        function drawArrow(ctx, x1, y1, x2, y2, color, label) {
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2.5;
+
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 8 * Math.cos(angle - 0.4), y2 - 8 * Math.sin(angle - 0.4));
+            ctx.lineTo(x2 - 8 * Math.cos(angle + 0.4), y2 - 8 * Math.sin(angle + 0.4));
+            ctx.closePath();
+            ctx.fill();
+
+            if (label) {
+                ctx.font = 'bold 11px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, (x1 + x2) / 2, Math.min(y1, y2) - 8);
+            }
+        }
+
+        // ===================== HERO PENDULUM =====================
+        const heroPendCanvas = document.getElementById('heroPendulum');
+        const heroPendCtx = heroPendCanvas.getContext('2d');
+
+        function drawHeroPendulum() {
+            const ctx = heroPendCtx;
+            const w = heroPendCanvas.width;
+            const h = heroPendCanvas.height;
+            const weight = parseFloat(document.getElementById('heroWeight').value);
+            const theta = parseFloat(document.getElementById('heroAngle').value);
+
+            document.getElementById('heroWeightVal').textContent = weight.toFixed(2) + ' N';
+            document.getElementById('heroAngleVal').textContent = theta + '°';
+
+            const thetaRad = theta * Math.PI / 180;
+            const tension = weight / Math.cos(thetaRad);
+            const force = tension * Math.sin(thetaRad);
+
+            ctx.clearRect(0, 0, w, h);
+
+            const anchorX = 80;
+            const anchorY = 30;
+            const stringLen = 100;
+            const bobX = anchorX + stringLen * Math.sin(thetaRad);
+            const bobY = anchorY + stringLen * Math.cos(thetaRad);
+
+            // Wall
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-elevated');
+            ctx.fillRect(50, 15, 30, 15);
+
+            // String
+            ctx.beginPath();
+            ctx.moveTo(anchorX, anchorY);
+            ctx.lineTo(bobX, bobY);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Angle arc
+            ctx.beginPath();
+            ctx.arc(anchorX, anchorY, 25, Math.PI/2 - thetaRad, Math.PI/2);
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Bob
+            ctx.beginPath();
+            ctx.arc(bobX, bobY, 12, 0, Math.PI * 2);
+            ctx.fillStyle = '#7c3aed';
+            ctx.fill();
+
+            // Force arrows
+            const scale = 100;
+            drawArrow(ctx, bobX, bobY + 12, bobX, bobY + 12 + weight * scale, '#ef4444', 'W');
+            const tensionLen = tension * scale * 0.7;
+            const tx = bobX - tensionLen * Math.sin(thetaRad);
+            const ty = bobY - tensionLen * Math.cos(thetaRad);
+            drawArrow(ctx, bobX, bobY, tx, ty, '#f59e0b', 'T');
+            drawArrow(ctx, bobX + 12, bobY, bobX + 12 + force * scale, bobY, '#10b981', 'F');
+
+            // Results text
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary');
+            ctx.font = '11px JetBrains Mono';
+            ctx.textAlign = 'left';
+            ctx.fillText(`T = ${tension.toFixed(3)} N`, 210, 40);
+            ctx.fillText(`F = ${force.toFixed(3)} N`, 210, 58);
+            ctx.fillText(`θ = ${theta}°`, 210, 76);
+        }
+
+        document.getElementById('heroWeight').addEventListener('input', drawHeroPendulum);
+        document.getElementById('heroAngle').addEventListener('input', drawHeroPendulum);
+        drawHeroPendulum();
+
+        // ===================== ATWOOD MACHINE =====================
+        const atwoodCanvas = document.getElementById('atwoodSim');
+        const atwoodCtx = atwoodCanvas.getContext('2d');
+        let atwoodRunning = false;
+        let atwoodY = 0;
+        let atwoodVel = 0;
+
+        function calcAtwood() {
+            const m1 = parseFloat(document.getElementById('atM1').value);
+            const m2 = parseFloat(document.getElementById('atM2').value);
+            const mu = parseFloat(document.getElementById('atMu').value);
+            const g = parseFloat(document.getElementById('atG').value);
+            const friction = mu * m1 * g;
+            const netForce = m2 * g - friction;
+            let accel = 0, tension = 0;
+            if (netForce > 0) {
+                accel = netForce / (m1 + m2);
+                tension = m2 * (g - accel);
+            } else {
+                tension = m2 * g;
+            }
+            return { m1, m2, mu, g, friction, accel, tension, canMove: netForce > 0 };
+        }
+
+        function updateAtwoodDisplay() {
+            const p = calcAtwood();
+            document.getElementById('atM1Val').textContent = p.m1.toFixed(1) + ' kg';
+            document.getElementById('atM2Val').textContent = p.m2.toFixed(1) + ' kg';
+            document.getElementById('atMuVal').textContent = p.mu.toFixed(2);
+            document.getElementById('atGVal').textContent = p.g.toFixed(1) + ' m/s²';
+            document.getElementById('atAccel').textContent = p.accel.toFixed(2) + ' m/s²';
+            document.getElementById('atTension').textContent = p.tension.toFixed(2) + ' N';
+            document.getElementById('atFriction').textContent = p.friction.toFixed(2) + ' N';
+        }
+
+        function drawAtwood() {
+            const ctx = atwoodCtx;
+            const w = atwoodCanvas.width;
+            const h = atwoodCanvas.height;
+            const p = calcAtwood();
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Table
+            ctx.fillStyle = '#3d5a80';
+            ctx.fillRect(0, 100, 250, 12);
+
+            // Mass 1
+            const box1Size = 24 + p.m1 * 2;
+            const box1X = 60 + atwoodY * 25;
+            ctx.fillStyle = '#7c3aed';
+            ctx.fillRect(box1X, 100 - box1Size, box1Size, box1Size);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${p.m1.toFixed(1)}`, box1X + box1Size/2, 100 - box1Size/2 + 4);
+
+            // Pulley
+            ctx.beginPath();
+            ctx.arc(270, 95, 14, 0, Math.PI * 2);
+            ctx.fillStyle = '#4a5568';
+            ctx.fill();
+
+            // String
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(box1X + box1Size, 100 - box1Size/2);
+            ctx.lineTo(256, 100 - box1Size/2);
+            ctx.lineTo(256, 81);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(270, 95, 14, -Math.PI/2, Math.PI/2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(284, 95);
+            ctx.lineTo(284, 115 + atwoodY * 25);
+            ctx.stroke();
+
+            // Mass 2
+            const box2Size = 24 + p.m2 * 2;
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(284 - box2Size/2, 115 + atwoodY * 25, box2Size, box2Size);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(`${p.m2.toFixed(1)}`, 284, 115 + atwoodY * 25 + box2Size/2 + 4);
+
+            // Status
+            ctx.fillStyle = p.canMove ? '#10b981' : '#f59e0b';
+            ctx.font = '11px Space Grotesk';
+            ctx.textAlign = 'left';
+            ctx.fillText(p.canMove ? '● Accelerating' : '● Static', 10, 18);
+        }
+
+        function animateAtwood() {
+            if (!atwoodRunning) return;
+            const p = calcAtwood();
+            if (p.canMove && atwoodY < 2.5) {
+                atwoodVel += p.accel * 0.016;
+                atwoodY += atwoodVel * 0.04;
+                drawAtwood();
+                requestAnimationFrame(animateAtwood);
+            } else {
+                atwoodRunning = false;
+                document.getElementById('atPlay').textContent = '▶ Start';
+            }
+        }
+
+        document.getElementById('atPlay').addEventListener('click', () => {
+            if (!atwoodRunning) {
+                atwoodRunning = true;
+                document.getElementById('atPlay').textContent = '⏸ Pause';
+                animateAtwood();
+            } else {
+                atwoodRunning = false;
+                document.getElementById('atPlay').textContent = '▶ Start';
+            }
+        });
+
+        document.getElementById('atReset').addEventListener('click', () => {
+            atwoodRunning = false;
+            atwoodY = 0;
+            atwoodVel = 0;
+            document.getElementById('atPlay').textContent = '▶ Start';
+            drawAtwood();
+        });
+
+        ['atM1', 'atM2', 'atMu', 'atG'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                atwoodY = 0;
+                atwoodVel = 0;
+                atwoodRunning = false;
+                document.getElementById('atPlay').textContent = '▶ Start';
+                updateAtwoodDisplay();
+                drawAtwood();
+            });
+        });
+
+        updateAtwoodDisplay();
+        drawAtwood();
+
+        // ===================== INCLINED PLANE =====================
+        const inclineCanvas = document.getElementById('inclineSim');
+        const inclineCtx = inclineCanvas.getContext('2d');
+        let inclineRunning = false;
+        let inclinePos = 0;
+        let inclineVel = 0;
+
+        function calcIncline() {
+            const mass = parseFloat(document.getElementById('incMass').value);
+            const angle = parseFloat(document.getElementById('incAngle').value);
+            const mu = parseFloat(document.getElementById('incMu').value);
+            const g = parseFloat(document.getElementById('incG').value);
+            const angleRad = angle * Math.PI / 180;
+            const weight = mass * g;
+            const normal = weight * Math.cos(angleRad);
+            const parallel = weight * Math.sin(angleRad);
+            const maxFriction = mu * normal;
+            const critical = Math.atan(mu) * 180 / Math.PI;
+            const isSliding = parallel > maxFriction;
+            const accel = isSliding ? (parallel - maxFriction) / mass : 0;
+            return { mass, angle, mu, g, weight, normal, parallel, maxFriction, critical, isSliding, accel };
+        }
+
+        function updateInclineDisplay() {
+            const p = calcIncline();
+            document.getElementById('incMassVal').textContent = p.mass.toFixed(1) + ' kg';
+            document.getElementById('incAngleVal').textContent = p.angle + '°';
+            document.getElementById('incMuVal').textContent = p.mu.toFixed(2);
+            document.getElementById('incGVal').textContent = p.g.toFixed(1) + ' m/s²';
+            document.getElementById('incAccel').textContent = p.accel.toFixed(2) + ' m/s²';
+            document.getElementById('incCritical').textContent = p.critical.toFixed(1) + '°';
+            const stateEl = document.getElementById('incState');
+            stateEl.textContent = p.isSliding ? 'Sliding ↓' : 'Static';
+            stateEl.style.color = p.isSliding ? '#f59e0b' : '#10b981';
+        }
+
+        function drawIncline() {
+            const ctx = inclineCtx;
+            const w = inclineCanvas.width;
+            const h = inclineCanvas.height;
+            const p = calcIncline();
+            const angleRad = p.angle * Math.PI / 180;
+
+            ctx.clearRect(0, 0, w, h);
+
+            ctx.save();
+            ctx.translate(60, 190);
+
+            // Ground
+            ctx.fillStyle = '#4a5568';
+            ctx.fillRect(0, 0, 280, 15);
+
+            // Incline
+            const incLen = 220;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(incLen * Math.cos(angleRad), -incLen * Math.sin(angleRad));
+            ctx.lineTo(incLen * Math.cos(angleRad), 0);
+            ctx.closePath();
+            ctx.fillStyle = '#3d5a80';
+            ctx.fill();
+
+            // Angle arc
+            ctx.beginPath();
+            ctx.arc(0, 0, 35, -angleRad, 0);
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.fillStyle = '#10b981';
+            ctx.font = '11px JetBrains Mono';
+            ctx.fillText(`${p.angle}°`, 40, -8);
+
+            // Block
+            const blockSize = 28;
+            const blockDist = 70 + inclinePos * 40;
+            const blockX = blockDist * Math.cos(angleRad);
+            const blockY = -blockDist * Math.sin(angleRad);
+
+            ctx.save();
+            ctx.translate(blockX, blockY);
+            ctx.rotate(-angleRad);
+            ctx.fillStyle = '#7c3aed';
+            ctx.fillRect(-blockSize/2, -blockSize, blockSize, blockSize);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 9px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${p.mass.toFixed(1)}`, 0, -blockSize/2 + 3);
+            ctx.restore();
+
+            ctx.restore();
+
+            // Status
+            ctx.fillStyle = p.isSliding ? '#f59e0b' : '#10b981';
+            ctx.font = '11px Space Grotesk';
+            ctx.textAlign = 'left';
+            ctx.fillText(p.isSliding ? '● Sliding' : '● Static', 10, 18);
+        }
+
+        function animateIncline() {
+            if (!inclineRunning) return;
+            const p = calcIncline();
+            if (p.isSliding && inclinePos < 3) {
+                inclineVel += p.accel * 0.016;
+                inclinePos += inclineVel * 0.025;
+                drawIncline();
+                requestAnimationFrame(animateIncline);
+            } else {
+                inclineRunning = false;
+                document.getElementById('incPlay').textContent = '▶ Start';
+            }
+        }
+
+        document.getElementById('incPlay').addEventListener('click', () => {
+            if (!inclineRunning) {
+                inclineRunning = true;
+                document.getElementById('incPlay').textContent = '⏸ Pause';
+                animateIncline();
+            } else {
+                inclineRunning = false;
+                document.getElementById('incPlay').textContent = '▶ Start';
+            }
+        });
+
+        document.getElementById('incReset').addEventListener('click', () => {
+            inclineRunning = false;
+            inclinePos = 0;
+            inclineVel = 0;
+            document.getElementById('incPlay').textContent = '▶ Start';
+            drawIncline();
+        });
+
+        ['incMass', 'incAngle', 'incMu', 'incG'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                inclinePos = 0;
+                inclineVel = 0;
+                inclineRunning = false;
+                document.getElementById('incPlay').textContent = '▶ Start';
+                updateInclineDisplay();
+                drawIncline();
+            });
+        });
+
+        updateInclineDisplay();
+        drawIncline();
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
