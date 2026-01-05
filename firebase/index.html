@@ -804,15 +804,34 @@ function getInitials(name) {
 
 // ============ LOGOUT ============
 async function logout() {
+    // Show loading screen immediately to prevent flickering
+    showScreen('loadingScreen');
+    updateLoading('Signing out...');
+    
+    // Clear user data immediately
+    currentUser = null;
+    currentUserData = null;
+    selectedSubjects = [];
+    
     try {
+        // Add a small delay to show the loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Sign out from Firebase
         await window.signOut(window.auth);
-        currentUser = null;
-        currentUserData = null;
-        selectedSubjects = [];
+        
+        console.log('User signed out successfully');
+        
+        // Show login screen immediately
         showScreen('loginScreen');
+        
+        // Clear any previous errors
+        hideError('loginError');
+        
     } catch (error) {
         console.error('Logout error:', error);
         showError('Logout failed: ' + error.message, 'loginError');
+        showScreen('loginScreen');
     }
 }
 
