@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Raven - Exam Preparation Platform</title>
 
-<!-- Supabase CDN (ONLY ONE TIME) -->
+<!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -452,16 +452,61 @@ select.form-control {
     </div>
 
 <script>
-// ============ SINGLE SUPABASE INITIALIZATION ============
+// ============ PRODUCTION CONFIGURATION ============
+const PRODUCTION_DOMAIN = 'examtutor.xyz';
 const SUPABASE_CONFIG = {
     url: 'https://kwicenbmgllolchbrjve.supabase.co',
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3aWNlbmJtZ2xsb2xjaGJyanZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNDk2OTQsImV4cCI6MjA4MDYyNTY5NH0.UL1NvX0lZaeX9QVb9bBTkjLrhd0XMeAwei-v8-7FVnc'
 };
 
-// Create ONE Supabase client instance
+// ============ URL MANAGEMENT ============
+function getAppUrl() {
+    const currentOrigin = window.location.origin;
+    const currentHostname = window.location.hostname;
+    
+    // Production domains
+    const productionDomains = [
+        'examtutor.xyz',
+        'www.examtutor.xyz'
+    ];
+    
+    // Development domains
+    const developmentDomains = [
+        'localhost',
+        '127.0.0.1',
+        '0.0.0.0'
+    ];
+    
+    // Check if current domain is production
+    if (productionDomains.includes(currentHostname)) {
+        console.log('Production mode:', currentOrigin);
+        return currentOrigin;
+    }
+    
+    // Check if current domain is development
+    if (developmentDomains.includes(currentHostname)) {
+        console.log('Development mode:', currentOrigin);
+        return currentOrigin;
+    }
+    
+    // Default to production
+    console.log('Using default production URL');
+    return `https://${PRODUCTION_DOMAIN}`;
+}
+
+// ============ SINGLE SUPABASE INITIALIZATION ============
 const supabaseClient = window.supabase.createClient(
     SUPABASE_CONFIG.url, 
-    SUPABASE_CONFIG.key
+    SUPABASE_CONFIG.key,
+    {
+        auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+            flowType: 'pkce',
+            redirectTo: getAppUrl()
+        }
+    }
 );
 
 // ============ APPLICATION STATE ============
@@ -575,10 +620,18 @@ async function signInWithGoogle() {
     hideError('loginError');
     
     try {
+        // Get the correct redirect URL
+        const redirectUrl = getAppUrl();
+        console.log('Using redirect URL:', redirectUrl);
+        
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin
+                redirectTo: redirectUrl,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent'
+                }
             }
         });
         
@@ -612,7 +665,7 @@ async function signInWithEmail() {
         const { error } = await supabaseClient.auth.signInWithOtp({
             email: email,
             options: {
-                emailRedirectTo: window.location.origin,
+                emailRedirectTo: getAppUrl(),
                 shouldCreateUser: true
             }
         });
@@ -900,7 +953,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Initialize app
-    console.log('Raven App Initializing...');
+    console.log('Raven Exam Platform Initializing...');
+    console.log('Domain:', PRODUCTION_DOMAIN);
+    console.log('App URL:', getAppUrl());
     console.log('Supabase URL:', SUPABASE_CONFIG.url);
     
     // Start auth listener
