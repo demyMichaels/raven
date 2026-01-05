@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Raven - Exam Preparation Platform</title>
 
-<!-- Supabase CDN -->
+<!-- Supabase CDN (ONLY ONE TIME) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -15,7 +15,7 @@
     --text-primary: #111827;
     --text-secondary: #6B7280;
     --border-color: #E5E7EB;
-    --accent-color: #3ECF8E; /* Supabase green */
+    --accent-color: #3ECF8E;
     --success-color: #10B981;
     --error-color: #EF4444;
     --supabase-dark: #1C1C1C;
@@ -101,16 +101,6 @@ body {
 .btn-google:hover {
     border-color: var(--accent-color);
     box-shadow: 0 2px 8px rgba(62, 207, 142, 0.1);
-}
-
-.btn-supabase {
-    background: var(--supabase-dark);
-    color: white;
-}
-
-.btn-supabase:hover {
-    background: #333;
-    transform: translateY(-1px);
 }
 
 .form-group {
@@ -297,133 +287,16 @@ select.form-control {
     color: var(--error-color);
     border-color: var(--error-color);
 }
-
-.connection-status {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.connection-status.online {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.connection-status.offline {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--error-color);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.online .status-dot { background: var(--success-color); }
-.offline .status-dot { background: var(--error-color); }
-
-.supabase-setup-guide {
-    margin-top: 20px;
-    padding: 20px;
-    background: rgba(62, 207, 142, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(62, 207, 142, 0.2);
-}
-
-.supabase-setup-guide ol {
-    text-align: left;
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.supabase-setup-guide code {
-    background: rgba(0, 0, 0, 0.1);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-}
-
-.small-note {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 10px;
-    text-align: center;
-}
 </style>
 </head>
 
 <body>
-    <!-- Connection Status -->
-    <div id="connectionStatus" class="connection-status offline hidden">
-        <span class="status-dot"></span>
-        <span id="connectionText">Offline</span>
-    </div>
-
     <!-- Loading Screen -->
     <div id="loadingScreen" class="container loading">
         <div class="spinner"></div>
         <h2>Loading Raven...</h2>
         <p id="loadingMessage">Initializing Supabase...</p>
         <div id="errorDisplay" class="error-message hidden"></div>
-        <div id="supabaseSetupGuide" class="supabase-setup-guide hidden">
-            <p><strong>Supabase Setup Required:</strong></p>
-            <ol>
-                <li>Go to <a href="https://supabase.com" target="_blank">supabase.com</a> and create account</li>
-                <li>Create a new project (free tier available)</li>
-                <li>Run the SQL below in the SQL Editor:</li>
-                <pre><code>-- 1. Create users table
-CREATE TABLE users (
-    id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    name TEXT,
-    photo_url TEXT,
-    institute TEXT,
-    course TEXT,
-    target_score INTEGER CHECK (target_score >= 180 AND target_score <= 400),
-    subjects TEXT[], -- Array of subjects
-    profile_complete BOOLEAN DEFAULT FALSE,
-    login_count INTEGER DEFAULT 0,
-    last_login TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 2. Enable Row Level Security
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- 3. Create policies
-CREATE POLICY "Users can view own data" 
-    ON users FOR SELECT 
-    USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own data" 
-    ON users FOR UPDATE 
-    USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own data" 
-    ON users FOR INSERT 
-    WITH CHECK (auth.uid() = id);
-
--- 4. Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE users;</code></pre>
-                <li>Go to Settings → API and copy your URL & anon key</li>
-                <li>Update lines 28-29 in the code with your credentials</li>
-            </ol>
-            <button onclick="window.open('https://app.supabase.com', '_blank')" 
-                    class="btn btn-supabase" style="margin-top: 10px;">
-                Open Supabase Dashboard
-            </button>
-        </div>
     </div>
 
     <!-- Login Screen -->
@@ -450,11 +323,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE users;</code></pre>
             <button id="emailSignInBtn" class="btn btn-primary">
                 Sign in with Email
             </button>
-            
-            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 20px;">
-                By signing in, you agree to our Terms of Service
-            </p>
-            <p class="small-note">Powered by Supabase</p>
         </div>
     </div>
 
@@ -580,36 +448,42 @@ ALTER PUBLICATION supabase_realtime ADD TABLE users;</code></pre>
             <button onclick="logout()" class="btn logout-btn">
                 Logout
             </button>
-            <p class="small-note">Data securely stored in PostgreSQL</p>
         </div>
     </div>
 
 <script>
-// ============ SUPABASE CONFIGURATION ============
-const SUPABASE_URL = 'https://kwicenbmgllolchbrjve.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3aWNlbmJtZ2xsb2xjaGJyanZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNDk2OTQsImV4cCI6MjA4MDYyNTY5NH0.UL1NvX0lZaeX9QVb9bBTkjLrhd0XMeAwei-v8-7FVnc';
+// ============ SINGLE SUPABASE INITIALIZATION ============
+const SUPABASE_CONFIG = {
+    url: 'https://kwicenbmgllolchbrjve.supabase.co',
+    key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3aWNlbmJtZ2xsb2xjaGJyanZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNDk2OTQsImV4cCI6MjA4MDYyNTY5NH0.UL1NvX0lZaeX9QVb9bBTkjLrhd0XMeAwei-v8-7FVnc'
+};
 
-// Initialize Supabase client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Create ONE Supabase client instance
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_CONFIG.url, 
+    SUPABASE_CONFIG.key
+);
 
-// Make supabase available globally for debugging
-window.supabaseClient = supabase;
+// ============ APPLICATION STATE ============
+const AppState = {
+    currentUser: null,
+    currentUserData: null,
+    selectedSubjects: [],
+    SUBJECTS: [
+        'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
+        'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
+        'Agricultural Science', 'CRS', 'History'
+    ]
+};
 
-// ============ GLOBAL VARIABLES ============
-let currentUser = null;
-let currentUserData = null;
-let selectedSubjects = [];
-const SUBJECTS = [
-    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
-    'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
-    'Agricultural Science', 'CRS', 'History'
-];
-
-// ============ SCREEN MANAGEMENT ============
+// ============ UI MANAGEMENT ============
 function showScreen(screenId) {
     const screens = ['loadingScreen', 'loginScreen', 'emailLoginModal', 'profileScreen', 'dashboardScreen'];
     screens.forEach(screen => {
-        document.getElementById(screen).classList.toggle('hidden', screen !== screenId);
+        const element = document.getElementById(screen);
+        if (element) {
+            element.classList.toggle('hidden', screen !== screenId);
+        }
     });
 }
 
@@ -619,7 +493,7 @@ function showError(message, elementId = 'errorDisplay') {
         errorEl.textContent = message;
         errorEl.classList.remove('hidden');
     }
-    console.error(message);
+    console.error('App Error:', message);
 }
 
 function hideError(elementId = 'errorDisplay') {
@@ -648,35 +522,48 @@ function updateLoading(message) {
 async function setupAuthListener() {
     updateLoading('Checking authentication...');
     
-    // Check current session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session?.user) {
-        console.log('User authenticated:', session.user.email);
-        currentUser = session.user;
-        await loadUserData(session.user);
-    } else {
-        console.log('No user, showing login screen');
-        currentUser = null;
-        currentUserData = null;
+    try {
+        // Check current session
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        
+        if (sessionError) {
+            console.error('Session error:', sessionError);
+            showError('Authentication error: ' + sessionError.message);
+            showScreen('loginScreen');
+            return;
+        }
+        
+        if (session?.user) {
+            console.log('User authenticated:', session.user.email);
+            AppState.currentUser = session.user;
+            await loadUserData(session.user);
+        } else {
+            console.log('No user session found');
+            AppState.currentUser = null;
+            AppState.currentUserData = null;
+            showScreen('loginScreen');
+        }
+        
+        // Listen for auth changes
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log('Auth state changed:', event, session?.user?.email);
+            
+            if (event === 'SIGNED_IN' && session?.user) {
+                AppState.currentUser = session.user;
+                await loadUserData(session.user);
+            } else if (event === 'SIGNED_OUT') {
+                AppState.currentUser = null;
+                AppState.currentUserData = null;
+                AppState.selectedSubjects = [];
+                showScreen('loginScreen');
+            }
+        });
+        
+    } catch (error) {
+        console.error('Auth setup error:', error);
+        showError('Failed to initialize authentication');
         showScreen('loginScreen');
     }
-    
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-            currentUser = session.user;
-            await loadUserData(session.user);
-        } else if (event === 'SIGNED_OUT') {
-            currentUser = null;
-            currentUserData = null;
-            showScreen('loginScreen');
-        } else if (event === 'USER_UPDATED') {
-            currentUser = session?.user || null;
-        }
-    });
 }
 
 async function signInWithGoogle() {
@@ -688,14 +575,10 @@ async function signInWithGoogle() {
     hideError('loginError');
     
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: window.location.origin,
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent'
-                }
+                redirectTo: window.location.origin
             }
         });
         
@@ -703,15 +586,7 @@ async function signInWithGoogle() {
         
     } catch (error) {
         console.error('Google sign-in error:', error);
-        
-        if (error.message?.includes('popup')) {
-            showError('Please allow popups for this site', 'loginError');
-        } else if (error.message?.includes('network')) {
-            showError('Network error. Check your internet connection.', 'loginError');
-        } else {
-            showError('Sign in failed: ' + error.message, 'loginError');
-        }
-        
+        showError('Sign in failed: ' + error.message, 'loginError');
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
@@ -734,7 +609,7 @@ async function signInWithEmail() {
     hideError('emailLoginSuccess');
     
     try {
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabaseClient.auth.signInWithOtp({
             email: email,
             options: {
                 emailRedirectTo: window.location.origin,
@@ -747,7 +622,6 @@ async function signInWithEmail() {
         showSuccess('Magic link sent! Check your email.', 'emailLoginSuccess');
         btn.textContent = 'Link Sent ✓';
         
-        // Show success for 5 seconds, then go back to login
         setTimeout(() => {
             showScreen('loginScreen');
         }, 5000);
@@ -760,74 +634,37 @@ async function signInWithEmail() {
     }
 }
 
-// ============ SUPABASE DATABASE FUNCTIONS ============
+// ============ DATABASE OPERATIONS ============
 async function loadUserData(user) {
     updateLoading('Loading your data...');
     showScreen('loadingScreen');
     
     try {
-        // Try to fetch user data from our users table
-        const { data: userData, error: fetchError } = await supabase
+        // Try to fetch user data
+        const { data: userData, error: fetchError } = await supabaseClient
             .from('users')
             .select('*')
             .eq('id', user.id)
             .single();
         
-        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        if (fetchError) {
+            // If no user found (PGRST116), create new user
+            if (fetchError.code === 'PGRST116') {
+                await createNewUser(user);
+                return;
+            }
             throw fetchError;
         }
         
-        if (userData) {
-            currentUserData = userData;
-            console.log('Existing user loaded:', currentUserData);
-            
-            // Update last login
-            try {
-                const { error: updateError } = await supabase
-                    .from('users')
-                    .update({
-                        last_login: new Date().toISOString(),
-                        login_count: (currentUserData.login_count || 0) + 1,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', user.id);
-                
-                if (updateError) throw updateError;
-                
-                currentUserData.login_count = (currentUserData.login_count || 0) + 1;
-                currentUserData.last_login = new Date().toISOString();
-                
-            } catch (updateError) {
-                console.warn('Could not update login count:', updateError);
-            }
-            
-            if (currentUserData.profile_complete) {
-                showDashboard();
-            } else {
-                showProfileSetup(user);
-            }
+        AppState.currentUserData = userData;
+        console.log('Existing user loaded:', AppState.currentUserData);
+        
+        // Update last login
+        await updateUserLogin(user.id);
+        
+        if (AppState.currentUserData.profile_complete) {
+            showDashboard();
         } else {
-            // Create new user in our table
-            const newUserData = {
-                id: user.id,
-                email: user.email,
-                name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-                photo_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                login_count: 1,
-                last_login: new Date().toISOString(),
-                profile_complete: false
-            };
-            
-            const { error: insertError } = await supabase
-                .from('users')
-                .insert([newUserData]);
-            
-            if (insertError) throw insertError;
-            
-            console.log('New user created:', newUserData);
-            currentUserData = newUserData;
             showProfileSetup(user);
         }
         
@@ -835,33 +672,74 @@ async function loadUserData(user) {
         console.error('Error loading user data:', error);
         
         if (error.message?.includes('relation "users" does not exist')) {
-            // Table doesn't exist - show setup guide
-            document.getElementById('supabaseSetupGuide').classList.remove('hidden');
-            showError('Database table not found. Please run the SQL setup.', 'errorDisplay');
-        } else if (error.message?.includes('JWT')) {
-            showError('Authentication error. Please sign in again.', 'errorDisplay');
+            showError('Database table not found. Please run SQL setup in Supabase.');
+        } else if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+            showError('Authentication error. Please sign in again.');
             logout();
-        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-            showError('Cannot connect to database. Check your internet.', 'errorDisplay');
         } else {
-            showError('Error loading data: ' + error.message, 'errorDisplay');
+            showError('Error loading data: ' + error.message);
         }
         
         showScreen('loginScreen');
     }
 }
 
-// ============ PROFILE SETUP ============
+async function createNewUser(user) {
+    const newUserData = {
+        id: user.id,
+        email: user.email,
+        name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+        photo_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        login_count: 1,
+        last_login: new Date().toISOString(),
+        profile_complete: false
+    };
+    
+    const { error: insertError } = await supabaseClient
+        .from('users')
+        .insert([newUserData]);
+    
+    if (insertError) throw insertError;
+    
+    console.log('New user created:', newUserData);
+    AppState.currentUserData = newUserData;
+    showProfileSetup(user);
+}
+
+async function updateUserLogin(userId) {
+    try {
+        const { error } = await supabaseClient
+            .from('users')
+            .update({
+                last_login: new Date().toISOString(),
+                login_count: (AppState.currentUserData.login_count || 0) + 1,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+        
+        if (error) throw error;
+        
+        AppState.currentUserData.login_count = (AppState.currentUserData.login_count || 0) + 1;
+        AppState.currentUserData.last_login = new Date().toISOString();
+        
+    } catch (error) {
+        console.warn('Could not update login count:', error);
+    }
+}
+
+// ============ PROFILE MANAGEMENT ============
 function showProfileSetup(user) {
     // Populate user info
-    document.getElementById('profileName').value = currentUserData.name || '';
+    document.getElementById('profileName').value = AppState.currentUserData.name || '';
     document.getElementById('profileEmail').value = user.email || '';
     
     // Populate subjects grid
     const subjectsGrid = document.getElementById('subjectsGrid');
     subjectsGrid.innerHTML = '';
     
-    SUBJECTS.forEach(subject => {
+    AppState.SUBJECTS.forEach(subject => {
         const chip = document.createElement('div');
         chip.className = 'subject-chip';
         chip.textContent = subject;
@@ -870,24 +748,18 @@ function showProfileSetup(user) {
         subjectsGrid.appendChild(chip);
     });
     
-    // Setup form submission
-    const profileForm = document.getElementById('profileForm');
-    profileForm.onsubmit = handleProfileSubmit;
-    
     showScreen('profileScreen');
 }
 
 function toggleSubject(chip) {
     const subject = chip.dataset.subject;
-    const index = selectedSubjects.indexOf(subject);
+    const index = AppState.selectedSubjects.indexOf(subject);
     
     if (index > -1) {
-        // Remove if already selected
-        selectedSubjects.splice(index, 1);
+        AppState.selectedSubjects.splice(index, 1);
         chip.classList.remove('selected');
-    } else if (selectedSubjects.length < 3) {
-        // Add if less than 3 selected
-        selectedSubjects.push(subject);
+    } else if (AppState.selectedSubjects.length < 3) {
+        AppState.selectedSubjects.push(subject);
         chip.classList.add('selected');
     }
     
@@ -895,7 +767,7 @@ function toggleSubject(chip) {
 }
 
 function updateSubjectMessage() {
-    const remaining = 3 - selectedSubjects.length;
+    const remaining = 3 - AppState.selectedSubjects.length;
     const messageEl = document.getElementById('subjectMessage');
     
     if (remaining > 0) {
@@ -910,8 +782,7 @@ function updateSubjectMessage() {
 async function handleProfileSubmit(e) {
     e.preventDefault();
     
-    // Validate subjects
-    if (selectedSubjects.length !== 3) {
+    if (AppState.selectedSubjects.length !== 3) {
         showError('Please select exactly 3 subjects', 'profileError');
         return;
     }
@@ -928,7 +799,7 @@ async function handleProfileSubmit(e) {
             institute: document.getElementById('institute').value,
             course: document.getElementById('course').value.trim(),
             target_score: parseInt(document.getElementById('targetScore').value),
-            subjects: selectedSubjects,
+            subjects: AppState.selectedSubjects,
             profile_complete: true,
             updated_at: new Date().toISOString()
         };
@@ -938,15 +809,15 @@ async function handleProfileSubmit(e) {
             throw new Error('Target score must be between 180 and 400');
         }
         
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('users')
             .update(updateData)
-            .eq('id', currentUser.id);
+            .eq('id', AppState.currentUser.id);
         
         if (error) throw error;
         
         // Update local data
-        currentUserData = { ...currentUserData, ...updateData };
+        AppState.currentUserData = { ...AppState.currentUserData, ...updateData };
         
         showDashboard();
         
@@ -960,24 +831,24 @@ async function handleProfileSubmit(e) {
 
 // ============ DASHBOARD ============
 function showDashboard() {
-    if (!currentUserData) return;
+    if (!AppState.currentUserData) return;
     
     // Update avatar
     const avatarEl = document.getElementById('userAvatar');
-    if (currentUserData.photo_url) {
-        avatarEl.innerHTML = `<img src="${currentUserData.photo_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    if (AppState.currentUserData.photo_url) {
+        avatarEl.innerHTML = `<img src="${AppState.currentUserData.photo_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
     } else {
-        avatarEl.textContent = getInitials(currentUserData.name || 'U');
+        avatarEl.textContent = getInitials(AppState.currentUserData.name || 'U');
     }
     
     // Update user info
-    document.getElementById('dashboardUserName').textContent = currentUserData.name?.split(' ')[0] || 'User';
-    document.getElementById('dashboardEmail').textContent = currentUserData.email || '-';
-    document.getElementById('dashboardInstitute').textContent = currentUserData.institute || '-';
-    document.getElementById('dashboardCourse').textContent = currentUserData.course || '-';
-    document.getElementById('dashboardTargetScore').textContent = currentUserData.target_score || '-';
-    document.getElementById('dashboardSubjects').textContent = currentUserData.subjects?.join(', ') || '-';
-    document.getElementById('dashboardLoginCount').textContent = currentUserData.login_count || '1';
+    document.getElementById('dashboardUserName').textContent = AppState.currentUserData.name?.split(' ')[0] || 'User';
+    document.getElementById('dashboardEmail').textContent = AppState.currentUserData.email || '-';
+    document.getElementById('dashboardInstitute').textContent = AppState.currentUserData.institute || '-';
+    document.getElementById('dashboardCourse').textContent = AppState.currentUserData.course || '-';
+    document.getElementById('dashboardTargetScore').textContent = AppState.currentUserData.target_score || '-';
+    document.getElementById('dashboardSubjects').textContent = AppState.currentUserData.subjects?.join(', ') || '-';
+    document.getElementById('dashboardLoginCount').textContent = AppState.currentUserData.login_count || '1';
     
     showScreen('dashboardScreen');
 }
@@ -991,16 +862,18 @@ async function logout() {
     showScreen('loadingScreen');
     updateLoading('Signing out...');
     
-    currentUser = null;
-    currentUserData = null;
-    selectedSubjects = [];
-    
     try {
-        const { error } = await supabase.auth.signOut();
+        const { error } = await supabaseClient.auth.signOut();
         
         if (error) throw error;
         
         console.log('User signed out successfully');
+        
+        // Clear state
+        AppState.currentUser = null;
+        AppState.currentUserData = null;
+        AppState.selectedSubjects = [];
+        
         showScreen('loginScreen');
         hideError('loginError');
         
@@ -1013,53 +886,26 @@ async function logout() {
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if Supabase credentials are set
-    if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-anon')) {
-        document.getElementById('supabaseSetupGuide').classList.remove('hidden');
-        showError('Please configure your Supabase credentials first', 'errorDisplay');
-        return;
-    }
-    
     // Setup event listeners
     document.getElementById('googleSignInBtn').onclick = signInWithGoogle;
     document.getElementById('emailSignInBtn').onclick = () => showScreen('emailLoginModal');
     document.getElementById('sendMagicLinkBtn').onclick = signInWithEmail;
+    document.getElementById('profileForm').onsubmit = handleProfileSubmit;
     
-    // Add enter key support for email input
+    // Enter key for email input
     document.getElementById('emailInput')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             signInWithEmail();
         }
     });
     
-    // Initialize
-    console.log('Supabase initialized:', SUPABASE_URL);
+    // Initialize app
+    console.log('Raven App Initializing...');
+    console.log('Supabase URL:', SUPABASE_CONFIG.url);
+    
+    // Start auth listener
     setupAuthListener();
-    
-    // Update connection status
-    updateConnectionStatus();
-    
-    // Listen for online/offline events
-    window.addEventListener('online', updateConnectionStatus);
-    window.addEventListener('offline', updateConnectionStatus);
 });
-
-function updateConnectionStatus() {
-    const statusEl = document.getElementById('connectionStatus');
-    const textEl = document.getElementById('connectionText');
-    
-    if (navigator.onLine) {
-        statusEl.classList.remove('offline');
-        statusEl.classList.add('online');
-        textEl.textContent = 'Online';
-        statusEl.classList.remove('hidden');
-    } else {
-        statusEl.classList.remove('online');
-        statusEl.classList.add('offline');
-        textEl.textContent = 'Offline';
-        statusEl.classList.remove('hidden');
-    }
-}
 </script>
 </body>
 </html>
