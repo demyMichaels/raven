@@ -3,84 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raven - JAMB Prep Platform</title>
+<title>Raven - Exam Preparation Platform</title>
 
-<!-- Firebase SDK v10 -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-  import { 
-    getAuth, 
-    GoogleAuthProvider, 
-    signInWithPopup, 
-    onAuthStateChanged, 
-    signOut 
-  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-  
-  import { 
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
-    authDomain: "raven-bddf7.firebaseapp.com",
-    projectId: "raven-bddf7",
-    storageBucket: "raven-bddf7.firebasestorage.app",
-    messagingSenderId: "515918066242",
-    appId: "1:515918066242:web:3aba4c8d6007310371f3db",
-    measurementId: "G-GGK7G5S0WB"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  
-  // Export to global scope
-  window.firebaseModules = {
-    auth,
-    db,
-    GoogleAuthProvider,
-    signInWithPopup,
-    onAuthStateChanged,
-    signOut,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot
-  };
-  
-  console.log('Firebase Firestore initialized successfully');
-</script>
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* [Keep all your CSS styles from previous version] */
 :root {
     --bg-primary: #FAFBFC;
     --bg-card: #FFFFFF;
     --text-primary: #111827;
     --text-secondary: #6B7280;
     --border-color: #E5E7EB;
-    --accent-color: #00B4A6;
+    --accent-color: #3ECF8E; /* Supabase green */
     --success-color: #10B981;
     --error-color: #EF4444;
+    --supabase-dark: #1C1C1C;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -99,7 +37,11 @@ body {
 
 .hidden { display: none !important; }
 
-.container { width: 100%; max-width: 400px; margin: 0 auto; }
+.container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
 
 .card {
     background: var(--bg-card);
@@ -108,6 +50,21 @@ body {
     padding: 32px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
+}
+
+.card h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+    color: var(--accent-color);
+}
+
+.card p {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 16px;
 }
 
 .btn {
@@ -125,8 +82,15 @@ body {
     gap: 10px;
 }
 
-.btn-primary { background: var(--accent-color); color: white; }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
 
 .btn-google {
     background: white;
@@ -136,11 +100,29 @@ body {
 
 .btn-google:hover {
     border-color: var(--accent-color);
-    box-shadow: 0 2px 8px rgba(0, 180, 166, 0.1);
+    box-shadow: 0 2px 8px rgba(62, 207, 142, 0.1);
 }
 
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary); }
+.btn-supabase {
+    background: var(--supabase-dark);
+    color: white;
+}
+
+.btn-supabase:hover {
+    background: #333;
+    transform: translateY(-1px);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
 
 .form-control {
     width: 100%;
@@ -153,7 +135,19 @@ body {
     transition: border-color 0.2s;
 }
 
-.form-control:focus { outline: none; border-color: var(--accent-color); }
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
 
 .subjects-grid {
     display: grid;
@@ -174,9 +168,12 @@ body {
     text-align: center;
 }
 
-.subject-chip:hover { border-color: var(--accent-color); }
+.subject-chip:hover {
+    border-color: var(--accent-color);
+}
+
 .subject-chip.selected {
-    background: rgba(0, 180, 166, 0.1);
+    background: rgba(62, 207, 142, 0.1);
     border-color: var(--accent-color);
     color: var(--accent-color);
 }
@@ -193,14 +190,16 @@ body {
 .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(0, 180, 166, 0.2);
+    border: 3px solid rgba(62, 207, 142, 0.2);
     border-top-color: var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 .error-message {
     background: rgba(239, 68, 68, 0.1);
@@ -213,7 +212,34 @@ body {
     text-align: center;
 }
 
-.dashboard-card { text-align: center; padding: 40px 20px; }
+.success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.back-link:hover {
+    color: var(--accent-color);
+}
+
+.dashboard-card {
+    text-align: center;
+    padding: 40px 20px;
+}
 
 .avatar {
     width: 80px;
@@ -227,11 +253,11 @@ body {
     font-size: 32px;
     font-weight: bold;
     margin: 0 auto 20px;
-    background-image: linear-gradient(135deg, #0F2C59 0%, #00B4A6 100%);
+    background-image: linear-gradient(135deg, var(--supabase-dark) 0%, var(--accent-color) 100%);
 }
 
 .user-info {
-    background: rgba(0, 180, 166, 0.05);
+    background: rgba(62, 207, 142, 0.05);
     padding: 20px;
     border-radius: 12px;
     margin: 20px 0;
@@ -245,9 +271,19 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.info-row:last-child { border-bottom: none; }
-.info-label { color: var(--text-secondary); font-weight: 500; }
-.info-value { font-weight: 600; color: var(--text-primary); }
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
 
 .logout-btn {
     margin-top: 20px;
@@ -261,16 +297,133 @@ body {
     color: var(--error-color);
     border-color: var(--error-color);
 }
+
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.connection-status.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.connection-status.offline {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.online .status-dot { background: var(--success-color); }
+.offline .status-dot { background: var(--error-color); }
+
+.supabase-setup-guide {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(62, 207, 142, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(62, 207, 142, 0.2);
+}
+
+.supabase-setup-guide ol {
+    text-align: left;
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.supabase-setup-guide code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.small-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    text-align: center;
+}
 </style>
 </head>
 
 <body>
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status offline hidden">
+        <span class="status-dot"></span>
+        <span id="connectionText">Offline</span>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen" class="container loading">
         <div class="spinner"></div>
         <h2>Loading Raven...</h2>
-        <p id="loadingMessage">Checking authentication...</p>
+        <p id="loadingMessage">Initializing Supabase...</p>
         <div id="errorDisplay" class="error-message hidden"></div>
+        <div id="supabaseSetupGuide" class="supabase-setup-guide hidden">
+            <p><strong>Supabase Setup Required:</strong></p>
+            <ol>
+                <li>Go to <a href="https://supabase.com" target="_blank">supabase.com</a> and create account</li>
+                <li>Create a new project (free tier available)</li>
+                <li>Run the SQL below in the SQL Editor:</li>
+                <pre><code>-- 1. Create users table
+CREATE TABLE users (
+    id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT,
+    photo_url TEXT,
+    institute TEXT,
+    course TEXT,
+    target_score INTEGER CHECK (target_score >= 180 AND target_score <= 400),
+    subjects TEXT[], -- Array of subjects
+    profile_complete BOOLEAN DEFAULT FALSE,
+    login_count INTEGER DEFAULT 0,
+    last_login TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Enable Row Level Security
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create policies
+CREATE POLICY "Users can view own data" 
+    ON users FOR SELECT 
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own data" 
+    ON users FOR UPDATE 
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own data" 
+    ON users FOR INSERT 
+    WITH CHECK (auth.uid() = id);
+
+-- 4. Enable realtime
+ALTER PUBLICATION supabase_realtime ADD TABLE users;</code></pre>
+                <li>Go to Settings → API and copy your URL & anon key</li>
+                <li>Update lines 28-29 in the code with your credentials</li>
+            </ol>
+            <button onclick="window.open('https://app.supabase.com', '_blank')" 
+                    class="btn btn-supabase" style="margin-top: 10px;">
+                Open Supabase Dashboard
+            </button>
+        </div>
     </div>
 
     <!-- Login Screen -->
@@ -290,9 +443,41 @@ body {
                 Continue with Google
             </button>
             
+            <div style="margin: 20px 0; text-align: center; color: var(--text-secondary);">
+                or
+            </div>
+            
+            <button id="emailSignInBtn" class="btn btn-primary">
+                Sign in with Email
+            </button>
+            
             <p style="font-size: 12px; color: var(--text-secondary); margin-top: 20px;">
                 By signing in, you agree to our Terms of Service
             </p>
+            <p class="small-note">Powered by Supabase</p>
+        </div>
+    </div>
+
+    <!-- Email Login Modal -->
+    <div id="emailLoginModal" class="container hidden">
+        <div class="card">
+            <h1>Sign in with Email</h1>
+            <p>Enter your email to receive a magic link</p>
+            <div id="emailLoginError" class="error-message hidden"></div>
+            <div id="emailLoginSuccess" class="success-message hidden"></div>
+            
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="emailInput" class="form-control" placeholder="you@example.com" required>
+            </div>
+            
+            <button id="sendMagicLinkBtn" class="btn btn-primary">
+                Send Magic Link
+            </button>
+            
+            <button onclick="showScreen('loginScreen')" class="back-link" style="margin-top: 20px;">
+                ← Back to login options
+            </button>
         </div>
     </div>
 
@@ -386,21 +571,35 @@ body {
                     <span class="info-label">JAMB Subjects:</span>
                     <span id="dashboardSubjects" class="info-value">-</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Login Count:</span>
+                    <span id="dashboardLoginCount" class="info-value">-</span>
+                </div>
             </div>
             
             <button onclick="logout()" class="btn logout-btn">
                 Logout
             </button>
+            <p class="small-note">Data securely stored in PostgreSQL</p>
         </div>
     </div>
 
 <script>
+// ============ SUPABASE CONFIGURATION ============
+// ⚠️ REPLACE THESE WITH YOUR SUPABASE CREDENTIALS ⚠️
+const SUPABASE_URL = 'https://your-project-id.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key';
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Make supabase available globally for debugging
+window.supabaseClient = supabase;
+
 // ============ GLOBAL VARIABLES ============
 let currentUser = null;
 let currentUserData = null;
 let selectedSubjects = [];
-let userListener = null;
-
 const SUBJECTS = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
     'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
@@ -409,7 +608,7 @@ const SUBJECTS = [
 
 // ============ SCREEN MANAGEMENT ============
 function showScreen(screenId) {
-    const screens = ['loadingScreen', 'loginScreen', 'profileScreen', 'dashboardScreen'];
+    const screens = ['loadingScreen', 'loginScreen', 'emailLoginModal', 'profileScreen', 'dashboardScreen'];
     screens.forEach(screen => {
         document.getElementById(screen).classList.toggle('hidden', screen !== screenId);
     });
@@ -431,6 +630,14 @@ function hideError(elementId = 'errorDisplay') {
     }
 }
 
+function showSuccess(message, elementId) {
+    const successEl = document.getElementById(elementId);
+    if (successEl) {
+        successEl.textContent = message;
+        successEl.classList.remove('hidden');
+    }
+}
+
 function updateLoading(message) {
     const loadingMsg = document.getElementById('loadingMessage');
     if (loadingMsg) {
@@ -439,27 +646,36 @@ function updateLoading(message) {
 }
 
 // ============ AUTHENTICATION ============
-function setupAuthListener() {
+async function setupAuthListener() {
     updateLoading('Checking authentication...');
     
-    if (!window.firebaseModules) {
-        showError('Firebase not loaded. Please refresh the page.');
-        return;
+    // Check current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+        console.log('User authenticated:', session.user.email);
+        currentUser = session.user;
+        await loadUserData(session.user);
+    } else {
+        console.log('No user, showing login screen');
+        currentUser = null;
+        currentUserData = null;
+        showScreen('loginScreen');
     }
     
-    const { onAuthStateChanged, auth } = window.firebaseModules;
-    
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log('User authenticated:', user.email);
-            currentUser = user;
-            await loadUserData(user);
-        } else {
-            console.log('No user, showing login screen');
+    // Listen for auth changes
+    supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+            currentUser = session.user;
+            await loadUserData(session.user);
+        } else if (event === 'SIGNED_OUT') {
             currentUser = null;
             currentUserData = null;
-            if (userListener) userListener();
             showScreen('loginScreen');
+        } else if (event === 'USER_UPDATED') {
+            currentUser = session?.user || null;
         }
     });
 }
@@ -473,21 +689,25 @@ async function signInWithGoogle() {
     hideError('loginError');
     
     try {
-        const { GoogleAuthProvider, signInWithPopup, auth } = window.firebaseModules;
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent'
+                }
+            }
+        });
         
-        await signInWithPopup(auth, provider);
-        console.log('Google sign-in successful');
+        if (error) throw error;
         
     } catch (error) {
-        console.error('Sign in error:', error);
+        console.error('Google sign-in error:', error);
         
-        if (error.code === 'auth/popup-closed-by-user') {
-            showError('Sign in cancelled', 'loginError');
-        } else if (error.code === 'auth/popup-blocked') {
+        if (error.message?.includes('popup')) {
             showError('Please allow popups for this site', 'loginError');
-        } else if (error.code === 'auth/network-request-failed') {
+        } else if (error.message?.includes('network')) {
             showError('Network error. Check your internet connection.', 'loginError');
         } else {
             showError('Sign in failed: ' + error.message, 'loginError');
@@ -498,101 +718,138 @@ async function signInWithGoogle() {
     }
 }
 
-// ============ FIRESTORE FUNCTIONS ============
+async function signInWithEmail() {
+    const email = document.getElementById('emailInput').value.trim();
+    
+    if (!email || !email.includes('@')) {
+        showError('Please enter a valid email address', 'emailLoginError');
+        return;
+    }
+    
+    const btn = document.getElementById('sendMagicLinkBtn');
+    const originalText = btn.textContent;
+    
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    hideError('emailLoginError');
+    hideError('emailLoginSuccess');
+    
+    try {
+        const { error } = await supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+                emailRedirectTo: window.location.origin,
+                shouldCreateUser: true
+            }
+        });
+        
+        if (error) throw error;
+        
+        showSuccess('Magic link sent! Check your email.', 'emailLoginSuccess');
+        btn.textContent = 'Link Sent ✓';
+        
+        // Show success for 5 seconds, then go back to login
+        setTimeout(() => {
+            showScreen('loginScreen');
+        }, 5000);
+        
+    } catch (error) {
+        console.error('Email sign-in error:', error);
+        showError('Failed to send magic link: ' + error.message, 'emailLoginError');
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+// ============ SUPABASE DATABASE FUNCTIONS ============
 async function loadUserData(user) {
     updateLoading('Loading your data...');
     showScreen('loadingScreen');
     
     try {
-        const { db, doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot } = window.firebaseModules;
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
+        // Try to fetch user data from our users table
+        const { data: userData, error: fetchError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
         
-        if (userDoc.exists()) {
-            currentUserData = userDoc.data();
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            throw fetchError;
+        }
+        
+        if (userData) {
+            currentUserData = userData;
             console.log('Existing user loaded:', currentUserData);
             
             // Update last login
             try {
-                await updateDoc(userRef, {
-                    lastLogin: serverTimestamp(),
-                    lastActive: serverTimestamp(),
-                    loginCount: (currentUserData.loginCount || 0) + 1
-                });
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({
+                        last_login: new Date().toISOString(),
+                        login_count: (currentUserData.login_count || 0) + 1,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', user.id);
+                
+                if (updateError) throw updateError;
+                
+                currentUserData.login_count = (currentUserData.login_count || 0) + 1;
+                currentUserData.last_login = new Date().toISOString();
+                
             } catch (updateError) {
                 console.warn('Could not update login count:', updateError);
             }
             
-            // Set up real-time listener
-            setupUserListener(userRef);
-            
-            if (currentUserData.profileComplete) {
+            if (currentUserData.profile_complete) {
                 showDashboard();
             } else {
                 showProfileSetup(user);
             }
         } else {
-            // Create new user
+            // Create new user in our table
             const newUserData = {
-                uid: user.uid,
+                id: user.id,
                 email: user.email,
-                name: user.displayName || 'User',
-                photoURL: user.photoURL || null,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                lastActive: serverTimestamp(),
-                loginCount: 1,
-                profileComplete: false,
-                isPremium: false,
-                balance: 0,
-                totalEarnings: 0,
-                studyStreak: 0,
-                totalQuestions: 0,
-                correctAnswers: 0
+                name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+                photo_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                login_count: 1,
+                last_login: new Date().toISOString(),
+                profile_complete: false
             };
             
-            await setDoc(userRef, newUserData);
-            console.log('New user created in Firestore:', newUserData);
+            const { error: insertError } = await supabase
+                .from('users')
+                .insert([newUserData]);
             
+            if (insertError) throw insertError;
+            
+            console.log('New user created:', newUserData);
             currentUserData = newUserData;
-            setupUserListener(userRef);
             showProfileSetup(user);
         }
         
     } catch (error) {
         console.error('Error loading user data:', error);
         
-        if (error.code === 'permission-denied') {
-            showError('Permission denied. Please check Firestore security rules.', 'errorDisplay');
-        } else if (error.code === 'failed-precondition') {
-            showError('Firestore database not created. Please create it in Firebase Console.', 'errorDisplay');
-        } else if (error.code === 'unavailable') {
-            showError('Cannot connect to database. Please check your internet connection.', 'errorDisplay');
+        if (error.message?.includes('relation "users" does not exist')) {
+            // Table doesn't exist - show setup guide
+            document.getElementById('supabaseSetupGuide').classList.remove('hidden');
+            showError('Database table not found. Please run the SQL setup.', 'errorDisplay');
+        } else if (error.message?.includes('JWT')) {
+            showError('Authentication error. Please sign in again.', 'errorDisplay');
+            logout();
+        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+            showError('Cannot connect to database. Check your internet.', 'errorDisplay');
         } else {
             showError('Error loading data: ' + error.message, 'errorDisplay');
         }
         
         showScreen('loginScreen');
     }
-}
-
-function setupUserListener(userRef) {
-    const { onSnapshot } = window.firebaseModules;
-    
-    // Clean up previous listener
-    if (userListener) userListener();
-    
-    // Set up real-time listener
-    userListener = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            currentUserData = doc.data();
-            if (currentUserData.profileComplete) {
-                updateUserDisplay();
-            }
-        }
-    }, (error) => {
-        console.error('User listener error:', error);
-    });
 }
 
 // ============ PROFILE SETUP ============
@@ -626,9 +883,11 @@ function toggleSubject(chip) {
     const index = selectedSubjects.indexOf(subject);
     
     if (index > -1) {
+        // Remove if already selected
         selectedSubjects.splice(index, 1);
         chip.classList.remove('selected');
     } else if (selectedSubjects.length < 3) {
+        // Add if less than 3 selected
         selectedSubjects.push(subject);
         chip.classList.add('selected');
     }
@@ -652,6 +911,7 @@ function updateSubjectMessage() {
 async function handleProfileSubmit(e) {
     e.preventDefault();
     
+    // Validate subjects
     if (selectedSubjects.length !== 3) {
         showError('Please select exactly 3 subjects', 'profileError');
         return;
@@ -664,31 +924,30 @@ async function handleProfileSubmit(e) {
     hideError('profileError');
     
     try {
-        const { db, doc, updateDoc, serverTimestamp } = window.firebaseModules;
-        const userRef = doc(db, 'users', currentUser.uid);
-        
         const updateData = {
             name: document.getElementById('profileName').value.trim(),
             institute: document.getElementById('institute').value,
             course: document.getElementById('course').value.trim(),
-            targetScore: parseInt(document.getElementById('targetScore').value),
+            target_score: parseInt(document.getElementById('targetScore').value),
             subjects: selectedSubjects,
-            profileComplete: true,
-            profileCompletedAt: serverTimestamp()
+            profile_complete: true,
+            updated_at: new Date().toISOString()
         };
         
-        await updateDoc(userRef, updateData);
-        
-        // Update analytics (optional)
-        try {
-            const analyticsRef = doc(db, 'analytics', 'users');
-            await updateDoc(analyticsRef, {
-                profilesCompleted: { increment: 1 },
-                lastUpdated: serverTimestamp()
-            }, { merge: true });
-        } catch (analyticsError) {
-            console.log('Analytics update optional:', analyticsError);
+        // Validate target score
+        if (updateData.target_score < 180 || updateData.target_score > 400) {
+            throw new Error('Target score must be between 180 and 400');
         }
+        
+        const { error } = await supabase
+            .from('users')
+            .update(updateData)
+            .eq('id', currentUser.id);
+        
+        if (error) throw error;
+        
+        // Update local data
+        currentUserData = { ...currentUserData, ...updateData };
         
         showDashboard();
         
@@ -703,17 +962,11 @@ async function handleProfileSubmit(e) {
 // ============ DASHBOARD ============
 function showDashboard() {
     if (!currentUserData) return;
-    updateUserDisplay();
-    showScreen('dashboardScreen');
-}
-
-function updateUserDisplay() {
-    if (!currentUserData) return;
     
     // Update avatar
     const avatarEl = document.getElementById('userAvatar');
-    if (currentUser?.photoURL) {
-        avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    if (currentUserData.photo_url) {
+        avatarEl.innerHTML = `<img src="${currentUserData.photo_url}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
     } else {
         avatarEl.textContent = getInitials(currentUserData.name || 'U');
     }
@@ -723,8 +976,11 @@ function updateUserDisplay() {
     document.getElementById('dashboardEmail').textContent = currentUserData.email || '-';
     document.getElementById('dashboardInstitute').textContent = currentUserData.institute || '-';
     document.getElementById('dashboardCourse').textContent = currentUserData.course || '-';
-    document.getElementById('dashboardTargetScore').textContent = currentUserData.targetScore || '-';
+    document.getElementById('dashboardTargetScore').textContent = currentUserData.target_score || '-';
     document.getElementById('dashboardSubjects').textContent = currentUserData.subjects?.join(', ') || '-';
+    document.getElementById('dashboardLoginCount').textContent = currentUserData.login_count || '1';
+    
+    showScreen('dashboardScreen');
 }
 
 function getInitials(name) {
@@ -733,33 +989,78 @@ function getInitials(name) {
 
 // ============ LOGOUT ============
 async function logout() {
+    showScreen('loadingScreen');
+    updateLoading('Signing out...');
+    
+    currentUser = null;
+    currentUserData = null;
+    selectedSubjects = [];
+    
     try {
-        const { signOut, auth } = window.firebaseModules;
-        if (userListener) userListener();
-        await signOut(auth);
-        currentUser = null;
-        currentUserData = null;
-        selectedSubjects = [];
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) throw error;
+        
+        console.log('User signed out successfully');
         showScreen('loginScreen');
+        hideError('loginError');
+        
     } catch (error) {
         console.error('Logout error:', error);
         showError('Logout failed: ' + error.message, 'loginError');
+        showScreen('loginScreen');
     }
 }
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('googleSignInBtn').onclick = signInWithGoogle;
+    // Check if Supabase credentials are set
+    if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-anon')) {
+        document.getElementById('supabaseSetupGuide').classList.remove('hidden');
+        showError('Please configure your Supabase credentials first', 'errorDisplay');
+        return;
+    }
     
-    // Wait for Firebase to load
-    const checkFirebase = setInterval(() => {
-        if (window.firebaseModules) {
-            clearInterval(checkFirebase);
-            console.log('Firebase loaded, setting up auth listener');
-            setupAuthListener();
+    // Setup event listeners
+    document.getElementById('googleSignInBtn').onclick = signInWithGoogle;
+    document.getElementById('emailSignInBtn').onclick = () => showScreen('emailLoginModal');
+    document.getElementById('sendMagicLinkBtn').onclick = signInWithEmail;
+    
+    // Add enter key support for email input
+    document.getElementById('emailInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            signInWithEmail();
         }
-    }, 100);
+    });
+    
+    // Initialize
+    console.log('Supabase initialized:', SUPABASE_URL);
+    setupAuthListener();
+    
+    // Update connection status
+    updateConnectionStatus();
+    
+    // Listen for online/offline events
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
 });
+
+function updateConnectionStatus() {
+    const statusEl = document.getElementById('connectionStatus');
+    const textEl = document.getElementById('connectionText');
+    
+    if (navigator.onLine) {
+        statusEl.classList.remove('offline');
+        statusEl.classList.add('online');
+        textEl.textContent = 'Online';
+        statusEl.classList.remove('hidden');
+    } else {
+        statusEl.classList.remove('online');
+        statusEl.classList.add('offline');
+        textEl.textContent = 'Offline';
+        statusEl.classList.remove('hidden');
+    }
+}
 </script>
 </body>
 </html>
