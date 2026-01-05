@@ -5,10 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Raven - Exam Preparation Platform</title>
 
-<!-- Firebase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-app-compat.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-auth-compat.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/firebase@11.0.1/firebase-firestore-compat.min.js"></script>
+<!-- Latest Firebase SDKs -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, child } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
+    authDomain: "raven-bddf7.firebaseapp.com",
+    projectId: "raven-bddf7",
+    storageBucket: "raven-bddf7.firebasestorage.app",
+    messagingSenderId: "515918066242",
+    appId: "1:515918066242:web:3aba4c8d6007310371f3db",
+    measurementId: "G-GGK7G5S0WB",
+    // Add your Realtime Database URL
+    databaseURL: "https://raven-bddf7-default-rtdb.firebaseio.com/" // Change this to your actual URL
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  
+  // Make them available globally (for simplicity in this example)
+  window.auth = auth;
+  window.db = db;
+  window.GoogleAuthProvider = GoogleAuthProvider;
+  window.signInWithPopup = signInWithPopup;
+  window.onAuthStateChanged = onAuthStateChanged;
+  window.signOut = signOut;
+  window.ref = ref;
+  window.set = set;
+  window.get = get;
+  window.update = update;
+  window.child = child;
+  
+  console.log('Firebase initialized successfully with Realtime Database');
+</script>
 
 <style>
 :root {
@@ -199,6 +235,7 @@ select.form-control {
     border-radius: 8px;
     margin-bottom: 20px;
     font-size: 14px;
+    text-align: center;
 }
 
 .success-message {
@@ -286,16 +323,81 @@ select.form-control {
     color: var(--error-color);
     border-color: var(--error-color);
 }
+
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.connection-status.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.connection-status.offline {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.online .status-dot { background: var(--success-color); }
+.offline .status-dot { background: var(--error-color); }
+
+#firestoreHelp {
+    margin-top: 20px;
+}
+
+#firestoreHelp ol {
+    text-align: left;
+    margin: 10px 0;
+    padding-left: 20px;
+}
 </style>
 </head>
 
 <body>
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status offline hidden">
+        <span class="status-dot"></span>
+        <span id="connectionText">Offline</span>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen" class="container loading">
         <div class="spinner"></div>
         <h2>Loading Raven...</h2>
         <p id="loadingMessage">Checking authentication...</p>
-        <div id="errorDisplay" class="hidden"></div>
+        <div id="errorDisplay" class="error-message hidden"></div>
+        <div id="firestoreHelp" class="error-message hidden">
+            <p><strong>Realtime Database Setup Required:</strong></p>
+            <ol>
+                <li>Go to Firebase Console</li>
+                <li>Click "Realtime Database" (not Firestore)</li>
+                <li>Click "Create Database"</li>
+                <li>Start in test mode</li>
+                <li>Choose location and enable</li>
+                <li>Copy the database URL and update line 25 in the code</li>
+            </ol>
+            <button onclick="window.open('https://console.firebase.google.com/', '_blank')" 
+                    class="btn btn-primary" style="margin-top: 10px;">
+                Open Firebase Console
+            </button>
+        </div>
     </div>
 
     <!-- Login Screen -->
@@ -420,31 +522,15 @@ select.form-control {
     </div>
 
 <script>
-// ============ FIREBASE CONFIGURATION ============
-const firebaseConfig = {
-    apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
-    authDomain: "raven-bddf7.firebaseapp.com",
-    projectId: "raven-bddf7",
-    storageBucket: "raven-bddf7.firebasestorage.app",
-    messagingSenderId: "515918066242",
-    appId: "1:515918066242:web:3aba4c8d6007310371f3db",
-    measurementId: "G-GGK7G5S0WB"
-};
-
-// Initialize Firebase
-let auth, db;
+// ============ GLOBAL VARIABLES ============
 let currentUser = null;
 let currentUserData = null;
-
-try {
-    firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    db = firebase.firestore();
-    console.log('Firebase initialized successfully');
-} catch (e) {
-    console.error('Firebase init error:', e);
-    showError('Firebase initialization failed. Please check your internet connection.');
-}
+let selectedSubjects = [];
+const SUBJECTS = [
+    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
+    'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
+    'Agricultural Science', 'CRS', 'History'
+];
 
 // ============ SCREEN MANAGEMENT ============
 function showScreen(screenId) {
@@ -481,7 +567,7 @@ function updateLoading(message) {
 function setupAuthListener() {
     updateLoading('Checking authentication...');
     
-    auth.onAuthStateChanged(async (user) => {
+    window.onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             console.log('User authenticated:', user.email);
             currentUser = user;
@@ -504,10 +590,10 @@ async function signInWithGoogle() {
     hideError('loginError');
     
     try {
-        const provider = new firebase.auth.GoogleAuthProvider();
+        const provider = new window.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         
-        await auth.signInWithPopup(provider);
+        await window.signInWithPopup(window.auth, provider);
         console.log('Google sign-in successful');
         
     } catch (error) {
@@ -517,6 +603,8 @@ async function signInWithGoogle() {
             showError('Sign in cancelled', 'loginError');
         } else if (error.code === 'auth/popup-blocked') {
             showError('Please allow popups for this site', 'loginError');
+        } else if (error.code === 'auth/network-request-failed') {
+            showError('Network error. Check your internet connection.', 'loginError');
         } else {
             showError('Sign in failed: ' + error.message, 'loginError');
         }
@@ -526,24 +614,28 @@ async function signInWithGoogle() {
     }
 }
 
-// ============ USER DATA MANAGEMENT ============
+// ============ REALTIME DATABASE FUNCTIONS ============
 async function loadUserData(user) {
     updateLoading('Loading your data...');
     showScreen('loadingScreen');
     
     try {
-        const userRef = db.collection('users').doc(user.uid);
-        const userDoc = await userRef.get();
+        const userRef = window.ref(window.db, 'users/' + user.uid);
+        const snapshot = await window.get(userRef);
         
-        if (userDoc.exists) {
-            currentUserData = userDoc.data();
+        if (snapshot.exists()) {
+            currentUserData = snapshot.val();
             console.log('Existing user loaded:', currentUserData);
             
             // Update last login
-            await userRef.update({
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                loginCount: firebase.firestore.FieldValue.increment(1)
-            });
+            try {
+                await window.update(userRef, {
+                    lastLogin: Date.now(),
+                    loginCount: (currentUserData.loginCount || 0) + 1
+                });
+            } catch (updateError) {
+                console.warn('Could not update login count:', updateError);
+            }
             
             if (currentUserData.profileComplete) {
                 showDashboard();
@@ -557,13 +649,13 @@ async function loadUserData(user) {
                 email: user.email,
                 name: user.displayName || 'User',
                 photoURL: user.photoURL || null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: Date.now(),
+                lastLogin: Date.now(),
                 loginCount: 1,
                 profileComplete: false
             };
             
-            await userRef.set(newUserData);
+            await window.set(userRef, newUserData);
             console.log('New user created:', newUserData);
             
             currentUserData = newUserData;
@@ -572,18 +664,20 @@ async function loadUserData(user) {
         
     } catch (error) {
         console.error('Error loading user data:', error);
-        showError('Error loading data. Please try again.');
+        
+        if (error.code === 'PERMISSION_DENIED') {
+            showError('Permission denied. Please check Realtime Database rules.', 'errorDisplay');
+        } else if (error.message.includes('offline') || error.code === 'unavailable') {
+            showError('Cannot connect to database. Please check your internet connection.', 'errorDisplay');
+        } else {
+            showError('Error loading data: ' + error.message, 'errorDisplay');
+        }
+        
         showScreen('loginScreen');
     }
 }
 
 // ============ PROFILE SETUP ============
-const SUBJECTS = [
-    'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
-    'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
-    'Agricultural Science', 'CRS', 'History'
-];
-
 function showProfileSetup(user) {
     // Populate user info
     document.getElementById('profileName').value = currentUserData.name || '';
@@ -608,8 +702,6 @@ function showProfileSetup(user) {
     
     showScreen('profileScreen');
 }
-
-let selectedSubjects = [];
 
 function toggleSubject(chip) {
     const subject = chip.dataset.subject;
@@ -664,17 +756,20 @@ async function handleProfileSubmit(e) {
             targetScore: parseInt(document.getElementById('targetScore').value),
             subjects: selectedSubjects,
             profileComplete: true,
-            profileCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
+            profileCompletedAt: Date.now()
         };
         
-        await db.collection('users').doc(currentUser.uid).update(updateData);
+        const userRef = window.ref(window.db, 'users/' + currentUser.uid);
+        await window.update(userRef, updateData);
+        
+        // Update local data
         currentUserData = { ...currentUserData, ...updateData };
         
         showDashboard();
         
     } catch (error) {
         console.error('Profile save error:', error);
-        showError('Error saving profile. Please try again.', 'profileError');
+        showError('Error saving profile: ' + error.message, 'profileError');
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
     }
@@ -710,13 +805,14 @@ function getInitials(name) {
 // ============ LOGOUT ============
 async function logout() {
     try {
-        await auth.signOut();
+        await window.signOut(window.auth);
         currentUser = null;
         currentUserData = null;
         selectedSubjects = [];
         showScreen('loginScreen');
     } catch (error) {
         console.error('Logout error:', error);
+        showError('Logout failed: ' + error.message, 'loginError');
     }
 }
 
@@ -725,12 +821,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Setup event listeners
     document.getElementById('googleSignInBtn').onclick = signInWithGoogle;
     
-    // Initialize the app
-    if (auth && db) {
-        setupAuthListener();
-    } else {
-        showError('Failed to initialize. Please refresh the page.', 'errorDisplay');
-    }
+    // Check if Firebase is initialized (wait a bit for module to load)
+    setTimeout(() => {
+        if (window.auth && window.db) {
+            console.log('Firebase available, setting up auth listener');
+            setupAuthListener();
+        } else {
+            showError('Firebase not initialized. Please check the console for errors.', 'errorDisplay');
+        }
+    }, 1000);
 });
 </script>
 </body>
