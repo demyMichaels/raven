@@ -3,34 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raven - JAMB Prep Platform</title>
+<title>Raven - Exam Preparation Platform</title>
 
-<!-- Firebase SDK v10 -->
+<!-- Latest Firebase SDKs -->
 <script type="module">
+  // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-  import { 
-    getAuth, 
-    GoogleAuthProvider, 
-    signInWithPopup, 
-    onAuthStateChanged, 
-    signOut 
-  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-  
-  import { 
-    getFirestore,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, child } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
+  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyAW0h6GzBE_bIvDusPuGtbzKZUlhoxUDXk",
     authDomain: "raven-bddf7.firebaseapp.com",
@@ -38,40 +20,33 @@
     storageBucket: "raven-bddf7.firebasestorage.app",
     messagingSenderId: "515918066242",
     appId: "1:515918066242:web:3aba4c8d6007310371f3db",
-    measurementId: "G-GGK7G5S0WB"
+    measurementId: "G-GGK7G5S0WB",
+    // Add your Realtime Database URL
+    databaseURL: "https://raven-bddf7-default-rtdb.firebaseio.com/" // Change this to your actual URL
   };
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = getDatabase(app);
   
-  // Export to global scope
-  window.firebaseModules = {
-    auth,
-    db,
-    GoogleAuthProvider,
-    signInWithPopup,
-    onAuthStateChanged,
-    signOut,
-    doc,
-    getDoc,
-    setDoc,
-    updateDoc,
-    serverTimestamp,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot
-  };
+  // Make them available globally (for simplicity in this example)
+  window.auth = auth;
+  window.db = db;
+  window.GoogleAuthProvider = GoogleAuthProvider;
+  window.signInWithPopup = signInWithPopup;
+  window.onAuthStateChanged = onAuthStateChanged;
+  window.signOut = signOut;
+  window.ref = ref;
+  window.set = set;
+  window.get = get;
+  window.update = update;
+  window.child = child;
   
-  console.log('Firebase Firestore initialized successfully');
+  console.log('Firebase initialized successfully with Realtime Database');
 </script>
 
 <style>
-/* [Keep all your CSS styles from previous version] */
 :root {
     --bg-primary: #FAFBFC;
     --bg-card: #FFFFFF;
@@ -99,7 +74,11 @@ body {
 
 .hidden { display: none !important; }
 
-.container { width: 100%; max-width: 400px; margin: 0 auto; }
+.container {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
 
 .card {
     background: var(--bg-card);
@@ -108,6 +87,21 @@ body {
     padding: 32px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 20px;
+}
+
+.card h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-align: center;
+    color: var(--accent-color);
+}
+
+.card p {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 16px;
 }
 
 .btn {
@@ -125,8 +119,14 @@ body {
     gap: 10px;
 }
 
-.btn-primary { background: var(--accent-color); color: white; }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
 
 .btn-google {
     background: white;
@@ -139,8 +139,16 @@ body {
     box-shadow: 0 2px 8px rgba(0, 180, 166, 0.1);
 }
 
-.form-group { margin-bottom: 20px; }
-.form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary); }
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
 
 .form-control {
     width: 100%;
@@ -153,7 +161,19 @@ body {
     transition: border-color 0.2s;
 }
 
-.form-control:focus { outline: none; border-color: var(--accent-color); }
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
 
 .subjects-grid {
     display: grid;
@@ -174,7 +194,10 @@ body {
     text-align: center;
 }
 
-.subject-chip:hover { border-color: var(--accent-color); }
+.subject-chip:hover {
+    border-color: var(--accent-color);
+}
+
 .subject-chip.selected {
     background: rgba(0, 180, 166, 0.1);
     border-color: var(--accent-color);
@@ -200,7 +223,9 @@ body {
     margin-bottom: 20px;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 
 .error-message {
     background: rgba(239, 68, 68, 0.1);
@@ -213,7 +238,34 @@ body {
     text-align: center;
 }
 
-.dashboard-card { text-align: center; padding: 40px 20px; }
+.success-message {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.back-link:hover {
+    color: var(--accent-color);
+}
+
+.dashboard-card {
+    text-align: center;
+    padding: 40px 20px;
+}
 
 .avatar {
     width: 80px;
@@ -245,9 +297,19 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.info-row:last-child { border-bottom: none; }
-.info-label { color: var(--text-secondary); font-weight: 500; }
-.info-value { font-weight: 600; color: var(--text-primary); }
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
 
 .logout-btn {
     margin-top: 20px;
@@ -261,16 +323,81 @@ body {
     color: var(--error-color);
     border-color: var(--error-color);
 }
+
+.connection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.connection-status.online {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.connection-status.offline {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.online .status-dot { background: var(--success-color); }
+.offline .status-dot { background: var(--error-color); }
+
+#firestoreHelp {
+    margin-top: 20px;
+}
+
+#firestoreHelp ol {
+    text-align: left;
+    margin: 10px 0;
+    padding-left: 20px;
+}
 </style>
 </head>
 
 <body>
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="connection-status offline hidden">
+        <span class="status-dot"></span>
+        <span id="connectionText">Offline</span>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen" class="container loading">
         <div class="spinner"></div>
         <h2>Loading Raven...</h2>
         <p id="loadingMessage">Checking authentication...</p>
         <div id="errorDisplay" class="error-message hidden"></div>
+        <div id="firestoreHelp" class="error-message hidden">
+            <p><strong>Realtime Database Setup Required:</strong></p>
+            <ol>
+                <li>Go to Firebase Console</li>
+                <li>Click "Realtime Database" (not Firestore)</li>
+                <li>Click "Create Database"</li>
+                <li>Start in test mode</li>
+                <li>Choose location and enable</li>
+                <li>Copy the database URL and update line 25 in the code</li>
+            </ol>
+            <button onclick="window.open('https://console.firebase.google.com/', '_blank')" 
+                    class="btn btn-primary" style="margin-top: 10px;">
+                Open Firebase Console
+            </button>
+        </div>
     </div>
 
     <!-- Login Screen -->
@@ -399,8 +526,6 @@ body {
 let currentUser = null;
 let currentUserData = null;
 let selectedSubjects = [];
-let userListener = null;
-
 const SUBJECTS = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Economics',
     'Accounting', 'Commerce', 'Government', 'Literature', 'Geography',
@@ -442,14 +567,7 @@ function updateLoading(message) {
 function setupAuthListener() {
     updateLoading('Checking authentication...');
     
-    if (!window.firebaseModules) {
-        showError('Firebase not loaded. Please refresh the page.');
-        return;
-    }
-    
-    const { onAuthStateChanged, auth } = window.firebaseModules;
-    
-    onAuthStateChanged(auth, async (user) => {
+    window.onAuthStateChanged(window.auth, async (user) => {
         if (user) {
             console.log('User authenticated:', user.email);
             currentUser = user;
@@ -458,7 +576,6 @@ function setupAuthListener() {
             console.log('No user, showing login screen');
             currentUser = null;
             currentUserData = null;
-            if (userListener) userListener();
             showScreen('loginScreen');
         }
     });
@@ -473,11 +590,10 @@ async function signInWithGoogle() {
     hideError('loginError');
     
     try {
-        const { GoogleAuthProvider, signInWithPopup, auth } = window.firebaseModules;
-        const provider = new GoogleAuthProvider();
+        const provider = new window.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         
-        await signInWithPopup(auth, provider);
+        await window.signInWithPopup(window.auth, provider);
         console.log('Google sign-in successful');
         
     } catch (error) {
@@ -498,33 +614,28 @@ async function signInWithGoogle() {
     }
 }
 
-// ============ FIRESTORE FUNCTIONS ============
+// ============ REALTIME DATABASE FUNCTIONS ============
 async function loadUserData(user) {
     updateLoading('Loading your data...');
     showScreen('loadingScreen');
     
     try {
-        const { db, doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot } = window.firebaseModules;
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
+        const userRef = window.ref(window.db, 'users/' + user.uid);
+        const snapshot = await window.get(userRef);
         
-        if (userDoc.exists()) {
-            currentUserData = userDoc.data();
+        if (snapshot.exists()) {
+            currentUserData = snapshot.val();
             console.log('Existing user loaded:', currentUserData);
             
             // Update last login
             try {
-                await updateDoc(userRef, {
-                    lastLogin: serverTimestamp(),
-                    lastActive: serverTimestamp(),
+                await window.update(userRef, {
+                    lastLogin: Date.now(),
                     loginCount: (currentUserData.loginCount || 0) + 1
                 });
             } catch (updateError) {
                 console.warn('Could not update login count:', updateError);
             }
-            
-            // Set up real-time listener
-            setupUserListener(userRef);
             
             if (currentUserData.profileComplete) {
                 showDashboard();
@@ -538,35 +649,25 @@ async function loadUserData(user) {
                 email: user.email,
                 name: user.displayName || 'User',
                 photoURL: user.photoURL || null,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                lastActive: serverTimestamp(),
+                createdAt: Date.now(),
+                lastLogin: Date.now(),
                 loginCount: 1,
-                profileComplete: false,
-                isPremium: false,
-                balance: 0,
-                totalEarnings: 0,
-                studyStreak: 0,
-                totalQuestions: 0,
-                correctAnswers: 0
+                profileComplete: false
             };
             
-            await setDoc(userRef, newUserData);
-            console.log('New user created in Firestore:', newUserData);
+            await window.set(userRef, newUserData);
+            console.log('New user created:', newUserData);
             
             currentUserData = newUserData;
-            setupUserListener(userRef);
             showProfileSetup(user);
         }
         
     } catch (error) {
         console.error('Error loading user data:', error);
         
-        if (error.code === 'permission-denied') {
-            showError('Permission denied. Please check Firestore security rules.', 'errorDisplay');
-        } else if (error.code === 'failed-precondition') {
-            showError('Firestore database not created. Please create it in Firebase Console.', 'errorDisplay');
-        } else if (error.code === 'unavailable') {
+        if (error.code === 'PERMISSION_DENIED') {
+            showError('Permission denied. Please check Realtime Database rules.', 'errorDisplay');
+        } else if (error.message.includes('offline') || error.code === 'unavailable') {
             showError('Cannot connect to database. Please check your internet connection.', 'errorDisplay');
         } else {
             showError('Error loading data: ' + error.message, 'errorDisplay');
@@ -574,25 +675,6 @@ async function loadUserData(user) {
         
         showScreen('loginScreen');
     }
-}
-
-function setupUserListener(userRef) {
-    const { onSnapshot } = window.firebaseModules;
-    
-    // Clean up previous listener
-    if (userListener) userListener();
-    
-    // Set up real-time listener
-    userListener = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-            currentUserData = doc.data();
-            if (currentUserData.profileComplete) {
-                updateUserDisplay();
-            }
-        }
-    }, (error) => {
-        console.error('User listener error:', error);
-    });
 }
 
 // ============ PROFILE SETUP ============
@@ -626,9 +708,11 @@ function toggleSubject(chip) {
     const index = selectedSubjects.indexOf(subject);
     
     if (index > -1) {
+        // Remove if already selected
         selectedSubjects.splice(index, 1);
         chip.classList.remove('selected');
     } else if (selectedSubjects.length < 3) {
+        // Add if less than 3 selected
         selectedSubjects.push(subject);
         chip.classList.add('selected');
     }
@@ -652,6 +736,7 @@ function updateSubjectMessage() {
 async function handleProfileSubmit(e) {
     e.preventDefault();
     
+    // Validate subjects
     if (selectedSubjects.length !== 3) {
         showError('Please select exactly 3 subjects', 'profileError');
         return;
@@ -664,9 +749,6 @@ async function handleProfileSubmit(e) {
     hideError('profileError');
     
     try {
-        const { db, doc, updateDoc, serverTimestamp } = window.firebaseModules;
-        const userRef = doc(db, 'users', currentUser.uid);
-        
         const updateData = {
             name: document.getElementById('profileName').value.trim(),
             institute: document.getElementById('institute').value,
@@ -674,21 +756,14 @@ async function handleProfileSubmit(e) {
             targetScore: parseInt(document.getElementById('targetScore').value),
             subjects: selectedSubjects,
             profileComplete: true,
-            profileCompletedAt: serverTimestamp()
+            profileCompletedAt: Date.now()
         };
         
-        await updateDoc(userRef, updateData);
+        const userRef = window.ref(window.db, 'users/' + currentUser.uid);
+        await window.update(userRef, updateData);
         
-        // Update analytics (optional)
-        try {
-            const analyticsRef = doc(db, 'analytics', 'users');
-            await updateDoc(analyticsRef, {
-                profilesCompleted: { increment: 1 },
-                lastUpdated: serverTimestamp()
-            }, { merge: true });
-        } catch (analyticsError) {
-            console.log('Analytics update optional:', analyticsError);
-        }
+        // Update local data
+        currentUserData = { ...currentUserData, ...updateData };
         
         showDashboard();
         
@@ -702,12 +777,6 @@ async function handleProfileSubmit(e) {
 
 // ============ DASHBOARD ============
 function showDashboard() {
-    if (!currentUserData) return;
-    updateUserDisplay();
-    showScreen('dashboardScreen');
-}
-
-function updateUserDisplay() {
     if (!currentUserData) return;
     
     // Update avatar
@@ -725,6 +794,8 @@ function updateUserDisplay() {
     document.getElementById('dashboardCourse').textContent = currentUserData.course || '-';
     document.getElementById('dashboardTargetScore').textContent = currentUserData.targetScore || '-';
     document.getElementById('dashboardSubjects').textContent = currentUserData.subjects?.join(', ') || '-';
+    
+    showScreen('dashboardScreen');
 }
 
 function getInitials(name) {
@@ -733,33 +804,52 @@ function getInitials(name) {
 
 // ============ LOGOUT ============
 async function logout() {
+    // Show loading screen immediately to prevent flickering
+    showScreen('loadingScreen');
+    updateLoading('Signing out...');
+    
+    // Clear user data immediately
+    currentUser = null;
+    currentUserData = null;
+    selectedSubjects = [];
+    
     try {
-        const { signOut, auth } = window.firebaseModules;
-        if (userListener) userListener();
-        await signOut(auth);
-        currentUser = null;
-        currentUserData = null;
-        selectedSubjects = [];
+        // Add a small delay to show the loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Sign out from Firebase
+        await window.signOut(window.auth);
+        
+        console.log('User signed out successfully');
+        
+        // Show login screen immediately
         showScreen('loginScreen');
+        
+        // Clear any previous errors
+        hideError('loginError');
+        
     } catch (error) {
         console.error('Logout error:', error);
         showError('Logout failed: ' + error.message, 'loginError');
+        showScreen('loginScreen');
     }
 }
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup event listeners
     document.getElementById('googleSignInBtn').onclick = signInWithGoogle;
     
-    // Wait for Firebase to load
-    const checkFirebase = setInterval(() => {
-        if (window.firebaseModules) {
-            clearInterval(checkFirebase);
-            console.log('Firebase loaded, setting up auth listener');
+    // Check if Firebase is initialized (wait a bit for module to load)
+    setTimeout(() => {
+        if (window.auth && window.db) {
+            console.log('Firebase available, setting up auth listener');
             setupAuthListener();
+        } else {
+            showError('Firebase not initialized. Please check the console for errors.', 'errorDisplay');
         }
-    }, 100);
+    }, 1000);
 });
 </script>
 </body>
-</html>
+</html>`
