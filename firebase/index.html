@@ -568,19 +568,32 @@ function setupAuthListener() {
     updateLoading('Checking authentication...');
     
     window.onAuthStateChanged(window.auth, async (user) => {
-        if (user) {
+        console.log('Auth state changed. User:', user ? user.email : 'No user');
+        
+        // Check if we're currently on the loading screen (meaning logout just happened)
+        const isOnLoadingScreen = !document.getElementById('loadingScreen').classList.contains('hidden');
+        const isOnLoginScreen = !document.getElementById('loginScreen').classList.contains('hidden');
+        
+        // If user exists and we're not on login/loading screen, load their data
+        if (user && !isOnLoginScreen && !isOnLoadingScreen) {
             console.log('User authenticated:', user.email);
             currentUser = user;
             await loadUserData(user);
-        } else {
+        } 
+        // If user doesn't exist and we're not showing login or loading screens
+        else if (!user && !isOnLoginScreen && !isOnLoadingScreen) {
             console.log('No user, showing login screen');
             currentUser = null;
             currentUserData = null;
             showScreen('loginScreen');
         }
+        // If we're already on login screen, do nothing
+        else if (!user && isOnLoginScreen) {
+            // Already on login screen, no action needed
+            console.log('Already on login screen');
+        }
     });
 }
-
 async function signInWithGoogle() {
     const btn = document.getElementById('googleSignInBtn');
     const originalText = btn.innerHTML;
@@ -803,16 +816,36 @@ function getInitials(name) {
 }
 
 // ============ LOGOUT ============
+// ============ LOGOUT ============
 async function logout() {
+    // Show loading screen immediately to prevent flickering
+    showScreen('loadingScreen');
+    updateLoading('Signing out...');
+    
+    // Clear user data immediately
+    currentUser = null;
+    currentUserData = null;
+    selectedSubjects = [];
+    
     try {
+        // Add a small delay to show the loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Sign out from Firebase
         await window.signOut(window.auth);
-        currentUser = null;
-        currentUserData = null;
-        selectedSubjects = [];
+        
+        console.log('User signed out successfully');
+        
+        // Show login screen immediately
         showScreen('loginScreen');
+        
+        // Clear any previous errors
+        hideError('loginError');
+        
     } catch (error) {
         console.error('Logout error:', error);
         showError('Logout failed: ' + error.message, 'loginError');
+        showScreen('loginScreen');
     }
 }
 
