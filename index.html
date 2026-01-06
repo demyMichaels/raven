@@ -740,15 +740,13 @@ function updateLoading(message) {
 
 // ============ AUTHENTICATION ============
 async function setupAuthListener() {
-    // Start with landing page visible (public access)
-    showScreen('landingPage');
-    
-    // Check for existing session in background
+    // Check for existing session first (don't show landing page yet)
     try {
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
         
         if (sessionError) {
             console.error('Session check error:', sessionError);
+            showScreen('landingPage');
             return;
         }
         
@@ -756,6 +754,9 @@ async function setupAuthListener() {
             console.log('User already authenticated:', session.user.email);
             AppState.currentUser = session.user;
             await loadUserData(session.user);
+        } else {
+            // Only show landing page if no session exists
+            showScreen('landingPage');
         }
         
         // Listen for auth changes
@@ -775,6 +776,7 @@ async function setupAuthListener() {
         
     } catch (error) {
         console.error('Auth setup error:', error);
+        showScreen('landingPage');
     }
 }
 
