@@ -10,12 +10,12 @@ serve(async (req) => {
   }
 
   try {
-    const { phoneNumber, userName } = await req.json();
+    const { whatsapp_number, name, course, institution, score } = await req.json();
 
     // Validate inputs
-    if (!phoneNumber || !userName) {
+    if (!whatsapp_number) {
       return new Response(
-        JSON.stringify({ error: "Missing phoneNumber or userName" }),
+        JSON.stringify({ error: "Missing whatsapp_number" }),
         { status: 400 }
       );
     }
@@ -39,7 +39,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           messaging_product: "whatsapp",
-          to: phoneNumber,
+          to: whatsapp_number,
           type: "template",
           template: {
             name: TEMPLATE_NAME,
