@@ -1073,6 +1073,9 @@ async function handleProfileSubmit(e) {
         // Update local data
         AppState.currentUserData = { ...AppState.currentUserData, ...updateData };
         
+        // Send WhatsApp welcome message with personalized data
+        await sendWelcomeWhatsApp(AppState.currentUserData);
+        
         showDashboard();
         
     } catch (error) {
@@ -1110,6 +1113,39 @@ function showDashboard() {
 
 function getInitials(name) {
     return (name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
+
+// ============ WHATSAPP MESSAGING ============
+async function sendWelcomeWhatsApp(userData) {
+    try {
+        const response = await fetch('https://kwicenbmgllolchbrjve.supabase.co/functions/v1/send-whatsapp-welcome', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_CONFIG.key}`
+            },
+            body: JSON.stringify({
+                phoneNumber: userData.whatsapp_number,
+                userName: userData.name,
+                template: 'jaspers_market_plain_text_v1',
+                payload: {
+                    name: userData.name || 'Student',
+                    course: userData.course || '',
+                    institution: userData.institute || '',
+                    score: userData.target_score || ''
+                },
+                message: `🎯 Welcome to Raven Exam Tutor, ${userData.name || 'Student'}! 👋 We're thrilled to have you join our JAMB preparation community. Your target: ${userData.course || ''} at ${userData.institute || ''} with score goal of ${userData.target_score || ''}. Check your dashboard for personalized study tips! 📚✨`
+            })
+        });
+        
+        const result = await response.json();
+        console.log('WhatsApp API response via Supabase function:', result);
+        return result;
+        
+    } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        return { success: false, error: error.message };
+    }
 }
 
 // ============ LOGOUT ============
