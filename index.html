@@ -551,17 +551,17 @@ select.form-control {
                     <input type="email" id="profileEmail" class="form-control" disabled>
                 </div>
 
-            <div class="form-group">
-                <label for="whatsappNumber">WhatsApp Number (for study reminders)</label>
-                <input type="tel" 
-                    id="whatsappNumber" 
-                    class="form-control" 
-                    placeholder="2348123456789"
-                    required>
-                <small style="color: var(--text-secondary); font-size: 12px;">
-                    Include country code without + (e.g., 2348123456789)
-                </small>
-            </div>
+                <div class="form-group">
+                    <label for="whatsappNumber">WhatsApp Number (for study reminders)</label>
+                    <input type="tel" 
+                        id="whatsappNumber" 
+                        class="form-control" 
+                        placeholder="2348123456789"
+                        required>
+                    <small style="color: var(--text-secondary); font-size: 12px;">
+                        Include country code without + (e.g., 2348123456789)
+                    </small>
+                </div>
                 
                 <div class="form-group">
                     <label>Target Institution</label>
@@ -620,6 +620,10 @@ select.form-control {
                 <div class="info-row">
                     <span class="info-label">Email:</span>
                     <span id="dashboardEmail" class="info-value">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">WhatsApp:</span>
+                    <span id="dashboardWhatsApp" class="info-value">-</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Institution:</span>
@@ -943,7 +947,8 @@ async function createNewUser(user) {
         updated_at: new Date().toISOString(),
         login_count: 1,
         last_login: new Date().toISOString(),
-        profile_complete: false
+        profile_complete: false,
+        whatsapp_number: null
     };
     
     const { error: insertError } = await supabaseClient
@@ -983,6 +988,7 @@ function showProfileSetup(user) {
     // Populate user info
     document.getElementById('profileName').value = AppState.currentUserData.name || '';
     document.getElementById('profileEmail').value = user.email || '';
+    document.getElementById('whatsappNumber').value = AppState.currentUserData.whatsapp_number || '';
     
     // Populate subjects grid
     const subjectsGrid = document.getElementById('subjectsGrid');
@@ -996,6 +1002,16 @@ function showProfileSetup(user) {
         chip.onclick = () => toggleSubject(chip);
         subjectsGrid.appendChild(chip);
     });
+    
+    // If user already has subjects selected, restore them
+    if (AppState.currentUserData.subjects && AppState.currentUserData.subjects.length > 0) {
+        AppState.selectedSubjects = [...AppState.currentUserData.subjects];
+        AppState.selectedSubjects.forEach(subject => {
+            const chip = document.querySelector(`.subject-chip[data-subject="${subject}"]`);
+            if (chip) chip.classList.add('selected');
+        });
+        updateSubjectMessage();
+    }
     
     showScreen('profileScreen');
 }
@@ -1031,6 +1047,19 @@ function updateSubjectMessage() {
 async function handleProfileSubmit(e) {
     e.preventDefault();
     
+    // Validate WhatsApp number
+    const whatsappNumber = document.getElementById('whatsappNumber').value.trim();
+    if (!whatsappNumber) {
+        showError('WhatsApp number is required for study reminders', 'profileError');
+        return;
+    }
+    
+    // Basic validation for Nigerian number format
+    if (!/^234\d{10}$/.test(whatsappNumber)) {
+        showError('Please enter a valid Nigerian WhatsApp number starting with 234 followed by 10 digits (e.g., 2348123456789)', 'profileError');
+        return;
+    }
+    
     if (AppState.selectedSubjects.length !== 3) {
         showError('Please select exactly 3 subjects', 'profileError');
         return;
@@ -1049,7 +1078,7 @@ async function handleProfileSubmit(e) {
             course: document.getElementById('course').value.trim(),
             target_score: parseInt(document.getElementById('targetScore').value),
             subjects: AppState.selectedSubjects,
-            whatsapp_number: document.getElementById('whatsappNumber').value.trim(),
+            whatsapp_number: whatsappNumber,
             profile_complete: true,
             updated_at: new Date().toISOString()
         };
@@ -1094,6 +1123,7 @@ function showDashboard() {
     // Update user info
     document.getElementById('dashboardUserName').textContent = AppState.currentUserData.name?.split(' ')[0] || 'User';
     document.getElementById('dashboardEmail').textContent = AppState.currentUserData.email || '-';
+    document.getElementById('dashboardWhatsApp').textContent = AppState.currentUserData.whatsapp_number || '-';
     document.getElementById('dashboardInstitute').textContent = AppState.currentUserData.institute || '-';
     document.getElementById('dashboardCourse').textContent = AppState.currentUserData.course || '-';
     document.getElementById('dashboardTargetScore').textContent = AppState.currentUserData.target_score || '-';
