@@ -556,10 +556,10 @@ select.form-control {
                     <input type="tel" 
                         id="whatsappNumber" 
                         class="form-control" 
-                        placeholder="2348123456789"
+                        placeholder="2349056226512"
                         required>
                     <small style="color: var(--text-secondary); font-size: 12px;">
-                        Include country code without + (e.g., 2348123456789)
+                        Include country code without + (e.g., 2349056226512)
                     </small>
                 </div>
                 
@@ -667,6 +667,13 @@ const SUPABASE_CONFIG = {
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3aWNlbmJtZ2xsb2xjaGJyanZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNDk2OTQsImV4cCI6MjA4MDYyNTY5NH0.UL1NvX0lZaeX9QVb9bBTkjLrhd0XMeAwei-v8-7FVnc'
 };
 
+// ============ WHATSAPP CONFIGURATION ============
+const WHATSAPP_CONFIG = {
+    accessToken: 'EAA79urix17YBQdfpa5pZAxZBGHEcTQIFGJHhhYphRsKAU7ffqKHZCDfQZCFjPPR3ZB6TOMM0XynnRbaqSdJOBCwQfL5lVQIUZBXAOJMn5eh3RaFt18lXcCutGe2pQ98o6xJgdhdZC2I6FeZBKL7ZACXVH7Wk6lvGIR7ZCUqk7RHmXTRisxpXZAEZBrhFAO3LTzaSXrFq4uW710Gb9gqVyZALGQDZANKfZA1Peqqsly3QyIZCGIAtvmZATzJnc5xkaS2T0IqOLZAvkqf2RnEiYSVTdlpVW3bHSY6ubU',
+    phoneNumberId: '914304808438758',
+    apiVersion: 'v22.0'
+};
+
 // ============ URL MANAGEMENT ============
 function getAppUrl() {
     const currentOrigin = window.location.origin;
@@ -771,9 +778,129 @@ function updateLoading(message) {
     }
 }
 
+// ============ WHATSAPP INTEGRATION ============
+async function sendWelcomeWhatsApp(userData) {
+    try {
+        const whatsappNumber = userData.whatsapp_number;
+        
+        if (!whatsappNumber) {
+            console.log('No WhatsApp number provided');
+            return { success: false, message: 'No WhatsApp number' };
+        }
+        
+        // Format the number for WhatsApp API
+        const formattedNumber = whatsappNumber.startsWith('+') ? whatsappNumber : `+${whatsappNumber}`;
+        
+        // WhatsApp API endpoint
+        const url = `https://graph.facebook.com/${WHATSAPP_CONFIG.apiVersion}/${WHATSAPP_CONFIG.phoneNumberId}/messages`;
+        
+        // Get institution full name
+        const institutionMap = {
+            'UNILAG': 'University of Lagos',
+            'UI': 'University of Ibadan',
+            'OAU': 'Obafemi Awolowo University',
+            'UNILORIN': 'University of Ilorin',
+            'FUTA': 'Federal University of Technology, Akure',
+            'OTHER': 'Your chosen institution'
+        };
+        
+        const institutionName = institutionMap[userData.institute] || userData.institute;
+        
+        // Create personalized message
+        const messageBody = `🎯 *Welcome to Raven Exam Tutor!*
+
+Hello ${userData.name || 'Student'}! 👋
+
+We're thrilled to have you join our community of JAMB aspirants! Here's what you've set up:
+
+🎓 *Target Course:* ${userData.course || 'Not specified'}
+🏫 *Target University:* ${institutionName}
+🎯 *Target JAMB Score:* ${userData.target_score || 'Not set'}
+📚 *Your Subjects:* ${userData.subjects?.join(', ') || 'Not selected'}
+
+*Your journey to success starts now!*
+
+✅ *Next Steps:*
+1. Check your dashboard for personalized study tips
+2. Start with our recommended study plan
+3. Track your progress weekly
+
+💡 *Tip:* Consistency is key! Study for at least 1 hour daily to see amazing results.
+
+Need help? Reply to this message anytime!
+
+Happy studying! 📚✨
+*Raven Team*`;
+        
+        console.log('Sending WhatsApp welcome message to:', formattedNumber);
+        
+        // First try: Send as regular text message
+        const payload = {
+            messaging_product: "whatsapp",
+            to: formattedNumber,
+            type: "text",
+            text: {
+                body: messageBody
+            }
+        };
+        
+        let response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${WHATSAPP_CONFIG.accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        let result = await response.json();
+        
+        if (response.ok) {
+            console.log('WhatsApp message sent successfully:', result);
+            return { success: true, data: result };
+        } else {
+            console.warn('Text message failed, trying template:', result);
+            
+            // Fallback: Try using a template if text message fails
+            const templatePayload = {
+                messaging_product: "whatsapp",
+                to: formattedNumber,
+                type: "template",
+                template: {
+                    name: "jaspers_market_plain_text_v1",
+                    language: { code: "en_US" }
+                }
+            };
+            
+            response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${WHATSAPP_CONFIG.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(templatePayload)
+            });
+            
+            result = await response.json();
+            
+            if (response.ok) {
+                console.log('WhatsApp template message sent successfully:', result);
+                return { success: true, data: result, usedTemplate: true };
+            } else {
+                console.error('Both text and template messages failed:', result);
+                return { success: false, error: result };
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error sending WhatsApp message:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 // ============ AUTHENTICATION ============
 async function setupAuthListener() {
-    // Start with landing page visible (public access)
+    // Show landing page by default
     showScreen('landingPage');
     
     // Check for existing session in background
@@ -988,7 +1115,7 @@ function showProfileSetup(user) {
     // Populate user info
     document.getElementById('profileName').value = AppState.currentUserData.name || '';
     document.getElementById('profileEmail').value = user.email || '';
-    document.getElementById('whatsappNumber').value = AppState.currentUserData.whatsapp_number || '';
+    document.getElementById('whatsappNumber').value = AppState.currentUserData.whatsapp_number || '2349056226512'; // Default to your test number
     
     // Populate subjects grid
     const subjectsGrid = document.getElementById('subjectsGrid');
@@ -1056,7 +1183,7 @@ async function handleProfileSubmit(e) {
     
     // Basic validation for Nigerian number format
     if (!/^234\d{10}$/.test(whatsappNumber)) {
-        showError('Please enter a valid Nigerian WhatsApp number starting with 234 followed by 10 digits (e.g., 2348123456789)', 'profileError');
+        showError('Please enter a valid Nigerian WhatsApp number starting with 234 followed by 10 digits (e.g., 2349056226512)', 'profileError');
         return;
     }
     
@@ -1097,6 +1224,18 @@ async function handleProfileSubmit(e) {
         
         // Update local data
         AppState.currentUserData = { ...AppState.currentUserData, ...updateData };
+        
+        // Send WhatsApp welcome message (in background, don't wait for it)
+        sendWelcomeWhatsApp(AppState.currentUserData).then(result => {
+            if (result.success) {
+                console.log('WhatsApp welcome message sent successfully');
+                if (result.usedTemplate) {
+                    console.log('Used template message as fallback');
+                }
+            } else {
+                console.warn('WhatsApp message not sent:', result.message || result.error);
+            }
+        });
         
         showDashboard();
         
@@ -1184,6 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Domain:', PRODUCTION_DOMAIN);
     console.log('App URL:', getAppUrl());
     console.log('Supabase URL:', SUPABASE_CONFIG.url);
+    console.log('WhatsApp Phone Number ID:', WHATSAPP_CONFIG.phoneNumberId);
     
     // Start auth listener (starts with landing page)
     setupAuthListener();
