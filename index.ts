@@ -1,23 +1,38 @@
 console.info('send-whatsapp-welcome function starting (verbose logging)');
+
+// CORS headers for all responses
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Content-Type': 'application/json'
+};
+
 Deno.serve(async (req: Request) => {
   try {
-    if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: corsHeaders });
+    }
+
+    if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405, headers: corsHeaders });
     const body = await req.json().catch(() => null);
-    if (!body) return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (!body) return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: corsHeaders });
 
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    if (!SUPABASE_URL || !SERVICE_ROLE) return new Response(JSON.stringify({ error: 'Missing SUPABASE_URL or SERVICE_ROLE' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    if (!SUPABASE_URL || !SERVICE_ROLE) return new Response(JSON.stringify({ error: 'Missing SUPABASE_URL or SERVICE_ROLE' }), { status: 500, headers: corsHeaders });
 
     const PHONE_NUMBER_ID = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
     const GRAPH_VERSION = Deno.env.get('WHATSAPP_GRAPH_VERSION') || 'v22.0';
     const WHATSAPP_TOKEN = Deno.env.get('WHATSAPP_TOKEN');
-    if (!PHONE_NUMBER_ID || !WHATSAPP_TOKEN) return new Response(JSON.stringify({ error: 'Missing WhatsApp config (PHONE_NUMBER_ID or TOKEN) in env' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    if (!PHONE_NUMBER_ID || !WHATSAPP_TOKEN) return new Response(JSON.stringify({ error: 'Missing WhatsApp config (PHONE_NUMBER_ID or TOKEN) in env' }), { status: 500, headers: corsHeaders });
 
     const whatsapp_number = body.whatsapp_number || body.phone || body.to;
-    if (!whatsapp_number) return new Response(JSON.stringify({ error: 'Missing whatsapp_number in request body' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (!whatsapp_number) return new Response(JSON.stringify({ error: 'Missing whatsapp_number in request body' }), { status: 400, headers: corsHeaders });
 
-    const template = body.template || 'jaspers_market_plain_text_v1'; // Changed to your actual template
+    // Use provided template or default to hardcoded template
+    const template = body.template || 'jaspers_market_plain_text_v1';
     const payload = body.payload || { name: body.name || 'User' };
 
     const WHATSAPP_API_URL = `https://graph.facebook.com/${GRAPH_VERSION}/${PHONE_NUMBER_ID}/messages`;
@@ -166,7 +181,7 @@ Deno.serve(async (req: Request) => {
     
     return new Response(JSON.stringify(result), { 
       status: 200, 
-      headers: { 'Content-Type': 'application/json' } 
+      headers: corsHeaders
     });
 
   } catch (err) {
@@ -176,7 +191,7 @@ Deno.serve(async (req: Request) => {
       details: String(err) 
     }), { 
       status: 500, 
-      headers: { 'Content-Type': 'application/json' } 
+      headers: corsHeaders
     });
   }
 });

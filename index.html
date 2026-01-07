@@ -1043,8 +1043,21 @@ async function handleProfileSubmit(e) {
         // Update local data
         AppState.currentUserData = { ...AppState.currentUserData, ...updateData };
         
-        // Send WhatsApp welcome message with personalized data
-        await sendWelcomeWhatsApp(AppState.currentUserData);
+        // Fetch the active template and send WhatsApp welcome message
+        try {
+            const { data: templateData, error: templateError } = await supabaseClient
+                .rpc('get_active_whatsapp_template');
+            
+            const template = (templateData && templateData.length > 0) 
+                ? templateData[0].meta_template_name 
+                : 'jaspers_market_plain_text_v1'; // fallback
+            
+            await sendWelcomeWhatsApp(AppState.currentUserData, template);
+        } catch (templateErr) {
+            console.warn('Could not fetch template config, using default:', templateErr);
+            // Still send message with default template
+            await sendWelcomeWhatsApp(AppState.currentUserData);
+        }
         
         showDashboard();
         
@@ -1086,8 +1099,11 @@ function getInitials(name) {
 }
 
 // ============ WHATSAPP MESSAGING ============
-async function sendWelcomeWhatsApp(userData) {
+async function sendWelcomeWhatsApp(userData, templateName) {
     try {
+        // Use provided template name or default
+        const template = templateName || 'jaspers_market_plain_text_v1';
+        
         const response = await fetch('https://kwicenbmgllolchbrjve.supabase.co/functions/v1/send-whatsapp-welcome', {
             method: 'POST',
             headers: {
@@ -1096,7 +1112,7 @@ async function sendWelcomeWhatsApp(userData) {
             },
             body: JSON.stringify({
                 whatsapp_number: userData.whatsapp_number,
-                template: 'jaspers_market_plain_text_v1',
+                template: template,
                 payload: {
                     name: userData.name || 'Student',
                     course: userData.course || '',
