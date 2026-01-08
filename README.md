@@ -16,7 +16,6 @@ Commercial Students - show economics graphs being brought to life
 Art Students - what will we show art students anad their parents?
 
 show that 1500 students are already using this.... marketing trick
-
 show how the heatmap visually shows their strenghts and weaknesses across all topics
 
 show how they can use the timer and quiz
