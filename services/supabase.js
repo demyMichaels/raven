@@ -22,6 +22,7 @@ class SupabaseService {
 
     return this.client;
   }
+  
  getAppUrl() {
     const currentOrigin = window.location.origin;
     const currentHostname = window.location.hostname;

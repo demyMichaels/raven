@@ -35,7 +35,8 @@ class AuthService {
       this.eventBus.emit('auth:error', error);
     }
   }
-async signInWithGoogle() {
+  
+  async signInWithGoogle() {
     try {
       const appUrl = supabaseService.getAppUrl();
       const { error } = await this.client.auth.signInWithOAuth({
