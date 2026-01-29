@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Database Simulator | Learn DB Operations</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #7c3aed;
+            --accent-color: #10b981;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --gray-color: #64748b;
+            --border-color: #e2e8f0;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.5rem;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1.2rem 1rem;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        /* Main layout */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                flex-direction: row;
+            }
+            
+            .operations-panel {
+                flex: 0 0 300px;
+            }
+            
+            .data-panel {
+                flex: 1;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .panel-title i {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Operations */
+        .operation-category {
+            margin-bottom: 2rem;
+        }
+
+        .operation-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .operation-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 44px; /* Accessibility: minimum touch target size */
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background-color: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: #eff6ff;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .select-control {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 2px solid var(--border-color);
+            font-size: 1rem;
+            background-color: white;
+            color: var(--dark-color);
+            min-height: 44px;
+        }
+
+        .select-control:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Query builder */
+        .query-builder {
+            background-color: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .query-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
+
+        .query-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .query-field {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .query-operator, .query-value {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        /* Data table */
+        .data-table-container {
+            overflow-x: auto;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+            background-color: white;
+            position: relative;
+            min-height: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark-color);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .sort-indicator {
+            margin-left: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .highlight {
+            background-color: #fef3c7;
+            font-weight: 600;
+        }
+
+        /* Results panel */
+        .results-panel {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .sql-output {
+            background-color: var(--dark-color);
+            color: #e2e8f0;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .sql-keyword {
+            color: #60a5fa;
+        }
+
+        .sql-value {
+            color: #fbbf24;
+        }
+
+        /* Instructions */
+        .instructions {
+            background-color: #f0fdf4;
+            border-left: 4px solid var(--accent-color);
+            margin-top: 1.5rem;
+        }
+
+        .instructions ol {
+            padding-left: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .instructions li {
+            margin-bottom: 0.75rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .accessibility-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 767px) {
+            .panel {
+                padding: 1.25rem 1rem;
+            }
+            
+            .btn {
+                flex: 1;
+                min-width: 140px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .operation-controls {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Accessibility focus states */
+        button:focus, select:focus, input:focus {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Visual feedback for actions */
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Active state for buttons */
+        .active-operation {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* Status messages */
+        .status-message {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .status-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid var(--success-color);
+        }
+
+        .status-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <h1>Mobile Database Simulator</h1>
+                        <p class="tagline">Learn sorting, filtering, and querying operations on mobile</p>
+                    </div>
+                </div>
+                <div class="accessibility-note">
+                    <i class="fas fa-universal-access"></i>
+                    <span>Optimized for accessibility & touch interaction</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="main-content">
+            <!-- Operations Panel -->
+            <div class="operations-panel">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-sliders-h"></i>
+                        <h2>Database Operations</h2>
+                    </div>
+                    
+                    <!-- Sorting Section -->
+                    <div class="operation-category">
+                        <div class="operation-title">
+                            <i class="fas fa-sort-amount-down"></i>
+                            <span>Sort Data</span>
+                        </div>
+                        <div class="operation-controls">
+                            <select id="sortField" class="select-control" aria-label="Select field to sort by">
+                                <option value="">Select field to sort...</option>
+                                <option value="name">Name (A-Z)</option>
+                                <option value="age">Age (Low to High)</option>
+                                <option value="grade">Grade (A-F)</option>
+                                <option value="major">Major (A-Z)</option>
+                                <option value="enrollmentYear">Enrollment Year</option>
+                            </select>
+                            <button id="sortAsc" class="btn btn-outline" aria-label="Sort ascending">
+                                <i class="fas fa-sort-amount-up"></i> Ascending
+                            </button>
+                            <button id="sortDesc" class="btn btn-outline" aria-label="Sort descending">
+                                <i class="fas fa-sort-amount-down"></i> Descending
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filtering Section -->
+                    <div class="operation-category">
+                        <div class="operation-title">
+                            <i class="fas fa-filter"></i>
+                            <span>Filter Data</span>
+                        </div>
+                        <div class="operation-controls">
+                            <select id="filterField" class="select-control" aria-label="Select field to filter by">
+                                <option value="">Select field to filter...</option>
+                                <option value="major">Major</option>
+                                <option value="grade">Grade</option>
+                                <option value="age">Age</option>
+                                <option value="enrollmentYear">Enrollment Year</option>
+                            </select>
+                            <select id="filterOperator" class="select-control" aria-label="Select filter operator">
+                                <option value="equals">Equals</option>
+                                <option value="contains">Contains</option>
+                                <option value="greater">Greater than</option>
+                                <option value="less">Less than</option>
+                            </select>
+                            <input type="text" id="filterValue" class="select-control" placeholder="Value..." aria-label="Filter value">
+                            <button id="applyFilter" class="btn btn-primary" aria-label="Apply filter">
+                                <i class="fas fa-check"></i> Apply Filter
+                            </button>
+                            <button id="clearFilter" class="btn btn-outline" aria-label="Clear all filters">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Query Builder -->
+                    <div class="operation-category">
+                        <div class="operation-title">
+                            <i class="fas fa-search"></i>
+                            <span>Build Query</span>
+                        </div>
+                        <div class="query-builder">
+                            <div class="query-row">
+                                <div class="query-field">
+                                    <select id="queryField1" class="select-control btn-small">
+                                        <option value="major">Major</option>
+                                        <option value="grade">Grade</option>
+                                        <option value="age">Age</option>
+                                    </select>
+                                </div>
+                                <div class="query-operator">
+                                    <select id="queryOperator1" class="select-control btn-small">
+                                        <option value="=">=</option>
+                                        <option value=">">&gt;</option>
+                                        <option value="<">&lt;</option>
+                                        <option value="contains">contains</option>
+                                    </select>
+                                </div>
+                                <div class="query-value">
+                                    <input type="text" id="queryValue1" class="select-control btn-small" placeholder="Value">
+                                </div>
+                            </div>
+                            
+                            <div class="query-row">
+                                <div class="query-field">
+                                    <select id="queryField2" class="select-control btn-small">
+                                        <option value="">(Optional)</option>
+                                        <option value="major">Major</option>
+                                        <option value="grade">Grade</option>
+                                        <option value="age">Age</option>
+                                    </select>
+                                </div>
+                                <div class="query-operator">
+                                    <select id="queryOperator2" class="select-control btn-small">
+                                        <option value="=">=</option>
+                                        <option value=">">&gt;</option>
+                                        <option value="<">&lt;</option>
+                                        <option value="contains">contains</option>
+                                    </select>
+                                </div>
+                                <div class="query-value">
+                                    <input type="text" id="queryValue2" class="select-control btn-small" placeholder="Value">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem;">
+                                <button id="runQuery" class="btn btn-primary" aria-label="Run query">
+                                    <i class="fas fa-play"></i> Run Query
+                                </button>
+                                <button id="resetQuery" class="btn btn-outline" aria-label="Reset query">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Controls -->
+                    <div class="operation-category">
+                        <div class="operation-title">
+                            <i class="fas fa-database"></i>
+                            <span>Data Controls</span>
+                        </div>
+                        <div class="operation-controls">
+                            <button id="resetData" class="btn btn-outline" aria-label="Reset to original data">
+                                <i class="fas fa-undo"></i> Reset Data
+                            </button>
+                            <button id="sampleData1" class="btn btn-outline" aria-label="Load sample data set 1">
+                                <i class="fas fa-users"></i> Load Students
+                            </button>
+                            <button id="sampleData2" class="btn btn-outline" aria-label="Load sample data set 2">
+                                <i class="fas fa-book"></i> Load Courses
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instructions Panel -->
+                <div class="panel instructions">
+                    <div class="panel-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h2>Learning Guide</h2>
+                    </div>
+                    <p>Practice these database operations:</p>
+                    <ol>
+                        <li><strong>Sorting:</strong> Organize data in ascending or descending order.</li>
+                        <li><strong>Filtering:</strong> Show only records matching specific criteria.</li>
+                        <li><strong>Querying:</strong> Combine conditions to find precise data.</li>
+                    </ol>
+                    <p style="margin-top: 1rem;">Try sorting by Age, filtering for "Computer Science" majors, or querying for students with Grade A.</p>
+                </div>
+            </div>
+            
+            <!-- Data Display Panel -->
+            <div class="data-panel">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-table"></i>
+                        <h2>Data Table</h2>
+                        <span id="recordCount" style="margin-left: auto; font-weight: 600; color: var(--primary-color);">10 records</span>
+                    </div>
+                    
+                    <!-- Status Messages -->
+                    <div id="statusMessage" class="status-message status-info" style="display: none;">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Use the controls to perform database operations</span>
+                    </div>
+                    
+                    <!-- Data Table -->
+                    <div class="data-table-container">
+                        <table id="dataTable" aria-label="Student database table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Age</th>
+                                    <th scope="col">Major</th>
+                                    <th scope="col">Grade</th>
+                                    <th scope="col">Year</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Data will be inserted here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Results Panel -->
+                    <div class="panel results-panel">
+                        <div class="panel-title">
+                            <i class="fas fa-code"></i>
+                            <h2>SQL Simulation</h2>
+                        </div>
+                        <p>Generated query based on your operations:</p>
+                        <div class="sql-output">
+                            <code id="sqlQuery">
+                                <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> students<br>
+                                <span class="sql-keyword">ORDER BY</span> name <span class="sql-keyword">ASC</span>;
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Mobile Database Simulator &copy; 2023 | Designed for accessibility and mobile learning</p>
+            <p class="accessibility-note">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Optimized for mobile touch interfaces | <i class="fas fa-keyboard"></i> Keyboard navigation supported</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Sample datasets
+        const sampleData = {
+            students: [
+                { id: 1, name: "Alex Johnson", age: 20, major: "Computer Science", grade: "A", enrollmentYear: 2021 },
+                { id: 2, name: "Maria Garcia", age: 22, major: "Biology", grade: "B", enrollmentYear: 2020 },
+                { id: 3, name: "James Smith", age: 19, major: "Mathematics", grade: "A", enrollmentYear: 2022 },
+                { id: 4, name: "Sofia Williams", age: 21, major: "Computer Science", grade: "B+", enrollmentYear: 2021 },
+                { id: 5, name: "Michael Brown", age: 23, major: "Physics", grade: "A-", enrollmentYear: 2019 },
+                { id: 6, name: "Emma Davis", age: 20, major: "Chemistry", grade: "C+", enrollmentYear: 2021 },
+                { id: 7, name: "Daniel Miller", age: 22, major: "Computer Science", grade: "A", enrollmentYear: 2020 },
+                { id: 8, name: "Olivia Wilson", age: 21, major: "Biology", grade: "B", enrollmentYear: 2021 },
+                { id: 9, name: "William Taylor", age: 19, major: "Mathematics", grade: "B+", enrollmentYear: 2022 },
+                { id: 10, name: "Ava Martinez", age: 20, major: "Computer Science", grade: "A-", enrollmentYear: 2021 }
+            ],
+            courses: [
+                { id: 1, name: "Introduction to Programming", department: "Computer Science", credits: 3, level: "Undergraduate", enrollment: 45 },
+                { id: 2, name: "Calculus I", department: "Mathematics", credits: 4, level: "Undergraduate", enrollment: 60 },
+                { id: 3, name: "Organic Chemistry", department: "Chemistry", credits: 4, level: "Undergraduate", enrollment: 35 },
+                { id: 4, name: "Data Structures", department: "Computer Science", credits: 3, level: "Undergraduate", enrollment: 40 },
+                { id: 5, name: "Genetics", department: "Biology", credits: 3, level: "Undergraduate", enrollment: 30 },
+                { id: 6, name: "Quantum Mechanics", department: "Physics", credits: 4, level: "Graduate", enrollment: 20 },
+                { id: 7, name: "Linear Algebra", department: "Mathematics", credits: 3, level: "Undergraduate", enrollment: 50 },
+                { id: 8, name: "Machine Learning", department: "Computer Science", credits: 3, level: "Graduate", enrollment: 25 },
+                { id: 9, name: "Cell Biology", department: "Biology", credits: 3, level: "Undergraduate", enrollment: 40 },
+                { id: 10, name: "Thermodynamics", department: "Physics", credits: 4, level: "Undergraduate", enrollment: 30 }
+            ]
+        };
+
+        // Current state of the application
+        let currentData = [...sampleData.students];
+        let currentSort = { field: 'name', direction: 'asc' };
+        let currentFilters = [];
+        let currentDataset = 'students';
+
+        // DOM elements
+        const tableBody = document.getElementById('tableBody');
+        const sqlQuery = document.getElementById('sqlQuery');
+        const recordCount = document.getElementById('recordCount');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable();
+            setupEventListeners();
+            showStatus('Welcome! Use the controls to practice database operations.', 'info');
+        });
+
+        // Set up event listeners for all interactive elements
+        function setupEventListeners() {
+            // Sorting controls
+            document.getElementById('sortAsc').addEventListener('click', () => handleSort('asc'));
+            document.getElementById('sortDesc').addEventListener('click', () => handleSort('desc'));
+            
+            // Filtering controls
+            document.getElementById('applyFilter').addEventListener('click', applyFilter);
+            document.getElementById('clearFilter').addEventListener('click', clearFilter);
+            
+            // Query builder controls
+            document.getElementById('runQuery').addEventListener('click', runQuery);
+            document.getElementById('resetQuery').addEventListener('click', resetQuery);
+            
+            // Data controls
+            document.getElementById('resetData').addEventListener('click', resetData);
+            document.getElementById('sampleData1').addEventListener('click', () => loadSampleData('students'));
+            document.getElementById('sampleData2').addEventListener('click', () => loadSampleData('courses'));
+            
+            // Sort field change
+            document.getElementById('sortField').addEventListener('change', function() {
+                if (this.value) {
+                    currentSort.field = this.value;
+                    applyCurrentSort();
+                }
+            });
+            
+            // Keyboard navigation for accessibility
+            document.addEventListener('keydown', function(e) {
+                // Tab key navigation already handled by browser
+                // Add shortcut keys for power users
+                if (e.altKey) {
+                    switch(e.key) {
+                        case 's':
+                            document.getElementById('sortField').focus();
+                            break;
+                        case 'f':
+                            document.getElementById('filterField').focus();
+                            break;
+                        case 'r':
+                            resetData();
+                            break;
+                    }
+                }
+            });
+            
+            // Make table headers clickable for sorting
+            document.querySelectorAll('th').forEach((th, index) => {
+                th.style.cursor = 'pointer';
+                th.setAttribute('tabindex', '0');
+                th.addEventListener('click', () => handleHeaderSort(index));
+                th.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleHeaderSort(index);
+                    }
+                });
+            });
+        }
+
+        // Render the table with current data
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            currentData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Determine which dataset we're displaying
+                if (currentDataset === 'students') {
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.age}</td>
+                        <td>${item.major}</td>
+                        <td>${item.grade}</td>
+                        <td>${item.enrollmentYear}</td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.department}</td>
+                        <td>${item.credits}</td>
+                        <td>${item.level}</td>
+                        <td>${item.enrollment}</td>
+                    `;
+                }
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update record count
+            recordCount.textContent = `${currentData.length} records`;
+            
+            // Update SQL display
+            updateSQLDisplay();
+        }
+
+        // Handle sorting operations
+        function handleSort(direction) {
+            const sortField = document.getElementById('sortField').value;
+            if (!sortField) {
+                showStatus('Please select a field to sort by first.', 'info');
+                return;
+            }
+            
+            currentSort.field = sortField;
+            currentSort.direction = direction;
+            
+            applyCurrentSort();
+            showStatus(`Sorted by ${sortField} in ${direction === 'asc' ? 'ascending' : 'descending'} order.`, 'success');
+            
+            // Visual feedback
+            const button = direction === 'asc' ? document.getElementById('sortAsc') : document.getElementById('sortDesc');
+            button.classList.add('pulse');
+            setTimeout(() => button.classList.remove('pulse'), 500);
+        }
+
+        // Apply current sort to data
+        function applyCurrentSort() {
+            currentData.sort((a, b) => {
+                let aVal = a[currentSort.field];
+                let bVal = b[currentSort.field];
+                
+                // Handle numeric sorting
+                if (!isNaN(aVal) && !isNaN(bVal)) {
+                    aVal = Number(aVal);
+                    bVal = Number(bVal);
+                }
+                
+                // Handle string comparison
+                if (currentSort.direction === 'asc') {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                } else {
+                    return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+                }
+            });
+            
+            renderTable();
+            
+            // Update sort indicator in UI
+            document.querySelectorAll('th').forEach(th => th.innerHTML = th.innerHTML.replace(' <i class="fas fa-sort sort-indicator"></i>', ''));
+            const headerIndex = getHeaderIndex(currentSort.field);
+            if (headerIndex !== -1) {
+                const th = document.querySelectorAll('th')[headerIndex];
+                const icon = currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+                th.innerHTML += ` <i class="fas ${icon} sort-indicator"></i>`;
+            }
+        }
+
+        // Handle sorting by clicking table headers
+        function handleHeaderSort(headerIndex) {
+            const headers = currentDataset === 'students' 
+                ? ['id', 'name', 'age', 'major', 'grade', 'enrollmentYear']
+                : ['id', 'name', 'department', 'credits', 'level', 'enrollment'];
+                
+            const field = headers[headerIndex];
+            currentSort.field = field;
+            
+            // Toggle direction if same field, otherwise default to ascending
+            if (currentSort.field === field) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.direction = 'asc';
+            }
+            
+            // Update sort field dropdown
+            document.getElementById('sortField').value = field;
+            
+            applyCurrentSort();
+            showStatus(`Sorted by ${field} in ${currentSort.direction} order.`, 'success');
+        }
+
+        // Get header index for a field name
+        function getHeaderIndex(field) {
+            const headers = currentDataset === 'students' 
+                ? ['id', 'name', 'age', 'major', 'grade', 'enrollmentYear']
+                : ['id', 'name', 'department', 'credits', 'level', 'enrollment'];
+                
+            return headers.indexOf(field);
+        }
+
+        // Apply filter to data
+        function applyFilter() {
+            const field = document.getElementById('filterField').value;
+            const operator = document.getElementById('filterOperator').value;
+            const value = document.getElementById('filterValue').value.trim();
+            
+            if (!field || value === '') {
+                showStatus('Please select a field and enter a value to filter by.', 'info');
+                return;
+            }
+            
+            // Add to current filters
+            currentFilters.push({ field, operator, value });
+            
+            // Apply all filters
+            filterData();
+            showStatus(`Filter applied: ${field} ${operator} "${value}".`, 'success');
+            
+            // Visual feedback
+            document.getElementById('applyFilter').classList.add('pulse');
+            setTimeout(() => document.getElementById('applyFilter').classList.remove('pulse'), 500);
+        }
+
+        // Filter data based on current filters
+        function filterData() {
+            // Start with the full dataset
+            let data = currentDataset === 'students' 
+                ? [...sampleData.students] 
+                : [...sampleData.courses];
+            
+            // Apply each filter
+            currentFilters.forEach(filter => {
+                data = data.filter(item => {
+                    const itemValue = String(item[filter.field]).toLowerCase();
+                    const filterValue = filter.value.toLowerCase();
+                    
+                    switch(filter.operator) {
+                        case 'equals':
+                            return itemValue === filterValue;
+                        case 'contains':
+                            return itemValue.includes(filterValue);
+                        case 'greater':
+                            return Number(item[filter.field]) > Number(filter.value);
+                        case 'less':
+                            return Number(item[filter.field]) < Number(filter.value);
+                        default:
+                            return true;
+                    }
+                });
+            });
+            
+            // Apply current sort
+            currentData = data;
+            applyCurrentSort();
+        }
+
+        // Clear all filters
+        function clearFilter() {
+            currentFilters = [];
+            document.getElementById('filterValue').value = '';
+            filterData();
+            showStatus('All filters cleared.', 'success');
+            
+            // Visual feedback
+            document.getElementById('clearFilter').classList.add('pulse');
+            setTimeout(() => document.getElementById('clearFilter').classList.remove('pulse'), 500);
+        }
+
+        // Run query from query builder
+        function runQuery() {
+            const field1 = document.getElementById('queryField1').value;
+            const operator1 = document.getElementById('queryOperator1').value;
+            const value1 = document.getElementById('queryValue1').value.trim();
+            
+            const field2 = document.getElementById('queryField2').value;
+            const operator2 = document.getElementById('queryOperator2').value;
+            const value2 = document.getElementById('queryValue2').value.trim();
+            
+            if (!field1 || !value1) {
+                showStatus('Please fill in at least the first query condition.', 'info');
+                return;
+            }
+            
+            // Build query conditions
+            currentFilters = [];
+            
+            // First condition
+            currentFilters.push({ 
+                field: field1, 
+                operator: operator1 === 'contains' ? 'contains' : 'equals', 
+                value: value1 
+            });
+            
+            // Second condition if provided
+            if (field2 && value2) {
+                currentFilters.push({ 
+                    field: field2, 
+                    operator: operator2 === 'contains' ? 'contains' : 'equals', 
+                    value: value2 
+                });
+            }
+            
+            filterData();
+            
+            // Show success message
+            const msg = field2 && value2 
+                ? `Query applied: ${field1} ${operator1} "${value1}" AND ${field2} ${operator2} "${value2}".`
+                : `Query applied: ${field1} ${operator1} "${value1}".`;
+                
+            showStatus(msg, 'success');
+            
+            // Visual feedback
+            document.getElementById('runQuery').classList.add('pulse');
+            setTimeout(() => document.getElementById('runQuery').classList.remove('pulse'), 500);
+        }
+
+        // Reset query builder
+        function resetQuery() {
+            document.getElementById('queryField1').value = 'major';
+            document.getElementById('queryOperator1').value = '=';
+            document.getElementById('queryValue1').value = '';
+            document.getElementById('queryField2').value = '';
+            document.getElementById('queryOperator2').value = '=';
+            document.getElementById('queryValue2').value = '';
+            
+            showStatus('Query builder reset.', 'info');
+            
+            // Visual feedback
+            document.getElementById('resetQuery').classList.add('pulse');
+            setTimeout(() => document.getElementById('resetQuery').classList.remove('pulse'), 500);
+        }
+
+        // Reset to original data
+        function resetData() {
+            currentData = currentDataset === 'students' 
+                ? [...sampleData.students] 
+                : [...sampleData.courses];
+                
+            currentFilters = [];
+            currentSort = { field: 'name', direction: 'asc' };
+            
+            // Reset UI controls
+            document.getElementById('sortField').value = 'name';
+            document.getElementById('filterField').value = '';
+            document.getElementById('filterValue').value = '';
+            resetQuery();
+            
+            applyCurrentSort();
+            showStatus('Data reset to original state.', 'success');
+            
+            // Visual feedback
+            document.getElementById('resetData').classList.add('pulse');
+            setTimeout(() => document.getElementById('resetData').classList.remove('pulse'), 500);
+        }
+
+        // Load sample dataset
+        function loadSampleData(dataset) {
+            currentDataset = dataset;
+            currentData = [...sampleData[dataset]];
+            currentFilters = [];
+            currentSort = { field: 'name', direction: 'asc' };
+            
+            // Update table headers based on dataset
+            const headers = document.querySelectorAll('th');
+            if (dataset === 'students') {
+                headers[0].textContent = 'ID';
+                headers[1].textContent = 'Name';
+                headers[2].textContent = 'Age';
+                headers[3].textContent = 'Major';
+                headers[4].textContent = 'Grade';
+                headers[5].textContent = 'Year';
+            } else {
+                headers[0].textContent = 'ID';
+                headers[1].textContent = 'Course Name';
+                headers[2].textContent = 'Department';
+                headers[3].textContent = 'Credits';
+                headers[4].textContent = 'Level';
+                headers[5].textContent = 'Enrollment';
+            }
+            
+            // Reset UI
+            resetData();
+            showStatus(`Loaded ${dataset} dataset.`, 'success');
+            
+            // Visual feedback
+            const button = dataset === 'students' 
+                ? document.getElementById('sampleData1') 
+                : document.getElementById('sampleData2');
+            button.classList.add('pulse');
+            setTimeout(() => button.classList.remove('pulse'), 500);
+        }
+
+        // Update SQL display based on current operations
+        function updateSQLDisplay() {
+            let sql = '<span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> ';
+            sql += currentDataset === 'students' ? 'students' : 'courses';
+            
+            // Add WHERE clause if filters exist
+            if (currentFilters.length > 0) {
+                sql += ' <span class="sql-keyword">WHERE</span> ';
+                sql += currentFilters.map(filter => {
+                    const operator = filter.operator === 'contains' ? 'LIKE' : 
+                                   filter.operator === 'greater' ? '>' : 
+                                   filter.operator === 'less' ? '<' : '=';
+                                   
+                    const value = filter.operator === 'contains' 
+                        ? `"%${filter.value}%"`
+                        : `"${filter.value}"`;
+                        
+                    return `${filter.field} ${operator} <span class="sql-value">${value}</span>`;
+                }).join(' <span class="sql-keyword">AND</span> ');
+            }
+            
+            // Add ORDER BY clause if sorting
+            if (currentSort.field) {
+                sql += ` <span class="sql-keyword">ORDER BY</span> ${currentSort.field} `;
+                sql += currentSort.direction === 'asc' 
+                    ? '<span class="sql-keyword">ASC</span>' 
+                    : '<span class="sql-keyword">DESC</span>';
+            }
+            
+            sql += ';';
+            sqlQuery.innerHTML = sql;
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message';
+            
+            if (type === 'success') {
+                statusMessage.classList.add('status-success');
+                statusMessage.querySelector('i').className = 'fas fa-check-circle';
+            } else {
+                statusMessage.classList.add('status-info');
+                statusMessage.querySelector('i').className = 'fas fa-info-circle';
+            }
+            
+            statusMessage.style.display = 'flex';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
