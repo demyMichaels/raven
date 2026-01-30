@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Economic Indicators Chart</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@5.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+transition: background-color 0.3s ease, color 0.3s ease;
+}
+.dark {
+color-scheme: dark;
+}
+.chart-container {
+position: relative;
+width: 100%;
+overflow: hidden;
+}
+.event-marker {
+position: absolute;
+transform: translateX(-50%);
+z-index: 20;
+transition: all 0.3s ease;
+cursor: pointer;
+}
+.event-marker.hidden {
+opacity: 0.3;
+}
+.event-marker-label {
+max-width: 90px;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+text-align: center;
+font-size: 0.7rem;
+font-weight: bold;
+}
+.event-marker-label.offset-left {
+transform: translateX(-40%);
+}
+.event-marker-label.offset-right {
+transform: translateX(40%);
+}
+.event-line {
+position: absolute;
+height: 85%;
+bottom: 0;
+width: 1px;
+border-left: 1px dashed;
+opacity: 0.5;
+transform: translateX(-50%);
+z-index: 10;
+transition: opacity 0.3s ease;
+}
+.event-line.hidden {
+opacity: 0.1;
+}
+.tooltip {
+position: absolute;
+transform: translate(-50%, -100%);
+background: white;
+border-radius: 0.5rem;
+padding: 0.75rem;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+pointer-events: none;
+z-index: 30;
+display: none;
+min-width: 150px;
+max-width: 300px;
+}
+.dark .tooltip {
+background: #2d3748;
+color: #f7fafc;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.36);
+}
+.pm-tenure {
+position: absolute;
+height: 100%;
+z-index: 5;
+opacity: 0.15;
+transition: opacity 0.3s ease;
+}
+.pm-tenure:hover {
+opacity: 0.25;
+}
+.pm-tenure.hidden {
+opacity: 0.05;
+}
+.pm-chart-image {
+position: absolute;
+width: 50px;
+height: 50px;
+object-fit: cover;
+border-radius: 50%;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+border: 2px solid white;
+transform: translateX(-50%);
+z-index: 15;
+transition: all 0.3s ease;
+}
+.dark .pm-chart-image {
+border-color: #2d3748;
+}
+.pm-image {
+width: 64px;
+height: 64px;
+object-fit: cover;
+border-radius: 50%;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+border: 2px solid white;
+}
+.dark .pm-image {
+border-color: #2d3748;
+}
+.recession-period {
+position: absolute;
+height: 100%;
+z-index: 3;
+background-color: rgba(220, 38, 38, 0.08);
+transition: opacity 0.3s ease;
+}
+.recession-period:hover {
+background-color: rgba(220, 38, 38, 0.15);
+}
+.dark .recession-period {
+background-color: rgba(220, 38, 38, 0.12);
+}
+.dark .recession-period:hover {
+background-color: rgba(220, 38, 38, 0.2);
+}
+.chart-legend-item {
+display: flex;
+align-items: center;
+margin-right: 12px;
+cursor: pointer;
+user-select: none;
+}
+.chart-legend-color {
+width: 16px;
+height: 16px;
+border-radius: 3px;
+margin-right: 6px;
+}
+.chart-controls {
+position: absolute;
+top: 10px;
+right: 10px;
+z-index: 25;
+}
+.recession-label {
+position: absolute;
+top: 15px;
+padding: 4px 8px;
+font-size: 0.75rem;
+font-weight: bold;
+color: white;
+background-color: rgba(220, 38, 38, 0.8);
+border-radius: 4px;
+z-index: 15;
+transform: translateX(-50%);
+}
+.compare-period {
+position: absolute;
+height: 100%;
+z-index: 2;
+background-color: rgba(79, 70, 229, 0.08);
+transition: opacity 0.3s ease;
+}
+.compare-period:hover {
+background-color: rgba(79, 70, 229, 0.15);
+}
+/* Add accessibility styles */
+.sr-only {
+position: absolute;
+width: 1px;
+height: 1px;
+padding: 0;
+margin: -1px;
+overflow: hidden;
+clip: rect(0, 0, 0, 0);
+white-space: nowrap;
+border-width: 0;
+}
+.key-focus:focus {
+outline: 2px solid #5D5CDE;
+outline-offset: 2px;
+}
+/* Dataset toggle buttons */
+.dataset-toggle {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 16px;
+}
+.dataset-toggle button {
+padding: 4px 12px;
+border-radius: 20px;
+font-size: 0.875rem;
+transition: all 0.3s ease;
+}
+.dataset-toggle button.active {
+font-weight: 600;
+}
+</style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 md:p-6">
+<div class="max-w-6xl mx-auto">
+<h1 class="text-2xl md:text-3xl font-bold mb-2">UK Economic Indicators (2019-2024)</h1>
+<p class="text-gray-600 dark:text-gray-400 mb-6">GDP growth, BoE interest rates, 10-year Gilt bond yields, FTSE 100, GBP/USD exchange rate, key events and PM tenures</p>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-8 relative chart-container">
+<!-- Chart accessibility description -->
+<div class="sr-only" id="chart-description">
+Chart showing UK economic indicators from 2019 to 2024, including GDP growth, Bank of England interest rates, 10-year Gilt bond yields, FTSE 100 index, and GBP/USD exchange rate. The chart highlights key events, recession periods, and UK Prime Minister tenures.
+</div>
+
+<div class="flex flex-wrap items-center justify-between gap-2 mb-4 chart-legend" id="chart-legend" aria-label="Chart legend">
+<!-- Will be populated by JavaScript -->
+</div>
+
+<div class="dataset-toggle" id="dataset-toggle">
+<!-- Will be populated by JavaScript -->
+</div>
+
+<div class="w-full h-[500px] relative" id="chart-container" aria-describedby="chart-description">
+<canvas id="gdpChart"></canvas>
+<div id="pm-tenures"></div>
+<div id="pm-images"></div>
+<div id="event-markers"></div>
+<div id="recession-markers"></div>
+<div id="tooltip" class="tooltip"></div>
+
+<!-- Chart Controls -->
+<div class="chart-controls flex gap-2">
+<button id="reset-zoom-btn" class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors key-focus" aria-label="Reset zoom">
+<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+</svg>
+</button>
+<button id="toggle-events-btn" class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors key-focus" aria-label="Toggle events visibility">
+<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+</svg>
+</button>
+<button id="download-btn" class="bg-white dark:bg-gray-700 p-2 rounded-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors key-focus" aria-label="Download chart as image">
+<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+</svg>
+</button>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-8">
+<h2 class="text-xl font-bold mb-4">Key Events Timeline</h2>
+<div class="flex mb-4 overflow-x-auto whitespace-nowrap pb-2 event-filters">
+<button class="filter-all bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 rounded-full px-3 py-1 text-sm font-medium mr-2 key-focus">All</button>
+<button class="filter-economic bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full px-3 py-1 text-sm font-medium mr-2 key-focus">Economic</button>
+<button class="filter-political bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded-full px-3 py-1 text-sm font-medium mr-2 key-focus">Political</button>
+<button class="filter-crisis bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full px-3 py-1 text-sm font-medium mr-2 key-focus">Crisis</button>
+</div>
+<div class="space-y-4" id="events-timeline">
+<!-- Will be populated by JavaScript -->
+</div>
+</div>
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-8">
+<h2 class="text-xl font-bold mb-4">Prime Ministers</h2>
+<div class="space-y-4" id="pm-timeline">
+<!-- Will be populated by JavaScript -->
+</div>
+</div>
+</div>
+</div>
+
+<script>
+// Check for dark mode
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+if (event.matches) {
+document.documentElement.classList.add('dark');
+} else {
+document.documentElement.classList.remove('dark');
+}
+});
+
+// GDP Data
+const gdpData = [
+{ date: "2019-01-01", value: 549060.0 },
+{ date: "2019-04-01", value: 556104.0 },
+{ date: "2019-07-01", value: 562999.0 },
+{ date: "2019-10-01", value: 565758.0 },
+{ date: "2020-01-01", value: 555891.0 },
+{ date: "2020-04-01", value: 476160.0 },
+{ date: "2020-07-01", value: 533806.0 },
+{ date: "2020-10-01", value: 537629.0 },
+{ date: "2021-01-01", value: 537992.0 },
+{ date: "2021-04-01", value: 568521.0 },
+{ date: "2021-07-01", value: 581805.0 },
+{ date: "2021-10-01", value: 597082.0 },
+{ date: "2022-01-01", value: 610346.0 },
+{ date: "2022-04-01", value: 625467.0 },
+{ date: "2022-07-01", value: 636553.0 },
+{ date: "2022-10-01", value: 654062.0 },
+{ date: "2023-01-01", value: 667103.0 },
+{ date: "2023-04-01", value: 679433.0 },
+{ date: "2023-07-01", value: 685035.0 },
+{ date: "2023-10-01", value: 685749.0 },
+{ date: "2024-01-01", value: 698800.0 },
+{ date: "2024-04-01", value: 707433.0 },
+{ date: "2024-07-01", value: 717089.0 },
+{ date: "2024-10-01", value: 724724.0 }
+];
+
+// Bank of England Interest Rate Data
+const boeRateData = [
+{ date: "2019-03-31", value: 0.84 },
+{ date: "2019-06-30", value: 0.78 },
+{ date: "2019-09-30", value: 0.77 },
+{ date: "2019-12-31", value: 0.79 },
+{ date: "2020-03-31", value: 0.53 },
+{ date: "2020-06-30", value: 0.19 },
+{ date: "2020-09-30", value: 0.06 },
+{ date: "2020-12-31", value: 0.03 },
+{ date: "2021-03-31", value: 0.08 },
+{ date: "2021-06-30", value: 0.08 },
+{ date: "2021-09-30", value: 0.07 },
+{ date: "2021-12-31", value: 0.16 },
+{ date: "2022-03-31", value: 0.99 },
+{ date: "2022-06-30", value: 1.57 },
+{ date: "2022-09-30", value: 2.91 },
+{ date: "2022-12-31", value: 3.78 },
+{ date: "2023-03-31", value: 4.33 },
+{ date: "2023-06-30", value: 5.09 },
+{ date: "2023-09-30", value: 5.52 },
+{ date: "2023-12-31", value: 5.22 },
+{ date: "2024-03-31", value: 5.2 },
+{ date: "2024-06-30", value: 5.16 },
+{ date: "2024-09-30", value: 4.84 },
+{ date: "2024-12-31", value: 4.64 },
+{ date: "2025-03-31", value: 4.39 }
+];
+
+// UK 10-year Gilt Bond Data
+const giltBondData = [
+{ date: "2019-03-31", value: 1.2504 },
+{ date: "2019-06-30", value: 1.0799 },
+{ date: "2019-09-30", value: 0.6687 },
+{ date: "2019-12-31", value: 0.7444 },
+{ date: "2020-03-31", value: 0.6058 },
+{ date: "2020-06-30", value: 0.3033 },
+{ date: "2020-09-30", value: 0.2514 },
+{ date: "2020-12-31", value: 0.3373 },
+{ date: "2021-03-31", value: 0.6117 },
+{ date: "2021-06-30", value: 0.8707 },
+{ date: "2021-09-30", value: 0.7147 },
+{ date: "2021-12-31", value: 0.9533 },
+{ date: "2022-03-31", value: 1.4133 },
+{ date: "2022-06-30", value: 2.0418 },
+{ date: "2022-09-30", value: 2.658 },
+{ date: "2022-12-31", value: 3.6761 },
+{ date: "2023-03-31", value: 3.5435 },
+{ date: "2023-06-30", value: 3.9928 },
+{ date: "2023-09-30", value: 4.4623 },
+{ date: "2023-12-31", value: 4.2346 },
+{ date: "2024-03-31", value: 4.0293 },
+{ date: "2024-06-30", value: 4.2015 },
+{ date: "2024-09-30", value: 3.9961 },
+{ date: "2024-12-31", value: 4.3501 }
+];
+
+// FTSE 100 Data (processed from monthly to quarterly)
+const ftseData = [
+{ date: "2019-03-31", value: 7279.19 }, // March 2019 close
+{ date: "2019-06-30", value: 7425.63 }, // June 2019 close
+{ date: "2019-09-30", value: 7408.21 }, // Sept 2019 close
+{ date: "2019-12-31", value: 7542.44 }, // Dec 2019 close
+{ date: "2020-03-31", value: 5671.96 }, // March 2020 close
+{ date: "2020-06-30", value: 6169.74 }, // June 2020 close
+{ date: "2020-09-30", value: 5866.10 }, // Sept 2020 close
+{ date: "2020-12-31", value: 6555.82 }, // Dec 2020 close
+{ date: "2021-03-31", value: 6713.63 }, // March 2021 close
+{ date: "2021-06-30", value: 7037.47 }, // June 2021 close
+{ date: "2021-09-30", value: 7086.42 }, // Sept 2021 close
+{ date: "2021-12-31", value: 7384.54 }, // Dec 2021 close
+{ date: "2022-03-31", value: 7515.68 }, // March 2022 close
+{ date: "2022-06-30", value: 7169.28 }, // June 2022 close
+{ date: "2022-09-30", value: 6893.81 }, // Sept 2022 close
+{ date: "2022-12-31", value: 7451.74 }, // Dec 2022 close
+{ date: "2023-03-31", value: 7631.74 }, // March 2023 close
+{ date: "2023-06-30", value: 7531.53 }, // June 2023 close
+{ date: "2023-09-30", value: 7608.08 }, // Sept 2023 close
+{ date: "2023-12-31", value: 7733.24 }, // Dec 2023 close
+{ date: "2024-03-31", value: 7952.62 }, // March 2024 close
+{ date: "2024-06-30", value: 8164.12 }, // June 2024 close
+{ date: "2024-09-30", value: 8236.95 }, // Sept 2024 close
+{ date: "2024-12-31", value: 8173.02 } // Dec 2024 close
+];
+
+// GBP/USD Exchange Rate Data
+const gbpUsdData = [
+{ date: "2019-01-31", value: 1.2901 },
+{ date: "2019-02-28", value: 1.3016 },
+{ date: "2019-03-31", value: 1.3167 },
+{ date: "2019-04-30", value: 1.3029 },
+{ date: "2019-05-31", value: 1.2854 },
+{ date: "2019-06-30", value: 1.2675 },
+{ date: "2019-07-31", value: 1.2461 },
+{ date: "2019-08-31", value: 1.216 },
+{ date: "2019-09-30", value: 1.2369 },
+{ date: "2019-10-31", value: 1.2657 },
+{ date: "2019-11-30", value: 1.2884 },
+{ date: "2019-12-31", value: 1.3109 },
+{ date: "2020-01-31", value: 1.3076 },
+{ date: "2020-02-29", value: 1.2953 },
+{ date: "2020-03-31", value: 1.2369 },
+{ date: "2020-04-30", value: 1.242 },
+{ date: "2020-05-31", value: 1.2302 },
+{ date: "2020-06-30", value: 1.2523 },
+{ date: "2020-07-31", value: 1.2701 },
+{ date: "2020-08-31", value: 1.3143 },
+{ date: "2020-09-30", value: 1.2947 },
+{ date: "2020-10-31", value: 1.298 },
+{ date: "2020-11-30", value: 1.3198 },
+{ date: "2020-12-31", value: 1.3434 },
+{ date: "2021-01-31", value: 1.3641 },
+{ date: "2021-02-28", value: 1.3867 },
+{ date: "2021-03-31", value: 1.3863 },
+{ date: "2021-04-30", value: 1.3845 },
+{ date: "2021-05-31", value: 1.4083 },
+{ date: "2021-06-30", value: 1.4025 },
+{ date: "2021-07-31", value: 1.3808 },
+{ date: "2021-08-31", value: 1.3797 },
+{ date: "2021-09-30", value: 1.3732 },
+{ date: "2021-10-31", value: 1.3701 },
+{ date: "2021-11-30", value: 1.3463 },
+{ date: "2021-12-31", value: 1.3303 },
+{ date: "2022-01-31", value: 1.3555 },
+{ date: "2022-02-28", value: 1.354 },
+{ date: "2022-03-31", value: 1.3168 },
+{ date: "2022-04-30", value: 1.2933 },
+{ date: "2022-05-31", value: 1.2438 },
+{ date: "2022-06-30", value: 1.232 },
+{ date: "2022-07-31", value: 1.1987 },
+{ date: "2022-08-31", value: 1.1983 },
+{ date: "2022-09-30", value: 1.132 },
+{ date: "2022-10-31", value: 1.1332 },
+{ date: "2022-11-30", value: 1.1727 },
+{ date: "2022-12-31", value: 1.218 },
+{ date: "2023-01-31", value: 1.2237 },
+{ date: "2023-02-28", value: 1.2084 },
+{ date: "2023-03-31", value: 1.2138 },
+{ date: "2023-04-30", value: 1.2446 },
+{ date: "2023-05-31", value: 1.2484 },
+{ date: "2023-06-30", value: 1.2627 },
+{ date: "2023-07-31", value: 1.2893 },
+{ date: "2023-08-31", value: 1.2706 },
+{ date: "2023-09-30", value: 1.2381 },
+{ date: "2023-10-31", value: 1.2175 },
+{ date: "2023-11-30", value: 1.2437 },
+{ date: "2023-12-31", value: 1.2657 },
+{ date: "2024-01-31", value: 1.2701 },
+{ date: "2024-02-29", value: 1.263 },
+{ date: "2024-03-31", value: 1.2713 },
+{ date: "2024-04-30", value: 1.2517 },
+{ date: "2024-05-31", value: 1.2636 },
+{ date: "2024-06-30", value: 1.2716 },
+{ date: "2024-07-31", value: 1.287 },
+{ date: "2024-08-31", value: 1.2945 },
+{ date: "2024-09-30", value: 1.3219 },
+{ date: "2024-10-31", value: 1.3043 },
+{ date: "2024-11-30", value: 1.2738 },
+{ date: "2024-12-31", value: 1.2647 }
+];
+
+// UK Inflation Data
+const inflationData = [
+{ date: "2019-01-31", value: 1.8 },
+{ date: "2019-02-28", value: 1.9 },
+{ date: "2019-03-31", value: 1.9 },
+{ date: "2019-04-30", value: 2.1 },
+{ date: "2019-05-31", value: 2.0 },
+{ date: "2019-06-30", value: 2.0 },
+{ date: "2019-07-31", value: 2.1 },
+{ date: "2019-08-31", value: 1.7 },
+{ date: "2019-09-30", value: 1.7 },
+{ date: "2019-10-31", value: 1.5 },
+{ date: "2019-11-30", value: 1.5 },
+{ date: "2019-12-31", value: 1.3 },
+{ date: "2020-01-31", value: 1.8 },
+{ date: "2020-02-29", value: 1.7 },
+{ date: "2020-03-31", value: 1.5 },
+{ date: "2020-04-30", value: 0.8 },
+{ date: "2020-05-31", value: 0.5 },
+{ date: "2020-06-30", value: 0.6 },
+{ date: "2020-07-31", value: 1.0 },
+{ date: "2020-08-31", value: 0.2 },
+{ date: "2020-09-30", value: 0.5 },
+{ date: "2020-10-31", value: 0.7 },
+{ date: "2020-11-30", value: 0.3 },
+{ date: "2020-12-31", value: 0.6 },
+{ date: "2021-01-31", value: 0.7 },
+{ date: "2021-02-28", value: 0.4 },
+{ date: "2021-03-31", value: 0.7 },
+{ date: "2021-04-30", value: 1.5 },
+{ date: "2021-05-31", value: 2.1 },
+{ date: "2021-06-30", value: 2.5 },
+{ date: "2021-07-31", value: 2.0 },
+{ date: "2021-08-31", value: 3.2 },
+{ date: "2021-09-30", value: 3.1 },
+{ date: "2021-10-31", value: 4.2 },
+{ date: "2021-11-30", value: 5.1 },
+{ date: "2021-12-31", value: 5.4 },
+{ date: "2022-01-31", value: 5.5 },
+{ date: "2022-02-28", value: 6.2 },
+{ date: "2022-03-31", value: 7.0 },
+{ date: "2022-04-30", value: 9.0 },
+{ date: "2022-05-31", value: 9.1 },
+{ date: "2022-06-30", value: 9.4 },
+{ date: "2022-07-31", value: 10.1 },
+{ date: "2022-08-31", value: 9.9 },
+{ date: "2022-09-30", value: 10.1 },
+{ date: "2022-10-31", value: 11.1 },
+{ date: "2022-11-30", value: 10.7 },
+{ date: "2022-12-31", value: 10.5 },
+{ date: "2023-01-31", value: 10.1 },
+{ date: "2023-02-28", value: 10.4 },
+{ date: "2023-03-31", value: 10.1 },
+{ date: "2023-04-30", value: 8.7 },
+{ date: "2023-05-31", value: 8.7 },
+{ date: "2023-06-30", value: 7.9 },
+{ date: "2023-07-31", value: 6.8 },
+{ date: "2023-08-31", value: 6.7 },
+{ date: "2023-09-30", value: 6.7 },
+{ date: "2023-10-31", value: 4.6 },
+{ date: "2023-11-30", value: 3.9 },
+{ date: "2023-12-31", value: 4.0 },
+{ date: "2024-01-31", value: 4.0 },
+{ date: "2024-02-29", value: 3.4 },
+{ date: "2024-03-31", value: 3.2 },
+{ date: "2024-04-30", value: 2.3 },
+{ date: "2024-05-31", value: 2.0 },
+{ date: "2024-06-30", value: 2.0 },
+{ date: "2024-07-31", value: 2.2 },
+{ date: "2024-08-31", value: 2.2 },
+{ date: "2024-09-30", value: 1.7 },
+{ date: "2024-10-31", value: 2.3 },
+{ date: "2024-11-30", value: 2.6 },
+{ date: "2024-12-31", value: 2.5 }
+];
+
+// Prime Ministers data
+const primeMinistersData = [
+{
+name: "Theresa May",
+startDate: "2016-07-13",
+endDate: "2019-07-24",
+color: "#0070C0",
+party: "Conservative",
+image: "https://pfst.cf2.poecdn.net/base/image/904e0081fd5bb2f25e8474c0b00c8abdd131243cc0a19e3e56dbe473cf034b86?w=533&h=800"
+},
+{
+name: "Boris Johnson",
+startDate: "2019-07-24",
+endDate: "2022-09-06",
+color: "#0070C0",
+party: "Conservative",
+image: "https://pfst.cf2.poecdn.net/base/image/7b42c9a6061cc08bb954820d0f88e6b534f082e5d733c156bf610790ee255632?w=500&h=500"
+},
+{
+name: "Liz Truss",
+startDate: "2022-09-06",
+endDate: "2022-10-25",
+color: "#0070C0",
+party: "Conservative",
+image: "https://pfst.cf2.poecdn.net/base/image/ae82264addcc505c2719272c2b05880b4b2e0a1415adb5de944d02cab441dc92?w=1200&h=1799"
+},
+{
+name: "Rishi Sunak",
+startDate: "2022-10-25",
+endDate: "2024-07-05",
+color: "#0070C0",
+party: "Conservative",
+image: "https://pfst.cf2.poecdn.net/base/image/27443fbf92b3e20d6d58a51eaec6dda5d404242e71d2de281763fd059af58934?w=1200&h=1799"
+},
+{
+name: "Keir Starmer",
+startDate: "2024-07-05",
+endDate: "2025-01-01", // Using a future date for current PM
+color: "#E0001B",
+party: "Labour",
+image: "https://pfst.cf2.poecdn.net/base/image/904e0081fd5bb2f25e8474c0b00c8abdd131243cc0a19e3e56dbe473cf034b86?w=533&h=800" // Placeholder
+}
+];
+
+// Key events to annotate with categories
+const keyEvents = [
+{
+date: "2019-07-24",
+title: "Boris Johnson PM",
+description: "Boris Johnson becomes UK Prime Minister following Theresa May's resignation.",
+icon: "👨‍💼",
+color: "#9b59b6",
+category: "political"
+},
+{
+date: "2020-01-31",
+title: "Brexit Day",
+description: "The UK officially left the European Union, entering a transition period.",
+icon: "🇪🇺",
+color: "#3498db",
+category: "political"
+},
+{
+date: "2020-03-23",
+title: "COVID-19 Lockdown",
+description: "First UK national lockdown announced, severely impacting economic activity.",
+icon: "🦠",
+color: "#e74c3c",
+category: "crisis"
+},
+{
+date: "2020-12-31",
+title: "Brexit Transition End",
+description: "End of Brexit transition period. UK completely leaves the EU single market and customs union.",
+icon: "🇬🇧",
+color: "#3498db",
+category: "economic"
+},
+{
+date: "2021-07-19",
+title: "Freedom Day",
+description: "Most COVID-19 restrictions lifted in England as vaccine rollout progresses.",
+icon: "💉",
+color: "#2ecc71",
+category: "economic"
+},
+{
+date: "2022-02-24",
+title: "Russia-Ukraine War",
+description: "Russia invades Ukraine, triggering global energy price spikes and supply chain disruptions.",
+icon: "⚔️",
+color: "#e67e22",
+category: "crisis"
+},
+{
+date: "2022-09-06",
+title: "Liz Truss PM",
+description: "Liz Truss becomes UK Prime Minister following Boris Johnson's resignation.",
+icon: "👩‍💼",
+color: "#9b59b6",
+category: "political"
+},
+{
+date: "2022-09-23",
+title: "Mini-Budget Crisis",
+description: "Controversial mini-budget announcement causes market turmoil and pound sterling crash.",
+icon: "📉",
+color: "#e74c3c",
+category: "economic"
+},
+{
+date: "2022-10-25",
+title: "Rishi Sunak PM",
+description: "Rishi Sunak becomes UK Prime Minister after Liz Truss's 49-day tenure.",
+icon: "👨‍💼",
+color: "#9b59b6",
+category: "political"
+},
+{
+date: "2023-05-11",
+title: "BoE Rate Peak",
+description: "Bank of England raises interest rates to 4.5%, highest level since 2008.",
+icon: "📈",
+color: "#f39c12",
+category: "economic"
+},
+{
+date: "2024-07-04",
+title: "UK Election",
+description: "Labour party wins UK general election, ending 14 years of Conservative rule.",
+icon: "🗳️",
+color: "#9b59b6",
+category: "political"
+},
+{
+date: "2024-07-05",
+title: "Keir Starmer PM",
+description: "Keir Starmer becomes UK Prime Minister following Labour's election victory.",
+icon: "👨‍💼",
+color: "#E0001B",
+category: "political"
+}
+];
+
+// Format dates for display
+function formatDate(dateString) {
+const date = new Date(dateString);
+return date.toLocaleDateString('en-GB', {
+year: 'numeric',
+month: 'short',
+day: 'numeric'
+});
+}
+
+// Format quarter for display
+function formatQuarter(dateString) {
+const date = new Date(dateString);
+const quarter = Math.floor(date.getMonth() / 3) + 1;
+return `Q${quarter} ${date.getFullYear()}`;
+}
+
+// Format GDP values for display (with commas)
+function formatGDP(value) {
+return '£' + value.toLocaleString('en-UK');
+}
+
+// Format interest rate values for display
+function formatInterestRate(value) {
+return value.toFixed(2) + '%';
+}
+
+// Format FTSE 100 values for display
+function formatFTSE(value) {
+return value.toLocaleString('en-UK');
+}
+
+// Format 10-year gilt values for display
+function formatGiltBond(value) {
+return value.toFixed(2) + '%';
+}
+
+// Format GBP/USD values for display
+function formatGbpUsd(value) {
+return value.toFixed(4);
+}
+
+// Format inflation rate for display
+function formatInflation(value) {
+return value.toFixed(1) + '%';
+}
+
+// Calculate percentage change between two values
+function percentChange(current, previous) {
+return ((current - previous) / previous * 100).toFixed(1);
+}
+
+// Find the nearest data point to an event date
+function findNearestDataPoint(eventDate, dataArray) {
+const eventTime = new Date(eventDate).getTime();
+let nearestPoint = dataArray[0];
+let minTimeDiff = Math.abs(new Date(nearestPoint.date).getTime() - eventTime);
+
+dataArray.forEach(point => {
+const timeDiff = Math.abs(new Date(point.date).getTime() - eventTime);
+if (timeDiff < minTimeDiff) {
+minTimeDiff = timeDiff;
+nearestPoint = point;
+}
+});
+
+return nearestPoint;
+}
+
+// Find the nearest GDP data point to an event date
+function findNearestGDPPoint(eventDate) {
+return findNearestDataPoint(eventDate, gdpData);
+}
+
+// Find the nearest BoE rate data point to an event date
+function findNearestBoePoint(eventDate) {
+return findNearestDataPoint(eventDate, boeRateData);
+}
+
+// Find the nearest gilt bond data point to an event date
+function findNearestGiltPoint(eventDate) {
+return findNearestDataPoint(eventDate, giltBondData);
+}
+
+// Find the nearest FTSE data point to an event date
+function findNearestFTSEPoint(eventDate) {
+return findNearestDataPoint(eventDate, ftseData);
+}
+
+// Find the nearest GBP/USD data point to an event date
+function findNearestGbpUsdPoint(eventDate) {
+return findNearestDataPoint(eventDate, gbpUsdData);
+}
+
+// Find the nearest inflation data point to an event date
+function findNearestInflationPoint(eventDate) {
+return findNearestDataPoint(eventDate, inflationData);
+}
+
+// Convert date to position ratio on chart timeline (0-1)
+function dateToPositionRatio(dateString) {
+const date = new Date(dateString).getTime();
+const earliestDate = new Date(gdpData[0].date).getTime();
+const latestDate = new Date(gdpData[gdpData.length - 1].date).getTime();
+const totalTimeSpan = latestDate - earliestDate;
+return (date - earliestDate) / totalTimeSpan;
+}
+
+// Improved event marker positioning algorithm with more spacing strategies
+function optimizeEventPositions(events) {
+const earliestDate = new Date(gdpData[0].date).getTime();
+const latestDate = new Date(gdpData[gdpData.length - 1].date).getTime();
+const timeRange = latestDate - earliestDate;
+
+// Sort events by date
+events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+// Calculate initial positions based on dates
+events.forEach(event => {
+event.position = dateToPositionRatio(event.date);
+event.yOffset = 0; // Start with neutral position
+event.row = 0; // Default row (will be assigned later)
+event.textPosition = 'center'; // Default text position
+});
+
+// Calculate minimum distance between markers based on container width
+const minDistance = 0.06; // Minimum normalized distance (6% of chart width)
+
+// Group events that are too close together
+let groups = [];
+let currentGroup = [events[0]];
+
+for (let i = 1; i < events.length; i++) {
+const prevEvent = events[i-1];
+const currEvent = events[i];
+
+if (currEvent.position - prevEvent.position < minDistance) {
+// Add to current group if too close
+currentGroup.push(currEvent);
+} else {
+// Start a new group
+groups.push([...currentGroup]);
+currentGroup = [currEvent];
+}
+}
+
+// Add the last group
+if (currentGroup.length > 0) {
+groups.push(currentGroup);
+}
+
+// Process each group to create a multi-row layout for event markers
+groups.forEach(group => {
+if (group.length === 1) {
+// Single event, position at top row
+group[0].row = 0;
+group[0].textPosition = 'center';
+return;
+}
+
+// For multiple events in a group, arrange them in rows
+const maxEventsPerRow = 3; // Limit number of events per row
+const totalRows = Math.ceil(group.length / maxEventsPerRow);
+    
+// Distribute events across rows
+group.forEach((event, idx) => {
+// Calculate which row this event should be in (0 = top row)
+const row = Math.floor(idx / maxEventsPerRow);
+event.row = row;
+        
+// Adjust horizontal positioning within the same time slot
+if (group.length <= maxEventsPerRow) {
+// For small groups, space events evenly
+const posOffset = (idx - (group.length - 1) / 2) * (minDistance * 0.8);
+event.position += posOffset;
+} else {
+// For larger groups, create a grid pattern
+const colInRow = idx % maxEventsPerRow;
+const rowOffset = (colInRow - (Math.min(group.length - row * maxEventsPerRow, maxEventsPerRow) - 1) / 2) * (minDistance * 0.8);
+event.position += rowOffset;
+}
+        
+// Set text position to avoid overlap
+if (idx % 3 === 0) event.textPosition = 'center';
+else if (idx % 3 === 1) event.textPosition = 'left';
+else event.textPosition = 'right';
+});
+});
+
+// Final adjustment to ensure all markers stay within chart
+events.forEach(event => {
+event.position = Math.max(0, Math.min(1, event.position));
+});
+
+return events;
+}
+
+// Identify recession periods (two consecutive quarters of negative growth)
+function identifyRecessionPeriods() {
+const recessionPeriods = [];
+let currentRecession = null;
+
+for (let i = 1; i < gdpData.length; i++) {
+const prevGDP = gdpData[i-1].value;
+const currGDP = gdpData[i].value;
+const growthPct = ((currGDP - prevGDP) / prevGDP) * 100;
+
+// Check if this is a negative growth quarter
+if (growthPct < 0) {
+// If we're not tracking a recession, check if previous quarter was also negative
+if (currentRecession === null && i > 1) {
+const prevPrevGDP = gdpData[i-2].value;
+const prevGrowthPct = ((prevGDP - prevPrevGDP) / prevPrevGDP) * 100;
+
+// Start tracking a recession if we have two consecutive negative quarters
+if (prevGrowthPct < 0) {
+currentRecession = {
+startQuarter: i-1,
+startDate: gdpData[i-1].date,
+lowestValue: Math.min(prevGDP, currGDP),
+lowestQuarter: prevGDP <= currGDP ? i-1 : i
+};
+}
+}
+
+// If we're already tracking a recession, update the lowest value
+if (currentRecession !== null && currGDP < currentRecession.lowestValue) {
+currentRecession.lowestValue = currGDP;
+currentRecession.lowestQuarter = i;
+}
+} else if (currentRecession !== null) {
+// Positive growth ends the recession
+currentRecession.endQuarter = i-1;
+currentRecession.endDate = gdpData[i-1].date;
+currentRecession.decline = ((currentRecession.lowestValue - gdpData[currentRecession.startQuarter].value) /
+gdpData[currentRecession.startQuarter].value * 100).toFixed(1);
+
+recessionPeriods.push(currentRecession);
+currentRecession = null;
+}
+}
+
+// Check if we're still in a recession at the end of the data
+if (currentRecession !== null) {
+currentRecession.endQuarter = gdpData.length - 1;
+currentRecession.endDate = gdpData[gdpData.length - 1].date;
+currentRecession.decline = ((currentRecession.lowestValue - gdpData[currentRecession.startQuarter].value) /
+gdpData[currentRecession.startQuarter].value * 100).toFixed(1);
+
+recessionPeriods.push(currentRecession);
+}
+
+return recessionPeriods;
+}
+
+// Calculate GDP plot points
+const labels = gdpData.map(d => formatQuarter(d.date));
+const values = gdpData.map(d => d.value);
+
+// Calculate quarter-over-quarter percentage changes
+const percentChanges = values.map((value, index) => {
+if (index === 0) return null;
+return ((value - values[index - 1]) / values[index - 1]) * 100;
+});
+
+// Prepare data for chart
+function prepareAlignedData(sourceData) {
+const alignedData = [];
+
+gdpData.forEach(gdpPoint => {
+const gdpDate = new Date(gdpPoint.date);
+// Find closest data point
+let closestPoint = sourceData[0];
+let minDiff = Math.abs(new Date(closestPoint.date) - gdpDate);
+
+sourceData.forEach(dataPoint => {
+const diff = Math.abs(new Date(dataPoint.date) - gdpDate);
+if (diff < minDiff) {
+minDiff = diff;
+closestPoint = dataPoint;
+}
+});
+
+alignedData.push(closestPoint.value);
+});
+
+return alignedData;
+}
+
+// Prepare aligned data for all datasets
+const rateValues = prepareAlignedData(boeRateData);
+const giltValues = prepareAlignedData(giltBondData);
+const ftseValues = prepareAlignedData(ftseData);
+const gbpUsdValues = prepareAlignedData(gbpUsdData);
+const inflationValues = prepareAlignedData(inflationData);
+
+// Set up the chart
+const ctx = document.getElementById('gdpChart').getContext('2d');
+
+// Find min and max values for better scaling
+const minGDPValue = Math.min(...values) * 0.95;
+const maxGDPValue = Math.max(...values) * 1.05;
+
+// Create gradients for the lines
+const gdpGradient = ctx.createLinearGradient(0, 0, 0, 400);
+gdpGradient.addColorStop(0, 'rgba(93, 92, 222, 0.8)');
+gdpGradient.addColorStop(1, 'rgba(93, 92, 222, 0.1)');
+
+// Define datasets
+const datasets = [
+{
+label: 'UK GDP (£ million)',
+data: values,
+yAxisID: 'y',
+borderColor: '#5D5CDE',
+backgroundColor: gdpGradient,
+borderWidth: 3,
+tension: 0.3,
+fill: 'start',
+pointBackgroundColor: '#5D5CDE',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 5,
+pointHoverRadius: 7,
+pointHoverBackgroundColor: '#5D5CDE',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 1
+},
+{
+label: 'BoE Interest Rate (%)',
+data: rateValues,
+yAxisID: 'y1',
+borderColor: '#FF9500',
+backgroundColor: 'rgba(255, 149, 0, 0.1)',
+borderWidth: 3,
+borderDash: [],
+tension: 0.2,
+fill: false,
+pointBackgroundColor: '#FF9500',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 4,
+pointHoverRadius: 6,
+pointHoverBackgroundColor: '#FF9500',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 0
+},
+{
+label: 'Inflation Rate (%)',
+data: inflationValues,
+yAxisID: 'y1',
+borderColor: '#8B5CF6',
+backgroundColor: 'rgba(139, 92, 246, 0.1)',
+borderWidth: 3,
+borderDash: [3, 5],
+tension: 0.2,
+fill: false,
+pointBackgroundColor: '#8B5CF6',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 4,
+pointHoverRadius: 6,
+pointHoverBackgroundColor: '#8B5CF6',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 0
+},
+{
+label: '10-Year Gilt (%)',
+data: giltValues,
+yAxisID: 'y1',
+borderColor: '#2ECC71',
+backgroundColor: 'rgba(46, 204, 113, 0.1)',
+borderWidth: 2.5,
+borderDash: [5, 5],
+tension: 0.2,
+fill: false,
+pointBackgroundColor: '#2ECC71',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 4,
+pointHoverRadius: 6,
+pointHoverBackgroundColor: '#2ECC71',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 2
+},
+{
+label: 'FTSE 100',
+data: ftseValues,
+yAxisID: 'y2',
+borderColor: '#E74C3C',
+backgroundColor: 'rgba(231, 76, 60, 0.1)',
+borderWidth: 2,
+borderDash: [],
+tension: 0.2,
+fill: false,
+pointBackgroundColor: '#E74C3C',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 3,
+pointHoverRadius: 5,
+pointHoverBackgroundColor: '#E74C3C',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 3
+},
+{
+label: 'GBP/USD',
+data: gbpUsdValues,
+yAxisID: 'y3',
+borderColor: '#4F46E5',
+backgroundColor: 'rgba(79, 70, 229, 0.1)',
+borderWidth: 2,
+borderDash: [],
+tension: 0.2,
+fill: false,
+pointBackgroundColor: '#4F46E5',
+pointBorderColor: '#ffffff',
+pointBorderWidth: 2,
+pointRadius: 3,
+pointHoverRadius: 5,
+pointHoverBackgroundColor: '#4F46E5',
+pointHoverBorderColor: '#ffffff',
+pointHoverBorderWidth: 2,
+order: 4
+}
+];
+
+// Create chart
+const chart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: labels,
+datasets: datasets
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+interaction: {
+mode: 'index',
+intersect: false,
+},
+plugins: {
+legend: {
+display: false
+},
+tooltip: {
+enabled: false,
+external: function(context) {
+// Tooltip Element
+let tooltipEl = document.getElementById('tooltip');
+
+// Hide if no tooltip
+if (context.tooltip.opacity === 0) {
+tooltipEl.style.display = 'none';
+return;
+}
+
+// Set Text
+if (context.tooltip.body) {
+const index = context.tooltip.dataPoints[0].dataIndex;
+const gdpValue = values[index];
+const rateValue = rateValues[index];
+const inflationValue = inflationValues[index];
+const giltValue = giltValues[index];
+const ftseValue = ftseValues[index];
+const gbpUsdValue = gbpUsdValues[index];
+const quarter = labels[index];
+let percentChangeText = '';
+
+if (index > 0) {
+const change = percentChanges[index];
+const arrow = change >= 0 ? '▲' : '▼';
+const color = change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+percentChangeText = `<div class="${color}">${arrow} ${Math.abs(change).toFixed(1)}% from previous quarter</div>`;
+}
+
+// Add annual growth rate if more than 4 quarters of data
+let annualChangeText = '';
+if (index >= 4) {
+const annualChange = ((gdpValue - values[index - 4]) / values[index - 4]) * 100;
+const annualArrow = annualChange >= 0 ? '▲' : '▼';
+const annualColor = annualChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+annualChangeText = `<div class="${annualColor}">${annualArrow} ${Math.abs(annualChange).toFixed(1)}% year-on-year</div>`;
+}
+
+// Calculate interest rate change text
+const rateChangeText = index > 0 ?
+`<div class="text-amber-600 dark:text-amber-400">
+${rateValues[index] > rateValues[index-1] ? '▲' : rateValues[index] < rateValues[index-1] ? '▼' : '►'}
+${formatInterestRate(rateValues[index])}
+</div>` :
+`<div class="text-amber-600 dark:text-amber-400">${formatInterestRate(rateValues[index])}</div>`;
+
+// Calculate inflation rate change text
+const inflationChangeText = index > 0 ?
+`<div class="text-purple-600 dark:text-purple-400">
+${inflationValues[index] > inflationValues[index-1] ? '▲' : inflationValues[index] < inflationValues[index-1] ? '▼' : '►'}
+${formatInflation(inflationValues[index])}
+</div>` :
+`<div class="text-purple-600 dark:text-purple-400">${formatInflation(inflationValues[index])}</div>`;
+
+// Calculate 10-year gilt change text
+const giltChangeText = index > 0 ?
+`<div class="text-green-600 dark:text-green-400">
+${giltValues[index] > giltValues[index-1] ? '▲' : giltValues[index] < giltValues[index-1] ? '▼' : '►'}
+${formatGiltBond(giltValues[index])}
+</div>` :
+`<div class="text-green-600 dark:text-green-400">${formatGiltBond(giltValues[index])}</div>`;
+
+// Calculate FTSE 100 change text
+const ftseChangeText = index > 0 ?
+`<div class="text-red-600 dark:text-red-400">
+${ftseValues[index] > ftseValues[index-1] ? '▲' : ftseValues[index] < ftseValues[index-1] ? '▼' : '►'}
+${formatFTSE(ftseValues[index])}
+</div>` :
+`<div class="text-red-600 dark:text-red-400">${formatFTSE(ftseValues[index])}</div>`;
+
+// Calculate GBP/USD change text
+const gbpUsdChangeText = index > 0 ?
+`<div class="text-indigo-600 dark:text-indigo-400">
+${gbpUsdValues[index] > gbpUsdValues[index-1] ? '▲' : gbpUsdValues[index] < gbpUsdValues[index-1] ? '▼' : '►'}
+${formatGbpUsd(gbpUsdValues[index])}
+</div>` :
+`<div class="text-indigo-600 dark:text-indigo-400">${formatGbpUsd(gbpUsdValues[index])}</div>`;
+
+tooltipEl.innerHTML = `
+<div class="font-bold">${quarter}</div>
+<div class="text-xl mt-1">${formatGDP(gdpValue)}</div>
+${percentChangeText}
+${annualChangeText}
+<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-2">
+<div>
+<div class="font-medium">BoE Interest Rate:</div>
+${rateChangeText}
+</div>
+<div>
+<div class="font-medium">Inflation Rate:</div>
+${inflationChangeText}
+</div>
+<div>
+<div class="font-medium">10-Year Gilt:</div>
+${giltChangeText}
+</div>
+<div>
+<div class="font-medium">FTSE 100:</div>
+${ftseChangeText}
+</div>
+<div>
+<div class="font-medium">GBP/USD:</div>
+${gbpUsdChangeText}
+</div>
+</div>
+`;
+}
+
+// Position and Show the tooltip
+tooltipEl.style.display = 'block';
+tooltipEl.style.left = context.chart.canvas.offsetLeft + context.tooltip.caretX + 'px';
+tooltipEl.style.top = context.chart.canvas.offsetTop + context.tooltip.caretY + 'px';
+}
+},
+// Add zoom plugin
+zoom: {
+pan: {
+enabled: true,
+mode: 'x',
+modifierKey: 'shift'
+},
+zoom: {
+wheel: {
+enabled: true
+},
+pinch: {
+enabled: true
+},
+mode: 'x'
+}
+}
+},
+scales: {
+x: {
+grid: {
+display: true,
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(45, 55, 72, 0.5)'
+: 'rgba(226, 232, 240, 0.7)';
+}
+},
+ticks: {
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(226, 232, 240, 0.8)'
+: 'rgba(45, 55, 72, 0.8)';
+},
+maxRotation: 45,
+minRotation: 45,
+// Improved responsive behavior for mobile
+autoSkip: true,
+maxTicksLimit: window.innerWidth < 768 ? 6 : 12
+}
+},
+y: {
+type: 'linear',
+display: true,
+position: 'left',
+min: minGDPValue,
+max: maxGDPValue,
+grid: {
+display: true,
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(45, 55, 72, 0.5)'
+: 'rgba(226, 232, 240, 0.7)';
+}
+},
+ticks: {
+callback: function(value) {
+return '£' + (value / 1000).toLocaleString('en-UK') + 'b';
+},
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(226, 232, 240, 0.8)'
+: 'rgba(45, 55, 72, 0.8)';
+}
+},
+title: {
+display: true,
+text: 'UK GDP (£ billion)',
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(226, 232, 240, 0.8)'
+: 'rgba(45, 55, 72, 0.8)';
+}
+}
+},
+y1: {
+type: 'linear',
+display: true,
+position: 'right',
+min: 0,
+max: Math.max(...giltValues, ...rateValues, ...inflationValues) * 1.1,
+grid: {
+drawOnChartArea: false, // only draw grid lines for the primary y-axis
+},
+ticks: {
+callback: function(value) {
+return value + '%';
+},
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(255, 149, 0, 0.8)'
+: 'rgba(255, 149, 0, 0.8)';
+},
+stepSize: 1
+},
+title: {
+display: true,
+text: 'Rates (%)',
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(255, 149, 0, 0.8)'
+: 'rgba(255, 149, 0, 0.8)';
+}
+}
+},
+y2: {
+type: 'linear',
+display: true,
+position: 'right',
+min: Math.min(...ftseValues) * 0.95,
+max: Math.max(...ftseValues) * 1.05,
+grid: {
+drawOnChartArea: false,
+},
+ticks: {
+callback: function(value) {
+return value.toLocaleString();
+},
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(231, 76, 60, 0.8)'
+: 'rgba(231, 76, 60, 0.8)';
+}
+},
+title: {
+display: true,
+text: 'FTSE 100',
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(231, 76, 60, 0.8)'
+: 'rgba(231, 76, 60, 0.8)';
+}
+}
+},
+y3: {
+type: 'linear',
+display: true,
+position: 'right',
+min: Math.min(...gbpUsdValues) * 0.95,
+max: Math.max(...gbpUsdValues) * 1.05,
+grid: {
+drawOnChartArea: false,
+},
+ticks: {
+callback: function(value) {
+return value.toFixed(2);
+},
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(79, 70, 229, 0.8)'
+: 'rgba(79, 70, 229, 0.8)';
+}
+},
+title: {
+display: true,
+text: 'GBP/USD',
+color: function(context) {
+return document.documentElement.classList.contains('dark')
+? 'rgba(79, 70, 229, 0.8)'
+: 'rgba(79, 70, 229, 0.8)';
+}
+}
+}
+}
+}
+});
+
+// Create dataset toggle buttons
+const datasetToggle = document.getElementById('dataset-toggle');
+const toggleButtons = [
+{ id: 'toggle-gdp', label: 'GDP', color: '#5D5CDE', dataset: 0, active: true },
+{ id: 'toggle-rate', label: 'BoE Rate', color: '#FF9500', dataset: 1, active: true },
+{ id: 'toggle-inflation', label: 'Inflation', color: '#8B5CF6', dataset: 2, active: true },
+{ id: 'toggle-gilt', label: '10-Year Gilt', color: '#2ECC71', dataset: 3, active: true },
+{ id: 'toggle-ftse', label: 'FTSE 100', color: '#E74C3C', dataset: 4, active: true },
+{ id: 'toggle-gbpusd', label: 'GBP/USD', color: '#4F46E5', dataset: 5, active: true }
+];
+
+toggleButtons.forEach(button => {
+const btn = document.createElement('button');
+btn.id = button.id;
+btn.className = `py-1 px-3 rounded-full border ${button.active ? 'active' : ''}`;
+btn.style.borderColor = button.color;
+btn.style.backgroundColor = button.active ? button.color : 'transparent';
+btn.style.color = button.active ? 'white' : button.color;
+btn.innerHTML = button.label;
+btn.setAttribute('aria-label', `Toggle ${button.label} visibility`);
+btn.setAttribute('aria-pressed', button.active ? 'true' : 'false');
+
+btn.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(button.dataset);
+chart.setDatasetVisibility(button.dataset, isVisible);
+
+if (isVisible) {
+btn.classList.add('active');
+btn.style.backgroundColor = button.color;
+btn.style.color = 'white';
+btn.setAttribute('aria-pressed', 'true');
+} else {
+btn.classList.remove('active');
+btn.style.backgroundColor = 'transparent';
+btn.style.color = button.color;
+btn.setAttribute('aria-pressed', 'false');
+}
+
+chart.update();
+});
+
+datasetToggle.appendChild(btn);
+});
+
+// Create the chart legend
+const chartLegend = document.getElementById('chart-legend');
+
+// Add GDP legend item
+const gdpLegend = document.createElement('div');
+gdpLegend.className = 'chart-legend-item';
+gdpLegend.setAttribute('data-series', 'gdp');
+gdpLegend.setAttribute('role', 'button');
+gdpLegend.setAttribute('tabindex', '0');
+gdpLegend.setAttribute('aria-label', 'Toggle GDP data visibility');
+
+gdpLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #5D5CDE;"></div>
+<span>UK GDP (£ billion)</span>
+`;
+
+// Add BoE rate legend item
+const rateLegend = document.createElement('div');
+rateLegend.className = 'chart-legend-item';
+rateLegend.setAttribute('data-series', 'rate');
+rateLegend.setAttribute('role', 'button');
+rateLegend.setAttribute('tabindex', '0');
+rateLegend.setAttribute('aria-label', 'Toggle interest rate data visibility');
+
+rateLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #FF9500;"></div>
+<span>BoE Interest Rate (%)</span>
+`;
+
+// Add inflation rate legend item
+const inflationLegend = document.createElement('div');
+inflationLegend.className = 'chart-legend-item';
+inflationLegend.setAttribute('data-series', 'inflation');
+inflationLegend.setAttribute('role', 'button');
+inflationLegend.setAttribute('tabindex', '0');
+inflationLegend.setAttribute('aria-label', 'Toggle inflation rate data visibility');
+
+inflationLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #8B5CF6;"></div>
+<span>Inflation Rate (%)</span>
+`;
+
+// Add 10-year gilt legend item
+const giltLegend = document.createElement('div');
+giltLegend.className = 'chart-legend-item';
+giltLegend.setAttribute('data-series', 'gilt');
+giltLegend.setAttribute('role', 'button');
+giltLegend.setAttribute('tabindex', '0');
+giltLegend.setAttribute('aria-label', 'Toggle 10-year gilt data visibility');
+
+giltLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #2ECC71;"></div>
+<span>10-Year Gilt (%)</span>
+`;
+
+// Add FTSE 100 legend item
+const ftseLegend = document.createElement('div');
+ftseLegend.className = 'chart-legend-item';
+ftseLegend.setAttribute('data-series', 'ftse');
+ftseLegend.setAttribute('role', 'button');
+ftseLegend.setAttribute('tabindex', '0');
+ftseLegend.setAttribute('aria-label', 'Toggle FTSE 100 data visibility');
+
+ftseLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #E74C3C;"></div>
+<span>FTSE 100</span>
+`;
+
+// Add GBP/USD legend item
+const gbpUsdLegend = document.createElement('div');
+gbpUsdLegend.className = 'chart-legend-item';
+gbpUsdLegend.setAttribute('data-series', 'gbpusd');
+gbpUsdLegend.setAttribute('role', 'button');
+gbpUsdLegend.setAttribute('tabindex', '0');
+gbpUsdLegend.setAttribute('aria-label', 'Toggle GBP/USD data visibility');
+
+gbpUsdLegend.innerHTML = `
+<div class="chart-legend-color" style="background-color: #4F46E5;"></div>
+<span>GBP/USD</span>
+`;
+
+// Toggle dataset visibility on click
+gdpLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(0);
+chart.setDatasetVisibility(0, isVisible);
+
+if (isVisible) {
+gdpLegend.classList.remove('opacity-50');
+document.getElementById('toggle-gdp').click();
+} else {
+gdpLegend.classList.add('opacity-50');
+document.getElementById('toggle-gdp').click();
+}
+
+chart.update();
+});
+
+rateLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(1);
+chart.setDatasetVisibility(1, isVisible);
+
+if (isVisible) {
+rateLegend.classList.remove('opacity-50');
+document.getElementById('toggle-rate').click();
+} else {
+rateLegend.classList.add('opacity-50');
+document.getElementById('toggle-rate').click();
+}
+
+chart.update();
+});
+
+inflationLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(2);
+chart.setDatasetVisibility(2, isVisible);
+
+if (isVisible) {
+inflationLegend.classList.remove('opacity-50');
+document.getElementById('toggle-inflation').click();
+} else {
+inflationLegend.classList.add('opacity-50');
+document.getElementById('toggle-inflation').click();
+}
+
+chart.update();
+});
+
+giltLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(3);
+chart.setDatasetVisibility(3, isVisible);
+
+if (isVisible) {
+giltLegend.classList.remove('opacity-50');
+document.getElementById('toggle-gilt').click();
+} else {
+giltLegend.classList.add('opacity-50');
+document.getElementById('toggle-gilt').click();
+}
+
+chart.update();
+});
+
+ftseLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(4);
+chart.setDatasetVisibility(4, isVisible);
+
+if (isVisible) {
+ftseLegend.classList.remove('opacity-50');
+document.getElementById('toggle-ftse').click();
+} else {
+ftseLegend.classList.add('opacity-50');
+document.getElementById('toggle-ftse').click();
+}
+
+chart.update();
+});
+
+gbpUsdLegend.addEventListener('click', () => {
+const isVisible = !chart.isDatasetVisible(5);
+chart.setDatasetVisibility(5, isVisible);
+
+if (isVisible) {
+gbpUsdLegend.classList.remove('opacity-50');
+document.getElementById('toggle-gbpusd').click();
+} else {
+gbpUsdLegend.classList.add('opacity-50');
+document.getElementById('toggle-gbpusd').click();
+}
+
+chart.update();
+});
+
+// Add keyboard accessibility for legend items
+[gdpLegend, rateLegend, inflationLegend, giltLegend, ftseLegend, gbpUsdLegend].forEach(legend => {
+legend.addEventListener('keydown', (e) => {
+if (e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+legend.click();
+}
+});
+});
+
+chartLegend.appendChild(gdpLegend);
+chartLegend.appendChild(rateLegend);
+chartLegend.appendChild(inflationLegend);
+chartLegend.appendChild(giltLegend);
+chartLegend.appendChild(ftseLegend);
+chartLegend.appendChild(gbpUsdLegend);
+
+// Add a legend item for technical recessions
+const recessionLegend = document.createElement('div');
+recessionLegend.className = 'chart-legend-item';
+recessionLegend.innerHTML = `
+<div class="chart-legend-color bg-red-500 opacity-25"></div>
+<span>Technical Recession</span>
+`;
+chartLegend.appendChild(recessionLegend);
+
+// Add the PM legend list
+const pmLegendList = document.createElement('div');
+pmLegendList.className = 'flex flex-wrap items-center';
+pmLegendList.setAttribute('aria-label', 'Prime Minister Legend');
+
+// Add legend items for each prime minister
+primeMinistersData.forEach(pm => {
+// Only show if at least part of tenure is within chart range
+const startRatio = dateToPositionRatio(pm.startDate);
+const endRatio = dateToPositionRatio(pm.endDate);
+
+if (startRatio <= 1 && endRatio >= 0) {
+const legendItem = document.createElement('div');
+legendItem.className = 'chart-legend-item';
+legendItem.setAttribute('data-pm-name', pm.name);
+legendItem.setAttribute('role', 'button');
+legendItem.setAttribute('tabindex', '0');
+legendItem.setAttribute('aria-label', `Toggle ${pm.name}'s tenure visibility`);
+
+legendItem.innerHTML = `
+<div class="chart-legend-color" style="background-color: ${pm.color};"></div>
+<span>${pm.name}</span>
+`;
+
+// Toggle PM tenure visibility
+legendItem.addEventListener('click', () => {
+const pmName = legendItem.getAttribute('data-pm-name');
+const isActive = !legendItem.classList.contains('opacity-50');
+
+// Toggle opacity class on legend item
+if (isActive) {
+legendItem.classList.add('opacity-50');
+} else {
+legendItem.classList.remove('opacity-50');
+}
+
+// Toggle visibility class on chart elements
+document.querySelectorAll(`.pm-tenure[data-pm-name="${pmName}"]`).forEach(el => {
+if (isActive) {
+el.classList.add('hidden');
+} else {
+el.classList.remove('hidden');
+}
+});
+
+document.querySelectorAll(`.pm-chart-image[data-pm-name="${pmName}"]`).forEach(el => {
+if (isActive) {
+el.style.opacity = '0.3';
+} else {
+el.style.opacity = '1';
+}
+});
+});
+
+// Add keyboard accessibility
+legendItem.addEventListener('keydown', (e) => {
+if (e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+legendItem.click();
+}
+});
+
+pmLegendList.appendChild(legendItem);
+}
+});
+
+chartLegend.appendChild(pmLegendList);
+
+// Add Prime Minister tenures to the chart
+const pmTenures = document.getElementById('pm-tenures');
+const pmImages = document.getElementById('pm-images');
+
+primeMinistersData.forEach(pm => {
+const startRatio = dateToPositionRatio(pm.startDate);
+const endRatio = dateToPositionRatio(pm.endDate);
+
+// Only show if at least part of tenure is within chart range
+if (startRatio <= 1 && endRatio >= 0) {
+// Clip to chart range
+const visibleStartRatio = Math.max(0, startRatio);
+const visibleEndRatio = Math.min(1, endRatio);
+const widthRatio = visibleEndRatio - visibleStartRatio;
+const midpointRatio = visibleStartRatio + (widthRatio / 2);
+
+// Create tenure rectangle
+const tenure = document.createElement('div');
+tenure.className = 'pm-tenure';
+tenure.style.left = `${visibleStartRatio * 100}%`;
+tenure.style.width = `${widthRatio * 100}%`;
+tenure.style.backgroundColor = pm.color;
+tenure.setAttribute('data-pm-name', pm.name);
+tenure.setAttribute('role', 'region');
+tenure.setAttribute('aria-label', `${pm.name}'s tenure from ${formatDate(pm.startDate)} to ${pm.endDate === "2025-01-01" ? "present" : formatDate(pm.endDate)}`);
+
+// Add PM image to the chart
+const image = document.createElement('img');
+image.src = pm.image;
+image.alt = pm.name;
+image.className = 'pm-chart-image';
+image.style.left = `${midpointRatio * 100}%`;
+image.style.top = '20%'; // Position in the upper part of the chart
+image.style.borderColor = pm.color;
+image.setAttribute('data-pm-name', pm.name);
+image.onerror = () => {
+// Handle image loading errors
+image.style.display = 'none';
+};
+
+// Add hover effects
+tenure.addEventListener('mouseover', () => {
+tenure.style.opacity = '0.25';
+image.style.transform = 'translateX(-50%) scale(1.1)';
+});
+tenure.addEventListener('mouseout', () => {
+if (!tenure.classList.contains('hidden')) {
+tenure.style.opacity = '0.15';
+}
+image.style.transform = 'translateX(-50%) scale(1)';
+});
+
+// Add tooltip on hover
+tenure.addEventListener('mouseenter', (e) => {
+const tooltip = document.getElementById('tooltip');
+
+// Set tooltip content
+tooltip.innerHTML = `
+<div class="font-bold">${pm.name}</div>
+<div class="text-sm mt-1">${pm.party}</div>
+<div class="text-sm mt-1">${formatDate(pm.startDate)} to ${pm.endDate === "2025-01-01" ? "present" : formatDate(pm.endDate)}</div>
+`;
+
+// Position tooltip
+tooltip.style.display = 'block';
+tooltip.style.left = `${e.clientX - pmTenures.getBoundingClientRect().left}px`;
+tooltip.style.top = `${e.clientY - pmTenures.getBoundingClientRect().top - 10}px`;
+});
+
+tenure.addEventListener('mouseleave', () => {
+const tooltip = document.getElementById('tooltip');
+tooltip.style.display = 'none';
+});
+
+pmTenures.appendChild(tenure);
+pmImages.appendChild(image);
+}
+});
+
+// Identify and highlight recession periods
+const recessionMarkers = document.getElementById('recession-markers');
+const recessionPeriods = identifyRecessionPeriods();
+
+recessionPeriods.forEach(recession => {
+const startRatio = dateToPositionRatio(recession.startDate);
+const endRatio = dateToPositionRatio(recession.endDate);
+const widthRatio = endRatio - startRatio;
+const midpointRatio = startRatio + (widthRatio / 2);
+
+// Create recession highlight element
+const recessionEl = document.createElement('div');
+recessionEl.className = 'recession-period';
+recessionEl.style.left = `${startRatio * 100}%`;
+recessionEl.style.width = `${widthRatio * 100}%`;
+recessionEl.setAttribute('role', 'region');
+recessionEl.setAttribute('aria-label', `Technical recession from ${formatQuarter(recession.startDate)} to ${formatQuarter(recession.endDate)} with ${recession.decline}% GDP decline`);
+
+// Add recession label
+const recessionLabel = document.createElement('div');
+recessionLabel.className = 'recession-label';
+recessionLabel.textContent = `Recession: ${recession.decline}%`;
+recessionLabel.style.left = `${midpointRatio * 100}%`;
+
+// Add tooltip on hover
+recessionEl.addEventListener('mouseenter', (e) => {
+const tooltip = document.getElementById('tooltip');
+const nearestRatePoint = findNearestBoePoint(recession.startDate);
+const nearestInflationPoint = findNearestInflationPoint(recession.startDate);
+const nearestGiltPoint = findNearestGiltPoint(recession.startDate);
+const nearestFTSEPoint = findNearestFTSEPoint(recession.startDate);
+const nearestGbpUsdPoint = findNearestGbpUsdPoint(recession.startDate);
+
+// Set tooltip content
+tooltip.innerHTML = `
+<div class="font-bold text-red-600 dark:text-red-400">Technical Recession</div>
+<div class="mt-1">${formatQuarter(recession.startDate)} to ${formatQuarter(recession.endDate)}</div>
+<div class="text-red-600 dark:text-red-400 mt-1">GDP decline: ${recession.decline}%</div>
+<div class="text-sm mt-1">Lowest point: ${formatGDP(recession.lowestValue)} in ${formatQuarter(gdpData[recession.lowestQuarter].date)}</div>
+<div class="grid grid-cols-2 gap-2 mt-2">
+<div>
+<div class="text-amber-600 dark:text-amber-400">BoE rate: ${formatInterestRate(nearestRatePoint.value)}</div>
+</div>
+<div>
+<div class="text-purple-600 dark:text-purple-400">Inflation: ${formatInflation(nearestInflationPoint.value)}</div>
+</div>
+<div>
+<div class="text-green-600 dark:text-green-400">10-Year Gilt: ${formatGiltBond(nearestGiltPoint.value)}</div>
+</div>
+<div>
+<div class="text-red-600 dark:text-red-400">FTSE 100: ${formatFTSE(nearestFTSEPoint.value)}</div>
+</div>
+<div>
+<div class="text-indigo-600 dark:text-indigo-400">GBP/USD: ${formatGbpUsd(nearestGbpUsdPoint.value)}</div>
+</div>
+</div>
+`;
+
+// Position tooltip
+tooltip.style.display = 'block';
+tooltip.style.left = `${e.clientX - recessionMarkers.getBoundingClientRect().left}px`;
+tooltip.style.top = `${e.clientY - recessionMarkers.getBoundingClientRect().top - 10}px`;
+});
+
+recessionEl.addEventListener('mouseleave', () => {
+const tooltip = document.getElementById('tooltip');
+tooltip.style.display = 'none';
+});
+
+recessionMarkers.appendChild(recessionEl);
+recessionMarkers.appendChild(recessionLabel);
+});
+
+// Add event markers with improved positioning
+const optimizedEvents = optimizeEventPositions([...keyEvents]);
+const eventMarkers = document.getElementById('event-markers');
+const eventsTimeline = document.getElementById('events-timeline');
+
+// Clear any existing event markers
+eventMarkers.innerHTML = '';
+eventsTimeline.innerHTML = '';
+
+// Toggle all events visibility
+let eventsVisible = true;
+const toggleEventsBtn = document.getElementById('toggle-events-btn');
+toggleEventsBtn.addEventListener('click', () => {
+eventsVisible = !eventsVisible;
+
+document.querySelectorAll('.event-marker, .event-line').forEach(el => {
+if (eventsVisible) {
+el.classList.remove('hidden');
+} else {
+el.classList.add('hidden');
+}
+});
+});
+
+// Filter events by category
+const filterButtons = {
+all: document.querySelector('.filter-all'),
+economic: document.querySelector('.filter-economic'),
+political: document.querySelector('.filter-political'),
+crisis: document.querySelector('.filter-crisis')
+};
+
+// Add filter functionality
+Object.entries(filterButtons).forEach(([category, button]) => {
+button.addEventListener('click', () => {
+// Reset all buttons
+Object.values(filterButtons).forEach(btn => {
+btn.classList.remove('bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-red-500',
+'dark:bg-indigo-700', 'dark:bg-blue-700', 'dark:bg-purple-700', 'dark:bg-red-700',
+'text-white');
+btn.classList.add('bg-indigo-100', 'dark:bg-indigo-900',
+'text-indigo-800', 'dark:text-indigo-200');
+});
+
+// Highlight selected button
+button.classList.remove('bg-indigo-100', 'dark:bg-indigo-900',
+'text-indigo-800', 'dark:text-indigo-200');
+
+if (category === 'economic') {
+button.classList.add('bg-blue-500', 'dark:bg-blue-700', 'text-white');
+} else if (category === 'political') {
+button.classList.add('bg-purple-500', 'dark:bg-purple-700', 'text-white');
+} else if (category === 'crisis') {
+button.classList.add('bg-red-500', 'dark:bg-red-700', 'text-white');
+} else {
+button.classList.add('bg-indigo-500', 'dark:bg-indigo-700', 'text-white');
+}
+
+// Filter timeline items
+document.querySelectorAll('.timeline-item').forEach(item => {
+if (category === 'all' || item.dataset.category === category) {
+item.classList.remove('hidden');
+} else {
+item.classList.add('hidden');
+}
+});
+
+// Filter chart markers
+document.querySelectorAll('.event-marker, .event-line').forEach(marker => {
+if (category === 'all' || marker.dataset.category === category) {
+marker.classList.remove('hidden');
+} else {
+marker.classList.add('hidden');
+}
+});
+});
+});
+
+optimizedEvents.forEach((event, index) => {
+// Calculate vertical position based on rows
+const chartContainer = document.getElementById('chart-container');
+const chartHeight = chartContainer.offsetHeight;
+const topMargin = 60; // Fixed distance from the top of the chart
+const rowHeight = 55; // Height between rows of markers
+const verticalPosition = topMargin + (event.row * rowHeight);
+
+// Create event marker
+const marker = document.createElement('div');
+marker.className = 'event-marker';
+marker.dataset.category = event.category;
+marker.dataset.eventId = `event-${index}`;
+marker.setAttribute('role', 'button');
+marker.setAttribute('tabindex', '0');
+marker.setAttribute('aria-label', `${event.title} on ${formatDate(event.date)}`);
+
+// Create the marker content with separate text positioning
+marker.innerHTML = `
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 flex items-center justify-center rounded-full text-white key-focus"
+style="background-color: ${event.color}">
+${event.icon}
+</div>
+<div class="event-marker-label ${event.textPosition === 'left' ? 'offset-left' : event.textPosition === 'right' ? 'offset-right' : ''} mt-1">${event.title}</div>
+</div>
+`;
+marker.style.left = `${event.position * 100}%`;
+marker.style.top = `${verticalPosition}px`;
+
+// Create event line
+const line = document.createElement('div');
+line.className = 'event-line';
+line.dataset.category = event.category;
+line.style.left = `${event.position * 100}%`;
+line.style.borderColor = event.color;
+
+// Add event click functionality
+marker.addEventListener('click', () => {
+// Scroll to the corresponding timeline item
+const timelineItem = document.getElementById(`timeline-${index}`);
+if (timelineItem) {
+timelineItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+timelineItem.classList.add('bg-indigo-50', 'dark:bg-indigo-900');
+setTimeout(() => {
+timelineItem.classList.remove('bg-indigo-50', 'dark:bg-indigo-900');
+}, 1500);
+}
+});
+
+// Add keyboard accessibility
+marker.addEventListener('keydown', (e) => {
+if (e.key === 'Enter' || e.key === ' ') {
+e.preventDefault();
+marker.click();
+}
+});
+
+// Add tooltip on hover
+marker.addEventListener('mouseenter', (e) => {
+const tooltip = document.getElementById('tooltip');
+const nearestGDPPoint = findNearestGDPPoint(event.date);
+const nearestRatePoint = findNearestBoePoint(event.date);
+const nearestInflationPoint = findNearestInflationPoint(event.date);
+const nearestGiltPoint = findNearestGiltPoint(event.date);
+const nearestFTSEPoint = findNearestFTSEPoint(event.date);
+const nearestGbpUsdPoint = findNearestGbpUsdPoint(event.date);
+
+// Set tooltip content
+tooltip.innerHTML = `
+<div class="font-bold">${event.title}</div>
+<div class="text-sm mt-1">${formatDate(event.date)}</div>
+<div class="text-sm mt-1">${event.description}</div>
+<div class="mt-2 grid grid-cols-2 gap-2">
+<div>
+<div class="text-xs font-medium">GDP:</div>
+<div class="text-xs">${formatGDP(nearestGDPPoint.value)}</div>
+</div>
+<div>
+<div class="text-xs font-medium">BoE Rate:</div>
+<div class="text-xs text-amber-600 dark:text-amber-400">${formatInterestRate(nearestRatePoint.value)}</div>
+</div>
+<div>
+<div class="text-xs font-medium">Inflation:</div>
+<div class="text-xs text-purple-600 dark:text-purple-400">${formatInflation(nearestInflationPoint.value)}</div>
+</div>
+<div>
+<div class="text-xs font-medium">10-Year Gilt:</div>
+<div class="text-xs text-green-600 dark:text-green-400">${formatGiltBond(nearestGiltPoint.value)}</div>
+</div>
+<div>
+<div class="text-xs font-medium">FTSE 100:</div>
+<div class="text-xs text-red-600 dark:text-red-400">${formatFTSE(nearestFTSEPoint.value)}</div>
+</div>
+<div>
+<div class="text-xs font-medium">GBP/USD:</div>
+<div class="text-xs text-indigo-600 dark:text-indigo-400">${formatGbpUsd(nearestGbpUsdPoint.value)}</div>
+</div>
+</div>
+`;
+
+// Position tooltip
+tooltip.style.display = 'block';
+tooltip.style.left = `${e.clientX - eventMarkers.getBoundingClientRect().left}px`;
+tooltip.style.top = `${e.clientY - eventMarkers.getBoundingClientRect().top - 10}px`;
+});
+
+marker.addEventListener('mouseleave', () => {
+const tooltip = document.getElementById('tooltip');
+tooltip.style.display = 'none';
+});
+
+eventMarkers.appendChild(marker);
+eventMarkers.appendChild(line);
+
+// Add to timeline section with category data attribute
+const nearestGDPPoint = findNearestGDPPoint(event.date);
+const nearestRatePoint = findNearestBoePoint(event.date);
+const nearestInflationPoint = findNearestInflationPoint(event.date);
+const nearestGiltPoint = findNearestGiltPoint(event.date);
+const nearestFTSEPoint = findNearestFTSEPoint(event.date);
+const nearestGbpUsdPoint = findNearestGbpUsdPoint(event.date);
+
+const timelineItem = document.createElement('div');
+timelineItem.className = 'flex border-l-4 pl-4 mb-4 timeline-item';
+timelineItem.id = `timeline-${index}`;
+timelineItem.dataset.category = event.category;
+timelineItem.style.borderColor = event.color;
+timelineItem.innerHTML = `
+<div class="flex-1">
+<div class="flex justify-between items-center">
+<div class="flex items-center">
+<div class="w-8 h-8 flex items-center justify-center rounded-full text-white mr-2"
+style="background-color: ${event.color}">
+${event.icon}
+</div>
+<h3 class="font-bold text-lg">${event.title}</h3>
+</div>
+<span class="text-sm text-gray-600 dark:text-gray-400">${formatDate(event.date)}</span>
+</div>
+<p class="text-gray-700 dark:text-gray-300 mt-1">${event.description}</p>
+<div class="mt-2 grid grid-cols-2 gap-2">
+<div>
+<span class="font-medium">GDP:</span>
+${formatQuarter(nearestGDPPoint.date)} - ${formatGDP(nearestGDPPoint.value)}
+</div>
+<div>
+<span class="font-medium">BoE Rate:</span>
+<span class="text-amber-600 dark:text-amber-400">${formatInterestRate(nearestRatePoint.value)}</span>
+</div>
+<div>
+<span class="font-medium">Inflation:</span>
+<span class="text-purple-600 dark:text-purple-400">${formatInflation(nearestInflationPoint.value)}</span>
+</div>
+<div>
+<span class="font-medium">10-Year Gilt:</span>
+<span class="text-green-600 dark:text-green-400">${formatGiltBond(nearestGiltPoint.value)}</span>
+</div>
+<div>
+<span class="font-medium">FTSE 100:</span>
+<span class="text-red-600 dark:text-red-400">${formatFTSE(nearestFTSEPoint.value)}</span>
+</div>
+<div>
+<span class="font-medium">GBP/USD:</span>
+<span class="text-indigo-600 dark:text-indigo-400">${formatGbpUsd(nearestGbpUsdPoint.value)}</span>
+</div>
+</div>
+</div>
+`;
+
+// Link timeline item to chart marker
+timelineItem.addEventListener('mouseenter', () => {
+document.querySelector(`.event-marker[data-event-id="event-${index}"]`)
+.classList.add('scale-125', 'z-30');
+});
+
+timelineItem.addEventListener('mouseleave', () => {
+document.querySelector(`.event-marker[data-event-id="event-${index}"]`)
+.classList.remove('scale-125', 'z-30');
+});
+
+eventsTimeline.appendChild(timelineItem);
+});
+
+// Populate PM timeline section
+const pmTimeline = document.getElementById('pm-timeline');
+
+primeMinistersData.forEach(pm => {
+// Check if at least part of tenure is within chart range
+const startRatio = dateToPositionRatio(pm.startDate);
+const endRatio = dateToPositionRatio(pm.endDate);
+
+if (startRatio <= 1 && endRatio >= 0) {
+const pmItem = document.createElement('div');
+pmItem.className = 'flex items-start pb-4 mb-4 border-b border-gray-200 dark:border-gray-700';
+
+// Calculate tenure duration in days and months
+const startDate = new Date(pm.startDate);
+const endDate = pm.endDate === "2025-01-01" ? new Date() : new Date(pm.endDate);
+const durationDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+const durationMonths = Math.floor(durationDays / 30);
+const durationYears = Math.floor(durationMonths / 12);
+
+let durationText = "";
+if (durationYears > 0) {
+durationText += `${durationYears} year${durationYears > 1 ? 's' : ''}`;
+if (durationMonths % 12 > 0) {
+durationText += `, ${durationMonths % 12} month${durationMonths % 12 > 1 ? 's' : ''}`;
+}
+} else {
+durationText = `${durationMonths} month${durationMonths > 1 ? 's' : ''}`;
+if (durationMonths === 0) {
+durationText = `${durationDays} day${durationDays > 1 ? 's' : ''}`;
+}
+}
+
+// Format tenure dates
+const formattedStartDate = formatDate(pm.startDate);
+const formattedEndDate = pm.endDate === "2025-01-01" ? "Present" : formatDate(pm.endDate);
+
+pmItem.innerHTML = `
+<div class="flex-shrink-0 mr-4">
+<img src="${pm.image}" alt="${pm.name}" class="pm-image" onerror="this.style.display='none'">
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-lg">${pm.name}</h3>
+<div class="inline-block px-2 py-1 rounded-full text-sm text-white mt-1"
+style="background-color: ${pm.color}">
+${pm.party}
+</div>
+</div>
+<div class="text-right">
+<div class="text-sm text-gray-600 dark:text-gray-400">
+${formattedStartDate} to ${formattedEndDate}
+</div>
+<div class="text-sm font-medium mt-1">
+${durationText}
+</div>
+</div>
+</div>
+
+<div class="mt-3">
+<h4 class="font-medium mb-1">Economic Indicators During Tenure:</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<h5 class="text-sm font-medium mb-1">GDP:</h5>
+${generateGDPChangeInfo(pm.startDate, pm.endDate)}
+</div>
+<div>
+<h5 class="text-sm font-medium mb-1">BoE Interest Rate:</h5>
+${generateRateChangeInfo(pm.startDate, pm.endDate)}
+</div>
+<div>
+<h5 class="text-sm font-medium mb-1">Inflation Rate:</h5>
+${generateInflationChangeInfo(pm.startDate, pm.endDate)}
+</div>
+<div>
+<h5 class="text-sm font-medium mb-1">10-Year Gilt:</h5>
+${generateGiltChangeInfo(pm.startDate, pm.endDate)}
+</div>
+<div>
+<h5 class="text-sm font-medium mb-1">FTSE 100:</h5>
+${generateFTSEChangeInfo(pm.startDate, pm.endDate)}
+</div>
+<div>
+<h5 class="text-sm font-medium mb-1">GBP/USD:</h5>
+${generateGbpUsdChangeInfo(pm.startDate, pm.endDate)}
+</div>
+</div>
+</div>
+</div>
+`;
+
+pmTimeline.appendChild(pmItem);
+}
+});
+
+// Function to calculate and display GDP change during PM tenure
+function generateGDPChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(gdpData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(gdpData[gdpData.length - 1].date)));
+
+// Find nearest GDP data points
+let startPoint = gdpData[0];
+let endPoint = gdpData[gdpData.length - 1];
+
+gdpData.forEach(point => {
+const pointDate = new Date(point.date);
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const percentChange = ((endPoint.value - startPoint.value) / startPoint.value * 100).toFixed(1);
+const isPositive = percentChange >= 0;
+const arrow = isPositive ? "▲" : "▼";
+const color = isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400";
+
+// Calculate annualized growth rate
+const years = (new Date(endPoint.date) - new Date(startPoint.date)) / (1000 * 60 * 60 * 24 * 365);
+const annualizedGrowth = (Math.pow((endPoint.value / startPoint.value), (1 / years)) - 1) * 100;
+const annualizedGrowthFormatted = years >= 0.5 ? annualizedGrowth.toFixed(1) + '% per year' : '';
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatGDP(startPoint.value)} (${formatQuarter(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${Math.abs(percentChange)}%</span>
+</div>
+<div>To: ${formatGDP(endPoint.value)} (${formatQuarter(endPoint.date)})</div>
+${annualizedGrowthFormatted ? `<div class="text-sm ${color} mt-1">Annualized: ${isPositive ? '▲' : '▼'} ${Math.abs(annualizedGrowth).toFixed(1)}% per year</div>` : ''}
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${isPositive ? 'bg-green-500' : 'bg-red-500'} h-2.5 rounded-full"
+style="width: ${Math.min(Math.abs(percentChange) * 2, 100)}%"></div>
+</div>
+</div>
+`;
+}
+
+// Function to calculate and display BoE rate change during PM tenure
+function generateRateChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(boeRateData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(boeRateData[boeRateData.length - 1].date)));
+
+// Find nearest Rate data points
+let startPoint = boeRateData[0];
+let endPoint = boeRateData[boeRateData.length - 1];
+
+// Find the highest rate during tenure
+let highestPoint = startPoint;
+// Find the lowest rate during tenure
+let lowestPoint = startPoint;
+
+boeRateData.forEach(point => {
+const pointDate = new Date(point.date);
+
+// Check if point is within tenure period
+if (pointDate >= visibleStartDate && pointDate <= visibleEndDate) {
+if (point.value > highestPoint.value) {
+highestPoint = point;
+}
+if (point.value < lowestPoint.value) {
+lowestPoint = point;
+}
+}
+
+// Find start and end points
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const netChange = endPoint.value - startPoint.value;
+const absoluteChange = Math.abs(netChange).toFixed(2);
+const isIncrease = netChange > 0;
+const arrow = isIncrease ? "▲" : netChange < 0 ? "▼" : "►";
+const color = isIncrease ? "text-amber-600 dark:text-amber-400" : netChange < 0 ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400";
+
+// Different bar colors and widths for net increases vs decreases
+const barColor = isIncrease ? "bg-amber-500" : "bg-blue-500";
+const barWidth = Math.min(Math.abs(netChange) * 15, 100); // Scale for better visualization
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatInterestRate(startPoint.value)} (${formatQuarter(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${absoluteChange}%</span>
+</div>
+<div>To: ${formatInterestRate(endPoint.value)} (${formatQuarter(endPoint.date)})</div>
+<div class="grid grid-cols-2 gap-2 mt-1 text-sm">
+<div>
+<span class="font-medium">Peak:</span>
+${formatInterestRate(highestPoint.value)}
+</div>
+<div>
+<span class="font-medium">Low:</span>
+${formatInterestRate(lowestPoint.value)}
+</div>
+</div>
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${barColor} h-2.5 rounded-full"
+style="width: ${barWidth}%"></div>
+</div>
+</div>
+`;
+}
+
+// Function to calculate and display Inflation rate change during PM tenure
+function generateInflationChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(inflationData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(inflationData[inflationData.length - 1].date)));
+
+// Find nearest inflation data points
+let startPoint = inflationData[0];
+let endPoint = inflationData[inflationData.length - 1];
+
+// Find the highest inflation during tenure
+let highestPoint = startPoint;
+// Find the lowest inflation during tenure
+let lowestPoint = startPoint;
+
+inflationData.forEach(point => {
+const pointDate = new Date(point.date);
+
+// Check if point is within tenure period
+if (pointDate >= visibleStartDate && pointDate <= visibleEndDate) {
+if (point.value > highestPoint.value) {
+highestPoint = point;
+}
+if (point.value < lowestPoint.value) {
+lowestPoint = point;
+}
+}
+
+// Find start and end points
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const netChange = endPoint.value - startPoint.value;
+const absoluteChange = Math.abs(netChange).toFixed(1);
+const isIncrease = netChange > 0;
+const arrow = isIncrease ? "▲" : netChange < 0 ? "▼" : "►";
+const color = isIncrease ? "text-purple-600 dark:text-purple-400" : netChange < 0 ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400";
+
+// Different bar colors and widths for net increases vs decreases
+const barColor = isIncrease ? "bg-purple-500" : "bg-blue-500";
+const barWidth = Math.min(Math.abs(netChange) * 5, 100); // Scale for better visualization
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatInflation(startPoint.value)} (${formatDate(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${absoluteChange}%</span>
+</div>
+<div>To: ${formatInflation(endPoint.value)} (${formatDate(endPoint.date)})</div>
+<div class="grid grid-cols-2 gap-2 mt-1 text-sm">
+<div>
+<span class="font-medium">Peak:</span>
+${formatInflation(highestPoint.value)}
+</div>
+<div>
+<span class="font-medium">Low:</span>
+${formatInflation(lowestPoint.value)}
+</div>
+</div>
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${barColor} h-2.5 rounded-full"
+style="width: ${barWidth}%"></div>
+</div>
+</div>
+`;
+}
+
+// Function to calculate and display Gilt Bond change during PM tenure
+function generateGiltChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(giltBondData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(giltBondData[giltBondData.length - 1].date)));
+
+// Find nearest Gilt data points
+let startPoint = giltBondData[0];
+let endPoint = giltBondData[giltBondData.length - 1];
+
+// Find the highest yield during tenure
+let highestPoint = startPoint;
+// Find the lowest yield during tenure
+let lowestPoint = startPoint;
+
+giltBondData.forEach(point => {
+const pointDate = new Date(point.date);
+
+// Check if point is within tenure period
+if (pointDate >= visibleStartDate && pointDate <= visibleEndDate) {
+if (point.value > highestPoint.value) {
+highestPoint = point;
+}
+if (point.value < lowestPoint.value) {
+lowestPoint = point;
+}
+}
+
+// Find start and end points
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const netChange = endPoint.value - startPoint.value;
+const absoluteChange = Math.abs(netChange).toFixed(2);
+const isIncrease = netChange > 0;
+const arrow = isIncrease ? "▲" : netChange < 0 ? "▼" : "►";
+const color = isIncrease ? "text-green-600 dark:text-green-400" : netChange < 0 ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400";
+
+// Different bar colors and widths for net increases vs decreases
+const barColor = isIncrease ? "bg-green-500" : "bg-blue-500";
+const barWidth = Math.min(Math.abs(netChange) * 20, 100); // Scale for better visualization
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatGiltBond(startPoint.value)} (${formatQuarter(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${absoluteChange}%</span>
+</div>
+<div>To: ${formatGiltBond(endPoint.value)} (${formatQuarter(endPoint.date)})</div>
+<div class="grid grid-cols-2 gap-2 mt-1 text-sm">
+<div>
+<span class="font-medium">Peak:</span>
+${formatGiltBond(highestPoint.value)}
+</div>
+<div>
+<span class="font-medium">Low:</span>
+${formatGiltBond(lowestPoint.value)}
+</div>
+</div>
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${barColor} h-2.5 rounded-full"
+style="width: ${barWidth}%"></div>
+</div>
+</div>
+`;
+}
+
+// Function to calculate and display FTSE 100 change during PM tenure
+function generateFTSEChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(ftseData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(ftseData[ftseData.length - 1].date)));
+
+// Find nearest FTSE data points
+let startPoint = ftseData[0];
+let endPoint = ftseData[ftseData.length - 1];
+
+// Find the highest level during tenure
+let highestPoint = startPoint;
+// Find the lowest level during tenure
+let lowestPoint = startPoint;
+
+ftseData.forEach(point => {
+const pointDate = new Date(point.date);
+
+// Check if point is within tenure period
+if (pointDate >= visibleStartDate && pointDate <= visibleEndDate) {
+if (point.value > highestPoint.value) {
+highestPoint = point;
+}
+if (point.value < lowestPoint.value) {
+lowestPoint = point;
+}
+}
+
+// Find start and end points
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const percentChange = ((endPoint.value - startPoint.value) / startPoint.value * 100).toFixed(1);
+const isPositive = percentChange >= 0;
+const arrow = isPositive ? "▲" : "▼";
+const color = isPositive ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400";
+
+// Calculate annualized growth rate
+const years = (new Date(endPoint.date) - new Date(startPoint.date)) / (1000 * 60 * 60 * 24 * 365);
+const annualizedGrowth = years >= 0.25 ? (Math.pow((endPoint.value / startPoint.value), (1 / years)) - 1) * 100 : 0;
+const annualizedGrowthFormatted = years >= 0.5 ? annualizedGrowth.toFixed(1) + '% per year' : '';
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatFTSE(startPoint.value)} (${formatQuarter(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${Math.abs(percentChange)}%</span>
+</div>
+<div>To: ${formatFTSE(endPoint.value)} (${formatQuarter(endPoint.date)})</div>
+${annualizedGrowthFormatted ? `<div class="text-sm ${color} mt-1">Annualized: ${isPositive ? '▲' : '▼'} ${Math.abs(annualizedGrowth).toFixed(1)}% per year</div>` : ''}
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${isPositive ? 'bg-red-500' : 'bg-blue-500'} h-2.5 rounded-full"
+style="width: ${Math.min(Math.abs(percentChange) * 2, 100)}%"></div>
+</div>
+</div>
+`;
+}
+
+// Function to calculate and display GBP/USD change during PM tenure
+function generateGbpUsdChangeInfo(startDate, endDate) {
+const visibleStartDate = new Date(Math.max(new Date(startDate), new Date(gbpUsdData[0].date)));
+const visibleEndDate = new Date(Math.min(new Date(endDate), new Date(gbpUsdData[gbpUsdData.length - 1].date)));
+
+// Find nearest GBP/USD data points
+let startPoint = gbpUsdData[0];
+let endPoint = gbpUsdData[gbpUsdData.length - 1];
+
+// Find the highest level during tenure
+let highestPoint = startPoint;
+// Find the lowest level during tenure
+let lowestPoint = startPoint;
+
+gbpUsdData.forEach(point => {
+const pointDate = new Date(point.date);
+
+// Check if point is within tenure period
+if (pointDate >= visibleStartDate && pointDate <= visibleEndDate) {
+if (point.value > highestPoint.value) {
+highestPoint = point;
+}
+if (point.value < lowestPoint.value) {
+lowestPoint = point;
+}
+}
+
+// Find start and end points
+if (Math.abs(pointDate - visibleStartDate) < Math.abs(new Date(startPoint.date) - visibleStartDate)) {
+startPoint = point;
+}
+if (Math.abs(pointDate - visibleEndDate) < Math.abs(new Date(endPoint.date) - visibleEndDate)) {
+endPoint = point;
+}
+});
+
+const percentChange = ((endPoint.value - startPoint.value) / startPoint.value * 100).toFixed(1);
+const isPositive = percentChange >= 0;
+const arrow = isPositive ? "▲" : "▼";
+const color = isPositive ? "text-indigo-600 dark:text-indigo-400" : "text-blue-600 dark:text-blue-400";
+
+// Calculate annualized growth rate
+const years = (new Date(endPoint.date) - new Date(startPoint.date)) / (1000 * 60 * 60 * 24 * 365);
+const annualizedGrowth = years >= 0.25 ? (Math.pow((endPoint.value / startPoint.value), (1 / years)) - 1) * 100 : 0;
+const annualizedGrowthFormatted = years >= 0.5 ? annualizedGrowth.toFixed(1) + '% per year' : '';
+
+return `
+<div class="w-full">
+<div class="flex justify-between items-center mb-1">
+<span>From: ${formatGbpUsd(startPoint.value)} (${formatQuarter(startPoint.date)})</span>
+<span class="${color} font-bold">${arrow} ${Math.abs(percentChange)}%</span>
+</div>
+<div>To: ${formatGbpUsd(endPoint.value)} (${formatQuarter(endPoint.date)})</div>
+${annualizedGrowthFormatted ? `<div class="text-sm ${color} mt-1">Annualized: ${isPositive ? '▲' : '▼'} ${Math.abs(annualizedGrowth).toFixed(1)}% per year</div>` : ''}
+<div class="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+<div class="${isPositive ? 'bg-indigo-500' : 'bg-blue-500'} h-2.5 rounded-full"
+style="width: ${Math.min(Math.abs(percentChange) * 5, 100)}%"></div>
+</div>
+</div>
+`;
+}
+
+// Add chart reset zoom functionality
+document.getElementById('reset-zoom-btn').addEventListener('click', () => {
+chart.resetZoom();
+});
+
+// Add chart download functionality
+document.getElementById('download-btn').addEventListener('click', async () => {
+try {
+const chartContainer = document.getElementById('chart-container');
+const canvas = await html2canvas(chartContainer, {
+backgroundColor: document.documentElement.classList.contains('dark') ? '#1a202c' : '#ffffff'
+});
+
+const link = document.createElement('a');
+link.download = 'uk-economic-indicators-chart.png';
+link.href = canvas.toDataURL('image/png');
+link.click();
+} catch (err) {
+console.error('Error generating chart image:', err);
+alert('Failed to download chart. Please try again.');
+}
+});
+
+// Update chart colors and annotations when dark mode changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+// Force chart update
+chart.update();
+});
+
+// Add resize listener to update the chart on screen size changes
+window.addEventListener('resize', () => {
+// Update the responsiveness of the x-axis
+chart.options.scales.x.ticks.maxTicksLimit = window.innerWidth < 768 ? 6 : 12;
+chart.update();
+});
+</script>
+</body>
+</html>
