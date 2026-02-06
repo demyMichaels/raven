@@ -1,9 +1,10 @@
-// Global variables
+// script.js - Main application logic
 let geminiAI = null;
 let chatSession = null;
+let coachChatSession = null;
 let currentScenario = null;
 let messages = [];
-let apiKey = null;
+let coachMessages = [];
 
 // Scenarios data
 const scenarios = [
@@ -11,12 +12,11 @@ const scenarios = [
         id: 'emma',
         name: 'Emma Richardson',
         role: 'CFO',
-        difficulty: 'Intermediate',
-        difficultyLevel: 'medium',
-        description: 'Emma is the CFO of a mid-sized tech company. She\'s budget-conscious and needs convincing on ROI.',
-        emotionalTriggers: ['Budget concerns', 'ROI skepticism', 'Risk aversion'],
-        systemInstruction: `You are Emma Richardson, the CFO of TechGrowth Inc. You're skeptical about new software purchases unless they show clear ROI within 12 months. You're polite but direct. You value data over promises. Your company is currently using outdated CRM software but you're worried about implementation costs and training time.`,
+        difficulty: 'Medium',
         avatarColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        description: 'CFO of TechGrowth Inc. Skeptical about software purchases without clear ROI within 12 months.',
+        emotionalTriggers: ['Budget concerns', 'ROI skepticism', 'Risk aversion'],
+        systemInstruction: `You are Emma Richardson, CFO of TechGrowth Inc. You're skeptical about new software purchases unless they show clear ROI within 12 months. You're polite but direct. You value data over promises. Your company is using outdated CRM software but you're worried about implementation costs and training time.`,
         initialGreeting: "I'm listening to your pitch, but I need to be clear upfront - unless you can show me a clear ROI within 12 months and minimal disruption to our current workflow, this won't be an easy sell. What makes your solution worth our investment?"
     },
     {
@@ -24,11 +24,10 @@ const scenarios = [
         name: 'David Chen',
         role: 'IT Director',
         difficulty: 'Hard',
-        difficultyLevel: 'hard',
-        description: 'David is overwhelmed with tech solutions and hates sales jargon. He wants practical solutions.',
+        avatarColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        description: 'IT Director at RetailCorp. Overwhelmed with tech solutions and hates sales jargon.',
         emotionalTriggers: ['Jargon aversion', 'Time constraints', 'Integration fears'],
         systemInstruction: `You are David Chen, IT Director at RetailCorp. You're tired of salespeople using buzzwords. You want concrete facts, integration capabilities with existing systems, and minimal maintenance. You're currently dealing with 5 different vendors and it's a nightmare. Be blunt but not rude.`,
-        avatarColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
         initialGreeting: "Let's skip the sales talk. I've heard it all before. Tell me exactly how this integrates with our existing Azure infrastructure and what the maintenance overhead is. We can't afford another system that needs constant babysitting."
     },
     {
@@ -36,52 +35,128 @@ const scenarios = [
         name: 'Sarah Johnson',
         role: 'Marketing Manager',
         difficulty: 'Easy',
-        difficultyLevel: 'easy',
-        description: 'Sarah is excited about new tech but needs help convincing her team about adoption.',
+        avatarColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        description: 'Marketing Manager at a growing e-commerce brand. Excited about new tech but needs help with team adoption.',
         emotionalTriggers: ['Team adoption', 'Learning curve', 'Feature relevance'],
         systemInstruction: `You are Sarah Johnson, Marketing Manager at a growing e-commerce brand. You're excited about tools that can help your team but worried about adoption. Your team is resistant to change. You need something intuitive that clearly benefits daily workflows.`,
-        avatarColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
         initialGreeting: "This looks interesting! My team is always looking for ways to work smarter. But they're a bit resistant to new tools. How would this actually fit into our daily workflow? I need something that won't require weeks of training."
+    },
+    {
+        id: 'michael',
+        name: 'Michael Rodriguez',
+        role: 'Operations Director',
+        difficulty: 'Medium',
+        avatarColor: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        description: 'Operations Director in manufacturing. Focused on efficiency and process improvement.',
+        emotionalTriggers: ['Process disruption', 'Training time', 'Scalability'],
+        systemInstruction: `You are Michael Rodriguez, Operations Director at a manufacturing company. You're focused on efficiency and hate downtime. Any new system must integrate smoothly with existing processes and show immediate productivity gains. You're data-driven and practical.`,
+        initialGreeting: "We're considering several solutions for our workflow management. Before we proceed, I need to understand how your system handles real-time data synchronization with our legacy systems and what the expected productivity gains are."
     }
 ];
 
-// Initial greetings mapping
-const INITIAL_GREETINGS = {
-    emma: "I'm listening to your pitch, but I need to be clear upfront - unless you can show me a clear ROI within 12 months and minimal disruption to our current workflow, this won't be an easy sell. What makes your solution worth our investment?",
-    david: "Let's skip the sales talk. I've heard it all before. Tell me exactly how this integrates with our existing Azure infrastructure and what the maintenance overhead is. We can't afford another system that needs constant babysitting.",
-    sarah: "This looks interesting! My team is always looking for ways to work smarter. But they're a bit resistant to new tools. How would this actually fit into our daily workflow? I need something that won't require weeks of training."
-};
+// Initialize application
+async function initializeApp() {
+    try {
+        // Load configuration
+        if (!CONFIG || !CONFIG.GEMINI_API_KEY) {
+            throw new Error('API key not found in config.js');
+        }
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize icons
-    lucide.createIcons();
-    
-    // Load saved API key
-    apiKey = localStorage.getItem('gemini_api_key');
-    if (apiKey) {
-        document.getElementById('apiKeyInput').value = '••••••••••••••••';
+        // Initialize Gemini AI
+        geminiAI = new googleGenerativeAI(CONFIG.GEMINI_API_KEY);
+        
+        // Initialize coach chat
+        await initializeCoach();
+        
+        // Load scenarios
+        renderScenarios();
+        
+        // Hide loading screen
+        setTimeout(() => {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.querySelector('.app-container').style.display = 'flex';
+            
+            // Add welcome message to coach chat
+            addCoachMessage('Hello! I\'m your AI Sales Coach. I\'m here to help you practice sales conversations. Select a scenario to begin, or ask me any sales-related questions!', 'received');
+            
+            // Initialize icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        document.getElementById('loadingScreen').innerHTML = `
+            <div class="loading-content">
+                <i data-lucide="alert-circle" style="font-size: 3rem; color: #f44336; margin-bottom: 1rem;"></i>
+                <h2>Initialization Failed</h2>
+                <p>${error.message}</p>
+                <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #4361ee; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    Retry
+                </button>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     }
-    
-    // Render scenarios
-    renderScenarios();
-    
-    // Initialize Gemini AI if key exists
-    if (apiKey) {
-        initializeGemini();
-    }
-});
+}
 
+// Initialize AI Coach
+async function initializeCoach() {
+    try {
+        const model = geminiAI.getGenerativeModel({ 
+            model: 'gemini-pro',
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 500,
+            }
+        });
+        
+        const coachPrompt = `You are an expert sales coach with 20+ years of experience. Your role is to:
+        1. Guide users through sales practice scenarios
+        2. Provide real-time feedback on their sales techniques
+        3. Suggest improvements and strategies
+        4. Answer sales-related questions
+        
+        Be supportive but honest. Focus on practical, actionable advice.
+        Keep responses clear and concise.`;
+        
+        coachChatSession = model.startChat({
+            history: [
+                {
+                    role: "user",
+                    parts: [{ text: coachPrompt }],
+                },
+                {
+                    role: "model",
+                    parts: [{ text: "I understand. I'm ready to help as your AI Sales Coach. I'll provide expert guidance on sales techniques, communication strategies, and help you practice effectively." }],
+                }
+            ],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 500,
+            },
+        });
+        
+        console.log('AI Coach initialized');
+    } catch (error) {
+        console.error('Failed to initialize coach:', error);
+    }
+}
+
+// Render scenarios
 function renderScenarios() {
     const container = document.getElementById('scenariosContainer');
     container.innerHTML = '';
     
     scenarios.forEach(scenario => {
         const card = document.createElement('div');
-        card.className = `scenario-card ${scenario.difficultyLevel}`;
+        card.className = 'scenario-card';
         card.innerHTML = `
             <div class="scenario-header">
-                <div class="avatar" style="background: ${scenario.avatarColor}">
+                <div class="scenario-avatar" style="background: ${scenario.avatarColor}">
                     <i data-lucide="user"></i>
                 </div>
                 <div class="scenario-info">
@@ -90,10 +165,11 @@ function renderScenarios() {
                 </div>
             </div>
             <p class="scenario-description">${scenario.description}</p>
-            <div class="triggers-container">
+            <div class="scenario-tags">
                 ${scenario.emotionalTriggers.map(trigger => 
-                    `<span class="trigger-tag">${trigger}</span>`
+                    `<span class="tag">${trigger}</span>`
                 ).join('')}
+                <span class="tag difficulty-${scenario.difficulty.toLowerCase()}">${scenario.difficulty}</span>
             </div>
         `;
         
@@ -102,109 +178,91 @@ function renderScenarios() {
     });
     
     // Refresh icons
-    setTimeout(() => lucide.createIcons(), 100);
-}
-
-function saveApiKey() {
-    const input = document.getElementById('apiKeyInput');
-    const key = input.value;
-    
-    if (key && !key.startsWith('••••')) {
-        apiKey = key;
-        localStorage.setItem('gemini_api_key', key);
-        input.value = '••••••••••••••••';
-        alert('API key saved successfully!');
-        initializeGemini();
+    if (typeof lucide !== 'undefined') {
+        setTimeout(() => lucide.createIcons(), 100);
     }
 }
 
-function initializeGemini() {
-    try {
-        // Using Google Generative AI JavaScript SDK for browser
-        geminiAI = new googleGenerativeAI(apiKey);
-        console.log('Gemini AI initialized');
-    } catch (error) {
-        console.error('Failed to initialize Gemini AI:', error);
-        alert('Failed to initialize Gemini AI. Please check your API key.');
-    }
-}
-
-function startScenario(scenario) {
-    if (!apiKey) {
-        alert('Please enter your Google AI API key first.');
-        return;
-    }
-    
+// Start a scenario
+async function startScenario(scenario) {
     if (!geminiAI) {
-        initializeGemini();
+        alert('Please wait for AI to initialize');
+        return;
     }
     
     currentScenario = scenario;
     messages = [];
     
     // Update UI
-    document.getElementById('scenarioScreen').style.display = 'none';
-    document.getElementById('chatScreen').style.display = 'flex';
+    document.getElementById('scenarioSection').style.display = 'none';
+    document.getElementById('chatSection').style.display = 'flex';
     
     // Update persona info
     document.getElementById('personaName').textContent = scenario.name;
-    document.getElementById('personaDetails').textContent = `${scenario.role} • ${scenario.difficulty}`;
-    document.getElementById('chatHeader').style.background = scenario.avatarColor;
-    document.getElementById('personaAvatar').style.background = scenario.avatarColor.replace('gradient', 'linear-gradient');
+    document.getElementById('personaRole').textContent = scenario.role;
+    document.getElementById('personaDifficulty').textContent = scenario.difficulty;
+    document.getElementById('personaDifficulty').className = `tag difficulty-${scenario.difficulty.toLowerCase()}`;
     
-    // Update emotional triggers
-    const triggersContainer = document.getElementById('emotionalTriggers');
-    triggersContainer.innerHTML = scenario.emotionalTriggers.map(trigger => 
-        `<span class="trigger-badge">${trigger}</span>`
-    ).join('');
+    const avatar = document.getElementById('personaAvatarLarge');
+    avatar.style.background = scenario.avatarColor;
+    avatar.innerHTML = '<i data-lucide="user"></i>';
     
-    // Initialize chat
-    initializeChat(scenario);
+    // Clear chat
+    document.getElementById('chatMessages').innerHTML = '';
     
     // Add initial greeting
-    addMessage(INITIAL_GREETINGS[scenario.id], 'ai');
+    addMessage(scenario.initialGreeting, 'ai');
+    
+    // Initialize chat session with persona
+    await initializePersonaChat(scenario);
+    
+    // Update coach chat with scenario info
+    const coachMessage = `You're now practicing with ${scenario.name}, the ${scenario.role}. ${scenario.description} I'll help you navigate this conversation.`;
+    addCoachMessage(coachMessage, 'received');
     
     // Refresh icons
-    setTimeout(() => lucide.createIcons(), 100);
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 }
 
-function initializeChat(scenario) {
+// Initialize persona chat
+async function initializePersonaChat(scenario) {
     try {
         const model = geminiAI.getGenerativeModel({ 
             model: 'gemini-pro',
             generationConfig: {
-                temperature: 0.9,
+                temperature: 0.8,
                 maxOutputTokens: 300,
             }
         });
         
-        // Start a chat session with system instruction
         chatSession = model.startChat({
             history: [
                 {
                     role: "user",
-                    parts: [{ text: `System instruction: ${scenario.systemInstruction}` }],
+                    parts: [{ text: `System instruction: ${scenario.systemInstruction}\n\nStart the conversation with: "${scenario.initialGreeting}"` }],
                 },
                 {
                     role: "model",
-                    parts: [{ text: "Understood. I will roleplay as specified." }],
+                    parts: [{ text: scenario.initialGreeting }],
                 }
             ],
             generationConfig: {
-                temperature: 0.9,
+                temperature: 0.8,
+                maxOutputTokens: 300,
             },
         });
         
-        console.log('Chat session initialized');
+        console.log('Persona chat initialized');
     } catch (error) {
-        console.error('Failed to initialize chat:', error);
-        addMessage('Error initializing chat. Please check your API key and try again.', 'ai');
+        console.error('Failed to initialize persona chat:', error);
+        addMessage('Error initializing conversation. Please try again.', 'ai');
     }
 }
 
-async function sendMessage(event) {
-    event.preventDefault();
-    
+// Send message to persona
+async function sendMessage() {
     const input = document.getElementById('messageInput');
     const message = input.value.trim();
     
@@ -214,12 +272,20 @@ async function sendMessage(event) {
     addMessage(message, 'user');
     input.value = '';
     autoResize(input);
-    
-    // Disable send button
     document.getElementById('sendButton').disabled = true;
     
     // Show typing indicator
-    document.getElementById('typingIndicator').style.display = 'flex';
+    const typingIndicator = document.createElement('div');
+    typingIndicator.className = 'message ai typing';
+    typingIndicator.innerHTML = `
+        <div class="typing-indicator">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    `;
+    document.getElementById('chatMessages').appendChild(typingIndicator);
+    typingIndicator.scrollIntoView({ behavior: 'smooth' });
     
     try {
         // Send to Gemini
@@ -227,39 +293,43 @@ async function sendMessage(event) {
         const response = await result.response;
         const text = response.text();
         
+        // Remove typing indicator
+        typingIndicator.remove();
+        
         // Add AI response
         addMessage(text, 'ai');
         
-        // Analyze the interaction
+        // Analyze interaction
         analyzeInteraction(message, text);
+        
+        // Ask coach for feedback
+        askCoachForFeedback(message, text);
         
     } catch (error) {
         console.error('Error sending message:', error);
+        typingIndicator.remove();
         addMessage('Sorry, I encountered an error. Please try again.', 'ai');
-    } finally {
-        // Hide typing indicator
-        document.getElementById('typingIndicator').style.display = 'none';
-        
-        // Re-enable send button
-        document.getElementById('sendButton').disabled = false;
     }
 }
 
+// Add message to chat
 function addMessage(text, sender) {
-    const messagesContainer = document.getElementById('messagesContainer');
-    
+    const container = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}-message`;
+    messageDiv.className = `message ${sender}`;
     
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const time = new Date().toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
     
     messageDiv.innerHTML = `
-        <div class="message-text">${escapeHtml(text)}</div>
-        <div class="message-time">${time}</div>
+        <p>${escapeHtml(text)}</p>
+        <span class="message-time">${time}</span>
     `;
     
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    container.appendChild(messageDiv);
+    container.scrollTop = container.scrollHeight;
     
     // Add to messages array
     messages.push({
@@ -269,38 +339,32 @@ function addMessage(text, sender) {
     });
 }
 
-function autoResize(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
-    
-    // Enable/disable send button
-    document.getElementById('sendButton').disabled = !textarea.value.trim();
-    document.getElementById('sendButton').disabled = !textarea.value.trim();
-}
-
+// Analyze interaction
 async function analyzeInteraction(userMessage, aiResponse) {
     if (!currentScenario || !geminiAI) return;
     
     const prompt = `
-        You are a world-class Sales Coach. Analyze the following interaction between a salesperson (User) and a potential customer (Persona).
+        Analyze this sales conversation interaction:
         
-        Scenario Context: ${currentScenario.description}
+        Scenario: ${currentScenario.description}
+        Persona: ${currentScenario.name}, ${currentScenario.role}
         
-        User said: "${userMessage}"
-        Persona (Customer) replied: "${aiResponse}"
+        Salesperson said: "${userMessage}"
+        Customer replied: "${aiResponse}"
         
-        Analyze the User's sales technique based on:
-        1. Empathy (Did they acknowledge the persona's emotion?)
-        2. Persuasion (Did they address the specific objection?)
-        3. Clarity (Was the pitch clear?)
-
-        Return a JSON object with:
-        - score (0-100 integer)
-        - feedback (1 sentence summary)
-        - detectedEmotion (The emotion the persona is currently feeling)
-        - suggestion (1 specific tip to improve the next reply)
+        Provide analysis in this exact JSON format:
+        {
+            "score": 0-100,
+            "detectedEmotion": "emotion name",
+            "feedback": "one sentence feedback",
+            "suggestion": "one specific improvement tip"
+        }
         
-        Format your response as valid JSON only.
+        Focus on:
+        1. Empathy shown
+        2. Clarity of message
+        3. Addressing customer concerns
+        4. Persuasion technique
     `;
     
     try {
@@ -309,55 +373,185 @@ async function analyzeInteraction(userMessage, aiResponse) {
         const response = await result.response;
         const text = response.text();
         
-        // Parse JSON from response
-        const jsonStart = text.indexOf('{');
-        const jsonEnd = text.lastIndexOf('}') + 1;
-        const jsonString = text.substring(jsonStart, jsonEnd);
-        
-        const analysis = JSON.parse(jsonString);
-        
-        // Display analysis
-        displayAnalysis(analysis);
-        
+        // Parse JSON
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            const analysis = JSON.parse(jsonMatch[0]);
+            displayAnalysis(analysis);
+        }
     } catch (error) {
         console.error('Analysis failed:', error);
         // Fallback analysis
         displayAnalysis({
             score: 50,
-            feedback: "Could not analyze at this moment.",
             detectedEmotion: "Neutral",
-            suggestion: "Keep trying to address their core needs."
+            feedback: "Keep the conversation going.",
+            suggestion: "Try to address their main concern directly."
         });
     }
 }
 
+// Display analysis
 function displayAnalysis(analysis) {
-    const panel = document.getElementById('analysisPanel');
-    const scoreBadge = document.getElementById('scoreBadge');
+    const container = document.getElementById('analysisContainer');
+    const scoreDisplay = document.getElementById('scoreDisplay');
     
-    // Update analysis content
+    document.getElementById('scoreValue').textContent = analysis.score;
     document.getElementById('detectedEmotion').textContent = analysis.detectedEmotion;
     document.getElementById('feedbackText').textContent = analysis.feedback;
     document.getElementById('suggestionText').textContent = analysis.suggestion;
     
-    // Update score badge with color
-    scoreBadge.textContent = `Score: ${analysis.score}/100`;
-    scoreBadge.style.background = analysis.score > 70 ? '#dcfce7' : '#fee2e2';
-    scoreBadge.style.color = analysis.score > 70 ? '#166534' : '#991b1b';
+    // Update score color
+    if (analysis.score >= 80) {
+        scoreDisplay.style.background = '#d1fae5';
+        scoreDisplay.style.color = '#065f46';
+    } else if (analysis.score >= 60) {
+        scoreDisplay.style.background = '#fef3c7';
+        scoreDisplay.style.color = '#92400e';
+    } else {
+        scoreDisplay.style.background = '#fee2e2';
+        scoreDisplay.style.color = '#991b1b';
+    }
     
-    // Show panel with animation
-    panel.style.display = 'block';
-    
-    // Scroll to analysis
-    setTimeout(() => {
-        panel.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, 100);
+    container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
 }
 
-function goBackToScenarios() {
-    document.getElementById('chatScreen').style.display = 'none';
-    document.getElementById('scenarioScreen').style.display = 'block';
-    document.getElementById('analysisPanel').style.display = 'none';
+// Ask coach for feedback
+async function askCoachForFeedback(userMessage, aiResponse) {
+    if (!coachChatSession) return;
+    
+    const prompt = `
+        The user just had this exchange with ${currentScenario.name}:
+        
+        User: "${userMessage}"
+        ${currentScenario.name}: "${aiResponse}"
+        
+        Give brief, actionable feedback for the user's next move. Focus on one key improvement.
+        Keep it under 2 sentences.
+    `;
+    
+    try {
+        const result = await coachChatSession.sendMessage(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        addCoachMessage(text, 'received');
+    } catch (error) {
+        console.error('Coach feedback failed:', error);
+    }
+}
+
+// Ask coach question
+async function askCoach(type) {
+    const input = document.getElementById('coachQuery');
+    let prompt = '';
+    
+    switch(type) {
+        case 'strategy':
+            prompt = `What's the best strategy for dealing with ${currentScenario.name}'s ${currentScenario.emotionalTriggers[0]}?`;
+            break;
+        case 'objection':
+            prompt = `How should I handle objections about ${currentScenario.emotionalTriggers[1]}?`;
+            break;
+        case 'question':
+            prompt = `What's a good question to ask ${currentScenario.name} to better understand their needs?`;
+            break;
+        case 'close':
+            prompt = `How can I move this conversation toward closing with ${currentScenario.name}?`;
+            break;
+        case 'custom':
+            prompt = input.value;
+            input.value = '';
+            break;
+        default:
+            prompt = 'How can I improve my sales technique?';
+    }
+    
+    if (!prompt.trim()) return;
+    
+    // Add user message
+    addCoachMessage(prompt, 'sent');
+    
+    // Show typing
+    const coachChat = document.getElementById('coachChat');
+    const typing = document.createElement('div');
+    typing.className = 'coach-message received typing';
+    typing.innerHTML = `
+        <div class="coach-avatar">
+            <i data-lucide="brain"></i>
+        </div>
+        <div class="message-bubble">
+            <div class="typing-indicator">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    `;
+    coachChat.appendChild(typing);
+    coachChat.scrollTop = coachChat.scrollHeight;
+    
+    try {
+        const result = await coachChatSession.sendMessage(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        typing.remove();
+        addCoachMessage(text, 'received');
+    } catch (error) {
+        console.error('Coach query failed:', error);
+        typing.remove();
+        addCoachMessage('Sorry, I encountered an error. Please try again.', 'received');
+    }
+}
+
+// Add message to coach chat
+function addCoachMessage(text, type) {
+    const container = document.getElementById('coachChat');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `coach-message ${type}`;
+    
+    const time = new Date().toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    const avatar = type === 'received' 
+        ? '<div class="coach-avatar"><i data-lucide="brain"></i></div>'
+        : '<div class="coach-avatar"><i data-lucide="user"></i></div>';
+    
+    messageDiv.innerHTML = `
+        ${avatar}
+        <div class="message-bubble">
+            <p>${escapeHtml(text)}</p>
+            <span class="timestamp">${time}</span>
+        </div>
+    `;
+    
+    container.appendChild(messageDiv);
+    container.scrollTop = container.scrollHeight;
+    
+    // Add to messages array
+    coachMessages.push({
+        text,
+        type,
+        timestamp: new Date()
+    });
+}
+
+// Utility functions
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    document.getElementById('sendButton').disabled = !textarea.value.trim();
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
 }
 
 function escapeHtml(text) {
@@ -366,9 +560,52 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Make functions available globally
-window.saveApiKey = saveApiKey;
-window.startScenario = startScenario;
-window.sendMessage = sendMessage;
-window.autoResize = autoResize;
-window.goBackToScenarios = goBackToScenarios;
+function insertTemplate(type) {
+    const input = document.getElementById('messageInput');
+    const templates = {
+        question: "That's a great point. Can you tell me more about your current process?",
+        value: "Based on what you've shared, our solution could save you approximately 15 hours per week by...",
+        objection: "I understand your concern about [objection]. Many of our clients felt the same way initially, but they found that..."
+    };
+    
+    if (templates[type]) {
+        input.value = templates[type];
+        autoResize(input);
+        document.getElementById('sendButton').disabled = false;
+    }
+}
+
+function toggleCoachPanel() {
+    const panel = document.getElementById('coachPanel');
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+}
+
+function goBackToScenarios() {
+    document.getElementById('chatSection').style.display = 'none';
+    document.getElementById('analysisContainer').style.display = 'none';
+    document.getElementById('scenarioSection').style.display = 'block';
+    document.getElementById('coachPanel').style.display = 'none';
+}
+
+function showAnalytics() {
+    alert('Analytics dashboard coming soon!');
+}
+
+function showSettings() {
+    alert('Settings panel coming soon!');
+}
+
+function showPrivacy() {
+    alert('Privacy policy information');
+}
+
+function showTerms() {
+    alert('Terms of service information');
+}
+
+function showHelp() {
+    alert('Help documentation');
+}
+
+// Initialize app when page loads
+window.addEventListener('load', initializeApp);
