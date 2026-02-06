@@ -4,104 +4,633 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Coach Simulator</title>
-    <link rel="stylesheet" href="style.css">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f94144;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+        }
+
+        /* Loading Screen */
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* App Container */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--gray-100);
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--gray-700);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: var(--gray-200);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr 400px;
+            }
+        }
+
+        /* Scenario Section */
+        .scenario-section {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .scenarios-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .scenario-card {
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scenario-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .scenario-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .scenario-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .scenario-info h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .scenario-info p {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+        }
+
+        .scenario-description {
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .scenario-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .difficulty-easy {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .difficulty-hard {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            background: white;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .chat-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--gray-100);
+            border: none;
+            border-radius: var(--border-radius);
+            color: var(--gray-700);
+            cursor: pointer;
+        }
+
+        .persona-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .persona-avatar-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .coach-help {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--gray-100);
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: white;
+            color: var(--gray-800);
+            border: 1px solid var(--gray-200);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-time {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+
+        /* Analysis Container */
+        .analysis-container {
+            background: #f0f9ff;
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            animation: slideUp 0.5s ease;
+            display: none;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .score-display {
+            margin-left: auto;
+            padding: 0.5rem 1rem;
+            background: white;
+            border-radius: 20px;
+            font-weight: 600;
+            border: 2px solid var(--gray-200);
+        }
+
+        /* Input Container */
+        .input-container {
+            border-top: 1px solid var(--gray-200);
+            padding: 1.5rem;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            min-height: 56px;
+            max-height: 120px;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--gray-300);
+            border: none;
+            border-radius: 10px;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .send-btn:enabled {
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Coach Panel */
+        .coach-panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            display: none;
+        }
+
+        .coach-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coach-chat {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .coach-message {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .coach-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 1rem 1.25rem;
+            border-radius: 18px;
+            background: var(--gray-100);
+        }
+
+        .coach-input {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .coach-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .coach-input button {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border: none;
+            border-radius: var(--border-radius);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Error Display */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 1rem;
+        }
+
+        .typing-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--gray-400);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator .dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 10px;
+            }
+            
+            .scenarios-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .coach-panel {
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                z-index: 1000;
+                border-radius: 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-content">
+    <div id="loadingScreen">
+        <div>
             <div class="loading-spinner"></div>
-            <h2>Initializing Sales Coach</h2>
-            <p>Loading AI models and scenarios...</p>
+            <h2>Sales Coach Simulator</h2>
+            <p id="loadingText">Initializing...</p>
+            <div id="errorMessage" class="error-message"></div>
+            <button id="retryButton" onclick="location.reload()" style="
+                display: none;
+                margin-top: 20px;
+                padding: 10px 20px;
+                background: white;
+                color: #667eea;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+            ">Retry</button>
         </div>
     </div>
 
-    <!-- App Container -->
-    <div class="app-container" style="display: none;">
+    <!-- Main App -->
+    <div class="app-container">
         <!-- Navigation -->
         <nav class="navbar">
             <div class="nav-brand">
-                <div class="logo">
-                    <i data-lucide="message-square"></i>
-                </div>
-                <h1>Sales Coach Pro</h1>
+                <div class="logo">💬</div>
+                <h1 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Sales Coach Pro
+                </h1>
             </div>
             <div class="nav-controls">
                 <button class="nav-btn" onclick="toggleCoachPanel()">
-                    <i data-lucide="graduation-cap"></i>
-                    <span>AI Coach</span>
+                    🎓 AI Coach
                 </button>
-                <button class="nav-btn" onclick="showAnalytics()">
-                    <i data-lucide="bar-chart"></i>
-                    <span>Analytics</span>
-                </button>
-                <button class="nav-btn" onclick="showSettings()">
-                    <i data-lucide="settings"></i>
-                    <span>Settings</span>
+                <button class="nav-btn" onclick="showScenarios()">
+                    👥 Scenarios
                 </button>
             </div>
         </nav>
 
-        <!-- Main Content -->
+        <!-- Main Layout -->
         <div class="main-layout">
-            <!-- Scenario Selector -->
+            <!-- Scenario Section -->
             <div class="scenario-section" id="scenarioSection">
-                <div class="section-header">
-                    <h2>Practice Scenarios</h2>
-                    <p class="subtitle">Select a customer persona to practice with</p>
-                </div>
-                
+                <h2>Practice Scenarios</h2>
+                <p style="color: var(--gray-600); margin-top: 0.5rem;">
+                    Select a customer persona to practice with
+                </p>
                 <div class="scenarios-container" id="scenariosContainer">
-                    <!-- Scenarios loaded dynamically -->
-                </div>
-
-                <div class="stats-section">
-                    <div class="stat-card">
-                        <i data-lucide="target"></i>
-                        <div>
-                            <h3>12</h3>
-                            <p>Completed Scenarios</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <i data-lucide="trending-up"></i>
-                        <div>
-                            <h3>78%</h3>
-                            <p>Average Score</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <i data-lucide="clock"></i>
-                        <div>
-                            <h3>2h 45m</h3>
-                            <p>Total Practice</p>
-                        </div>
-                    </div>
+                    <!-- Scenarios loaded here -->
                 </div>
             </div>
 
-            <!-- Chat Interface (Hidden by default) -->
-            <div class="chat-section" id="chatSection" style="display: none;">
+            <!-- Chat Section -->
+            <div class="chat-section" id="chatSection">
                 <div class="chat-header">
-                    <button class="back-btn" onclick="goBackToScenarios()">
-                        <i data-lucide="arrow-left"></i>
-                        Back
+                    <button class="back-btn" onclick="showScenarios()">
+                        ← Back
                     </button>
                     <div class="persona-header">
-                        <div class="persona-avatar-large" id="personaAvatarLarge"></div>
-                        <div class="persona-details">
+                        <div class="persona-avatar-large" id="personaAvatarLarge">👤</div>
+                        <div>
                             <h2 id="personaName">Emma Richardson</h2>
-                            <div class="persona-tags">
-                                <span class="tag" id="personaRole">CFO</span>
-                                <span class="tag difficulty-medium" id="personaDifficulty">Medium</span>
-                            </div>
+                            <p id="personaRole">CFO • Medium</p>
                         </div>
                     </div>
                     <button class="coach-help" onclick="toggleCoachPanel()">
-                        <i data-lucide="help-circle"></i>
-                        Get Coach Help
+                        🎓 Coach Help
                     </button>
                 </div>
 
@@ -110,32 +639,33 @@
                     <!-- Messages appear here -->
                 </div>
 
-                <!-- Analysis Panel -->
-                <div class="analysis-container" id="analysisContainer" style="display: none;">
+                <!-- Analysis Container -->
+                <div class="analysis-container" id="analysisContainer">
                     <div class="analysis-header">
-                        <i data-lucide="sparkles"></i>
-                        <h3>Coach Analysis</h3>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            ⭐ <h3 style="margin: 0;">Coach Analysis</h3>
+                        </div>
                         <div class="score-display" id="scoreDisplay">
                             Score: <span id="scoreValue">0</span>/100
                         </div>
                     </div>
-                    <div class="analysis-content">
-                        <div class="analysis-item">
-                            <label>Detected Emotion:</label>
-                            <span class="emotion-badge" id="detectedEmotion">Neutral</span>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <strong>Detected Emotion:</strong>
+                            <span id="detectedEmotion" style="background: #e0f2fe; padding: 4px 12px; border-radius: 20px; font-size: 0.9rem; margin-left: 8px;">
+                                Neutral
+                            </span>
                         </div>
-                        <div class="analysis-item">
-                            <label>Feedback:</label>
-                            <p id="feedbackText">Waiting for analysis...</p>
-                        </div>
-                        <div class="analysis-item">
-                            <label>Improvement Tip:</label>
-                            <p class="tip" id="suggestionText">Try to address their main concern directly.</p>
-                        </div>
+                        <p id="feedbackText" style="font-style: italic; color: var(--gray-700);">
+                            Waiting for analysis...
+                        </p>
+                        <p class="tip" id="suggestionText" style="background: #e6f3ff; padding: 12px; border-radius: 8px; border-left: 4px solid var(--primary);">
+                            💡 Try to address their main concern directly.
+                        </p>
                     </div>
                 </div>
 
-                <!-- Input Area -->
+                <!-- Input Container -->
                 <div class="input-container">
                     <div class="input-wrapper">
                         <textarea 
@@ -143,107 +673,641 @@
                             placeholder="Type your sales pitch here..."
                             rows="1"
                             oninput="autoResize(this)"
-                            onkeydown="handleKeyPress(event)"
+                            onkeydown="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
                         ></textarea>
-                        <div class="input-actions">
-                            <button class="action-btn" title="Add attachment">
-                                <i data-lucide="paperclip"></i>
-                            </button>
-                            <button class="action-btn" title="Insert template">
-                                <i data-lucide="file-text"></i>
-                            </button>
-                            <button 
-                                id="sendButton" 
-                                class="send-btn" 
-                                onclick="sendMessage()"
-                                disabled
-                            >
-                                <i data-lucide="send"></i>
-                            </button>
-                        </div>
+                        <button 
+                            id="sendButton" 
+                            class="send-btn" 
+                            onclick="sendMessage()"
+                            disabled
+                        >
+                            📤
+                        </button>
                     </div>
-                    <div class="quick-tips">
-                        <span>Quick tips:</span>
-                        <button class="tip-btn" onclick="insertTemplate('question')">Ask questions</button>
-                        <button class="tip-btn" onclick="insertTemplate('value')">Show value</button>
-                        <button class="tip-btn" onclick="insertTemplate('objection')">Handle objection</button>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button onclick="insertTemplate('question')" style="
+                            background: #f1f5f9;
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 20px;
+                            font-size: 0.9rem;
+                            cursor: pointer;
+                        ">💬 Ask a question</button>
+                        <button onclick="insertTemplate('value')" style="
+                            background: #f1f5f9;
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 20px;
+                            font-size: 0.9rem;
+                            cursor: pointer;
+                        ">💰 Show value</button>
+                        <button onclick="insertTemplate('objection')" style="
+                            background: #f1f5f9;
+                            border: none;
+                            padding: 6px 12px;
+                            border-radius: 20px;
+                            font-size: 0.9rem;
+                            cursor: pointer;
+                        ">🛡️ Handle objection</button>
                     </div>
                 </div>
             </div>
 
-            <!-- AI Coach Panel -->
-            <div class="coach-panel" id="coachPanel" style="display: none;">
+            <!-- Coach Panel -->
+            <div class="coach-panel" id="coachPanel">
                 <div class="coach-header">
-                    <h2><i data-lucide="graduation-cap"></i> AI Sales Coach</h2>
-                    <button class="close-btn" onclick="toggleCoachPanel()">
-                        <i data-lucide="x"></i>
+                    <h2>🎓 AI Sales Coach</h2>
+                    <button onclick="toggleCoachPanel()" style="
+                        background: none;
+                        border: none;
+                        color: var(--gray-600);
+                        cursor: pointer;
+                        padding: 5px;
+                        border-radius: 6px;
+                    ">
+                        ✕
                     </button>
                 </div>
                 
-                <div class="coach-status">
-                    <div class="status-indicator active"></div>
-                    <span>Connected to Gemini 2.0 Flash</span>
-                </div>
-
                 <div class="coach-chat" id="coachChat">
-                    <div class="coach-message received">
-                        <div class="coach-avatar">
-                            <i data-lucide="brain"></i>
-                        </div>
+                    <div class="coach-message">
+                        <div class="coach-avatar">🧠</div>
                         <div class="message-bubble">
                             <p>Hello! I'm your AI Sales Coach. I'll help you navigate this sales conversation. What would you like help with?</p>
-                            <span class="timestamp">Just now</span>
+                            <small style="color: var(--gray-500);">Just now</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="coach-quick-actions">
-                    <button class="quick-action" onclick="askCoach('strategy')">
-                        <i data-lucide="target"></i>
-                        <span>Best strategy</span>
-                    </button>
-                    <button class="quick-action" onclick="askCoach('objection')">
-                        <i data-lucide="shield"></i>
-                        <span>Handle objection</span>
-                    </button>
-                    <button class="quick-action" onclick="askCoach('question')">
-                        <i data-lucide="help-circle"></i>
-                        <span>Ask a question</span>
-                    </button>
-                    <button class="quick-action" onclick="askCoach('close')">
-                        <i data-lucide="handshake"></i>
-                        <span>Close the deal</span>
-                    </button>
+                <div style="padding: 1rem; border-top: 1px solid var(--gray-200); display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="quickCoachTip('strategy')" style="
+                        background: #e0f2fe;
+                        color: #0369a1;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    ">🎯 Best strategy</button>
+                    <button onclick="quickCoachTip('objection')" style="
+                        background: #fce7f3;
+                        color: #9d174d;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    ">🛡️ Handle objection</button>
+                    <button onclick="quickCoachTip('question')" style="
+                        background: #dcfce7;
+                        color: #166534;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    ">❓ Ask a question</button>
                 </div>
 
                 <div class="coach-input">
                     <input 
                         type="text" 
-                        id="coachQuery" 
+                        id="coachInput" 
                         placeholder="Ask your coach anything..."
-                        onkeypress="if(event.key === 'Enter') askCoach('custom')"
+                        onkeypress="if(event.key === 'Enter') askCoach()"
                     >
-                    <button onclick="askCoach('custom')">
-                        <i data-lucide="send"></i>
+                    <button onclick="askCoach()">
+                        📤
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <footer class="app-footer">
-            <p>Sales Coach Pro • Powered by Google Gemini AI • For educational purposes only</p>
-            <div class="footer-links">
-                <a href="#" onclick="showPrivacy()">Privacy</a>
-                <a href="#" onclick="showTerms()">Terms</a>
-                <a href="#" onclick="showHelp()">Help</a>
-            </div>
+        <footer style="
+            margin-top: 2rem;
+            text-align: center;
+            color: white;
+            padding: 1rem;
+        ">
+            <p>Sales Coach Pro • Powered by Google Gemini AI • For educational purposes</p>
         </footer>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://unpkg.com/@google/generative-ai"></script>
-    <script src="config.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // Configuration - Your API Key
+        const CONFIG = {
+            GEMINI_API_KEY: "AIzaSyBKXdjfql_vFda8CMDDYjC5Kr32wd-hZHQ"
+        };
+
+        // Global variables
+        let geminiAI = null;
+        let chatSession = null;
+        let coachSession = null;
+        let currentScenario = null;
+
+        // Scenarios data
+        const scenarios = [
+            {
+                id: 'emma',
+                name: 'Emma Richardson',
+                role: 'CFO',
+                difficulty: 'Medium',
+                avatarColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                description: 'CFO who needs clear ROI within 12 months. Budget-conscious and data-driven.',
+                emotionalTriggers: ['Budget', 'ROI', 'Risk'],
+                systemInstruction: `You are Emma Richardson, CFO of TechGrowth Inc. You're skeptical about new software purchases unless they show clear ROI within 12 months. You're polite but direct. You value data over promises. Your company is currently using outdated CRM software but you're worried about implementation costs and training time.`,
+                initialGreeting: "I'm listening to your pitch, but I need to be clear upfront - unless you can show me a clear ROI within 12 months and minimal disruption to our current workflow, this won't be an easy sell. What makes your solution worth our investment?"
+            },
+            {
+                id: 'david',
+                name: 'David Chen',
+                role: 'IT Director',
+                difficulty: 'Hard',
+                avatarColor: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                description: 'IT Director overwhelmed with tech solutions. Hates sales jargon and buzzwords.',
+                emotionalTriggers: ['Jargon', 'Integration', 'Maintenance'],
+                systemInstruction: `You are David Chen, IT Director at RetailCorp. You're tired of salespeople using buzzwords. You want concrete facts, integration capabilities with existing systems, and minimal maintenance. You're currently dealing with 5 different vendors and it's a nightmare. Be blunt but not rude.`,
+                initialGreeting: "Let's skip the sales talk. I've heard it all before. Tell me exactly how this integrates with our existing Azure infrastructure and what the maintenance overhead is. We can't afford another system that needs constant babysitting."
+            },
+            {
+                id: 'sarah',
+                name: 'Sarah Johnson',
+                role: 'Marketing Manager',
+                difficulty: 'Easy',
+                avatarColor: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                description: 'Marketing Manager excited about new tech but needs help with team adoption.',
+                emotionalTriggers: ['Adoption', 'Training', 'Workflow'],
+                systemInstruction: `You are Sarah Johnson, Marketing Manager at a growing e-commerce brand. You're excited about tools that can help your team but worried about adoption. Your team is resistant to change. You need something intuitive that clearly benefits daily workflows.`,
+                initialGreeting: "This looks interesting! My team is always looking for ways to work smarter. But they're a bit resistant to new tools. How would this actually fit into our daily workflow? I need something that won't require weeks of training."
+            }
+        ];
+
+        // Initialize the app
+        async function initializeApp() {
+            try {
+                updateLoadingText('Checking configuration...');
+                
+                // Check configuration
+                if (!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY === 'YOUR_API_KEY_HERE') {
+                    throw new Error('Please update the API key in the CONFIG object');
+                }
+                
+                updateLoadingText('Loading AI SDK...');
+                
+                // Load Google AI SDK dynamically
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/@google/generative-ai';
+                    script.onload = () => {
+                        setTimeout(resolve, 1000); // Give SDK time to initialize
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+                
+                updateLoadingText('Initializing AI models...');
+                
+                // Initialize Gemini AI
+                geminiAI = new google.generativeai.GenerativeAI(CONFIG.GEMINI_API_KEY);
+                
+                // Test connection
+                const model = geminiAI.getGenerativeModel({ model: 'gemini-pro' });
+                await model.generateContent('test');
+                
+                // Initialize coach
+                await initializeCoach();
+                
+                // Load scenarios
+                renderScenarios();
+                
+                // Show app
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.querySelector('.app-container').style.display = 'block';
+                    updateCoachMessage('Ready to practice! Select a scenario to begin.');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showError(`Failed to initialize: ${error.message}`);
+            }
+        }
+
+        // Initialize AI Coach
+        async function initializeCoach() {
+            try {
+                const model = geminiAI.getGenerativeModel({ 
+                    model: 'gemini-pro',
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 300,
+                    }
+                });
+                
+                coachSession = model.startChat({
+                    history: [
+                        {
+                            role: "user",
+                            parts: [{ text: "You are an expert sales coach with 20 years experience. Give short, actionable advice for sales conversations. Be supportive but honest." }],
+                        },
+                        {
+                            role: "model",
+                            parts: [{ text: "I'll help you practice sales conversations. Ask me for strategies, feedback, or tips. I'll keep my advice practical and actionable." }],
+                        }
+                    ]
+                });
+            } catch (error) {
+                console.warn('Coach init failed:', error);
+            }
+        }
+
+        // Render scenarios
+        function renderScenarios() {
+            const container = document.getElementById('scenariosContainer');
+            container.innerHTML = '';
+            
+            scenarios.forEach(scenario => {
+                const card = document.createElement('div');
+                card.className = 'scenario-card';
+                card.innerHTML = `
+                    <div class="scenario-header">
+                        <div class="scenario-avatar" style="background: ${scenario.avatarColor}">
+                            👤
+                        </div>
+                        <div class="scenario-info">
+                            <h3>${scenario.name}</h3>
+                            <p>${scenario.role} • ${scenario.difficulty}</p>
+                        </div>
+                    </div>
+                    <p class="scenario-description">${scenario.description}</p>
+                    <div class="scenario-tags">
+                        ${scenario.emotionalTriggers.map(trigger => 
+                            `<span class="tag">${trigger}</span>`
+                        ).join('')}
+                        <span class="tag difficulty-${scenario.difficulty.toLowerCase()}">${scenario.difficulty}</span>
+                    </div>
+                `;
+                
+                card.onclick = () => startScenario(scenario);
+                container.appendChild(card);
+            });
+        }
+
+        // Start a scenario
+        async function startScenario(scenario) {
+            currentScenario = scenario;
+            
+            // Update UI
+            document.getElementById('scenarioSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'flex';
+            document.getElementById('coachPanel').style.display = 'none';
+            
+            // Update persona info
+            document.getElementById('personaName').textContent = scenario.name;
+            document.getElementById('personaRole').textContent = `${scenario.role} • ${scenario.difficulty}`;
+            document.getElementById('personaAvatarLarge').style.background = scenario.avatarColor;
+            
+            // Clear chat
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('analysisContainer').style.display = 'none';
+            
+            // Add initial message
+            addMessage(scenario.initialGreeting, 'ai');
+            
+            // Initialize chat session
+            try {
+                const model = geminiAI.getGenerativeModel({ 
+                    model: 'gemini-pro',
+                    generationConfig: {
+                        temperature: 0.8,
+                        maxOutputTokens: 300,
+                    }
+                });
+                
+                chatSession = model.startChat({
+                    history: [
+                        {
+                            role: "user",
+                            parts: [{ text: scenario.systemInstruction }],
+                        },
+                        {
+                            role: "model",
+                            parts: [{ text: scenario.initialGreeting }],
+                        }
+                    ]
+                });
+                
+                // Update coach message
+                updateCoachMessage(`You're now practicing with ${scenario.name}. I'm here to help!`);
+                
+            } catch (error) {
+                console.error('Chat init failed:', error);
+                addMessage('Error starting conversation. Please try again.', 'ai');
+            }
+        }
+
+        // Send message to persona
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !chatSession) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            autoResize(input);
+            document.getElementById('sendButton').disabled = true;
+            
+            // Show typing indicator
+            const typing = document.createElement('div');
+            typing.className = 'message ai';
+            typing.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            `;
+            document.getElementById('chatMessages').appendChild(typing);
+            
+            try {
+                // Get response
+                const result = await chatSession.sendMessage(message);
+                const response = result.response;
+                const text = response.text();
+                
+                // Remove typing indicator
+                typing.remove();
+                
+                // Add AI response
+                addMessage(text, 'ai');
+                
+                // Analyze conversation
+                analyzeConversation(message, text);
+                
+                // Get coach feedback
+                getCoachFeedback(message, text);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                typing.remove();
+                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+                document.getElementById('sendButton').disabled = false;
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                <p>${escapeHtml(text)}</p>
+                <span class="message-time">${time}</span>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Analyze conversation
+        async function analyzeConversation(userMsg, aiMsg) {
+            if (!currentScenario || !geminiAI) return;
+            
+            const prompt = `
+                Analyze this sales conversation:
+                
+                Scenario: ${currentScenario.description}
+                Salesperson: "${userMsg}"
+                Customer: "${aiMsg}"
+                
+                Provide analysis in this exact format:
+                Score: [0-100]
+                Emotion: [detected emotion]
+                Feedback: [one sentence]
+                Suggestion: [one tip]
+            `;
+            
+            try {
+                const model = geminiAI.getGenerativeModel({ model: 'gemini-pro' });
+                const result = await model.generateContent(prompt);
+                const response = result.response;
+                const text = response.text();
+                
+                // Parse response
+                const scoreMatch = text.match(/Score:\s*(\d+)/);
+                const emotionMatch = text.match(/Emotion:\s*([^\n]+)/);
+                const feedbackMatch = text.match(/Feedback:\s*([^\n]+)/);
+                const suggestionMatch = text.match(/Suggestion:\s*([^\n]+)/);
+                
+                // Update UI
+                const container = document.getElementById('analysisContainer');
+                const scoreDisplay = document.getElementById('scoreDisplay');
+                const scoreValue = document.getElementById('scoreValue');
+                const detectedEmotion = document.getElementById('detectedEmotion');
+                const feedbackText = document.getElementById('feedbackText');
+                const suggestionText = document.getElementById('suggestionText');
+                
+                if (scoreMatch) {
+                    const score = parseInt(scoreMatch[1]);
+                    scoreValue.textContent = score;
+                    scoreDisplay.style.background = score >= 80 ? '#d1fae5' : 
+                                                    score >= 60 ? '#fef3c7' : '#fee2e2';
+                    scoreDisplay.style.color = score >= 80 ? '#065f46' : 
+                                               score >= 60 ? '#92400e' : '#991b1b';
+                }
+                
+                if (emotionMatch) detectedEmotion.textContent = emotionMatch[1].trim();
+                if (feedbackMatch) feedbackText.textContent = feedbackMatch[1].trim();
+                if (suggestionMatch) suggestionText.textContent = `💡 ${suggestionMatch[1].trim()}`;
+                
+                container.style.display = 'block';
+                container.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Analysis failed:', error);
+            }
+        }
+
+        // Get coach feedback
+        async function getCoachFeedback(userMsg, aiMsg) {
+            if (!coachSession) return;
+            
+            const prompt = `Brief feedback for this exchange with ${currentScenario.name}:\n\nUser: "${userMsg}"\nCustomer: "${aiMsg}"\n\nGive one tip for improvement.`;
+            
+            try {
+                const result = await coachSession.sendMessage(prompt);
+                const response = result.response;
+                const text = response.text();
+                
+                updateCoachMessage(text);
+            } catch (error) {
+                console.error('Coach feedback failed:', error);
+            }
+        }
+
+        // Ask coach a question
+        async function askCoach() {
+            const input = document.getElementById('coachInput');
+            const question = input.value.trim();
+            
+            if (!question || !coachSession) return;
+            
+            // Add user question
+            addCoachMessage(question, 'user');
+            input.value = '';
+            
+            // Show typing indicator
+            const typing = document.createElement('div');
+            typing.className = 'coach-message';
+            typing.innerHTML = `
+                <div class="coach-avatar">🧠</div>
+                <div class="message-bubble">
+                    <div class="typing-indicator">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('coachChat').appendChild(typing);
+            
+            try {
+                const result = await coachSession.sendMessage(question);
+                const response = result.response;
+                const text = response.text();
+                
+                typing.remove();
+                addCoachMessage(text, 'coach');
+                
+            } catch (error) {
+                console.error('Coach error:', error);
+                typing.remove();
+                addCoachMessage('Sorry, I encountered an error. Please try again.', 'coach');
+            }
+        }
+
+        // Quick coach tips
+        function quickCoachTip(type) {
+            const questions = {
+                strategy: "What's the best strategy for dealing with this customer?",
+                objection: "How should I handle their main objection?",
+                question: "What question should I ask next?"
+            };
+            
+            if (questions[type]) {
+                document.getElementById('coachInput').value = questions[type];
+                askCoach();
+            }
+        }
+
+        // Add coach message
+        function addCoachMessage(text, sender) {
+            const container = document.getElementById('coachChat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'coach-message';
+            
+            const avatar = sender === 'coach' ? '🧠' : '👤';
+            const bgColor = sender === 'coach' ? '#f0f9ff' : '#f1f5f9';
+            const borderColor = sender === 'coach' ? '#0ea5e9' : '#94a3b8';
+            
+            messageDiv.innerHTML = `
+                <div class="coach-avatar">${avatar}</div>
+                <div class="message-bubble" style="background: ${bgColor}; border-left: 4px solid ${borderColor};">
+                    <p>${escapeHtml(text)}</p>
+                    <small style="color: var(--gray-500);">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function updateCoachMessage(text) {
+            const container = document.getElementById('coachChat');
+            // Remove existing messages except the first one
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
+            }
+            addCoachMessage(text, 'coach');
+        }
+
+        // UI Functions
+        function toggleCoachPanel() {
+            const panel = document.getElementById('coachPanel');
+            if (panel.style.display === 'flex') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'flex';
+                if (currentScenario) {
+                    updateCoachMessage(`I'm here to help you with ${currentScenario.name}. What do you need help with?`);
+                }
+            }
+        }
+
+        function showScenarios() {
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('coachPanel').style.display = 'none';
+            document.getElementById('scenarioSection').style.display = 'block';
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            document.getElementById('sendButton').disabled = !textarea.value.trim();
+        }
+
+        function insertTemplate(type) {
+            const templates = {
+                question: "That's a great point. Can you tell me more about your current process?",
+                value: "Based on what you've shared, our solution could save you approximately 15 hours per week by automating repetitive tasks.",
+                objection: "I understand your concern about [objection]. Many of our clients felt the same way initially, but they found that..."
+            };
+            
+            const input = document.getElementById('messageInput');
+            if (templates[type]) {
+                input.value = templates[type];
+                autoResize(input);
+                document.getElementById('sendButton').disabled = false;
+            }
+        }
+
+        // Utility Functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateLoadingText(text) {
+            document.getElementById('loadingText').textContent = text;
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('retryButton').style.display = 'inline-block';
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeApp);
+    </script>
 </body>
 </html>
