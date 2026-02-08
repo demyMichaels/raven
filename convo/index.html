@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atomic Chat — Component Architecture Demo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #faf9f7;
+      --bg-secondary: #f0eeeb;
+      --bg-tertiary: #e8e5e1;
+      --bg-card: #ffffff;
+      --text-primary: #1a1816;
+      --text-secondary: #5c5652;
+      --text-muted: #9c9590;
+      --accent: #e85d04;
+      --accent-soft: #fff0e6;
+      --accent-hover: #d45403;
+      --border: #e0dcd8;
+      --message-sent: #1a1816;
+      --message-sent-text: #ffffff;
+      --message-received: #f0eeeb;
+      --message-received-text: #1a1816;
+      --success: #2d9a5a;
+      --shadow-sm: 0 1px 2px rgba(26, 24, 22, 0.04);
+      --shadow-md: 0 4px 12px rgba(26, 24, 22, 0.08);
+      --shadow-lg: 0 12px 32px rgba(26, 24, 22, 0.12);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dark {
+      --bg-primary: #0f0e0d;
+      --bg-secondary: #1a1816;
+      --bg-tertiary: #252220;
+      --bg-card: #1f1d1b;
+      --text-primary: #f5f3f0;
+      --text-secondary: #a8a29e;
+      --text-muted: #6b6560;
+      --accent: #ff7b29;
+      --accent-soft: #2d1f14;
+      --accent-hover: #ff8f47;
+      --border: #2d2a27;
+      --message-sent: #ff7b29;
+      --message-sent-text: #0f0e0d;
+      --message-received: #252220;
+      --message-received-text: #f5f3f0;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LAYOUT — AppLayout.tsx
+       ═══════════════════════════════════════════════════════════════ */
+    .app-layout {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ORGANISM — ChatSidebar.tsx
+       ═══════════════════════════════════════════════════════════════ */
+    .chat-sidebar {
+      width: 320px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: transform var(--transition), opacity var(--transition);
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .brand-text {
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      margin-left: auto;
+    }
+
+    /* MOLECULE — IconButton.tsx */
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .icon-button:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .icon-button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .icon-button.primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .new-chat-btn {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all var(--transition);
+    }
+
+    .new-chat-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      margin-top: 8px;
+    }
+
+    /* MOLECULE — SidebarItem.tsx */
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+      margin-bottom: 4px;
+    }
+
+    .sidebar-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .sidebar-item.active {
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar-item-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .sidebar-item-avatar.online::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      background: var(--success);
+      border: 2px solid var(--bg-secondary);
+      border-radius: 50%;
+    }
+
+    .sidebar-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-item-title {
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-item-preview {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-item-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .sidebar-item-time {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-item-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      background: var(--accent);
+      border-radius: var(--radius-full);
+      margin-top: 4px;
+    }
+
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .user-profile:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--accent) 0%, #f97316 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .user-status {
+      font-size: 12px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .user-status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--success);
+      border-radius: 50%;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       TEMPLATE — ChatTemplate.tsx
+       ═══════════════════════════════════════════════════════════════ */
+    .chat-template {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-primary);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    .chat-header-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .chat-header-text h2 {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .chat-header-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--success);
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 2px;
+    }
+
+    .typing-dots span {
+      width: 4px;
+      height: 4px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-4px); }
+    }
+
+    .chat-header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ORGANISM — ChatMessageList.tsx
+       ═══════════════════════════════════════════════════════════════ */
+    .chat-message-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message-date-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 0;
+    }
+
+    .message-date-divider::before,
+    .message-date-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .message-date-divider span {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* MOLECULE — MessageBubble.tsx */
+    .message-group {
+      display: flex;
+      gap: 12px;
+      max-width: 75%;
+      animation: messageIn 0.3s ease-out;
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message-group.sent {
+      margin-left: auto;
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      flex-shrink: 0;
+      align-self: flex-end;
+    }
+
+    .message-group.sent .message-avatar {
+      background: linear-gradient(135deg, var(--accent) 0%, #f97316 100%);
+    }
+
+    .message-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .message-bubble {
+      padding: 12px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      line-height: 1.5;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .message-group:not(.sent) .message-bubble {
+      background: var(--message-received);
+      color: var(--message-received-text);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+
+    .message-group.sent .message-bubble {
+      background: var(--message-sent);
+      color: var(--message-sent-text);
+      border-bottom-right-radius: var(--radius-sm);
+    }
+
+    .message-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 0 4px;
+    }
+
+    .message-group.sent .message-meta {
+      justify-content: flex-end;
+    }
+
+    .message-status {
+      color: var(--success);
+    }
+
+    .message-reactions {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .reaction-badge {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .reaction-badge:hover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       ORGANISM — ChatInputBar.tsx
+       ═══════════════════════════════════════════════════════════════ */
+    .chat-input-bar {
+      padding: 16px 24px 24px;
+      background: var(--bg-primary);
+    }
+
+    .input-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 8px;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .input-container:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .input-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .input-actions .icon-button {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+    }
+
+    .input-field {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--text-primary);
+      resize: none;
+      min-height: 40px;
+      max-height: 120px;
+      padding: 8px 4px;
+      line-height: 1.5;
+    }
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .input-field:focus {
+      outline: none;
+    }
+
+    .send-button {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .send-button:hover {
+      background: var(--accent-hover);
+      transform: scale(1.05);
+    }
+
+    .send-button:active {
+      transform: scale(0.95);
+    }
+
+    .send-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       COMPONENT LABELS (Demo overlay)
+       ═══════════════════════════════════════════════════════════════ */
+    .component-label {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      padding: 3px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity var(--transition);
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    .label-molecule { background: #dbeafe; color: #1d4ed8; }
+    .label-organism { background: #dcfce7; color: #15803d; }
+    .label-template { background: #fef3c7; color: #b45309; }
+    .label-layout { background: #f3e8ff; color: #7c3aed; }
+
+    .dark .label-molecule { background: #1e3a5f; color: #60a5fa; }
+    .dark .label-organism { background: #14532d; color: #4ade80; }
+    .dark .label-template { background: #451a03; color: #fbbf24; }
+    .dark .label-layout { background: #3b0764; color: #c084fc; }
+
+    .show-labels .component-label {
+      opacity: 1;
+    }
+
+    .show-labels [data-component] {
+      outline: 2px dashed var(--accent);
+      outline-offset: 2px;
+    }
+
+    .labeled-container {
+      position: relative;
+    }
+
+    /* Toggle button */
+    .label-toggle {
+      position: fixed;
+      bottom: 100px;
+      right: 20px;
+      padding: 10px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: var(--shadow-lg);
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .label-toggle:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .label-toggle .toggle-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background var(--transition);
+    }
+
+    .show-labels .label-toggle .toggle-indicator {
+      background: var(--success);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ���══════════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .chat-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+        width: 85%;
+        max-width: 320px;
+      }
+
+      .chat-sidebar.open {
+        transform: translateX(0);
+        box-shadow: var(--shadow-lg);
+      }
+
+      .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--transition);
+      }
+
+      .sidebar-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .mobile-menu-btn {
+        display: flex;
+      }
+
+      .message-group {
+        max-width: 85%;
+      }
+
+      .chat-header {
+        padding: 12px 16px;
+      }
+
+      .chat-message-list {
+        padding: 16px;
+      }
+
+      .chat-input-bar {
+        padding: 12px 16px 20px;
+      }
+
+      .label-toggle {
+        bottom: 90px;
+        right: 12px;
+        padding: 8px 12px;
+        font-size: 11px;
+      }
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- LAYOUT — AppLayout.tsx -->
+  <div class="app-layout labeled-container" data-component="layout">
+    <span class="component-label label-layout">layouts/AppLayout.tsx</span>
+
+    <!-- ORGANISM — ChatSidebar.tsx -->
+    <aside class="chat-sidebar labeled-container" id="sidebar" data-component="organism">
+      <span class="component-label label-organism">organisms/ChatSidebar.tsx</span>
+
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="brand-icon">A</div>
+          <span class="brand-text">Atomic Chat</span>
+          <span class="brand-badge">v2.0</span>
+        </div>
+        <button class="new-chat-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          New Conversation
+        </button>
+      </div>
+
+      <div class="sidebar-content">
+        <div class="sidebar-section-title">Today</div>
+
+        <!-- MOLECULE — SidebarItem.tsx -->
+        <div class="sidebar-item active labeled-container" data-component="molecule">
+          <span class="component-label label-molecule">molecules/SidebarItem.tsx</span>
+          <div class="sidebar-item-avatar">AI</div>
+          <div class="sidebar-item-content">
+            <div class="sidebar-item-title">Design System Chat</div>
+            <div class="sidebar-item-preview">Component architecture overview...</div>
+          </div>
+          <div class="sidebar-item-meta">
+            <div class="sidebar-item-time">Now</div>
+          </div>
+        </div>
+
+        <div class="sidebar-item labeled-container" data-component="molecule">
+          <div class="sidebar-item-avatar">EK</div>
+          <div class="sidebar-item-content">
+            <div class="sidebar-item-title">Emma & Team</div>
+            <div class="sidebar-item-preview">The sprint review is scheduled for...</div>
+          </div>
+          <div class="sidebar-item-meta">
+            <div class="sidebar-item-time">2:45 PM</div>
+            <div class="sidebar-item-badge">3</div>
+          </div>
+        </div>
+
+        <div class="sidebar-section-title">Yesterday</div>
+
+        <div class="sidebar-item labeled-container" data-component="molecule">
+          <div class="sidebar-item-avatar">MP</div>
+          <div class="sidebar-item-content">
+            <div class="sidebar-item-title">Mike Peterson</div>
+            <div class="sidebar-item-preview">Thanks for the code review!</div>
+          </div>
+          <div class="sidebar-item-meta">
+            <div class="sidebar-item-time">Yesterday</div>
+          </div>
+        </div>
+
+        <div class="sidebar-item labeled-container" data-component="molecule">
+          <div class="sidebar-item-avatar">JD</div>
+          <div class="sidebar-item-content">
+            <div class="sidebar-item-title">Julia Davis</div>
+            <div class="sidebar-item-preview">The new designs look amazing!</div>
+          </div>
+          <div class="sidebar-item-meta">
+            <div class="sidebar-item-time">Yesterday</div>
+          </div>
+        </div>
+
+        <div class="sidebar-section-title">This Week</div>
+
+        <div class="sidebar-item labeled-container" data-component="molecule">
+          <div class="sidebar-item-avatar">TS</div>
+          <div class="sidebar-item-content">
+            <div class="sidebar-item-title">Tech Support</div>
+            <div class="sidebar-item-preview">Your ticket has been resolved</div>
+          </div>
+          <div class="sidebar-item-meta">
+            <div class="sidebar-item-time">Mon</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">YO</div>
+          <div class="user-info">
+            <div class="user-name">Your Name</div>
+            <div class="user-status">Online</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);">
+            <circle cx="12" cy="12" r="1"></circle>
+            <circle cx="19" cy="12" r="1"></circle>
+            <circle cx="5" cy="12" r="1"></circle>
+          </svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- TEMPLATE — ChatTemplate.tsx -->
+    <main class="chat-template labeled-container" data-component="template">
+      <span class="component-label label-template">templates/ChatTemplate.tsx</span>
+
+      <header class="chat-header">
+        <!-- MOLECULE — IconButton.tsx (mobile menu) -->
+        <button class="icon-button mobile-menu-btn labeled-container" id="menuBtn" data-component="molecule">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        <div class="chat-header-info">
+          <div class="chat-header-avatar">AI</div>
+          <div class="chat-header-text">
+            <h2>Design System Chat</h2>
+            <p class="typing-indicator">
+              <span class="typing-dots">
+                <span></span><span></span><span></span>
+              </span>
+              AI is typing...
+            </p>
+          </div>
+        </div>
+
+        <div class="chat-header-actions">
+          <!-- MOLECULE — IconButton.tsx -->
+          <button class="icon-button labeled-container" data-component="molecule">
+            <span class="component-label label-molecule">molecules/IconButton.tsx</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94m-1 7.98v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+          </button>
+          <button class="icon-button labeled-container" data-component="molecule">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+          </button>
+          <button class="icon-button labeled-container" data-component="molecule">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ORGANISM — ChatMessageList.tsx -->
+      <div class="chat-message-list labeled-container" id="messageList" data-component="organism">
+        <span class="component-label label-organism">organisms/ChatMessageList.tsx</span>
+
+        <div class="message-date-divider">
+          <span>Today</span>
+        </div>
+
+        <!-- MOLECULE — MessageBubble.tsx (received) -->
+        <div class="message-group labeled-container" data-component="molecule">
+          <span class="component-label label-molecule">molecules/MessageBubble.tsx</span>
+          <div class="message-avatar">AI</div>
+          <div class="message-content">
+            <div class="message-bubble">
+              Hey! 👋 I see you're interested in learning about Atomic Design component architecture. This pattern is incredibly powerful for building scalable React applications!
+            </div>
+            <div class="message-meta">
+              <span>10:30 AM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MOLECULE — MessageBubble.tsx (sent) -->
+        <div class="message-group sent labeled-container" data-component="molecule">
+          <div class="message-avatar">YO</div>
+          <div class="message-content">
+            <div class="message-bubble">
+              Yes! Can you explain how atoms, molecules, and organisms work together?
+            </div>
+            <div class="message-meta">
+              <span>10:32 AM</span>
+              <span class="message-status">✓✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-group labeled-container" data-component="molecule">
+          <div class="message-avatar">AI</div>
+          <div class="message-content">
+            <div class="message-bubble">
+              Great question! Here's the hierarchy:
+              <br><br>
+              <strong>🔹 Atoms</strong> – Basic building blocks like buttons, inputs, labels
+              <br><br>
+              <strong>🔸 Molecules</strong> – Simple combinations of atoms (like this MessageBubble, SidebarItem, or IconButton)
+              <br><br>
+              <strong>🟢 Organisms</strong> – Complex UI sections made of molecules (like ChatMessageList, ChatInputBar, ChatSidebar)
+              <br><br>
+              <strong>📄 Templates</strong> – Page-level layouts that arrange organisms
+              <br><br>
+              <strong>📱 Pages</strong> – Specific instances with real content
+            </div>
+            <div class="message-meta">
+              <span>10:33 AM</span>
+            </div>
+            <div class="message-reactions">
+              <div class="reaction-badge">👍 2</div>
+              <div class="reaction-badge">💡 1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-group sent labeled-container" data-component="molecule">
+          <div class="message-avatar">YO</div>
+          <div class="message-content">
+            <div class="message-bubble">
+              This is really helpful! I love how visual this explanation is 🎨
+            </div>
+            <div class="message-meta">
+              <span>10:35 AM</span>
+              <span class="message-status">✓✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-group labeled-container" data-component="molecule">
+          <div class="message-avatar">AI</div>
+          <div class="message-content">
+            <div class="message-bubble">
+              Try clicking the <strong>"Show Components"</strong> button in the bottom right! It will highlight all the components and show their file paths based on your architecture. 🔍
+            </div>
+            <div class="message-meta">
+              <span>Just now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORGANISM — ChatInputBar.tsx -->
+      <div class="chat-input-bar labeled-container" data-component="organism">
+        <span class="component-label label-organism">organisms/ChatInputBar.tsx</span>
+
+        <div class="input-container">
+          <div class="input-actions">
+            <button class="icon-button labeled-container" data-component="molecule">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+              </svg>
+            </button>
+            <button class="icon-button labeled-container" data-component="molecule">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+              </svg>
+            </button>
+          </div>
+
+          <textarea
+            class="input-field"
+            id="messageInput"
+            placeholder="Type your message..."
+            rows="1"
+          ></textarea>
+
+          <button class="send-button" id="sendBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Component Label Toggle -->
+  <button class="label-toggle" id="labelToggle">
+    <span class="toggle-indicator"></span>
+    Show Components
+  </button>
+
+  <script>
+    // Dark mode detection
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+      if (event.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    });
+
+    // Component label toggle
+    const labelToggle = document.getElementById('labelToggle');
+    const appLayout = document.querySelector('.app-layout');
+
+    labelToggle.addEventListener('click', () => {
+      appLayout.classList.toggle('show-labels');
+      const isShowing = appLayout.classList.contains('show-labels');
+      labelToggle.innerHTML = `
+        <span class="toggle-indicator"></span>
+        ${isShowing ? 'Hide Components' : 'Show Components'}
+      `;
+    });
+
+    // Mobile sidebar toggle
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      sidebarOverlay.classList.add('visible');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('visible');
+    });
+
+    // Auto-resize textarea
+    const messageInput = document.getElementById('messageInput');
+    messageInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Send message functionality
+    const sendBtn = document.getElementById('sendBtn');
+    const messageList = document.getElementById('messageList');
+
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      const messageGroup = document.createElement('div');
+      messageGroup.className = 'message-group sent';
+      messageGroup.innerHTML = `
+        <div class="message-avatar">YO</div>
+        <div class="message-content">
+          <div class="message-bubble">${escapeHtml(text)}</div>
+          <div class="message-meta">
+            <span>Just now</span>
+            <span class="message-status">✓</span>
+          </div>
+        </div>
+      `;
+      messageList.appendChild(messageGroup);
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+      messageList.scrollTop = messageList.scrollHeight;
+
+      // Simulate read receipt
+      setTimeout(() => {
+        const status = messageGroup.querySelector('.message-status');
+        if (status) status.textContent = '✓✓';
+      }, 1000);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Scroll to bottom on load
+    messageList.scrollTop = messageList.scrollHeight;
+
+    // Sidebar item click handlers
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        if (window.innerWidth <= 768) {
+          sidebar.classList.remove('open');
+          sidebarOverlay.classList.remove('visible');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+
