@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Power of Electrons: Electrolysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Pro:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #1a2236;
+  --bg-card-alt: #162032;
+  --text-primary: #e8ecf4;
+  --text-secondary: #9ca8c4;
+  --text-muted: #6b7a9a;
+  --accent-cyan: #00e5ff;
+  --accent-yellow: #ffd740;
+  --accent-red: #ff5252;
+  --accent-green: #69f0ae;
+  --accent-purple: #b388ff;
+  --accent-orange: #ffab40;
+  --border-color: rgba(0,229,255,0.15);
+  --glow-cyan: 0 0 20px rgba(0,229,255,0.3);
+  --glow-yellow: 0 0 20px rgba(255,215,64,0.3);
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.4);
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Crimson Pro', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html.light {
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f7fafc;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --accent-cyan: #0077b6;
+  --accent-yellow: #d69e2e;
+  --accent-red: #c53030;
+  --accent-green: #2f855a;
+  --accent-purple: #6b46c1;
+  --accent-orange: #c05621;
+  --border-color: rgba(0,119,182,0.2);
+  --glow-cyan: 0 0 12px rgba(0,119,182,0.15);
+  --glow-yellow: 0 0 12px rgba(214,158,46,0.15);
+  --shadow-card: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-size: 17px;
+  overflow-x: hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 3px; }
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  overflow: hidden;
+}
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+}
+.hero-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan);
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  animation: fadeSlideUp 0.8s ease-out 0.2s both;
+}
+.hero h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 0.8rem;
+  animation: fadeSlideUp 0.8s ease-out 0.4s both;
+}
+.hero h1 .highlight {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero .subtitle {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  animation: fadeSlideUp 0.8s ease-out 0.6s both;
+}
+.hero .cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: linear-gradient(135deg, var(--accent-cyan), #0091ea);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.85rem 2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: fadeSlideUp 0.8s ease-out 0.8s both;
+}
+html.light .hero .cta-btn { color: #fff; }
+.hero .cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-cyan);
+}
+
+/* ── SPARK ANIMATION ── */
+@keyframes spark {
+  0% { opacity:0; transform: translate(-50%,-50%) scale(0); }
+  50% { opacity:1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity:0; transform: translate(-50%,-50%) scale(0.5); }
+}
+.spark {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: spark 1.5s ease-out infinite;
+  box-shadow: 0 0 8px var(--accent-cyan);
+}
+
+/* ── NAV ── */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0;
+  backdrop-filter: blur(10px);
+}
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  gap: 0;
+}
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-btn {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  padding: 0.9rem 1.1rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-btn:hover, .nav-btn.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+}
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem;
+}
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin-bottom: 0.5rem;
+}
+.section h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+.section p, .section li {
+  color: var(--text-secondary);
+  margin-bottom: 0.8rem;
+}
+.section ul { list-style: none; padding: 0; }
+.section li::before {
+  content: '⚡';
+  margin-right: 0.5rem;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.3s;
+}
+.card:hover { border-color: var(--accent-cyan); }
+.card h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  margin-bottom: 0.6rem;
+  color: var(--text-primary);
+}
+.card h3 .icon { margin-right: 0.5rem; }
+
+/* ── OBJECTIVES ── */
+.objectives-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.obj-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.obj-card:hover { transform: translateY(-3px); border-color: var(--accent-cyan); }
+.obj-num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0,229,255,0.1);
+  color: var(--accent-cyan);
+  flex-shrink: 0;
+}
+.obj-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* ── ELECTROLYTIC CELL SIM ── */
+.cell-sim-wrap {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 2rem 0;
+}
+.cell-sim-canvas {
+  width: 100%;
+  display: block;
+}
+.cell-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card-alt);
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+}
+.cell-controls label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+.cell-controls select, .cell-controls button {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.cell-controls button {
+  background: linear-gradient(135deg, var(--accent-cyan), #0091ea);
+  color: #fff;
+  border: none;
+  font-weight: 500;
+}
+html.light .cell-controls button { color: #fff; }
+.cell-controls button:hover { box-shadow: var(--glow-cyan); }
+
+/* ── ELECTROCHEM SERIES ── */
+.series-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 1.5rem 0;
+}
+.series-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 100px;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  cursor: default;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.92rem;
+}
+.series-row:hover {
+  background: rgba(0,229,255,0.05);
+  border-left-color: var(--accent-cyan);
+}
+.series-row .symbol {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.series-row .name { color: var(--text-secondary); }
+.series-row .potential {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-align: right;
+}
+.series-row.highlight-row {
+  background: rgba(0,229,255,0.08);
+  border-left-color: var(--accent-yellow);
+}
+.reactivity-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  gap: 0.5rem;
+}
+.reactivity-arrow .arrow-line {
+  width: 2px;
+  height: 30px;
+  background: linear-gradient(to bottom, var(--accent-red), var(--accent-green));
+}
+
+/* ── CASE STUDIES ── */
+.case-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.case-tab {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.case-tab:hover, .case-tab.active {
+  background: rgba(0,229,255,0.1);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+.case-content { display: none; }
+.case-content.active { display: block; }
+.half-eq {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--accent-cyan);
+  padding: 0.6rem 1rem;
+  margin: 0.6rem 0;
+  border-radius: 0 6px 6px 0;
+  color: var(--text-primary);
+  overflow-x: auto;
+}
+.half-eq.anode-eq { border-left-color: var(--accent-red); }
+.half-eq.cathode-eq { border-left-color: var(--accent-green); }
+.electrode-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 0.8rem;
+  margin-bottom: 0.2rem;
+}
+.electrode-label.anode { color: var(--accent-red); }
+.electrode-label.cathode { color: var(--accent-green); }
+
+/* ── FARADAY CALCULATOR ── */
+.calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+@media (max-width: 600px) { .calc-grid { grid-template-columns: 1fr; } }
+.calc-field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+.calc-field input, .calc-field select {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.calc-field input:focus, .calc-field select:focus {
+  border-color: var(--accent-cyan);
+}
+.calc-btn {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange));
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.calc-btn:hover { transform: translateY(-1px); box-shadow: var(--glow-yellow); }
+.calc-result {
+  grid-column: 1 / -1;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  display: none;
+}
+.calc-result .val {
+  color: var(--accent-cyan);
+  font-weight: 500;
+}
+
+/* ── GALVANIC CELL ── */
+.galvanic-canvas-wrap {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 2rem 0;
+}
+.galvanic-canvas { width: 100%; display: block; }
+.galvanic-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card-alt);
+  border-top: 1px solid var(--border-color);
+  align-items: center;
+}
+.galvanic-controls label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.galvanic-controls select {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+.emf-display {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--accent-yellow);
+  margin-left: auto;
+}
+.emf-display .emf-val { font-weight: 500; }
+
+/* ── CORROSION ── */
+.corrosion-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.method-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.3rem;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.method-card:hover { transform: translateY(-3px); border-color: var(--accent-cyan); }
+.method-icon {
+  font-size: 2rem;
+  margin-bottom: 0.8rem;
+}
+.method-card h4 {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+.method-card p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* ── CONCLUSION ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.summary-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 1.2rem;
+  text-align: center;
+}
+.summary-stat .big-num {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--accent-cyan);
+}
+.summary-stat .stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 0.3rem;
+}
+
+/* ── CUSTOM MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.visible { opacity: 1; pointer-events: auto; }
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+.modal-box h3 { font-family: var(--font-heading); margin-bottom: 0.8rem; }
+.modal-box p { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
+.modal-box button {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.6rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: var(--accent-cyan);
+  color: #fff;
+}
+html.light .modal-box button { color: #fff; }
+
+/* ── DISCHARGE FACTOR PILLS ── */
+.factor-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.factor-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  transition: border-color 0.2s;
+}
+.factor-pill:hover { border-color: var(--accent-cyan); }
+.factor-pill .pill-icon { color: var(--accent-yellow); }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--accent-cyan); }
+  50% { box-shadow: 0 0 20px var(--accent-cyan); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .section { padding: 2.5rem 1rem; }
+  .hero { padding: 1.5rem 1rem; }
+  .nav-btn { padding: 0.7rem 0.8rem; font-size: 0.68rem; }
+  .cell-controls { padding: 0.8rem; }
+  .galvanic-controls { padding: 0.8rem; }
+  .series-row { grid-template-columns: 40px 1fr 70px; font-size: 0.82rem; padding: 0.5rem 0.6rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero" id="hero">
+  <canvas class="hero-canvas" id="heroCanvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">Senior High School Chemistry</div>
+    <h1>The Power of <span class="highlight">Electrons</span></h1>
+    <p class="subtitle">A Comprehensive &amp; Interactive Guide to Electrolysis — from ion migration to Faraday's calculations, electrode potentials, and corrosion prevention.</p>
+    <a class="cta-btn" href="#objectives">
+      <i class="fas fa-bolt"></i> Begin Learning
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav class="nav-bar" id="navBar">
+  <div class="nav-inner">
+    <button class="nav-btn active" data-target="objectives">Objectives</button>
+    <button class="nav-btn" data-target="mechanism">Mechanism</button>
+    <button class="nav-btn" data-target="series">EC Series</button>
+    <button class="nav-btn" data-target="cases">Case Studies</button>
+    <button class="nav-btn" data-target="faraday">Faraday's Laws</button>
+    <button class="nav-btn" data-target="galvanic">Galvanic Cells</button>
+    <button class="nav-btn" data-target="corrosion">Corrosion</button>
+    <button class="nav-btn" data-target="conclusion">Summary</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ 1. OBJECTIVES ═══════════════ -->
+<section class="section" id="objectives">
+  <div class="section-label">Part 01</div>
+  <h2>Learning Objectives</h2>
+  <p>By the end of this lesson, you will be able to:</p>
+  <div class="objectives-grid">
+    <div class="obj-card"><div class="obj-num">1</div><div class="obj-text">Distinguish between electrolytes and non-electrolytes</div></div>
+    <div class="obj-card"><div class="obj-num">2</div><div class="obj-text">Perform advanced calculations using Faraday's Laws</div></div>
+    <div class="obj-card"><div class="obj-num">3</div><div class="obj-text">Identify suitable electrodes and predict products of electrolysis</div></div>
+    <div class="obj-card"><div class="obj-num">4</div><div class="obj-text">Understand factors affecting ion discharge</div></div>
+    <div class="obj-card"><div class="obj-num">5</div><div class="obj-text">Apply the electrochemical series and cell potentials</div></div>
+    <div class="obj-card"><div class="obj-num">6</div><div class="obj-text">Understand corrosion and methods of prevention</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════ 2. MECHANISM ═══════════════ -->
+<section class="section" id="mechanism">
+  <div class="section-label">Part 02</div>
+  <h2>Electrolytes &amp; the Mechanism</h2>
+
+  <div class="card">
+    <h3><span class="icon">🧪</span> Electrolytes vs Non-electrolytes</h3>
+    <p><strong>Electrolytes</strong> are substances that, when molten or in aqueous solution, conduct electricity and are decomposed by it.</p>
+    <ul>
+      <li><strong>Strong electrolytes</strong> — e.g. Sodium Formate (HCOONa), NaOH — dissociate completely into ions.</li>
+      <li><strong>Non-electrolytes</strong> — e.g. ethanol, glucose, ethyl acetate — do not form ions and cannot conduct.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">🔋</span> The Electrolytic Cell — An-Ox &amp; Red-Cat</h3>
+    <p>Remember the mnemonic: <strong style="color:var(--accent-red)">An-Ox</strong> (Anode → Oxidation) and <strong style="color:var(--accent-green)">Red-Cat</strong> (Reduction → Cathode).</p>
+    <ul>
+      <li><strong style="color:var(--accent-red)">Anode (+)</strong> — Oxidation: anions lose electrons.</li>
+      <li><strong style="color:var(--accent-green)">Cathode (−)</strong> — Reduction: cations gain electrons.</li>
+    </ul>
+  </div>
+
+  <!-- Interactive Cell Simulation -->
+  <h3 style="margin-top:2rem; font-family:var(--font-heading);">Interactive Simulation</h3>
+  <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem;">Watch ions migrate under an electric field. Choose an electrolyte and toggle the current.</p>
+  <div class="cell-sim-wrap">
+    <canvas class="cell-sim-canvas" id="cellCanvas" height="360"></canvas>
+    <div class="cell-controls">
+      <div>
+        <label>Electrolyte</label><br>
+        <select id="electrolyteSelect">
+          <option value="NaCl">Molten NaCl</option>
+          <option value="CuSO4">CuSO₄ (aq)</option>
+          <option value="H2SO4">Dilute H₂SO₄</option>
+          <option value="NaOH">NaOH (aq)</option>
+        </select>
+      </div>
+      <div>
+        <label>Electrodes</label><br>
+        <select id="electrodeSelect">
+          <option value="inert">Platinum (Inert)</option>
+          <option value="copper">Copper (Active)</option>
+          <option value="graphite">Graphite (Inert)</option>
+        </select>
+      </div>
+      <button id="toggleCurrentBtn"><i class="fas fa-power-off"></i> Toggle Current</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 3. ELECTROCHEMICAL SERIES ═══════════════ -->
+<section class="section" id="series">
+  <div class="section-label">Part 03</div>
+  <h2>The Electrochemical Series</h2>
+  <p>Ions <strong>lower</strong> in the series (less reactive) are discharged more easily. Note that Mg is above Al — a common exam trap!</p>
+
+  <div class="reactivity-arrow">
+    <span style="color:var(--accent-red);">Most Reactive</span>
+    <div class="arrow-line"></div>
+    <span style="color:var(--accent-green);">Least Reactive</span>
+  </div>
+
+  <div class="series-container" id="seriesContainer"></div>
+
+  <h3 style="margin-top:2rem; font-family:var(--font-heading);">Factors Affecting Discharge</h3>
+  <div class="factor-pills">
+    <div class="factor-pill"><span class="pill-icon"><i class="fas fa-list-ol"></i></span> Position in Series</div>
+    <div class="factor-pill"><span class="pill-icon"><i class="fas fa-flask"></i></span> Concentration of Ions</div>
+    <div class="factor-pill"><span class="pill-icon"><i class="fas fa-plug"></i></span> Nature of Electrodes</div>
+  </div>
+  <div class="card" style="margin-top:1rem;">
+    <p><strong>Position:</strong> Ions lower in the series are preferentially discharged — they require less energy to reduce/oxidize.</p>
+    <p><strong>Concentration:</strong> A very high concentration of an ion can override series position. e.g. concentrated NaCl produces Cl₂ instead of O₂ at the anode.</p>
+    <p><strong>Electrode Nature:</strong> Inert electrodes (Pt, graphite) don't participate. Active electrodes (Cu) dissolve or deposit, altering products.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ 4. CASE STUDIES ═══════════════ -->
+<section class="section" id="cases">
+  <div class="section-label">Part 04</div>
+  <h2>Case Studies in Electrolysis</h2>
+  <p>Select a case to explore the products and half-equations at each electrode.</p>
+
+  <div class="case-tabs">
+    <button class="case-tab active" data-case="fused-nacl">Fused NaCl</button>
+    <button class="case-tab" data-case="dil-h2so4">Dil. H₂SO₄</button>
+    <button class="case-tab" data-case="naoh">NaOH (aq)</button>
+    <button class="case-tab" data-case="aq-nacl">Aq. NaCl</button>
+    <button class="case-tab" data-case="cuso4-inert">CuSO₄ (Pt)</button>
+    <button class="case-tab" data-case="cuso4-cu">CuSO₄ (Cu)</button>
+  </div>
+
+  <!-- Fused NaCl -->
+  <div class="case-content active" id="case-fused-nacl">
+    <div class="card">
+      <h3>Fused (Molten) NaCl</h3>
+      <p>Only Na⁺ and Cl⁻ ions present — no water competition.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">2Cl⁻ → Cl₂(g) + 2e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">Na⁺ + e⁻ → Na(l)</div>
+      <p style="margin-top:0.8rem;">Products: <strong>Chlorine gas</strong> at anode, <strong>Sodium metal</strong> at cathode.</p>
+    </div>
+  </div>
+
+  <!-- Dil H2SO4 -->
+  <div class="case-content" id="case-dil-h2so4">
+    <div class="card">
+      <h3>Dilute Sulfuric Acid (H₂SO₄) — Pt Electrodes</h3>
+      <p>Ions present: H⁺, SO₄²⁻, H₂O (→ H⁺ + OH⁻). Water is effectively electrolyzed.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">4OH⁻ → 2H₂O + O₂(g) + 4e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">2H⁺ + 2e⁻ → H₂(g)</div>
+      <p style="margin-top:0.8rem;">Products: <strong>Oxygen gas</strong> at anode, <strong>Hydrogen gas</strong> at cathode. Volume ratio H₂:O₂ = 2:1.</p>
+    </div>
+  </div>
+
+  <!-- NaOH -->
+  <div class="case-content" id="case-naoh">
+    <div class="card">
+      <h3>Sodium Hydroxide (NaOH) Solution — Pt Electrodes</h3>
+      <p>Ions present: Na⁺, OH⁻, H₂O. Na⁺ is too high in the series to discharge.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">4OH⁻ → 2H₂O + O₂(g) + 4e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">2H₂O + 2e⁻ → H₂(g) + 2OH⁻</div>
+      <p style="margin-top:0.8rem;">Products: <strong>O₂</strong> at anode, <strong>H₂</strong> at cathode. NaOH concentration <strong>increases</strong> near the cathode.</p>
+    </div>
+  </div>
+
+  <!-- Aq NaCl -->
+  <div class="case-content" id="case-aq-nacl">
+    <div class="card">
+      <h3>Aqueous NaCl — The Stirring Effect</h3>
+      <p>Cold, stirred NaCl solution with graphite/iron electrodes. Cl₂ reacts with OH⁻ in solution.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">2Cl⁻ → Cl₂(g) + 2e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">2H₂O + 2e⁻ → H₂(g) + 2OH⁻</div>
+      <p style="margin-top:0.8rem;">When stirred: Cl₂ + 2NaOH → <strong>NaOCl</strong> (sodium hypochlorite) + NaCl + H₂O — the basis of bleach production!</p>
+    </div>
+  </div>
+
+  <!-- CuSO4 Pt -->
+  <div class="case-content" id="case-cuso4-inert">
+    <div class="card">
+      <h3>CuSO₄ with Platinum (Inert) Electrodes</h3>
+      <p>Ions present: Cu²⁺, SO₄²⁻, H⁺, OH⁻. Cu²⁺ is lower in the series than H⁺.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">4OH⁻ → 2H₂O + O₂(g) + 4e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">Cu²⁺ + 2e⁻ → Cu(s)</div>
+      <p style="margin-top:0.8rem;">As OH⁻ depletes, H⁺ accumulates → solution becomes <strong>acidic</strong>. Litmus at anode turns <strong style="color:var(--accent-red)">red</strong>. Blue colour fades as Cu²⁺ is removed.</p>
+    </div>
+  </div>
+
+  <!-- CuSO4 Cu -->
+  <div class="case-content" id="case-cuso4-cu">
+    <div class="card">
+      <h3>CuSO₄ with Copper (Active) Electrodes</h3>
+      <p>Used for <strong>copper purification</strong>. The anode dissolves; the cathode grows.</p>
+      <div class="electrode-label anode">Anode (+) — Oxidation</div>
+      <div class="half-eq anode-eq">Cu(s) → Cu²⁺(aq) + 2e⁻</div>
+      <div class="electrode-label cathode">Cathode (−) — Reduction</div>
+      <div class="half-eq cathode-eq">Cu²⁺(aq) + 2e⁻ → Cu(s)</div>
+      <p style="margin-top:0.8rem;">Cu²⁺ concentration stays <strong>constant</strong>. Impurities from the impure anode collect as "<strong>anode mud</strong>." This is how >99.99% pure copper is produced industrially.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 5. FARADAY'S LAWS ═══════════════ -->
+<section class="section" id="faraday">
+  <div class="section-label">Part 05</div>
+  <h2>Faraday's Laws &amp; Calculations</h2>
+
+  <div class="card">
+    <h3><span class="icon">📐</span> Key Relationships</h3>
+    <div class="half-eq" style="border-left-color:var(--accent-yellow);">Q = I × t &nbsp;&nbsp;|&nbsp;&nbsp; 1 Faraday = 96,500 C = 1 mol of electrons</div>
+    <p style="margin-top:0.8rem;"><strong>First Law:</strong> Mass deposited ∝ quantity of electricity (Q) passed.</p>
+    <p><strong>Second Law:</strong> When the same Q passes through different electrolytes, masses deposited are proportional to their equivalent weights.</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">✏️</span> Worked Example 1</h3>
+    <p><em>How many Coulombs to discharge 2 moles of Pb from PbCl₂?</em></p>
+    <p>Pb²⁺ needs 2 mol e⁻ per mol Pb. For 2 mol Pb → 4 mol e⁻.</p>
+    <div class="half-eq" style="border-left-color:var(--accent-yellow);">Q = 4 × 96,500 = <strong>386,000 C</strong></div>
+  </div>
+
+  <div class="card">
+    <h3><span class="icon">✏️</span> Worked Example 2</h3>
+    <p><em>A current liberates 3.6g of Ag (Ag⁺). What mass of Al (Al³⁺) is liberated by the same charge?</em></p>
+    <p>Mol of Ag = 3.6 / 108 = 0.0333 mol → 0.0333 mol e⁻.</p>
+    <p>Al³⁺ needs 3 e⁻ per atom → mol Al = 0.0333 / 3 = 0.0111.</p>
+    <div class="half-eq" style="border-left-color:var(--accent-yellow);">Mass of Al = 0.0111 × 27 = <strong>0.3 g</strong></div>
+  </div>
+
+  <h3 style="margin-top:2rem; font-family:var(--font-heading);">Interactive Calculator</h3>
+  <p style="color:var(--text-muted); font-size:0.9rem;">Enter values to calculate mass deposited, charge required, or time needed.</p>
+
+  <div class="calc-grid">
+    <div class="calc-field">
+      <label>Element / Ion</label>
+      <select id="calcElement">
+        <option value="Cu-2" data-m="63.5" data-z="2">Cu²⁺ (M=63.5, z=2)</option>
+        <option value="Ag-1" data-m="108" data-z="1">Ag⁺ (M=108, z=1)</option>
+        <option value="Al-3" data-m="27" data-z="3">Al³⁺ (M=27, z=3)</option>
+        <option value="Na-1" data-m="23" data-z="1">Na⁺ (M=23, z=1)</option>
+        <option value="Pb-2" data-m="207" data-z="2">Pb²⁺ (M=207, z=2)</option>
+        <option value="Zn-2" data-m="65.4" data-z="2">Zn²⁺ (M=65.4, z=2)</option>
+        <option value="Fe-3" data-m="56" data-z="3">Fe³⁺ (M=56, z=3)</option>
+        <option value="Au-3" data-m="197" data-z="3">Au³⁺ (M=197, z=3)</option>
+        <option value="H-1" data-m="1" data-z="1">H⁺ (M=1, z=1)</option>
+        <option value="Cl-1" data-m="35.5" data-z="1">Cl⁻ (M=35.5, z=1)</option>
+      </select>
+    </div>
+    <div class="calc-field">
+      <label>Solve For</label>
+      <select id="calcSolveFor">
+        <option value="mass">Mass Deposited</option>
+        <option value="charge">Charge (Q) Needed</option>
+        <option value="time">Time Required</option>
+        <option value="current">Current Required</option>
+      </select>
+    </div>
+    <div class="calc-field" id="fieldCurrent">
+      <label>Current (A)</label>
+      <input type="number" id="calcCurrent" placeholder="e.g. 5" step="any">
+    </div>
+    <div class="calc-field" id="fieldTime">
+      <label>Time (seconds)</label>
+      <input type="number" id="calcTime" placeholder="e.g. 3600" step="any">
+    </div>
+    <div class="calc-field" id="fieldMass" style="display:none;">
+      <label>Mass (g)</label>
+      <input type="number" id="calcMass" placeholder="e.g. 3.2" step="any">
+    </div>
+    <div class="calc-field" id="fieldCharge" style="display:none;">
+      <label>Charge (C)</label>
+      <input type="number" id="calcCharge" placeholder="e.g. 96500" step="any">
+    </div>
+    <button class="calc-btn" id="calcBtn"><i class="fas fa-calculator"></i> Calculate</button>
+    <div class="calc-result" id="calcResult"></div>
+  </div>
+</section>
+
+<!-- ═══════════════ 6. GALVANIC CELLS ═══════════════ -->
+<section class="section" id="galvanic">
+  <div class="section-label">Part 06</div>
+  <h2>Electrochemical (Galvanic) Cells</h2>
+  <p>Unlike electrolytic cells, galvanic cells convert <strong>chemical energy → electrical energy</strong>. The EMF is calculated as:</p>
+  <div class="half-eq" style="border-left-color:var(--accent-purple); margin:1rem 0;">E°<sub>cell</sub> = E°<sub>cathode</sub> − E°<sub>anode</sub></div>
+  <p>A <strong>positive E°<sub>cell</sub></strong> indicates a spontaneous reaction.</p>
+
+  <div class="galvanic-canvas-wrap">
+    <canvas class="galvanic-canvas" id="galvanicCanvas" height="340"></canvas>
+    <div class="galvanic-controls">
+      <div>
+        <label>Anode Metal</label><br>
+        <select id="galvAnode">
+          <option value="Zn" data-e="-0.76">Zn (−0.76 V)</option>
+          <option value="Fe" data-e="-0.44">Fe (−0.44 V)</option>
+          <option value="Mg" data-e="-2.37">Mg (−2.37 V)</option>
+          <option value="Al" data-e="-1.66">Al (−1.66 V)</option>
+          <option value="Sn" data-e="-0.14">Sn (−0.14 V)</option>
+          <option value="Pb" data-e="-0.13">Pb (−0.13 V)</option>
+        </select>
+      </div>
+      <div>
+        <label>Cathode Metal</label><br>
+        <select id="galvCathode">
+          <option value="Cu" data-e="0.34">Cu (+0.34 V)</option>
+          <option value="Ag" data-e="0.80">Ag (+0.80 V)</option>
+          <option value="Au" data-e="1.50">Au (+1.50 V)</option>
+          <option value="Pt" data-e="1.20">Pt (+1.20 V)</option>
+          <option value="Hg" data-e="0.85">Hg (+0.85 V)</option>
+        </select>
+      </div>
+      <div class="emf-display">
+        E°<sub>cell</sub> = <span class="emf-val" id="emfValue">1.10</span> V
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 7. CORROSION ═══════════════ -->
+<section class="section" id="corrosion">
+  <div class="section-label">Part 07</div>
+  <h2>Corrosion &amp; Prevention</h2>
+  <p>Corrosion is essentially an <strong>unwanted electrolytic process</strong>. Iron acts as an anode:</p>
+  <div class="half-eq anode-eq" style="margin:1rem 0;">Fe(s) → Fe²⁺(aq) + 2e⁻</div>
+
+  <div class="corrosion-methods">
+    <div class="method-card">
+      <div class="method-icon">🎨</div>
+      <h4>Painting / Coating</h4>
+      <p>Physical barrier prevents O₂ and H₂O from reaching the metal surface.</p>
+    </div>
+    <div class="method-card">
+      <div class="method-icon">⚡</div>
+      <h4>Electroplating</h4>
+      <p>Electrolysis coats a reactive metal with a less reactive one (Ag, Au, Cr, Ni).</p>
+    </div>
+    <div class="method-card">
+      <div class="method-icon">🛡️</div>
+      <h4>Cathodic Protection</h4>
+      <p>A more reactive "sacrificial" metal (Mg, Zn) corrodes instead of the protected iron.</p>
+    </div>
+    <div class="method-card">
+      <div class="method-icon">🔩</div>
+      <h4>Galvanization</h4>
+      <p>Coating iron with zinc — even if scratched, zinc corrodes preferentially.</p>
+    </div>
+  </div>
+
+  <!-- Corrosion Animation -->
+  <h3 style="margin-top:2rem; font-family:var(--font-heading);">Corrosion vs. Protection — Visual</h3>
+  <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0.5rem;">Watch how a sacrificial zinc block protects an iron nail from rusting.</p>
+  <div class="cell-sim-wrap">
+    <canvas id="corrosionCanvas" class="cell-sim-canvas" height="300"></canvas>
+    <div class="cell-controls">
+      <button id="corrosionToggle"><i class="fas fa-shield-halved"></i> Toggle Zinc Protection</button>
+      <span id="corrosionStatus" style="font-family:var(--font-mono); font-size:0.82rem; color:var(--accent-red); margin-left:auto;">⚠ Unprotected — Iron is rusting!</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 8. CONCLUSION ═══════════════ -->
+<section class="section" id="conclusion">
+  <div class="section-label">Part 08</div>
+  <h2>Summary &amp; Key Takeaways</h2>
+  <p>Today, we've mastered the mechanics of electrolysis — from ion migration to industrial applications.</p>
+
+  <div class="summary-grid">
+    <div class="summary-stat">
+      <div class="big-num">96,500</div>
+      <div class="stat-label">Coulombs / Faraday</div>
+    </div>
+    <div class="summary-stat">
+      <div class="big-num">3.2 g</div>
+      <div class="stat-label">Cu from 0.1 F</div>
+    </div>
+    <div class="summary-stat">
+      <div class="big-num">An-Ox</div>
+      <div class="stat-label">Anode = Oxidation</div>
+    </div>
+    <div class="summary-stat">
+      <div class="big-num">Red-Cat</div>
+      <div class="stat-label">Reduction = Cathode</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:2rem;">
+    <h3>Key Concepts Checklist</h3>
+    <ul>
+      <li>Electrolytes dissociate into ions — non-electrolytes do not.</li>
+      <li>Ion discharge depends on position in the EC series, concentration, and electrode type.</li>
+      <li>Faraday's Laws: Q = I × t; 1 mol e⁻ = 96,500 C.</li>
+      <li>CuSO₄ with Cu electrodes → purification; with Pt electrodes → solution turns acidic.</li>
+      <li>Stirred NaCl → NaOCl (bleach). Fused NaCl → Na metal + Cl₂ gas.</li>
+      <li>E°<sub>cell</sub> = E°<sub>cathode</sub> − E°<sub>anode</sub>. Positive → spontaneous.</li>
+      <li>Corrosion prevention: painting, electroplating, cathodic/sacrificial protection, galvanization.</li>
+    </ul>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>The Power of Electrons — Interactive Electrolysis Guide &nbsp;|&nbsp; Senior High School Chemistry</p>
+</footer>
+
+<!-- CUSTOM MODAL (for notifications) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3 id="modalTitle">Notice</h3>
+    <p id="modalMsg">Message goes here.</p>
+    <button id="modalClose">Got it</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════ THEME DETECTION ═══════════════ */
+(function initTheme() {
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    document.documentElement.classList.add('light');
+  }
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function(e) {
+    if (e.matches) {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+  });
+})();
+
+/* ═══════════════ CUSTOM MODAL ═══════════════ */
+function showModal(title, msg) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+document.getElementById('modalClose').addEventListener('click', function() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+});
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('visible');
+});
+
+/* ═══════════════ NAV BUTTONS ═══════════════ */
+(function initNav() {
+  var btns = document.querySelectorAll('.nav-btn');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var target = document.getElementById(btn.dataset.target);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Update active nav on scroll
+  var sections = Array.from(btns).map(function(b) { return document.getElementById(b.dataset.target); });
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        btns.forEach(function(b) { b.classList.remove('active'); });
+        var match = Array.from(btns).find(function(b) { return b.dataset.target === entry.target.id; });
+        if (match) match.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(function(s) { if (s) observer.observe(s); });
+})();
+
+/* ═══════════════ HERO PARTICLE CANVAS ═══════════════ */
+(function initHeroCanvas() {
+  var canvas = document.getElementById('heroCanvas');
+  var ctx = canvas.getContext('2d');
+  var particles = [];
+  var NUM = 60;
+
+  function resize() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.vx = (Math.random() - 0.5) * 0.6;
+    this.vy = (Math.random() - 0.5) * 0.6;
+    this.r = Math.random() * 2 + 0.5;
+    this.alpha = Math.random() * 0.5 + 0.2;
+  }
+
+  for (var i = 0; i < NUM; i++) particles.push(new Particle());
+
+  function isLight() { return document.documentElement.classList.contains('light'); }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var baseColor = isLight() ? '0,119,182' : '0,229,255';
+    var lineColor = isLight() ? '0,119,182' : '0,229,255';
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + baseColor + ',' + p.alpha + ')';
+      ctx.fill();
+      for (var j = i + 1; j < particles.length; j++) {
+        var q = particles[j];
+        var dx = p.x - q.x, dy = p.y - q.y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(q.x, q.y);
+          ctx.strokeStyle = 'rgba(' + lineColor + ',' + (0.12 * (1 - dist / 120)) + ')';
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════ ELECTROCHEMICAL SERIES TABLE ═══════════════ */
+(function initSeries() {
+  var data = [
+    { sym: 'K', name: 'Potassium', e: '-2.93' },
+    { sym: 'Ca', name: 'Calcium', e: '-2.87' },
+    { sym: 'Na', name: 'Sodium', e: '-2.71' },
+    { sym: 'Mg', name: 'Magnesium', e: '-2.37' },
+    { sym: 'Al', name: 'Aluminium', e: '-1.66' },
+    { sym: 'Zn', name: 'Zinc', e: '-0.76' },
+    { sym: 'Fe', name: 'Iron', e: '-0.44' },
+    { sym: 'Sn', name: 'Tin', e: '-0.14' },
+    { sym: 'Pb', name: 'Lead', e: '-0.13' },
+    { sym: 'H', name: 'Hydrogen', e: '0.00' },
+    { sym: 'Cu', name: 'Copper', e: '+0.34' },
+    { sym: 'Hg', name: 'Mercury', e: '+0.85' },
+    { sym: 'Ag', name: 'Silver', e: '+0.80' },
+    { sym: 'Au', name: 'Gold', e: '+1.50' }
+  ];
+  var container = document.getElementById('seriesContainer');
+  data.forEach(function(d) {
+    var row = document.createElement('div');
+    row.className = 'series-row';
+    if (d.sym === 'H') row.classList.add('highlight-row');
+    var negColor = 'var(--accent-red)';
+    var posColor = 'var(--accent-green)';
+    var eVal = parseFloat(d.e);
+    var eColor = eVal < 0 ? negColor : (eVal > 0 ? posColor : 'var(--accent-yellow)');
+    row.innerHTML = '<div class="symbol">' + d.sym + '</div><div class="name">' + d.name + '</div><div class="potential" style="color:' + eColor + '">' + d.e + ' V</div>';
+    container.appendChild(row);
+  });
+})();
+
+/* ═══════════════ CASE STUDY TABS ═══════════════ */
+(function initCases() {
+  var tabs = document.querySelectorAll('.case-tab');
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.case-content').forEach(function(c) { c.classList.remove('active'); });
+      tab.classList.add('active');
+      var target = document.getElementById('case-' + tab.dataset.case);
+      if (target) target.classList.add('active');
+    });
+  });
+})();
+
+/* ═══════════════ ELECTROLYTIC CELL SIMULATION ═══════════════ */
+(function initCellSim() {
+  var canvas = document.getElementById('cellCanvas');
+  var ctx = canvas.getContext('2d');
+  var currentOn = false;
+  var ions = [];
+  var bubbles = [];
+  var W, H;
+
+  function resize() {
+    W = canvas.parentElement.clientWidth;
+    canvas.width = W;
+    H = canvas.height;
+    initIons();
+  }
+
+  var electrolytes = {
+    NaCl: { cation: 'Na⁺', anion: 'Cl⁻', cColor: '#ffd740', aColor: '#69f0ae', liquid: 'rgba(255,215,64,0.08)' },
+    CuSO4: { cation: 'Cu²⁺', anion: 'SO₄²⁻', cColor: '#42a5f5', aColor: '#ef5350', liquid: 'rgba(66,165,245,0.1)' },
+    H2SO4: { cation: 'H⁺', anion: 'SO₄²⁻', cColor: '#ff8a65', aColor: '#ef5350', liquid: 'rgba(255,138,101,0.06)' },
+    NaOH: { cation: 'Na⁺', anion: 'OH⁻', cColor: '#ffd740', aColor: '#b388ff', liquid: 'rgba(179,136,255,0.08)' }
+  };
+
+  function getElectrolyte() {
+    return electrolytes[document.getElementById('electrolyteSelect').value];
+  }
+
+  function isLight() { return document.documentElement.classList.contains('light'); }
+
+  function initIons() {
+    ions = [];
+    var el = getElectrolyte();
+    var beakerLeft = W * 0.15;
+    var beakerRight = W * 0.85;
+    var beakerTop = H * 0.2;
+    var beakerBottom = H * 0.82;
+    for (var i = 0; i < 18; i++) {
+      ions.push({
+        x: beakerLeft + Math.random() * (beakerRight - beakerLeft),
+        y: beakerTop + Math.random() * (beakerBottom - beakerTop),
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        type: i < 9 ? 'cation' : 'anion',
+        label: i < 9 ? el.cation : el.anion,
+        color: i < 9 ? el.cColor : el.aColor,
+        r: 12
+      });
+    }
+    bubbles = [];
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  document.getElementById('electrolyteSelect').addEventListener('change', initIons);
+  document.getElementById('electrodeSelect').addEventListener('change', function() { /* visual only */ });
+  document.getElementById('toggleCurrentBtn').addEventListener('click', function() {
+    currentOn = !currentOn;
+    this.innerHTML = currentOn
+      ? '<i class="fas fa-power-off"></i> Current ON'
+      : '<i class="fas fa-power-off"></i> Toggle Current';
+    this.style.background = currentOn
+      ? 'linear-gradient(135deg, #69f0ae, #00c853)'
+      : 'linear-gradient(135deg, var(--accent-cyan), #0091ea)';
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var el = getElectrolyte();
+    var light = isLight();
+    var bgCard = light ? '#ffffff' : '#1a2236';
+    var bgSec = light ? '#e2e8f0' : '#111827';
+    var textCol = light ? '#1a202c' : '#e8ecf4';
+    var mutedCol = light ? '#718096' : '#6b7a9a';
+
+    var bL = W * 0.15, bR = W * 0.85, bT = H * 0.18, bB = H * 0.85;
+    var midX = W * 0.5;
+    var anodeX = bL + 30, cathodeX = bR - 30;
+
+    // Battery
+    ctx.fillStyle = mutedCol;
+    ctx.font = '11px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillText('BATTERY (DC)', midX, 18);
+
+    // Battery box
+    ctx.strokeStyle = light ? 'rgba(0,119,182,0.4)' : 'rgba(0,229,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(midX - 40, 24, 80, 24, 4);
+    ctx.stroke();
+    ctx.fillStyle = light ? '#0077b6' : '#00e5ff';
+    ctx.font = 'bold 11px "JetBrains Mono"';
+    ctx.fillText('+ −', midX, 41);
+
+    // Wires
+    ctx.strokeStyle = light ? 'rgba(0,119,182,0.35)' : 'rgba(0,229,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    // Anode wire
+    ctx.beginPath(); ctx.moveTo(midX - 20, 48); ctx.lineTo(midX - 20, 60); ctx.lineTo(anodeX, 60); ctx.lineTo(anodeX, bT); ctx.stroke();
+    // Cathode wire
+    ctx.beginPath(); ctx.moveTo(midX + 20, 48); ctx.lineTo(midX + 20, 60); ctx.lineTo(cathodeX, 60); ctx.lineTo(cathodeX, bT); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Electron flow arrows if on
+    if (currentOn) {
+      var t = Date.now() / 600;
+      drawArrow(ctx, anodeX, bT - 8, anodeX, 65, light ? '#c53030' : '#ff5252', t);
+      drawArrow(ctx, cathodeX, 65, cathodeX, bT - 8, light ? '#2f855a' : '#69f0ae', t);
+    }
+
+    // Beaker
+    ctx.fillStyle = el.liquid;
+    ctx.fillRect(bL, bT, bR - bL, bB - bT);
+    ctx.strokeStyle = light ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(bL, bT, bR - bL, bB - bT);
+
+    // Electrodes
+    var elType = document.getElementById('electrodeSelect').value;
+    var elColor = elType === 'copper' ? '#b87333' : (light ? '#718096' : '#607d8b');
+    ctx.fillStyle = elColor;
+    ctx.fillRect(anodeX - 6, bT, 12, (bB - bT) * 0.7);
+    ctx.fillRect(cathodeX - 6, bT, 12, (bB - bT) * 0.7);
+
+    // Labels
+    ctx.font = 'bold 11px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = light ? '#c53030' : '#ff5252';
+    ctx.fillText('ANODE (+)', anodeX, bB + 16);
+    ctx.fillStyle = light ? '#2f855a' : '#69f0ae';
+    ctx.fillText('CATHODE (−)', cathodeX, bB + 16);
+
+    // Ions
+    var bl = bL + 20, br = bR - 20, bt = bT + 15, bb = bB - 10;
+    ions.forEach(function(ion) {
+      if (currentOn) {
+        if (ion.type === 'cation') {
+          ion.vx += (cathodeX - ion.x) * 0.0003;
+        } else {
+          ion.vx += (anodeX - ion.x) * 0.0003;
+        }
+        ion.vx *= 0.995;
+        ion.vy *= 0.99;
+        ion.vy += (Math.random() - 0.5) * 0.08;
+      } else {
+        ion.vx += (Math.random() - 0.5) * 0.04;
+        ion.vy += (Math.random() - 0.5) * 0.04;
+        ion.vx *= 0.98;
+        ion.vy *= 0.98;
+      }
+      ion.x += ion.vx;
+      ion.y += ion.vy;
+      if (ion.x < bl) { ion.x = bl; ion.vx *= -0.5; }
+      if (ion.x > br) { ion.x = br; ion.vx *= -0.5; }
+      if (ion.y < bt) { ion.y = bt; ion.vy *= -0.5; }
+      if (ion.y > bb) { ion.y = bb; ion.vy *= -0.5; }
+
+      ctx.beginPath();
+      ctx.arc(ion.x, ion.y, ion.r, 0, Math.PI * 2);
+      ctx.fillStyle = ion.color;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = light ? '#1a202c' : '#fff';
+      ctx.font = '9px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(ion.label, ion.x, ion.y);
+    });
+
+    // Bubbles at electrodes when current is on
+    if (currentOn && Math.random() < 0.08) {
+      bubbles.push({ x: anodeX + (Math.random() - 0.5) * 10, y: bT + (bB - bT) * 0.5, vy: -0.8, alpha: 0.7, side: 'anode' });
+      bubbles.push({ x: cathodeX + (Math.random() - 0.5) * 10, y: bT + (bB - bT) * 0.5, vy: -0.8, alpha: 0.7, side: 'cathode' });
+    }
+    bubbles.forEach(function(b) {
+      b.y += b.vy;
+      b.alpha -= 0.005;
+      if (b.alpha > 0) {
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+        ctx.fillStyle = b.side === 'anode'
+          ? 'rgba(255,82,82,' + b.alpha + ')'
+          : 'rgba(105,240,174,' + b.alpha + ')';
+        ctx.fill();
+      }
+    });
+    bubbles = bubbles.filter(function(b) { return b.alpha > 0 && b.y > bT; });
+
+    requestAnimationFrame(draw);
+  }
+
+  function drawArrow(c, x1, y1, x2, y2, color, t) {
+    var len = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    var frac = ((t % 1) + 1) % 1;
+    var px = x1 + (x2 - x1) * frac;
+    var py = y1 + (y2 - y1) * frac;
+    c.beginPath();
+    c.arc(px, py, 3, 0, Math.PI * 2);
+    c.fillStyle = color;
+    c.fill();
+  }
+
+  draw();
+})();
+
+/* ═══════════════ FARADAY CALCULATOR ═══════════════ */
+(function initCalc() {
+  var solveFor = document.getElementById('calcSolveFor');
+  var fieldCurrent = document.getElementById('fieldCurrent');
+  var fieldTime = document.getElementById('fieldTime');
+  var fieldMass = document.getElementById('fieldMass');
+  var fieldCharge = document.getElementById('fieldCharge');
+
+  function updateFields() {
+    var v = solveFor.value;
+    fieldCurrent.style.display = (v === 'current') ? 'none' : 'block';
+    fieldTime.style.display = (v === 'time') ? 'none' : 'block';
+    fieldMass.style.display = (v === 'mass') ? 'none' : 'block';
+    fieldCharge.style.display = (v === 'charge') ? 'none' : 'block';
+
+    if (v === 'mass') { fieldCurrent.style.display = 'block'; fieldTime.style.display = 'block'; fieldCharge.style.display = 'none'; }
+    if (v === 'charge') { fieldMass.style.display = 'block'; fieldCurrent.style.display = 'none'; fieldTime.style.display = 'none'; }
+    if (v === 'time') { fieldMass.style.display = 'block'; fieldCurrent.style.display = 'block'; fieldCharge.style.display = 'none'; }
+    if (v === 'current') { fieldMass.style.display = 'block'; fieldTime.style.display = 'block'; fieldCharge.style.display = 'none'; }
+  }
+  solveFor.addEventListener('change', updateFields);
+  updateFields();
+
+  document.getElementById('calcBtn').addEventListener('click', function() {
+    var sel = document.getElementById('calcElement');
+    var opt = sel.options[sel.selectedIndex];
+    var M = parseFloat(opt.dataset.m);
+    var z = parseFloat(opt.dataset.z);
+    var F = 96500;
+    var sv = solveFor.value;
+    var result = document.getElementById('calcResult');
+    result.style.display = 'block';
+
+    var I = parseFloat(document.getElementById('calcCurrent').value);
+    var t = parseFloat(document.getElementById('calcTime').value);
+    var m = parseFloat(document.getElementById('calcMass').value);
+    var Q = parseFloat(document.getElementById('calcCharge').value);
+
+    try {
+      if (sv === 'mass') {
+        if (isNaN(I) || isNaN(t) || I <= 0 || t <= 0) throw new Error('Enter positive Current and Time.');
+        Q = I * t;
+        var molesE = Q / F;
+        var molesM = molesE / z;
+        m = molesM * M;
+        result.innerHTML = '<strong>Step-by-step:</strong><br>'
+          + '1. Q = I × t = ' + I + ' × ' + t + ' = <span class="val">' + Q.toFixed(1) + ' C</span><br>'
+          + '2. Moles of e⁻ = Q / F = ' + Q.toFixed(1) + ' / 96500 = <span class="val">' + molesE.toFixed(5) + ' mol</span><br>'
+          + '3. Moles of ' + opt.text.split(' ')[0] + ' = ' + molesE.toFixed(5) + ' / ' + z + ' = <span class="val">' + molesM.toFixed(5) + ' mol</span><br>'
+          + '4. Mass = ' + molesM.toFixed(5) + ' × ' + M + ' = <span class="val">' + m.toFixed(4) + ' g</span>';
+      } else if (sv === 'charge') {
+        if (isNaN(m) || m <= 0) throw new Error('Enter a positive Mass.');
+        var molesM2 = m / M;
+        var molesE2 = molesM2 * z;
+        Q = molesE2 * F;
+        result.innerHTML = '<strong>Step-by-step:</strong><br>'
+          + '1. Moles of metal = ' + m + ' / ' + M + ' = <span class="val">' + molesM2.toFixed(5) + ' mol</span><br>'
+          + '2. Moles of e⁻ = ' + molesM2.toFixed(5) + ' × ' + z + ' = <span class="val">' + molesE2.toFixed(5) + ' mol</span><br>'
+          + '3. Q = ' + molesE2.toFixed(5) + ' × 96500 = <span class="val">' + Q.toFixed(1) + ' C</span>';
+      } else if (sv === 'time') {
+        if (isNaN(m) || isNaN(I) || m <= 0 || I <= 0) throw new Error('Enter positive Mass and Current.');
+        var molesM3 = m / M;
+        var molesE3 = molesM3 * z;
+        Q = molesE3 * F;
+        t = Q / I;
+        result.innerHTML = '<strong>Step-by-step:</strong><br>'
+          + '1. Moles of metal = ' + m + ' / ' + M + ' = <span class="val">' + molesM3.toFixed(5) + ' mol</span><br>'
+          + '2. Moles of e⁻ = ' + molesM3.toFixed(5) + ' × ' + z + ' = <span class="val">' + molesE3.toFixed(5) + ' mol</span><br>'
+          + '3. Q = ' + molesE3.toFixed(5) + ' × 96500 = <span class="val">' + Q.toFixed(1) + ' C</span><br>'
+          + '4. t = Q / I = ' + Q.toFixed(1) + ' / ' + I + ' = <span class="val">' + t.toFixed(1) + ' s (' + (t / 60).toFixed(2) + ' min)</span>';
+      } else if (sv === 'current') {
+        if (isNaN(m) || isNaN(t) || m <= 0 || t <= 0) throw new Error('Enter positive Mass and Time.');
+        var molesM4 = m / M;
+        var molesE4 = molesM4 * z;
+        Q = molesE4 * F;
+        I = Q / t;
+        result.innerHTML = '<strong>Step-by-step:</strong><br>'
+          + '1. Moles of metal = ' + m + ' / ' + M + ' = <span class="val">' + molesM4.toFixed(5) + ' mol</span><br>'
+          + '2. Moles of e⁻ = ' + molesM4.toFixed(5) + ' × ' + z + ' = <span class="val">' + molesE4.toFixed(5) + ' mol</span><br>'
+          + '3. Q = ' + molesE4.toFixed(5) + ' × 96500 = <span class="val">' + Q.toFixed(1) + ' C</span><br>'
+          + '4. I = Q / t = ' + Q.toFixed(1) + ' / ' + t + ' = <span class="val">' + I.toFixed(4) + ' A</span>';
+      }
+    } catch (err) {
+      showModal('Input Error', err.message);
+      result.style.display = 'none';
+    }
+  });
+})();
+
+/* ═══════════════ GALVANIC CELL ═══════════════ */
+(function initGalvanic() {
+  var canvas = document.getElementById('galvanicCanvas');
+  var ctx = canvas.getContext('2d');
+  var anodeSel = document.getElementById('galvAnode');
+  var cathodeSel = document.getElementById('galvCathode');
+  var emfEl = document.getElementById('emfValue');
+  var W, H;
+  var electronParticles = [];
+
+  function resize() {
+    W = canvas.parentElement.clientWidth;
+    canvas.width = W;
+    H = canvas.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function updateEMF() {
+    var eC = parseFloat(cathodeSel.options[cathodeSel.selectedIndex].dataset.e);
+    var eA = parseFloat(anodeSel.options[anodeSel.selectedIndex].dataset.e);
+    var emf = (eC - eA).toFixed(2);
+    emfEl.textContent = emf;
+    emfEl.style.color = emf >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+  }
+  anodeSel.addEventListener('change', updateEMF);
+  cathodeSel.addEventListener('change', updateEMF);
+  updateEMF();
+
+  function isLight() { return document.documentElement.classList.contains('light'); }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var light = isLight();
+    var textCol = light ? '#1a202c' : '#e8ecf4';
+    var mutedCol = light ? '#718096' : '#6b7a9a';
+    var borderCol = light ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.1)';
+    var cyanCol = light ? '#0077b6' : '#00e5ff';
+
+    var midX = W / 2;
+    var beakerW = W * 0.28;
+    var beakerH = H * 0.5;
+    var lbX = midX - beakerW - 20;
+    var rbX = midX + 20;
+    var bY = H * 0.35;
+
+    // Anode beaker (left)
+    ctx.fillStyle = light ? 'rgba(0,119,182,0.06)' : 'rgba(0,229,255,0.05)';
+    ctx.fillRect(lbX, bY, beakerW, beakerH);
+    ctx.strokeStyle = borderCol;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(lbX, bY, beakerW, beakerH);
+
+    // Cathode beaker (right)
+    ctx.fillStyle = light ? 'rgba(214,158,46,0.06)' : 'rgba(255,215,64,0.05)';
+    ctx.fillRect(rbX, bY, beakerW, beakerH);
+    ctx.strokeRect(rbX, bY, beakerW, beakerH);
+
+    // Electrodes
+    var anMetal = anodeSel.value;
+    var caMetal = cathodeSel.value;
+    var anElX = lbX + beakerW / 2;
+    var caElX = rbX + beakerW / 2;
+
+    ctx.fillStyle = '#78909c';
+    ctx.fillRect(anElX - 6, bY - 20, 12, beakerH * 0.7 + 20);
+    ctx.fillStyle = '#b87333';
+    ctx.fillRect(caElX - 6, bY - 20, 12, beakerH * 0.7 + 20);
+
+    // Labels
+    ctx.font = 'bold 11px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = light ? '#c53030' : '#ff5252';
+    ctx.fillText('ANODE (' + anMetal + ')', anElX, bY + beakerH + 20);
+    ctx.fillStyle = light ? '#2f855a' : '#69f0ae';
+    ctx.fillText('CATHODE (' + caMetal + ')', caElX, bY + beakerH + 20);
+
+    // Salt bridge
+    ctx.strokeStyle = cyanCol;
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(lbX + beakerW - 10, bY + 20);
+    ctx.quadraticCurveTo(midX, bY - 30, rbX + 10, bY + 20);
+    ctx.stroke();
+
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillStyle = cyanCol;
+    ctx.fillText('SALT BRIDGE', midX, bY - 5);
+
+    // Wire on top
+    ctx.strokeStyle = mutedCol;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(anElX, bY - 20);
+    ctx.lineTo(anElX, bY - 50);
+    ctx.lineTo(caElX, bY - 50);
+    ctx.lineTo(caElX, bY - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // e- flow arrows
+    var t = Date.now() / 800;
+    var frac = ((t % 1) + 1) % 1;
+    var wireY = bY - 50;
+    var px = anElX + (caElX - anElX) * frac;
+    ctx.beginPath();
+    ctx.arc(px, wireY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = light ? '#0077b6' : '#00e5ff';
+    ctx.fill();
+    ctx.font = '9px "JetBrains Mono"';
+    ctx.fillStyle = mutedCol;
+    ctx.fillText('e⁻ →', midX, wireY - 8);
+
+    // Voltmeter
+    ctx.fillStyle = textCol;
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillText('V', midX, wireY + 5);
+
+    // Beaker labels
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.fillStyle = mutedCol;
+    ctx.fillText(anMetal + 'SO₄(aq)', lbX + beakerW / 2, bY + beakerH - 10);
+    ctx.fillText(caMetal + 'SO₄(aq)', rbX + beakerW / 2, bY + beakerH - 10);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════ CORROSION SIMULATION ═══════════════ */
+(function initCorrosion() {
+  var canvas = document.getElementById('corrosionCanvas');
+  var ctx = canvas.getContext('2d');
+  var statusEl = document.getElementById('corrosionStatus');
+  var isProtected = false;
+  var rustParticles = [];
+  var zincParticles = [];
+  var W, H;
+
+  function resize() {
+    W = canvas.parentElement.clientWidth;
+    canvas.width = W;
+    H = canvas.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  document.getElementById('corrosionToggle').addEventListener('click', function() {
+    isProtected = !isProtected;
+    if (isProtected) {
+      statusEl.textContent = '✓ Protected — Zinc corrodes instead!';
+      statusEl.style.color = 'var(--accent-green)';
+      rustParticles = [];
+    } else {
+      statusEl.textContent = '⚠ Unprotected — Iron is rusting!';
+      statusEl.style.color = 'var(--accent-red)';
+      zincParticles = [];
+    }
+  });
+
+  function isLight() { return document.documentElement.classList.contains('light'); }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var light = isLight();
+    var midX = W / 2;
+
+    // Water background
+    ctx.fillStyle = light ? 'rgba(0,119,182,0.04)' : 'rgba(0,229,255,0.03)';
+    ctx.fillRect(0, H * 0.3, W, H * 0.7);
+
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = light ? '#718096' : '#6b7a9a';
+    ctx.fillText('O₂ + H₂O environment', midX, H * 0.15);
+
+    // Iron nail
+    var nailX = midX;
+    var nailY = H * 0.5;
+    var nailW = 14;
+    var nailH = 100;
+
+    // Nail head
+    ctx.fillStyle = isProtected ? '#607d8b' : '#8d6e63';
+    ctx.fillRect(nailX - 20, nailY - 15, 40, 15);
+    // Nail body
+    ctx.fillStyle = isProtected ? '#78909c' : '#a1887f';
+    ctx.fillRect(nailX - nailW / 2, nailY, nailW, nailH);
+
+    ctx.fillStyle = light ? '#1a202c' : '#e8ecf4';
+    ctx.font = 'bold 11px "JetBrains Mono"';
+    ctx.fillText('Fe (Iron)', nailX, nailY + nailH + 22);
+
+    // Zinc block if protected
+    if (isProtected) {
+      var znX = nailX + 50;
+      var znY = nailY + 20;
+      ctx.fillStyle = '#90a4ae';
+      ctx.fillRect(znX, znY, 24, 60);
+      ctx.fillStyle = light ? '#1a202c' : '#e8ecf4';
+      ctx.font = '10px "JetBrains Mono"';
+      ctx.fillText('Zn', znX + 12, znY + 75);
+
+      // Wire between
+      ctx.strokeStyle = light ? '#718096' : '#607d8b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(nailX + nailW / 2, nailY + 20);
+      ctx.lineTo(znX, znY + 20);
+      ctx.stroke();
+
+      // Zinc dissolving particles
+      if (Math.random() < 0.06) {
+        zincParticles.push({
+          x: znX + Math.random() * 24,
+          y: znY + Math.random() * 60,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: -Math.random() * 0.8,
+          alpha: 0.9,
+          life: 80
+        });
+      }
+      zincParticles.forEach(function(p) {
+        p.x += p.vx; p.y += p.vy; p.alpha -= 0.01; p.life--;
+        if (p.alpha > 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(144,164,174,' + p.alpha + ')';
+          ctx.fill();
+        }
+      });
+      zincParticles = zincParticles.filter(function(p) { return p.life > 0; });
+
+      // Label
+      ctx.fillStyle = light ? '#2f855a' : '#69f0ae';
+      ctx.font = '9px "JetBrains Mono"';
+      ctx.fillText('Zn → Zn²⁺ + 2e⁻', znX + 12, znY - 10);
+      ctx.fillText('(sacrificial)', znX + 12, znY - 0);
+    } else {
+      // Rust particles from iron
+      if (Math.random() < 0.08) {
+        rustParticles.push({
+          x: nailX + (Math.random() - 0.5) * nailW,
+          y: nailY + Math.random() * nailH,
+          vx: (Math.random() - 0.5) * 1.2,
+          vy: (Math.random() - 0.5) * 0.5,
+          alpha: 0.8,
+          life: 100
+        });
+      }
+      rustParticles.forEach(function(p) {
+        p.x += p.vx; p.y += p.vy; p.alpha -= 0.008; p.life--;
+        if (p.alpha > 0) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(183,28,28,' + p.alpha + ')';
+          ctx.fill();
+        }
+      });
+      rustParticles = rustParticles.filter(function(p) { return p.life > 0; });
+
+      ctx.fillStyle = light ? '#c53030' : '#ff5252';
+      ctx.font = '9px "JetBrains Mono"';
+      ctx.fillText('Fe → Fe²⁺ + 2e⁻', nailX, nailY - 22);
+      ctx.fillText('(rusting!)', nailX, nailY - 12);
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atomic Bonds — Molecular Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2340;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8892a8;
+  --accent-blue: #3b82f6;
+  --accent-cyan: #06d6a0;
+  --accent-pink: #f72585;
+  --accent-orange: #ff8c42;
+  --accent-yellow: #ffd166;
+  --accent-purple: #7b2ff7;
+  --border: rgba(255,255,255,0.06);
+  --glow-blue: 0 0 20px rgba(59,130,246,0.3);
+  --glow-cyan: 0 0 20px rgba(6,214,160,0.3);
+  --radius: 16px;
+}
+html.dark { /* default is dark */ }
+html:not(.dark) {
+  --bg-primary: #f0f4fa;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f9fc;
+  --text-primary: #1a1a2e;
+  --text-secondary: #5a6178;
+  --border: rgba(0,0,0,0.08);
+  --glow-blue: 0 0 12px rgba(59,130,246,0.15);
+  --glow-cyan: 0 0 12px rgba(6,214,160,0.15);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(247,37,133,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  position: relative;
+  z-index: 1;
+}
+header {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeDown 0.6s ease;
+}
+@keyframes fadeDown {
+  from { opacity:0; transform:translateY(-20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+header h1 {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+header p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-top: 6px;
+  font-weight: 300;
+}
+.tabs {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  animation: fadeDown 0.6s ease 0.1s both;
+}
+.tab-btn {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border-radius: 40px;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+.tab-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--glow-blue);
+}
+.panel { display: none; animation: fadeIn 0.5s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card h2 .icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+}
+.info-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+.info-text strong { color: var(--text-primary); font-weight: 600; }
+.canvas-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+canvas {
+  border-radius: 12px;
+  background: rgba(0,0,0,0.15);
+  max-width: 100%;
+}
+html:not(.dark) canvas {
+  background: rgba(0,0,0,0.03);
+}
+.molecule-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.mol-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-weight: 500;
+}
+.mol-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.mol-btn.active {
+  border-color: var(--accent-cyan);
+  background: rgba(6,214,160,0.1);
+  color: var(--accent-cyan);
+}
+.valency-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.valency-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+html:not(.dark) .valency-card { background: rgba(0,0,0,0.02); }
+.valency-card:hover { transform: translateY(-2px); box-shadow: var(--glow-cyan); }
+.valency-symbol {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.valency-name { font-size: 0.82rem; color: var(--text-secondary); }
+.valency-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.bond-notation {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 16px 0;
+}
+.bond-example {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.bond-line {
+  width: 28px; height: 3px;
+  border-radius: 2px;
+}
+.download-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 24px;
+  flex-wrap: wrap;
+  animation: fadeDown 0.6s ease 0.2s both;
+}
+.dl-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dl-btn.primary {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+  color: #fff;
+}
+.dl-btn.primary:hover { box-shadow: var(--glow-cyan); transform: translateY(-1px); }
+.dl-btn.secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.dl-btn.secondary:hover { background: var(--bg-card-hover); }
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-cyan);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  z-index: 999;
+  transition: transform 0.4s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+@media(max-width:600px) {
+  .container { padding: 16px 10px; }
+  .card { padding: 16px; }
+  .valency-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚛ Atomic Bonds &amp; Molecular Structure</h1>
+    <p>Interactive guide to atoms, covalent bonds &amp; simple organic molecules</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="atom" aria-label="Atom tab">Atomic Structure</button>
+    <button class="tab-btn" data-tab="bonds" aria-label="Bonds tab">Covalent Bonds</button>
+    <button class="tab-btn" data-tab="molecules" aria-label="Molecules tab">Molecules</button>
+  </div>
+
+  <!-- PANEL 1: ATOMIC STRUCTURE -->
+  <div class="panel active" id="panel-atom">
+    <div class="card">
+      <h2><span class="icon" style="background:rgba(59,130,246,0.15);color:var(--accent-blue);">⚛</span> Inside the Atom</h2>
+      <p class="info-text">
+        Every atom has a <strong>nucleus</strong> made of <strong>protons</strong> (positive charge) and <strong>neutrons</strong> (no charge),
+        surrounded by <strong>electrons</strong> (negative charge) orbiting in shells. The number of electrons determines how an atom bonds with others.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="atomCanvas" width="420" height="420"></canvas>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#f72585;"></span> Proton (+)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#8892a8;"></span> Neutron (0)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> Electron (−)</span>
+      </div>
+      <div class="molecule-selector" style="margin-top:14px; justify-content:center;">
+        <button class="mol-btn active" data-atom="H">H — Hydrogen</button>
+        <button class="mol-btn" data-atom="C">C — Carbon</button>
+        <button class="mol-btn" data-atom="N">N — Nitrogen</button>
+        <button class="mol-btn" data-atom="O">O — Oxygen</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon" style="background:rgba(6,214,160,0.15);color:var(--accent-cyan);">🔢</span> Valency</h2>
+      <p class="info-text">
+        An atom's <strong>valency</strong> is the number of bonds it can form — determined by how many electrons it needs to fill its outer shell.
+      </p>
+      <div class="valency-grid">
+        <div class="valency-card">
+          <div class="valency-symbol" style="color:var(--accent-cyan);">H</div>
+          <div class="valency-name">Hydrogen</div>
+          <div class="valency-num" style="color:var(--accent-cyan);">Valency: 1</div>
+        </div>
+        <div class="valency-card">
+          <div class="valency-symbol" style="color:var(--accent-pink);">O</div>
+          <div class="valency-name">Oxygen</div>
+          <div class="valency-num" style="color:var(--accent-pink);">Valency: 2</div>
+        </div>
+        <div class="valency-card">
+          <div class="valency-symbol" style="color:var(--accent-purple);">N</div>
+          <div class="valency-name">Nitrogen</div>
+          <div class="valency-num" style="color:var(--accent-purple);">Valency: 3</div>
+        </div>
+        <div class="valency-card">
+          <div class="valency-symbol" style="color:var(--accent-orange);">C</div>
+          <div class="valency-name">Carbon</div>
+          <div class="valency-num" style="color:var(--accent-orange);">Valency: 4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: COVALENT BONDS -->
+  <div class="panel" id="panel-bonds">
+    <div class="card">
+      <h2><span class="icon" style="background:rgba(247,37,133,0.15);color:var(--accent-pink);">🔗</span> Covalent Bonding</h2>
+      <p class="info-text">
+        A <strong>covalent bond</strong> forms when two atoms <strong>share a pair of electrons</strong> — one electron from each atom.
+        This shared pair holds the atoms together. A single bond (one shared pair) is drawn as a <strong>single line</strong> between atoms.
+      </p>
+      <div class="canvas-wrap">
+        <canvas id="bondCanvas" width="500" height="300"></canvas>
+      </div>
+      <p class="info-text" style="text-align:center; margin-top:8px;">
+        Two hydrogen atoms share electrons to form H₂ — the simplest covalent bond.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon" style="background:rgba(255,140,66,0.15);color:var(--accent-orange);">✏️</span> Bond Notation</h2>
+      <p class="info-text">
+        In structural formulas we use a <strong>line (—)</strong> to represent a single covalent bond (2 shared electrons).
+      </p>
+      <div class="bond-notation">
+        <div class="bond-example">
+          <span style="color:var(--accent-cyan);">H</span>
+          <span class="bond-line" style="background:var(--text-secondary);"></span>
+          <span style="color:var(--accent-cyan);">H</span>
+        </div>
+        <div class="bond-example">
+          <span style="color:var(--accent-cyan);">H</span>
+          <span class="bond-line" style="background:var(--text-secondary);"></span>
+          <span style="color:var(--accent-pink);">O</span>
+          <span class="bond-line" style="background:var(--text-secondary);"></span>
+          <span style="color:var(--accent-cyan);">H</span>
+        </div>
+        <div class="bond-example">
+          <span style="color:var(--accent-cyan);">H</span>
+          <span class="bond-line" style="background:var(--text-secondary);"></span>
+          <span style="color:var(--accent-orange);">C</span>
+          <span class="bond-line" style="background:var(--text-secondary);"></span>
+          <span style="color:var(--accent-cyan);">H</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: MOLECULES -->
+  <div class="panel" id="panel-molecules">
+    <div class="card">
+      <h2><span class="icon" style="background:rgba(123,47,247,0.15);color:var(--accent-purple);">🧪</span> Organic Molecules</h2>
+      <p class="info-text">
+        Using valency rules we can draw <strong>structural formulas</strong> for simple organic molecules. Select a molecule below to see how each atom satisfies its valency through single covalent bonds.
+      </p>
+      <div class="molecule-selector" id="molSelector">
+        <button class="mol-btn active" data-mol="methane">CH₄ Methane</button>
+        <button class="mol-btn" data-mol="methanol">CH₃OH Methanol</button>
+        <button class="mol-btn" data-mol="methylamine">CH₃NH₂ Methylamine</button>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="molCanvas" width="520" height="420"></canvas>
+      </div>
+      <div class="legend" id="molLegend"></div>
+      <p class="info-text" id="molDescription" style="text-align:center; margin-top:10px;"></p>
+    </div>
+  </div>
+
+  <div class="download-bar">
+    <button class="dl-btn primary" id="btnDownloadPNG" aria-label="Download as image">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Save as PNG
+    </button>
+    <button class="dl-btn secondary" id="btnDownloadHTML" aria-label="Download HTML file">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+      Download HTML
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Dark/Light Mode ── */
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+  if (event.matches) { document.documentElement.classList.add('dark'); }
+  else { document.documentElement.classList.remove('dark'); }
+});
+
+/* ── Toast ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ── Tabs ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ── Color helpers ── */
+const COLORS = {
+  H: '#06d6a0', C: '#ff8c42', N: '#7b2ff7', O: '#f72585',
+  proton: '#f72585', neutron: '#8892a8', electron: '#3b82f6',
+  bond: '#ffd166'
+};
+
+function isDark() { return document.documentElement.classList.contains('dark'); }
+function textColor() { return isDark() ? '#e8ecf4' : '#1a1a2e'; }
+function subtleColor() { return isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PANEL 1 — ATOM VISUALIZATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const atomData = {
+  H: { name:'Hydrogen', symbol:'H', protons:1, neutrons:0, electrons:[1], shells:[1] },
+  C: { name:'Carbon', symbol:'C', protons:6, neutrons:6, electrons:[2,4], shells:[2,4] },
+  N: { name:'Nitrogen', symbol:'N', protons:7, neutrons:7, electrons:[2,5], shells:[2,5] },
+  O: { name:'Oxygen', symbol:'O', protons:8, neutrons:8, electrons:[2,6], shells:[2,6] }
+};
+let selectedAtom = 'H';
+const atomCvs = document.getElementById('atomCanvas');
+const atomCtx = atomCvs.getContext('2d');
+let atomAnimFrame;
+let atomTime = 0;
+
+document.querySelectorAll('[data-atom]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-atom]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedAtom = btn.dataset.atom;
+    atomTime = 0;
+  });
+});
+
+function drawAtom(time) {
+  const w = atomCvs.width, h = atomCvs.height;
+  const cx = w / 2, cy = h / 2;
+  const dpr = window.devicePixelRatio || 1;
+  atomCtx.clearRect(0, 0, w, h);
+
+  const data = atomData[selectedAtom];
+
+  /* Nucleus */
+  const nucR = data.protons === 1 ? 18 : 28;
+  const grad = atomCtx.createRadialGradient(cx, cy, 0, cx, cy, nucR + 10);
+  grad.addColorStop(0, 'rgba(247,37,133,0.25)');
+  grad.addColorStop(1, 'rgba(247,37,133,0)');
+  atomCtx.fillStyle = grad;
+  atomCtx.beginPath();
+  atomCtx.arc(cx, cy, nucR + 16, 0, Math.PI * 2);
+  atomCtx.fill();
+
+  /* Draw protons and neutrons in nucleus */
+  const totalNuc = data.protons + data.neutrons;
+  if (totalNuc === 1) {
+    drawParticle(atomCtx, cx, cy, 12, COLORS.proton, '+');
+  } else {
+    const ring = Math.min(totalNuc, 12);
+    const ringR = nucR * 0.55;
+    for (let i = 0; i < totalNuc; i++) {
+      const angle = (i / totalNuc) * Math.PI * 2 - Math.PI / 2;
+      const wobble = Math.sin(time * 0.8 + i) * 1.5;
+      const px = cx + Math.cos(angle) * (ringR + wobble);
+      const py = cy + Math.sin(angle) * (ringR + wobble);
+      const isProton = i < data.protons;
+      drawParticle(atomCtx, px, py, 7, isProton ? COLORS.proton : COLORS.neutron, isProton ? '+' : '');
+    }
+  }
+
+  /* Shells + electrons */
+  const shellRadii = data.shells.length === 1 ? [75] : [65, 120];
+  data.shells.forEach((count, si) => {
+    const sr = shellRadii[si];
+    atomCtx.strokeStyle = subtleColor();
+    atomCtx.lineWidth = 1;
+    atomCtx.setLineDash([4, 6]);
+    atomCtx.beginPath();
+    atomCtx.arc(cx, cy, sr, 0, Math.PI * 2);
+    atomCtx.stroke();
+    atomCtx.setLineDash([]);
+
+    for (let e = 0; e < count; e++) {
+      const angle = (e / count) * Math.PI * 2 + time * (1.2 - si * 0.3);
+      const ex = cx + Math.cos(angle) * sr;
+      const ey = cy + Math.sin(angle) * sr;
+      /* glow */
+      const eg = atomCtx.createRadialGradient(ex, ey, 0, ex, ey, 14);
+      eg.addColorStop(0, 'rgba(59,130,246,0.35)');
+      eg.addColorStop(1, 'rgba(59,130,246,0)');
+      atomCtx.fillStyle = eg;
+      atomCtx.beginPath();
+      atomCtx.arc(ex, ey, 14, 0, Math.PI * 2);
+      atomCtx.fill();
+
+      atomCtx.fillStyle = COLORS.electron;
+      atomCtx.beginPath();
+      atomCtx.arc(ex, ey, 6, 0, Math.PI * 2);
+      atomCtx.fill();
+
+      atomCtx.fillStyle = '#fff';
+      atomCtx.font = 'bold 7px JetBrains Mono, monospace';
+      atomCtx.textAlign = 'center';
+      atomCtx.textBaseline = 'middle';
+      atomCtx.fillText('−', ex, ey + 0.5);
+    }
+  });
+
+  /* Label */
+  atomCtx.fillStyle = textColor();
+  atomCtx.font = 'bold 14px Outfit, sans-serif';
+  atomCtx.textAlign = 'center';
+  atomCtx.fillText(data.name + '  (' + data.symbol + ')', cx, h - 20);
+  atomCtx.font = '12px Outfit, sans-serif';
+  atomCtx.fillStyle = isDark() ? '#8892a8' : '#5a6178';
+  atomCtx.fillText(data.protons + ' proton' + (data.protons > 1 ? 's' : '') + ',  ' + data.neutrons + ' neutron' + (data.neutrons !== 1 ? 's' : '') + ',  ' + data.electrons.reduce((a, b) => a + b, 0) + ' electron' + (data.electrons.reduce((a, b) => a + b, 0) > 1 ? 's' : ''), cx, h - 4);
+}
+
+function drawParticle(ctx, x, y, r, color, label) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  if (label) {
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold ' + (r * 0.9) + 'px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 0.5);
+  }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PANEL 2 — BOND VISUALIZATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const bondCvs = document.getElementById('bondCanvas');
+const bondCtx = bondCvs.getContext('2d');
+let bondTime = 0;
+
+function drawBond(time) {
+  const w = bondCvs.width, h = bondCvs.height;
+  bondCtx.clearRect(0, 0, w, h);
+  const cy = h / 2;
+
+  const atomR = 36;
+  const gap = 130;
+  const x1 = w / 2 - gap / 2;
+  const x2 = w / 2 + gap / 2;
+
+  /* Overlap region */
+  const overlapAlpha = 0.08 + Math.sin(time * 1.5) * 0.04;
+  bondCtx.fillStyle = isDark()
+    ? 'rgba(255,209,102,' + overlapAlpha + ')'
+    : 'rgba(255,140,66,' + overlapAlpha + ')';
+  bondCtx.beginPath();
+  bondCtx.ellipse(w / 2, cy, gap * 0.55, atomR * 1.3, 0, 0, Math.PI * 2);
+  bondCtx.fill();
+
+  /* Bond line */
+  bondCtx.strokeStyle = COLORS.bond;
+  bondCtx.lineWidth = 3;
+  bondCtx.beginPath();
+  bondCtx.moveTo(x1, cy);
+  bondCtx.lineTo(x2, cy);
+  bondCtx.stroke();
+
+  /* Shared electrons */
+  const e1Angle = time * 1.8;
+  const e2Angle = e1Angle + Math.PI;
+  const eOrbR = 16;
+  const eMidX = w / 2;
+  for (let i = 0; i < 2; i++) {
+    const a = i === 0 ? e1Angle : e2Angle;
+    const ex = eMidX + Math.cos(a) * eOrbR;
+    const ey = cy + Math.sin(a) * eOrbR;
+    const eg = bondCtx.createRadialGradient(ex, ey, 0, ex, ey, 12);
+    eg.addColorStop(0, 'rgba(59,130,246,0.4)');
+    eg.addColorStop(1, 'rgba(59,130,246,0)');
+    bondCtx.fillStyle = eg;
+    bondCtx.beginPath();
+    bondCtx.arc(ex, ey, 12, 0, Math.PI * 2);
+    bondCtx.fill();
+    bondCtx.fillStyle = COLORS.electron;
+    bondCtx.beginPath();
+    bondCtx.arc(ex, ey, 5, 0, Math.PI * 2);
+    bondCtx.fill();
+    bondCtx.fillStyle = '#fff';
+    bondCtx.font = 'bold 6px JetBrains Mono';
+    bondCtx.textAlign = 'center';
+    bondCtx.textBaseline = 'middle';
+    bondCtx.fillText('−', ex, ey + 0.5);
+  }
+
+  /* Atoms */
+  [x1, x2].forEach(x => {
+    const ag = bondCtx.createRadialGradient(x, cy, 0, x, cy, atomR);
+    ag.addColorStop(0, 'rgba(6,214,160,0.18)');
+    ag.addColorStop(1, 'rgba(6,214,160,0)');
+    bondCtx.fillStyle = ag;
+    bondCtx.beginPath();
+    bondCtx.arc(x, cy, atomR, 0, Math.PI * 2);
+    bondCtx.fill();
+
+    bondCtx.fillStyle = COLORS.H;
+    bondCtx.strokeStyle = 'rgba(6,214,160,0.3)';
+    bondCtx.lineWidth = 2;
+    bondCtx.beginPath();
+    bondCtx.arc(x, cy, 22, 0, Math.PI * 2);
+    bondCtx.fill();
+    bondCtx.stroke();
+
+    bondCtx.fillStyle = '#fff';
+    bondCtx.font = 'bold 16px JetBrains Mono, monospace';
+    bondCtx.textAlign = 'center';
+    bondCtx.textBaseline = 'middle';
+    bondCtx.fillText('H', x, cy + 1);
+  });
+
+  /* Labels */
+  bondCtx.fillStyle = textColor();
+  bondCtx.font = '12px Outfit, sans-serif';
+  bondCtx.textAlign = 'center';
+  bondCtx.fillText('shared electron pair', w / 2, cy + 56);
+
+  bondCtx.fillStyle = COLORS.bond;
+  bondCtx.font = 'bold 13px JetBrains Mono, monospace';
+  bondCtx.fillText('H — H', w / 2, cy + 78);
+
+  bondCtx.fillStyle = isDark() ? '#8892a8' : '#5a6178';
+  bondCtx.font = '11px Outfit, sans-serif';
+  bondCtx.fillText('single covalent bond', w / 2, cy + 94);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PANEL 3 — MOLECULE VISUALIZATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const molCvs = document.getElementById('molCanvas');
+const molCtx = molCvs.getContext('2d');
+let selectedMol = 'methane';
+let molTime = 0;
+
+const molecules = {
+  methane: {
+    name: 'Methane',
+    formula: 'CH₄',
+    desc: 'Carbon (valency 4) bonds with 4 hydrogen atoms. Each C—H bond is a single covalent bond.',
+    atoms: [
+      { el:'C', x:0, y:0 },
+      { el:'H', x:0, y:-1.1 },
+      { el:'H', x:1.1, y:0 },
+      { el:'H', x:0, y:1.1 },
+      { el:'H', x:-1.1, y:0 }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4]],
+    elements: ['C','H']
+  },
+  methanol: {
+    name: 'Methanol',
+    formula: 'CH₃OH',
+    desc: 'Carbon bonds to 3 hydrogens and 1 oxygen. Oxygen (valency 2) bonds to carbon and one more hydrogen.',
+    atoms: [
+      { el:'C', x:-0.6, y:0 },
+      { el:'H', x:-0.6, y:-1.1 },
+      { el:'H', x:-1.7, y:0.55 },
+      { el:'H', x:-0.6, y:1.1 },
+      { el:'O', x:0.7, y:0 },
+      { el:'H', x:1.65, y:0.55 }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4],[4,5]],
+    elements: ['C','H','O']
+  },
+  methylamine: {
+    name: 'Methylamine',
+    formula: 'CH₃NH₂',
+    desc: 'Carbon bonds to 3 hydrogens and 1 nitrogen. Nitrogen (valency 3) bonds to carbon and 2 hydrogens.',
+    atoms: [
+      { el:'C', x:-0.65, y:0 },
+      { el:'H', x:-0.65, y:-1.1 },
+      { el:'H', x:-1.75, y:0.55 },
+      { el:'H', x:-0.65, y:1.1 },
+      { el:'N', x:0.7, y:0 },
+      { el:'H', x:1.6, y:-0.7 },
+      { el:'H', x:1.6, y:0.7 }
+    ],
+    bonds: [[0,1],[0,2],[0,3],[0,4],[4,5],[4,6]],
+    elements: ['C','H','N']
+  }
+};
+
+document.querySelectorAll('[data-mol]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mol]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMol = btn.dataset.mol;
+    molTime = 0;
+    updateMolInfo();
+  });
+});
+
+function updateMolInfo() {
+  const mol = molecules[selectedMol];
+  document.getElementById('molDescription').textContent = mol.desc;
+  const legendEl = document.getElementById('molLegend');
+  legendEl.innerHTML = mol.elements.map(el =>
+    '<span class="legend-item"><span class="legend-dot" style="background:' + COLORS[el] + ';"></span> ' + el + '</span>'
+  ).join('');
+}
+updateMolInfo();
+
+function drawMolecule(time) {
+  const w = molCvs.width, h = molCvs.height;
+  molCtx.clearRect(0, 0, w, h);
+  const mol = molecules[selectedMol];
+  const cx = w / 2, cy = h / 2 - 10;
+  const scale = 90;
+
+  const atomR = { C: 26, O: 24, N: 24, H: 18 };
+
+  /* Breathing */
+  const breath = 1 + Math.sin(time * 0.7) * 0.015;
+
+  /* Draw bonds */
+  mol.bonds.forEach(function(bond) {
+    const a = mol.atoms[bond[0]];
+    const b = mol.atoms[bond[1]];
+    const ax = cx + a.x * scale * breath;
+    const ay = cy + a.y * scale * breath;
+    const bx = cx + b.x * scale * breath;
+    const by = cy + b.y * scale * breath;
+
+    molCtx.strokeStyle = COLORS.bond;
+    molCtx.lineWidth = 4;
+    molCtx.lineCap = 'round';
+    molCtx.beginPath();
+    molCtx.moveTo(ax, ay);
+    molCtx.lineTo(bx, by);
+    molCtx.stroke();
+
+    /* Shared electron pair dots on bond midpoint */
+    const mx = (ax + bx) / 2;
+    const my = (ay + by) / 2;
+    var dx = bx - ax;
+    var dy = by - ay;
+    var len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var nx = -dy / len;
+    var ny = dx / len;
+    var sep = 5;
+    for (var ei = 0; ei < 2; ei++) {
+      var sign = ei === 0 ? 1 : -1;
+      var epx = mx + nx * sep * sign;
+      var epy = my + ny * sep * sign;
+      molCtx.fillStyle = COLORS.electron;
+      molCtx.beginPath();
+      molCtx.arc(epx, epy, 3, 0, Math.PI * 2);
+      molCtx.fill();
+    }
+  });
+
+  /* Draw atoms */
+  mol.atoms.forEach(function(atom) {
+    var ax = cx + atom.x * scale * breath;
+    var ay = cy + atom.y * scale * breath;
+    var r = atomR[atom.el];
+    var col = COLORS[atom.el];
+
+    /* Glow */
+    var g = molCtx.createRadialGradient(ax, ay, 0, ax, ay, r + 12);
+    g.addColorStop(0, col.replace(')', ',0.2)').replace('rgb', 'rgba'));
+    g.addColorStop(1, col.replace(')', ',0)').replace('rgb', 'rgba'));
+    molCtx.fillStyle = g;
+    molCtx.beginPath();
+    molCtx.arc(ax, ay, r + 12, 0, Math.PI * 2);
+    molCtx.fill();
+
+    /* Sphere */
+    molCtx.fillStyle = col;
+    molCtx.beginPath();
+    molCtx.arc(ax, ay, r, 0, Math.PI * 2);
+    molCtx.fill();
+
+    /* Highlight */
+    var hg = molCtx.createRadialGradient(ax - r * 0.3, ay - r * 0.3, 0, ax, ay, r);
+    hg.addColorStop(0, 'rgba(255,255,255,0.25)');
+    hg.addColorStop(1, 'rgba(255,255,255,0)');
+    molCtx.fillStyle = hg;
+    molCtx.beginPath();
+    molCtx.arc(ax, ay, r, 0, Math.PI * 2);
+    molCtx.fill();
+
+    /* Label */
+    molCtx.fillStyle = '#fff';
+    molCtx.font = 'bold ' + (atom.el === 'H' ? 13 : 16) + 'px JetBrains Mono, monospace';
+    molCtx.textAlign = 'center';
+    molCtx.textBaseline = 'middle';
+    molCtx.fillText(atom.el, ax, ay + 1);
+  });
+
+  /* Title */
+  molCtx.fillStyle = textColor();
+  molCtx.font = 'bold 15px Outfit, sans-serif';
+  molCtx.textAlign = 'center';
+  molCtx.fillText(mol.name + '  —  ' + mol.formula, cx, h - 16);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ANIMATION LOOP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function animate() {
+  atomTime += 0.016;
+  bondTime += 0.016;
+  molTime += 0.016;
+  drawAtom(atomTime);
+  drawBond(bondTime);
+  drawMolecule(molTime);
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   DOWNLOAD FUNCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.getElementById('btnDownloadPNG').addEventListener('click', function() {
+  /* Find currently visible canvas */
+  var canvas;
+  if (document.getElementById('panel-atom').classList.contains('active')) {
+    canvas = atomCvs;
+  } else if (document.getElementById('panel-bonds').classList.contains('active')) {
+    canvas = bondCvs;
+  } else {
+    canvas = molCvs;
+  }
+  var link = document.createElement('a');
+  link.download = 'atomic-bonds.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('PNG saved!');
+});
+
+document.getElementById('btnDownloadHTML').addEventListener('click', function() {
+  var html = document.documentElement.outerHTML;
+  var blob = new Blob([html], { type: 'text/html' });
+  var link = document.createElement('a');
+  link.download = 'atomic-bonds-visualizer.html';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+  showToast('HTML file saved!');
+});
+</script>
+</body>
+</html>
+
