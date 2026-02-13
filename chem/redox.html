@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redox Chemistry Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0f1c;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --accent-oxidation: #f43f5e;
+            --accent-reduction: #22d3ee;
+            --accent-neutral: #a78bfa;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+            --electron-glow: #fbbf24;
+            --solution-color: rgba(59, 130, 246, 0.15);
+            --wire-color: #78716c;
+        }
+
+        .light {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border: #cbd5e1;
+            --solution-color: rgba(59, 130, 246, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--accent-neutral) 0%, transparent 70%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral), var(--accent-oxidation));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            padding: 0 10px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            border-color: var(--accent-neutral);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral));
+            color: white;
+            border-color: transparent;
+        }
+
+        .panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-neutral);
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        }
+
+        button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--accent-reduction), var(--accent-neutral));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(167, 139, 250, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-neutral);
+            box-shadow: none;
+        }
+
+        /* Oxidation Calculator Styles */
+        .compound-display {
+            text-align: center;
+            padding: 30px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .compound-formula {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .compound-formula sub {
+            font-size: 0.6em;
+            vertical-align: sub;
+        }
+
+        .compound-formula sup {
+            font-size: 0.5em;
+            vertical-align: super;
+        }
+
+        .calculation-steps {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            animation: slideIn 0.3s ease forwards;
+            opacity: 0;
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-neutral);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .highlight-ox {
+            color: var(--accent-oxidation);
+            font-weight: 600;
+        }
+
+        .highlight-red {
+            color: var(--accent-reduction);
+            font-weight: 600;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(167, 139, 250, 0.1));
+            border: 1px solid var(--accent-neutral);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .result-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Enhanced Electron Transfer - Electrochemical Cell */
+        .reaction-container {
+            position: relative;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .view-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn:hover {
+            border-color: var(--accent-neutral);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .view-btn.active {
+            background: var(--accent-neutral);
+            border-color: var(--accent-neutral);
+            color: white;
+        }
+
+        .transfer-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            height: 420px;
+            margin-bottom: 15px;
+        }
+
+        #transfer-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .half-reactions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .half-reaction {
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .half-reaction.oxidation {
+            background: rgba(244, 63, 94, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .half-reaction.oxidation.active {
+            border-color: var(--accent-oxidation);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+        }
+
+        .half-reaction.reduction {
+            background: rgba(34, 211, 238, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .half-reaction.reduction.active {
+            border-color: var(--accent-reduction);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.3);
+        }
+
+        .half-reaction-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .half-reaction.oxidation .half-reaction-label {
+            color: var(--accent-oxidation);
+        }
+
+        .half-reaction.reduction .half-reaction-label {
+            color: var(--accent-reduction);
+        }
+
+        .half-reaction-equation {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .half-reaction-potential {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .transfer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-btn:hover {
+            border-color: var(--accent-neutral);
+            background: var(--bg-secondary);
+            transform: translateY(-1px);
+            box-shadow: none;
+        }
+
+        .control-btn.active {
+            background: var(--accent-neutral);
+            border-color: var(--accent-neutral);
+            color: white;
+        }
+
+        .animation-stage {
+            text-align: center;
+            padding: 12px 20px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stage-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stage-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .stage-dot.active {
+            background: var(--accent-neutral);
+            box-shadow: 0 0 10px var(--accent-neutral);
+        }
+
+        .stage-dot.completed {
+            background: var(--accent-reduction);
+        }
+
+        .stage-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .driving-force {
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(167, 139, 250, 0.1));
+            border: 1px solid var(--accent-neutral);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .driving-force-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .driving-force-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent-reduction);
+        }
+
+        .driving-force-explanation {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .legend-box {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-electron {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--electron-glow);
+            box-shadow: 0 0 8px var(--electron-glow);
+        }
+
+        .legend-anode {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: #94a3b8;
+        }
+
+        .legend-cathode {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: #f97316;
+        }
+
+        .legend-solution {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: rgba(59, 130, 246, 0.4);
+        }
+
+        /* Reaction Analyzer */
+        .reaction-input {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-input input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .analysis-result {
+            margin-top: 20px;
+        }
+
+        .species-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .species-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .species-card.ox-agent {
+            border-color: var(--accent-oxidation);
+            background: rgba(244, 63, 94, 0.05);
+        }
+
+        .species-card.red-agent {
+            border-color: var(--accent-reduction);
+            background: rgba(34, 211, 238, 0.05);
+        }
+
+        .species-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .species-role {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .species-role.oxidized {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-oxidation);
+        }
+
+        .species-role.reduced {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-reduction);
+        }
+
+        .species-change {
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Quick Reference */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .rule-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--accent-neutral);
+        }
+
+        .rule-element {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .rule-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .mnemonic-box {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.1), rgba(34, 211, 238, 0.1));
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .mnemonic-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .mnemonic-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .mnemonic-text span {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 8px;
+            margin: 5px;
+        }
+
+        .mnemonic-text .oil {
+            background: rgba(244, 63, 94, 0.2);
+            color: var(--accent-oxidation);
+        }
+
+        .mnemonic-text .rig {
+            background: rgba(34, 211, 238, 0.2);
+            color: var(--accent-reduction);
+        }
+
+        /* Preset buttons */
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-neutral);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .half-reactions {
+                grid-template-columns: 1fr;
+            }
+
+            .transfer-canvas-wrapper {
+                height: 350px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-tabs {
+                gap: 6px;
+            }
+
+            .nav-tab {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .transfer-canvas-wrapper {
+                height: 300px;
+            }
+
+            .view-toggle {
+                flex-direction: column;
+            }
+
+            .view-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Redox Chemistry Simulator</h1>
+            <p class="subtitle">Visualize oxidation states, electron transfer & redox reactions</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="calculator">Oxidation Calculator</button>
+            <button class="nav-tab" data-tab="transfer">Electron Transfer</button>
+            <button class="nav-tab" data-tab="analyzer">Reaction Analyzer</button>
+            <button class="nav-tab" data-tab="reference">Quick Reference</button>
+        </nav>
+
+        <!-- Oxidation State Calculator -->
+        <div id="calculator" class="panel active">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-neutral);">🧮</span>
+                    Calculate Oxidation State
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Enter a compound formula to calculate the oxidation state of any element.
+                    Use standard notation: KMnO4, H2SO4, Fe2O3, etc.
+                </p>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="setCompound('KMnO4', 'Mn')">KMnO₄</button>
+                    <button class="preset-btn" onclick="setCompound('KClO3', 'Cl')">KClO₃</button>
+                    <button class="preset-btn" onclick="setCompound('H2SO4', 'S')">H₂SO₄</button>
+                    <button class="preset-btn" onclick="setCompound('Na2Cr2O7', 'Cr')">Na₂Cr₂O₇</button>
+                    <button class="preset-btn" onclick="setCompound('H2O2', 'O')">H₂O₂</button>
+                    <button class="preset-btn" onclick="setCompound('Fe2O3', 'Fe')">Fe₂O₃</button>
+                </div>
+
+                <div class="input-group">
+                    <label>Compound Formula</label>
+                    <input type="text" id="compound-input" placeholder="e.g., KMnO4, H2SO4, Fe2O3">
+                </div>
+
+                <div class="input-group">
+                    <label>Element to Find</label>
+                    <input type="text" id="element-input" placeholder="e.g., Mn, S, Fe">
+                </div>
+
+                <button onclick="calculateOxidationState()">Calculate Oxidation State</button>
+
+                <div id="calc-result" style="display: none;">
+                    <div class="compound-display">
+                        <div class="compound-formula" id="formula-display"></div>
+                        <div style="color: var(--text-secondary);">Finding oxidation state of <span id="target-element" class="highlight-ox"></span></div>
+                    </div>
+
+                    <div class="calculation-steps" id="calc-steps"></div>
+
+                    <div class="result-box">
+                        <div class="result-value" id="final-result"></div>
+                        <div class="result-label">Oxidation State</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Electron Transfer Visualization -->
+        <div id="transfer" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--electron-glow);">⚡</span>
+                    Electrochemical Cell Visualization
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Watch how electrons flow through a wire in a galvanic cell. This accurately shows redox reactions as they occur in electrochemistry.
+                </p>
+
+                <div class="input-group">
+                    <label>Select Reaction</label>
+                    <select id="reaction-select" onchange="initializeTransfer()">
+                        <option value="">Choose a reaction...</option>
+                        <option value="zn-cu">Zn | Zn²⁺ || Cu²⁺ | Cu (Daniell Cell)</option>
+                        <option value="mg-cu">Mg | Mg²⁺ || Cu²⁺ | Cu</option>
+                        <option value="zn-ag">Zn | Zn²⁺ || Ag⁺ | Ag</option>
+                        <option value="fe-cu">Fe | Fe²⁺ || Cu²⁺ | Cu</option>
+                    </select>
+                </div>
+
+                <div id="transfer-container" class="reaction-container" style="display: none;">
+                    <!-- Half Reactions Display -->
+                    <div class="half-reactions">
+                        <div class="half-reaction oxidation" id="oxidation-half">
+                            <div class="half-reaction-label">⬆️ Oxidation (Anode)</div>
+                            <div class="half-reaction-equation" id="ox-equation">Zn → Zn²⁺ + 2e⁻</div>
+                            <div class="half-reaction-potential" id="ox-potential">E° = -0.76 V</div>
+                        </div>
+                        <div class="half-reaction reduction" id="reduction-half">
+                            <div class="half-reaction-label">⬇️ Reduction (Cathode)</div>
+                            <div class="half-reaction-equation" id="red-equation">Cu²⁺ + 2e⁻ → Cu</div>
+                            <div class="half-reaction-potential" id="red-potential">E° = +0.34 V</div>
+                        </div>
+                    </div>
+
+                    <div class="animation-stage">
+                        <div class="stage-indicator" id="stage-indicator"></div>
+                        <div class="stage-text" id="stage-text">Select a reaction to begin</div>
+                    </div>
+
+                    <div class="transfer-controls">
+                        <button class="control-btn" id="play-btn" onclick="toggleAnimation()">
+                            <span id="play-icon">▶</span> Play
+                        </button>
+                        <button class="control-btn" onclick="stepAnimation()">
+                            ⏭ Step
+                        </button>
+                        <button class="control-btn" onclick="resetAnimation()">
+                            ↺ Reset
+                        </button>
+                        <button class="control-btn" id="speed-btn" onclick="toggleSpeed()">
+                            🐢 Normal
+                        </button>
+                    </div>
+
+                    <div class="transfer-canvas-wrapper">
+                        <canvas id="transfer-canvas"></canvas>
+                    </div>
+
+                    <div class="legend-box">
+                        <div class="legend-item">
+                            <div class="legend-anode"></div>
+                            <span>Anode (−)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-cathode"></div>
+                            <span>Cathode (+)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-electron"></div>
+                            <span>Electron flow</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-solution"></div>
+                            <span>Electrolyte solution</span>
+                        </div>
+                    </div>
+
+                    <div class="driving-force">
+                        <div class="driving-force-title">Why do electrons flow? (Driving Force)</div>
+                        <div class="driving-force-value" id="cell-potential">E°cell = +1.10 V</div>
+                        <div class="driving-force-explanation" id="driving-explanation">
+                            Positive E°cell means the reaction is spontaneous. Electrons flow from lower potential (anode) to higher potential (cathode).
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transfer-placeholder" class="reaction-container" style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🔋</div>
+                    <div style="color: var(--text-secondary); font-size: 1.1rem;">Select a galvanic cell above to visualize electron transfer</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">Electrons flow through the external wire, not through the solution!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reaction Analyzer -->
+        <div id="analyzer" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-reduction);">🔬</span>
+                    Reaction Analyzer
+                </h2>
+
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Enter a chemical reaction to identify oxidizing and reducing agents, or select from examples.
+                </p>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn" onclick="analyzePreset('Zn + CuSO4 -> ZnSO4 + Cu')">Zn + CuSO₄</button>
+                    <button class="preset-btn" onclick="analyzePreset('2Fe3+ + 2I- -> 2Fe2+ + I2')">Fe³⁺ + I⁻</button>
+                    <button class="preset-btn" onclick="analyzePreset('Cl2 + 2KBr -> 2KCl + Br2')">Cl₂ + KBr</button>
+                    <button class="preset-btn" onclick="analyzePreset('2Na + Cl2 -> 2NaCl')">Na + Cl₂</button>
+                    <button class="preset-btn" onclick="analyzePreset('H2S + Cl2 -> 2HCl + S')">H₂S + Cl₂</button>
+                </div>
+
+                <div class="reaction-input">
+                    <input type="text" id="reaction-input" placeholder="e.g., Zn + Cu2+ -> Zn2+ + Cu">
+                    <button onclick="analyzeReaction()">Analyze</button>
+                </div>
+
+                <div id="analysis-result" class="analysis-result" style="display: none;">
+                    <h3 style="margin-bottom: 15px;">Analysis Result</h3>
+
+                    <div class="compound-display" style="margin-bottom: 15px;">
+                        <div class="compound-formula" id="analyzed-reaction" style="font-size: 1.3rem;"></div>
+                    </div>
+
+                    <div id="redox-check" style="padding: 15px; border-radius: 10px; margin-bottom: 15px;"></div>
+
+                    <div class="species-grid" id="species-analysis"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div id="reference" class="panel">
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-oxidation);">📚</span>
+                    Oxidation State Rules
+                </h2>
+
+                <div class="rules-grid">
+                    <div class="rule-card">
+                        <div class="rule-element">Free Elements</div>
+                        <div class="rule-text">Oxidation state = <strong>0</strong><br>Examples: Na, Fe, O₂, Cl₂, S₈</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Hydrogen (H)</div>
+                        <div class="rule-text">Usually <strong>+1</strong><br>Exception: Metal hydrides (NaH) = <strong>-1</strong></div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Oxygen (O)</div>
+                        <div class="rule-text">Usually <strong>-2</strong><br>Peroxides (H₂O₂) = <strong>-1</strong><br>With F (OF₂) = <strong>+2</strong></div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Halogens</div>
+                        <div class="rule-text">F always <strong>-1</strong><br>Cl, Br, I usually <strong>-1</strong> (negative when with metals)</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Alkali Metals (Group 1)</div>
+                        <div class="rule-text">Always <strong>+1</strong><br>Li, Na, K, Rb, Cs</div>
+                    </div>
+                    <div class="rule-card">
+                        <div class="rule-element">Alkaline Earth (Group 2)</div>
+                        <div class="rule-text">Always <strong>+2</strong><br>Mg, Ca, Sr, Ba</div>
+                    </div>
+                </div>
+
+                <div class="mnemonic-box">
+                    <div class="mnemonic-title">Remember the mnemonic:</div>
+                    <div class="mnemonic-text">
+                        <span class="oil">OIL</span> - <span class="rig">RIG</span>
+                    </div>
+                    <p style="margin-top: 15px; color: var(--text-secondary);">
+                        <span class="highlight-ox">Oxidation Is Loss</span> of electrons &nbsp;|&nbsp;
+                        <span class="highlight-red">Reduction Is Gain</span> of electrons
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">
+                    <span class="icon" style="background: var(--accent-reduction);">⚗️</span>
+                    Key Concepts
+                </h2>
+
+                <div class="rules-grid">
+                    <div class="rule-card" style="border-color: var(--accent-oxidation);">
+                        <div class="rule-element" style="color: var(--accent-oxidation);">Oxidizing Agent</div>
+                        <div class="rule-text">
+                            • Causes oxidation in another substance<br>
+                            • <strong>Gets reduced itself</strong> (gains electrons)<br>
+                            • Oxidation number decreases<br>
+                            • Examples: KMnO₄, K₂Cr₂O₇, HNO₃, Cl₂
+                        </div>
+                    </div>
+                    <div class="rule-card" style="border-color: var(--accent-reduction);">
+                        <div class="rule-element" style="color: var(--accent-reduction);">Reducing Agent</div>
+                        <div class="rule-text">
+                            • Causes reduction in another substance<br>
+                            • <strong>Gets oxidized itself</strong> (loses electrons)<br>
+                            • Oxidation number increases<br>
+                            • Examples: H₂, C, Zn, Na, H₂S
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 20px; background: var(--bg-secondary); border-radius: 12px;">
+                    <h4 style="margin-bottom: 15px;">📐 Calculating Unknown Oxidation States</h4>
+                    <ol style="color: var(--text-secondary); padding-left: 20px; line-height: 1.8;">
+                        <li>Sum of all oxidation states = charge on species (0 for neutral compounds)</li>
+                        <li>Assign known oxidation states first (O = -2, H = +1, alkali metals = +1, etc.)</li>
+                        <li>Set up equation and solve for unknown element</li>
+                        <li>Example: KMnO₄ → (+1) + x + 4(-2) = 0 → x = +7</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            document.documentElement.classList.add('light');
+        }
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('light');
+            } else {
+                document.documentElement.classList.remove('light');
+            }
+        });
+
+        // Tab navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+
+                if (tab.dataset.tab === 'transfer' && currentReaction) {
+                    setTimeout(() => initializeTransfer(), 100);
+                }
+            });
+        });
+
+        // Oxidation state rules database
+        const oxidationRules = {
+            'H': { default: 1, exceptions: { 'hydride': -1 } },
+            'O': { default: -2, exceptions: { 'peroxide': -1, 'superoxide': -0.5, 'OF2': 2 } },
+            'F': { default: -1 },
+            'Li': { default: 1 }, 'Na': { default: 1 }, 'K': { default: 1 }, 'Rb': { default: 1 }, 'Cs': { default: 1 },
+            'Be': { default: 2 }, 'Mg': { default: 2 }, 'Ca': { default: 2 }, 'Sr': { default: 2 }, 'Ba': { default: 2 },
+            'Al': { default: 3 },
+            'Ag': { default: 1 },
+            'Zn': { default: 2 },
+            'Cl': { default: -1 }, 'Br': { default: -1 }, 'I': { default: -1 }
+        };
+
+        function parseFormula(formula) {
+            const elements = [];
+            const regex = /([A-Z][a-z]?)(\d*)/g;
+            let match;
+            while ((match = regex.exec(formula)) !== null) {
+                const element = match[1];
+                const count = match[2] ? parseInt(match[2]) : 1;
+                elements.push({ element, count });
+            }
+            return elements;
+        }
+
+        function formatFormula(formula) {
+            return formula.replace(/(\d+)/g, '<sub>$1</sub>')
+                         .replace(/(\+|\-)(\d*)/g, '<sup>$1$2</sup>');
+        }
+
+        function setCompound(compound, element) {
+            document.getElementById('compound-input').value = compound;
+            document.getElementById('element-input').value = element;
+            calculateOxidationState();
+        }
+
+        function calculateOxidationState() {
+            const compound = document.getElementById('compound-input').value.trim();
+            const targetElement = document.getElementById('element-input').value.trim();
+
+            if (!compound || !targetElement) {
+                showModal('Error', 'Please enter both compound formula and target element.');
+                return;
+            }
+
+            const elements = parseFormula(compound);
+            const targetData = elements.find(e => e.element === targetElement);
+
+            if (!targetData) {
+                showModal('Error', `Element "${targetElement}" not found in the compound.`);
+                return;
+            }
+
+            let totalCharge = 0;
+            if (compound.includes('+')) {
+                const chargeMatch = compound.match(/(\d*)\+/);
+                totalCharge = chargeMatch && chargeMatch[1] ? parseInt(chargeMatch[1]) : 1;
+            } else if (compound.includes('-')) {
+                const chargeMatch = compound.match(/(\d*)\-/);
+                totalCharge = -(chargeMatch && chargeMatch[1] ? parseInt(chargeMatch[1]) : 1);
+            }
+
+            let knownSum = 0;
+            const steps = [];
+            let stepDelay = 0;
+
+            elements.forEach(({ element, count }) => {
+                if (element !== targetElement && oxidationRules[element]) {
+                    let oxState = oxidationRules[element].default;
+
+                    if (element === 'O' && compound.includes('O2') && compound.includes('H2')) {
+                        oxState = -1;
+                    }
+
+                    const contribution = oxState * count;
+                    knownSum += contribution;
+                    steps.push({
+                        text: `${element}: (${oxState > 0 ? '+' : ''}${oxState}) × ${count} = ${contribution > 0 ? '+' : ''}${contribution}`,
+                        delay: stepDelay
+                    });
+                    stepDelay += 100;
+                }
+            });
+
+            const unknownTotal = totalCharge - knownSum;
+            const unknownOxState = unknownTotal / targetData.count;
+
+            steps.push({ text: `Total charge = ${totalCharge}`, delay: stepDelay });
+            stepDelay += 100;
+            steps.push({ text: `Sum of known = ${knownSum > 0 ? '+' : ''}${knownSum}`, delay: stepDelay });
+            stepDelay += 100;
+            steps.push({ text: `${targetElement} contribution = ${totalCharge} - (${knownSum > 0 ? '+' : ''}${knownSum}) = ${unknownTotal > 0 ? '+' : ''}${unknownTotal}`, delay: stepDelay });
+            stepDelay += 100;
+
+            if (targetData.count > 1) {
+                steps.push({ text: `${targetElement} per atom = ${unknownTotal > 0 ? '+' : ''}${unknownTotal} ÷ ${targetData.count} = ${unknownOxState > 0 ? '+' : ''}${unknownOxState}`, delay: stepDelay });
+            }
+
+            document.getElementById('calc-result').style.display = 'block';
+            document.getElementById('formula-display').innerHTML = formatFormula(compound);
+            document.getElementById('target-element').textContent = targetElement;
+
+            const stepsContainer = document.getElementById('calc-steps');
+            stepsContainer.innerHTML = '';
+
+            steps.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'step';
+                stepEl.style.animationDelay = `${step.delay}ms`;
+                stepEl.innerHTML = `
+                    <span class="step-number">${index + 1}</span>
+                    <span class="step-content">${step.text}</span>
+                `;
+                stepsContainer.appendChild(stepEl);
+            });
+
+            const resultEl = document.getElementById('final-result');
+            resultEl.textContent = unknownOxState > 0 ? `+${unknownOxState}` : unknownOxState.toString();
+            resultEl.style.color = unknownOxState > 0 ? 'var(--accent-oxidation)' : 'var(--accent-reduction)';
+        }
+
+        // ====== ELECTROCHEMICAL CELL VISUALIZATION ======
+
+        const reactions = {
+            'zn-cu': {
+                name: 'Daniell Cell',
+                anode: { symbol: 'Zn', color: '#94a3b8', ionSymbol: 'Zn²⁺', ionColor: '#64748b' },
+                cathode: { symbol: 'Cu', color: '#f97316', ionSymbol: 'Cu²⁺', ionColor: '#ea580c' },
+                anodeAnion: 'SO₄²⁻',
+                cathodeAnion: 'SO₄²⁻',
+                electrons: 2,
+                oxEquation: 'Zn(s) → Zn²⁺(aq) + 2e⁻',
+                redEquation: 'Cu²⁺(aq) + 2e⁻ → Cu(s)',
+                oxPotential: -0.76,
+                redPotential: 0.34,
+                stages: [
+                    'Initial state: Zinc anode in ZnSO₄ solution, Copper cathode in CuSO₄ solution',
+                    'At anode: Zn atoms lose 2 electrons and dissolve as Zn²⁺ ions (oxidation)',
+                    'Electrons flow through the external wire from anode to cathode',
+                    'At cathode: Cu²⁺ ions gain 2 electrons and deposit as Cu metal (reduction)',
+                    'Salt bridge maintains electrical neutrality by ion migration'
+                ]
+            },
+            'mg-cu': {
+                name: 'Mg-Cu Cell',
+                anode: { symbol: 'Mg', color: '#a78bfa', ionSymbol: 'Mg²⁺', ionColor: '#8b5cf6' },
+                cathode: { symbol: 'Cu', color: '#f97316', ionSymbol: 'Cu²⁺', ionColor: '#ea580c' },
+                anodeAnion: 'SO₄²⁻',
+                cathodeAnion: 'SO₄²⁻',
+                electrons: 2,
+                oxEquation: 'Mg(s) → Mg²⁺(aq) + 2e⁻',
+                redEquation: 'Cu²⁺(aq) + 2e⁻ → Cu(s)',
+                oxPotential: -2.37,
+                redPotential: 0.34,
+                stages: [
+                    'Initial state: Magnesium anode in MgSO₄ solution, Copper cathode in CuSO₄ solution',
+                    'At anode: Mg atoms lose 2 electrons and dissolve as Mg²⁺ ions (oxidation)',
+                    'Electrons flow through the external wire from anode to cathode',
+                    'At cathode: Cu²⁺ ions gain 2 electrons and deposit as Cu metal (reduction)',
+                    'High cell potential (2.71V) due to Mg being a strong reducing agent'
+                ]
+            },
+            'zn-ag': {
+                name: 'Zn-Ag Cell',
+                anode: { symbol: 'Zn', color: '#94a3b8', ionSymbol: 'Zn²⁺', ionColor: '#64748b' },
+                cathode: { symbol: 'Ag', color: '#e2e8f0', ionSymbol: 'Ag⁺', ionColor: '#cbd5e1' },
+                anodeAnion: 'NO₃⁻',
+                cathodeAnion: 'NO₃⁻',
+                electrons: 2,
+                oxEquation: 'Zn(s) → Zn²⁺(aq) + 2e⁻',
+                redEquation: '2Ag⁺(aq) + 2e⁻ → 2Ag(s)',
+                oxPotential: -0.76,
+                redPotential: 0.80,
+                stages: [
+                    'Initial state: Zinc anode in Zn(NO₃)₂ solution, Silver cathode in AgNO₃ solution',
+                    'At anode: Zn atoms lose 2 electrons and dissolve as Zn²⁺ ions (oxidation)',
+                    'Electrons flow through the external wire from anode to cathode',
+                    'At cathode: 2 Ag⁺ ions each gain 1 electron and deposit as Ag metal',
+                    'Salt bridge allows NO₃⁻ and cation migration to maintain charge balance'
+                ]
+            },
+            'fe-cu': {
+                name: 'Fe-Cu Cell',
+                anode: { symbol: 'Fe', color: '#78716c', ionSymbol: 'Fe²⁺', ionColor: '#57534e' },
+                cathode: { symbol: 'Cu', color: '#f97316', ionSymbol: 'Cu²⁺', ionColor: '#ea580c' },
+                anodeAnion: 'SO₄²⁻',
+                cathodeAnion: 'SO₄²⁻',
+                electrons: 2,
+                oxEquation: 'Fe(s) → Fe²⁺(aq) + 2e⁻',
+                redEquation: 'Cu²⁺(aq) + 2e⁻ → Cu(s)',
+                oxPotential: -0.44,
+                redPotential: 0.34,
+                stages: [
+                    'Initial state: Iron anode in FeSO₄ solution, Copper cathode in CuSO₄ solution',
+                    'At anode: Fe atoms lose 2 electrons and dissolve as Fe²⁺ ions (oxidation)',
+                    'Electrons flow through the external wire from anode to cathode',
+                    'At cathode: Cu²⁺ ions gain 2 electrons and deposit as Cu metal (reduction)',
+                    'This reaction explains why iron corrodes faster in contact with copper'
+                ]
+            }
+        };
+
+        let canvas, ctx;
+        let currentReaction = null;
+        let animationId = null;
+        let isPlaying = false;
+        let animationSpeed = 1;
+        let currentStage = 0;
+        let animationProgress = 0;
+        let electrons = [];
+        let ions = { anode: [], cathode: [] };
+        let anodeSize = 1;
+        let cathodeSize = 1;
+        let time = 0;
+
+        function getThemeColors() {
+            const isLight = document.documentElement.classList.contains('light');
+            return {
+                bg: isLight ? '#e2e8f0' : '#111827',
+                bgCard: isLight ? '#ffffff' : '#1a2234',
+                text: isLight ? '#0f172a' : '#f1f5f9',
+                textSecondary: isLight ? '#475569' : '#94a3b8',
+                border: isLight ? '#cbd5e1' : '#334155',
+                electronGlow: '#fbbf24',
+                reduction: '#22d3ee',
+                oxidation: '#f43f5e',
+                neutral: '#a78bfa',
+                solution: isLight ? 'rgba(59, 130, 246, 0.12)' : 'rgba(59, 130, 246, 0.2)',
+                solutionDark: isLight ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.35)',
+                wire: '#78716c',
+                saltBridge: isLight ? '#fef3c7' : '#fef3c7'
+            };
+        }
+
+        function initializeTransfer() {
+            const select = document.getElementById('reaction-select');
+            const reactionKey = select.value;
+
+            if (!reactionKey) {
+                document.getElementById('transfer-container').style.display = 'none';
+                document.getElementById('transfer-placeholder').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('transfer-container').style.display = 'block';
+            document.getElementById('transfer-placeholder').style.display = 'none';
+
+            currentReaction = reactions[reactionKey];
+            canvas = document.getElementById('transfer-canvas');
+            ctx = canvas.getContext('2d');
+
+            const wrapper = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = wrapper.clientWidth * dpr;
+            canvas.height = wrapper.clientHeight * dpr;
+            ctx.scale(dpr, dpr);
+            canvas.style.width = wrapper.clientWidth + 'px';
+            canvas.style.height = wrapper.clientHeight + 'px';
+
+            // Update UI
+            document.getElementById('ox-equation').textContent = currentReaction.oxEquation;
+            document.getElementById('red-equation').textContent = currentReaction.redEquation;
+            document.getElementById('ox-potential').textContent = `E° = ${currentReaction.oxPotential.toFixed(2)} V`;
+            document.getElementById('red-potential').textContent = `E° = ${currentReaction.redPotential.toFixed(2)} V`;
+
+            const cellPotential = currentReaction.redPotential - currentReaction.oxPotential;
+            document.getElementById('cell-potential').textContent = `E°cell = +${cellPotential.toFixed(2)} V`;
+            document.getElementById('driving-explanation').textContent =
+                `Positive E°cell means spontaneous. Electrons flow from ${currentReaction.anode.symbol} (E° = ${currentReaction.oxPotential}V) to ${currentReaction.cathode.symbol} (E° = ${currentReaction.redPotential}V).`;
+
+            const stageIndicator = document.getElementById('stage-indicator');
+            stageIndicator.innerHTML = currentReaction.stages.map((_, i) =>
+                `<div class="stage-dot" data-stage="${i}"></div>`
+            ).join('');
+
+            resetAnimation();
+        }
+
+        function resetAnimation() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            isPlaying = false;
+            currentStage = 0;
+            animationProgress = 0;
+            time = 0;
+            electrons = [];
+            ions = { anode: [], cathode: [] };
+            anodeSize = 1;
+            cathodeSize = 1;
+
+            updatePlayButton();
+            updateStageDisplay();
+            updateHalfReactionHighlight();
+            draw();
+        }
+
+        function updateHalfReactionHighlight() {
+            const oxHalf = document.getElementById('oxidation-half');
+            const redHalf = document.getElementById('reduction-half');
+
+            oxHalf.classList.remove('active');
+            redHalf.classList.remove('active');
+
+            if (currentStage === 1) {
+                oxHalf.classList.add('active');
+            } else if (currentStage === 3) {
+                redHalf.classList.add('active');
+            } else if (currentStage === 2) {
+                oxHalf.classList.add('active');
+                redHalf.classList.add('active');
+            }
+        }
+
+        function draw() {
+            if (!ctx || !currentReaction) return;
+
+            const colors = getThemeColors();
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            ctx.fillStyle = colors.bg;
+            ctx.fillRect(0, 0, w, h);
+
+            drawBeakers(w, h, colors);
+            drawSaltBridge(w, h, colors);
+            drawWire(w, h, colors);
+            drawElectrodes(w, h, colors);
+            drawElectrons(w, h, colors);
+            drawIons(w, h, colors);
+            drawLabels(w, h, colors);
+        }
+
+        function drawBeakers(w, h, colors) {
+            const beakerWidth = w * 0.32;
+            const beakerHeight = h * 0.55;
+            const beakerY = h * 0.38;
+            const leftX = w * 0.12;
+            const rightX = w * 0.56;
+
+            // Left beaker (anode)
+            ctx.fillStyle = colors.solution;
+            ctx.beginPath();
+            ctx.roundRect(leftX, beakerY, beakerWidth, beakerHeight, [0, 0, 15, 15]);
+            ctx.fill();
+
+            ctx.strokeStyle = colors.border;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(leftX, beakerY);
+            ctx.lineTo(leftX, beakerY + beakerHeight);
+            ctx.arcTo(leftX, beakerY + beakerHeight + 15, leftX + 15, beakerY + beakerHeight + 15, 15);
+            ctx.lineTo(leftX + beakerWidth - 15, beakerY + beakerHeight);
+            ctx.arcTo(leftX + beakerWidth, beakerY + beakerHeight + 15, leftX + beakerWidth, beakerY + beakerHeight, 15);
+            ctx.lineTo(leftX + beakerWidth, beakerY);
+            ctx.stroke();
+
+            // Right beaker (cathode)
+            ctx.fillStyle = colors.solutionDark;
+            ctx.beginPath();
+            ctx.roundRect(rightX, beakerY, beakerWidth, beakerHeight, [0, 0, 15, 15]);
+            ctx.fill();
+
+            ctx.strokeStyle = colors.border;
+            ctx.beginPath();
+            ctx.moveTo(rightX, beakerY);
+            ctx.lineTo(rightX, beakerY + beakerHeight);
+            ctx.arcTo(rightX, beakerY + beakerHeight + 15, rightX + 15, beakerY + beakerHeight + 15, 15);
+            ctx.lineTo(rightX + beakerWidth - 15, beakerY + beakerHeight);
+            ctx.arcTo(rightX + beakerWidth, beakerY + beakerHeight + 15, rightX + beakerWidth, beakerY + beakerHeight, 15);
+            ctx.lineTo(rightX + beakerWidth, beakerY);
+            ctx.stroke();
+
+            // Solution labels
+            ctx.fillStyle = colors.textSecondary;
+            ctx.font = '12px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${currentReaction.anode.ionSymbol} + ${currentReaction.anodeAnion}`, leftX + beakerWidth / 2, beakerY + beakerHeight - 15);
+            ctx.fillText(`${currentReaction.cathode.ionSymbol} + ${currentReaction.cathodeAnion}`, rightX + beakerWidth / 2, beakerY + beakerHeight - 15);
+        }
+
+        function drawSaltBridge(w, h, colors) {
+            const bridgeY = h * 0.32;
+            const bridgeHeight = 25;
+            const leftX = w * 0.36;
+            const rightX = w * 0.56;
+
+            // U-shaped salt bridge
+            ctx.fillStyle = colors.saltBridge;
+            ctx.beginPath();
+            ctx.moveTo(leftX, h * 0.42);
+            ctx.lineTo(leftX, bridgeY + bridgeHeight);
+            ctx.quadraticCurveTo(leftX, bridgeY, (leftX + rightX + w * 0.08) / 2, bridgeY);
+            ctx.quadraticCurveTo(rightX + w * 0.08, bridgeY, rightX + w * 0.08, bridgeY + bridgeHeight);
+            ctx.lineTo(rightX + w * 0.08, h * 0.42);
+            ctx.lineTo(rightX + w * 0.08 - 15, h * 0.42);
+            ctx.lineTo(rightX + w * 0.08 - 15, bridgeY + bridgeHeight + 8);
+            ctx.quadraticCurveTo(rightX + w * 0.08 - 15, bridgeY + 12, (leftX + rightX + w * 0.08) / 2, bridgeY + 12);
+            ctx.quadraticCurveTo(leftX + 15, bridgeY + 12, leftX + 15, bridgeY + bridgeHeight + 8);
+            ctx.lineTo(leftX + 15, h * 0.42);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = colors.border;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Salt bridge label
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 11px Space Grotesk';
+            ctx.textAlign = 'center';
+            ctx.fillText('Salt Bridge', w * 0.5, bridgeY - 8);
+            ctx.font = '10px JetBrains Mono';
+            ctx.fillStyle = colors.textSecondary;
+            ctx.fillText('(KNO₃ or KCl)', w * 0.5, bridgeY + 5);
+
+            // Draw ion movement in salt bridge during stage 4
+            if (currentStage >= 4) {
+                const arrowY = bridgeY + bridgeHeight / 2 + 5;
+                ctx.fillStyle = colors.oxidation;
+                ctx.font = '10px JetBrains Mono';
+                ctx.fillText('← anions', w * 0.42, arrowY);
+                ctx.fillStyle = colors.reduction;
+                ctx.fillText('cations →', w * 0.58, arrowY);
+            }
+        }
+
+        function drawWire(w, h, colors) {
+            const wireY = h * 0.12;
+            const leftElectrodeX = w * 0.28;
+            const rightElectrodeX = w * 0.72;
+
+            // Wire path
+            ctx.strokeStyle = colors.wire;
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(leftElectrodeX, h * 0.38);
+            ctx.lineTo(leftElectrodeX, wireY);
+            ctx.lineTo(rightElectrodeX, wireY);
+            ctx.lineTo(rightElectrodeX, h * 0.38);
+            ctx.stroke();
+
+            // Voltmeter/load in the middle
+            const meterX = w * 0.5;
+            const meterY = wireY;
+            const meterR = 22;
+
+            ctx.fillStyle = colors.bgCard;
+            ctx.beginPath();
+            ctx.arc(meterX, meterY, meterR, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = colors.border;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Voltmeter display
+            const cellPotential = currentReaction.redPotential - currentReaction.oxPotential;
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 10px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${cellPotential.toFixed(1)}V`, meterX, meterY);
+
+            // Electron flow direction arrow on wire
+            if (currentStage >= 2) {
+                const arrowX = w * 0.38;
+                ctx.fillStyle = colors.electronGlow;
+                ctx.beginPath();
+                ctx.moveTo(arrowX + 8, wireY - 15);
+                ctx.lineTo(arrowX + 18, wireY - 15);
+                ctx.lineTo(arrowX + 18, wireY - 20);
+                ctx.lineTo(arrowX + 28, wireY - 12);
+                ctx.lineTo(arrowX + 18, wireY - 4);
+                ctx.lineTo(arrowX + 18, wireY - 9);
+                ctx.lineTo(arrowX + 8, wireY - 9);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.font = '11px Space Grotesk';
+                ctx.fillText('e⁻ flow', arrowX + 18, wireY - 28);
+            }
+        }
+
+        function drawElectrodes(w, h, colors) {
+            const beakerY = h * 0.38;
+            const electrodeWidth = 30;
+            const electrodeHeight = h * 0.4;
+
+            // Anode (shrinks as it dissolves)
+            const anodeX = w * 0.28 - electrodeWidth / 2;
+            const anodeHeight = electrodeHeight * anodeSize;
+            const anodeY = beakerY + (electrodeHeight - anodeHeight) / 2;
+
+            ctx.fillStyle = currentReaction.anode.color;
+            ctx.beginPath();
+            ctx.roundRect(anodeX, anodeY, electrodeWidth, anodeHeight, 4);
+            ctx.fill();
+            ctx.strokeStyle = shadeColor(currentReaction.anode.color, -20);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Cathode (grows as metal deposits)
+            const cathodeX = w * 0.72 - electrodeWidth / 2;
+            const cathodeHeight = electrodeHeight * cathodeSize;
+            const cathodeY = beakerY + (electrodeHeight - cathodeHeight) / 2;
+
+            ctx.fillStyle = currentReaction.cathode.color;
+            ctx.beginPath();
+            ctx.roundRect(cathodeX, cathodeY, electrodeWidth, cathodeHeight, 4);
+            ctx.fill();
+            ctx.strokeStyle = shadeColor(currentReaction.cathode.color, -20);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Electrode labels
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 14px JetBrains Mono';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentReaction.anode.symbol, w * 0.28, beakerY + electrodeHeight + 25);
+            ctx.fillText(currentReaction.cathode.symbol, w * 0.72, beakerY + electrodeHeight + 25);
+
+            // Anode/Cathode labels
+            ctx.font = '12px Space Grotesk';
+            ctx.fillStyle = colors.oxidation;
+            ctx.fillText('ANODE (−)', w * 0.28, beakerY + electrodeHeight + 42);
+            ctx.fillStyle = colors.reduction;
+            ctx.fillText('CATHODE (+)', w * 0.72, beakerY + electrodeHeight + 42);
+
+            // Oxidation state change
+            ctx.font = '11px JetBrains Mono';
+            if (currentStage >= 1) {
+                ctx.fillStyle = colors.oxidation;
+                ctx.fillText('0 → +2', w * 0.28, beakerY - 8);
+            }
+            if (currentStage >= 3) {
+                ctx.fillStyle = colors.reduction;
+                ctx.fillText('+2 → 0', w * 0.72, beakerY - 8);
+            }
+        }
+
+        function drawElectrons(w, h, colors) {
+            electrons.forEach(e => {
+                // Glow
+                const gradient = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, 15);
+                gradient.addColorStop(0, colors.electronGlow);
+                gradient.addColorStop(0.5, colors.electronGlow + '80');
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core
+                ctx.fillStyle = colors.electronGlow;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Label
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 7px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('e⁻', e.x, e.y);
+            });
+        }
+
+        function drawIons(w, h, colors) {
+            // Draw ions in solution
+            ions.anode.forEach(ion => {
+                ctx.fillStyle = currentReaction.anode.ionColor + 'cc';
+                ctx.beginPath();
+                ctx.arc(ion.x, ion.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 7px JetBrains Mono';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('2+', ion.x, ion.y);
+            });
+
+            ions.cathode.forEach(ion => {
+                if (!ion.deposited) {
+                    ctx.fillStyle = currentReaction.cathode.ionColor + 'cc';
+                    ctx.beginPath();
+                    ctx.arc(ion.x, ion.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 7px JetBrains Mono';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('2+', ion.x, ion.y);
+                }
+            });
+        }
+
+        function drawLabels(w, h, colors) {
+            // Title
+            ctx.fillStyle = colors.text;
+            ctx.font = 'bold 16px Space Grotesk';
+            ctx.textAlign = 'center';
+            ctx.fillText(currentReaction.name, w * 0.5, h - 12);
+        }
+
+        function shadeColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+            const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+            const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+            return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+        }
+
+        function updateStageDisplay() {
+            if (!currentReaction) return;
+
+            const stageText = document.getElementById('stage-text');
+            stageText.textContent = currentReaction.stages[currentStage] || '';
+
+            document.querySelectorAll('.stage-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === currentStage) dot.classList.add('active');
+                else if (i < currentStage) dot.classList.add('completed');
+            });
+
+            updateHalfReactionHighlight();
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('play-btn');
+            if (isPlaying) {
+                btn.innerHTML = '<span id="play-icon">⏸</span> Pause';
+            } else {
+                btn.innerHTML = '<span id="play-icon">▶</span> Play';
+            }
+        }
+
+        function toggleAnimation() {
+            if (!currentReaction) return;
+
+            isPlaying = !isPlaying;
+            updatePlayButton();
+
+            if (isPlaying) {
+                if (currentStage >= currentReaction.stages.length - 1 && animationProgress >= 1) {
+                    resetAnimation();
+                    isPlaying = true;
+                    updatePlayButton();
+                }
+                animate();
+            }
+        }
+
+        function stepAnimation() {
+            if (!currentReaction) return;
+
+            isPlaying = false;
+            updatePlayButton();
+
+            if (currentStage < currentReaction.stages.length - 1) {
+                currentStage++;
+                animationProgress = 0;
+                updateStageDisplay();
+            }
+            draw();
+        }
+
+        function toggleSpeed() {
+            const btn = document.getElementById('speed-btn');
+            if (animationSpeed === 1) {
+                animationSpeed = 2;
+                btn.textContent = '🐇 Fast';
+            } else {
+                animationSpeed = 1;
+                btn.textContent = '🐢 Normal';
+            }
+        }
+
+        function animate() {
+            if (!isPlaying || !currentReaction) return;
+
+            time += 0.016 * animationSpeed;
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            // Stage-based animations
+            if (currentStage >= 1) {
+                // Create ions leaving anode
+                if (Math.random() < 0.03 * animationSpeed && ions.anode.length < 6) {
+                    ions.anode.push({
+                        x: w * 0.28,
+                        y: h * 0.55,
+                        vx: (Math.random() - 0.7) * 1.5,
+                        vy: Math.random() * 0.5
+                    });
+                }
+
+                // Shrink anode
+                anodeSize = Math.max(0.6, anodeSize - 0.0003 * animationSpeed);
+            }
+
+            if (currentStage >= 2) {
+                // Create electrons flowing through wire
+                if (Math.random() < 0.05 * animationSpeed && electrons.length < 8) {
+                    electrons.push({
+                        x: w * 0.28,
+                        y: h * 0.38,
+                        progress: 0
+                    });
+                }
+
+                // Move electrons along wire
+                electrons.forEach(e => {
+                    e.progress += 0.008 * animationSpeed;
+                    if (e.progress <= 0.25) {
+                        e.y = h * 0.38 - (e.progress / 0.25) * (h * 0.38 - h * 0.12);
+                        e.x = w * 0.28;
+                    } else if (e.progress <= 0.75) {
+                        e.y = h * 0.12;
+                        e.x = w * 0.28 + ((e.progress - 0.25) / 0.5) * (w * 0.72 - w * 0.28);
+                    } else {
+                        e.y = h * 0.12 + ((e.progress - 0.75) / 0.25) * (h * 0.38 - h * 0.12);
+                        e.x = w * 0.72;
+                    }
+                });
+
+                // Remove completed electrons
+                electrons = electrons.filter(e => e.progress < 1);
+            }
+
+            if (currentStage >= 3) {
+                // Move cathode ions toward electrode and deposit
+                if (ions.cathode.length < 4 && Math.random() < 0.02 * animationSpeed) {
+                    ions.cathode.push({
+                        x: w * 0.80,
+                        y: h * 0.5 + Math.random() * 80,
+                        deposited: false
+                    });
+                }
+
+                ions.cathode.forEach(ion => {
+                    if (!ion.deposited) {
+                        ion.x -= 0.5 * animationSpeed;
+                        if (ion.x < w * 0.74) {
+                            ion.deposited = true;
+                            cathodeSize = Math.min(1.15, cathodeSize + 0.01);
+                        }
+                    }
+                });
+
+                // Grow cathode
+                cathodeSize = Math.min(1.15, cathodeSize + 0.0002 * animationSpeed);
+            }
+
+            // Move anode ions
+            ions.anode.forEach(ion => {
+                ion.x += ion.vx;
+                ion.y += ion.vy;
+                ion.vy += 0.01;
+            });
+            ions.anode = ions.anode.filter(ion => ion.x > w * 0.12 && ion.x < w * 0.44 && ion.y < h * 0.9);
+
+            // Auto-advance stages
+            animationProgress += 0.003 * animationSpeed;
+            if (animationProgress >= 1 && currentStage < currentReaction.stages.length - 1) {
+                currentStage++;
+                animationProgress = 0;
+                updateStageDisplay();
+            }
+
+            if (currentStage >= currentReaction.stages.length - 1 && animationProgress >= 1) {
+                isPlaying = false;
+                updatePlayButton();
+            }
+
+            draw();
+            if (isPlaying) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+
+        // Reaction Analyzer
+        function analyzePreset(reaction) {
+            document.getElementById('reaction-input').value = reaction;
+            analyzeReaction();
+        }
+
+        function analyzeReaction() {
+            const input = document.getElementById('reaction-input').value.trim();
+
+            if (!input) {
+                showModal('Error', 'Please enter a reaction to analyze.');
+                return;
+            }
+
+            const formattedReaction = input
+                .replace(/->/g, '→')
+                .replace(/(\d+)(?=[A-Z])/g, '$1')
+                .replace(/([A-Za-z])(\d+)/g, '$1<sub>$2</sub>')
+                .replace(/(\d+)([+-])/g, '<sup>$1$2</sup>')
+                .replace(/([+-])(?!\d)/g, '<sup>$1</sup>');
+
+            document.getElementById('analyzed-reaction').innerHTML = formattedReaction;
+            document.getElementById('analysis-result').style.display = 'block';
+
+            const knownRedoxPatterns = [
+                { pattern: /Zn.*Cu/i, isRedox: true, species: [
+                    { name: 'Zn', change: '0 → +2', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cu²⁺', change: '+2 → 0', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Fe.*I/i, isRedox: true, species: [
+                    { name: 'I⁻', change: '-1 → 0', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Fe³⁺', change: '+3 → +2', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Cl2.*Br/i, isRedox: true, species: [
+                    { name: 'Br⁻', change: '-1 → 0', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /Na.*Cl2/i, isRedox: true, species: [
+                    { name: 'Na', change: '0 → +1', role: 'oxidized', agent: 'Reducing agent' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]},
+                { pattern: /H2S.*Cl2/i, isRedox: true, species: [
+                    { name: 'S²⁻', change: '-2 → 0', role: 'oxidized', agent: 'Reducing agent (H₂S)' },
+                    { name: 'Cl₂', change: '0 → -1', role: 'reduced', agent: 'Oxidizing agent' }
+                ]}
+            ];
+
+            let matchedPattern = knownRedoxPatterns.find(p => p.pattern.test(input));
+
+            const checkBox = document.getElementById('redox-check');
+            const speciesGrid = document.getElementById('species-analysis');
+
+            if (matchedPattern && matchedPattern.isRedox) {
+                checkBox.style.background = 'rgba(34, 211, 238, 0.1)';
+                checkBox.style.border = '1px solid var(--accent-reduction)';
+                checkBox.innerHTML = '<strong style="color: var(--accent-reduction);">✓ This is a REDOX reaction</strong><br><span style="color: var(--text-secondary);">Electron transfer occurs between species.</span>';
+
+                speciesGrid.innerHTML = matchedPattern.species.map(s => `
+                    <div class="species-card ${s.role === 'oxidized' ? 'red-agent' : 'ox-agent'}">
+                        <div class="species-name">${formatFormula(s.name)}</div>
+                        <span class="species-role ${s.role}">${s.role.toUpperCase()}</span>
+                        <div class="species-change">${s.change}</div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary);">${s.agent}</div>
+                    </div>
+                `).join('');
+            } else {
+                checkBox.style.background = 'rgba(167, 139, 250, 0.1)';
+                checkBox.style.border = '1px solid var(--accent-neutral)';
+                checkBox.innerHTML = '<strong style="color: var(--accent-neutral);">Analysis</strong><br><span style="color: var(--text-secondary);">Enter a standard reaction format to get detailed analysis. Try the preset examples above.</span>';
+                speciesGrid.innerHTML = '';
+            }
+        }
+
+        // Custom modal
+        function showModal(title, message) {
+            const existing = document.querySelector('.custom-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.style.cssText = `
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            modal.innerHTML = `
+                <div style="
+                    background: var(--bg-card);
+                    padding: 24px;
+                    border-radius: 16px;
+                    max-width: 400px;
+                    width: 90%;
+                    border: 1px solid var(--border);
+                ">
+                    <h3 style="margin-bottom: 12px; color: var(--accent-neutral);">${title}</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">${message}</p>
+                    <button onclick="this.closest('.custom-modal').remove()" style="width: 100%;">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            if (currentReaction && canvas) {
+                initializeTransfer();
+            }
+        });
+
+        // Enter key support
+        document.getElementById('compound-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') calculateOxidationState();
+        });
+        document.getElementById('element-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') calculateOxidationState();
+        });
+        document.getElementById('reaction-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') analyzeReaction();
+        });
+
+        // Polyfill for roundRect
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (typeof r === 'number') r = [r, r, r, r];
+                const [tl, tr, br, bl] = r;
+                this.beginPath();
+                this.moveTo(x + tl, y);
+                this.lineTo(x + w - tr, y);
+                this.arcTo(x + w, y, x + w, y + tr, tr);
+                this.lineTo(x + w, y + h - br);
+                this.arcTo(x + w, y + h, x + w - br, y + h, br);
+                this.lineTo(x + bl, y + h);
+                this.arcTo(x, y + h, x, y + h - bl, bl);
+                this.lineTo(x, y + tl);
+                this.arcTo(x, y, x + tl, y, tl);
+                this.closePath();
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>
+
