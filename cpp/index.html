@@ -1,1 +1,1376 @@
-Making Cpp Fun
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>C++ Journey — Learn C++ Interactively</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://unpkg.com/JSCPP/dist/JSCPP.es5.min.js"></script>
+<style>
+:root {
+  --bg: #FFFBF5;
+  --bg-card: #FFFFFF;
+  --bg-code: #1E1E2E;
+  --bg-output: #F0EDE8;
+  --bg-nav: #FFFFFF;
+  --text: #2D2A26;
+  --text-dim: #7A756E;
+  --text-code: #CDD6F4;
+  --primary: #0891B2;
+  --primary-light: #E0F7FA;
+  --secondary: #F97316;
+  --accent: #8B5CF6;
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --border: #E8E2DA;
+  --shadow: 0 2px 16px rgba(45,42,38,0.08);
+  --shadow-lg: 0 8px 32px rgba(45,42,38,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-body: 'Instrument Sans', sans-serif;
+  --font-display: 'Bricolage Grotesque', serif;
+  --font-code: 'JetBrains Mono', monospace;
+  --nav-height: 68px;
+  --top-height: 56px;
+}
+
+html.dark {
+  --bg: #0F0F1A;
+  --bg-card: #1A1A2E;
+  --bg-code: #12121F;
+  --bg-output: #16162A;
+  --bg-nav: #1A1A2E;
+  --text: #E8E2DA;
+  --text-dim: #8A8498;
+  --primary: #22D3EE;
+  --primary-light: #0C3A44;
+  --secondary: #FB923C;
+  --accent: #A78BFA;
+  --success: #34D399;
+  --error: #F87171;
+  --warning: #FBBF24;
+  --border: #2A2A42;
+  --shadow: 0 2px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* ——— Scrollbar ——— */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ——— Top Bar ——— */
+.topbar {
+  height: var(--top-height);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 20;
+}
+.topbar .back-btn {
+  width: 36px; height: 36px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--bg-card);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+.topbar .back-btn.visible { display: flex; }
+.topbar .title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar .title span { color: var(--primary); }
+
+/* ——— Main Content ——— */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.main > .page { display: none; padding: 16px 16px calc(var(--nav-height) + 20px); }
+.main > .page.active { display: block; }
+
+/* ——— Bottom Navigation ——— */
+.bottom-nav {
+  height: var(--nav-height);
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-nav);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 20;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-item i { font-size: 20px; transition: transform 0.2s; }
+.nav-item.active { color: var(--primary); }
+.nav-item.active i { transform: scale(1.15); }
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 3px;
+  background: var(--primary);
+  border-radius: 0 0 3px 3px;
+}
+
+/* ——— Home Page ——— */
+.hero {
+  text-align: center;
+  padding: 32px 8px 24px;
+  animation: fadeUp 0.6s ease-out;
+}
+.hero-icon {
+  width: 80px; height: 80px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(8,145,178,0.3);
+  animation: float 3s ease-in-out infinite;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.hero p { color: var(--text-dim); font-size: 15px; line-height: 1.5; max-width: 320px; margin: 0 auto; }
+
+.chapter-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+.chapter-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: left;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  animation: fadeUp 0.5s ease-out backwards;
+}
+.chapter-card:nth-child(2) { animation-delay: 0.1s; }
+.chapter-card:active { transform: scale(0.98); }
+.chapter-card:hover { box-shadow: var(--shadow-lg); }
+.chapter-card .ch-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.chapter-card:nth-child(1) .ch-icon { background: linear-gradient(135deg, #0891B2, #06B6D4); color: #fff; }
+.chapter-card:nth-child(2) .ch-icon { background: linear-gradient(135deg, #8B5CF6, #A78BFA); color: #fff; }
+.chapter-card .ch-info h3 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.chapter-card .ch-info p { font-size: 13px; color: var(--text-dim); line-height: 1.4; }
+.chapter-card .ch-arrow { color: var(--text-dim); font-size: 14px; margin-left: auto; flex-shrink: 0; }
+
+.tip-banner {
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  animation: fadeUp 0.6s ease-out 0.2s backwards;
+}
+.tip-banner i { color: var(--primary); font-size: 16px; margin-top: 2px; flex-shrink: 0; }
+
+/* ——— Lesson List ——— */
+.lesson-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.lesson-list-header .ch-badge {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.lesson-list-header h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+.lesson-list-header p { font-size: 13px; color: var(--text-dim); }
+
+.lesson-list { display: flex; flex-direction: column; gap: 10px; }
+.lesson-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  transition: transform 0.15s, box-shadow 0.15s;
+  animation: fadeUp 0.4s ease-out backwards;
+}
+.lesson-item:active { transform: scale(0.98); }
+.lesson-item .l-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.lesson-item.completed .l-num { background: var(--success); color: #fff; }
+.lesson-item .l-info { flex: 1; }
+.lesson-item .l-info h4 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.lesson-item .l-info p { font-size: 12px; color: var(--text-dim); }
+.lesson-item .l-arrow { color: var(--text-dim); font-size: 13px; }
+
+/* ——— Lesson Detail ——— */
+.lesson-detail { max-width: 640px; margin: 0 auto; }
+.lesson-detail h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.25;
+}
+
+.content-block { margin-bottom: 20px; animation: fadeUp 0.4s ease-out backwards; }
+.content-block p, .content-block li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.content-block ul, .content-block ol { padding-left: 20px; }
+.content-block li { margin-bottom: 6px; }
+.content-block strong { color: var(--primary); font-weight: 600; }
+.content-block code {
+  font-family: var(--font-code);
+  font-size: 13px;
+  background: var(--bg-output);
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: var(--secondary);
+}
+
+/* Concept Cards */
+.concept-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: 14px 0;
+}
+.concept-card h4 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.concept-card .dt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.dt-chip {
+  background: var(--bg-output);
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.dt-chip .dt-name { font-weight: 700; font-size: 14px; display: block; margin-bottom: 2px; }
+.dt-chip .dt-desc { font-size: 11px; color: var(--text-dim); }
+.dt-chip.full { grid-column: 1 / -1; }
+
+/* Tip / Note boxes */
+.tip-box, .note-box, .warning-box {
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 14px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.tip-box { background: #ECFDF5; border-left: 4px solid var(--success); }
+.note-box { background: var(--primary-light); border-left: 4px solid var(--primary); }
+.warning-box { background: #FEF3C7; border-left: 4px solid var(--warning); }
+html.dark .tip-box { background: #064E3B33; }
+html.dark .note-box { background: #0C3A4466; }
+html.dark .warning-box { background: #78350F33; }
+.tip-box i { color: var(--success); }
+.note-box i { color: var(--primary); }
+.warning-box i { color: var(--warning); }
+
+/* ——— Code Editor ——— */
+.code-playground {
+  background: var(--bg-code);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 16px 0;
+  box-shadow: var(--shadow);
+}
+.code-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.code-toolbar .dots { display: flex; gap: 6px; }
+.code-toolbar .dots span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.code-toolbar .dots span:nth-child(1) { background: #EF4444; }
+.code-toolbar .dots span:nth-child(2) { background: #F59E0B; }
+.code-toolbar .dots span:nth-child(3) { background: #10B981; }
+.code-toolbar .file-name {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  flex: 1;
+}
+.code-toolbar .copy-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.code-toolbar .copy-btn:hover { color: rgba(255,255,255,0.8); }
+
+.code-editor {
+  width: 100%;
+  min-height: 180px;
+  background: transparent;
+  color: var(--text-code);
+  font-family: var(--font-code);
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 14px;
+  border: none;
+  resize: vertical;
+  outline: none;
+  tab-size: 2;
+  -moz-tab-size: 2;
+}
+
+.code-input-section {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 10px 14px;
+}
+.code-input-section label {
+  font-family: var(--font-code);
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  display: block;
+  margin-bottom: 6px;
+}
+.code-input-section textarea {
+  width: 100%;
+  min-height: 40px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--text-code);
+  font-family: var(--font-code);
+  font-size: 14px;
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+}
+.code-input-section textarea:focus { border-color: var(--primary); }
+
+.code-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.run-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--success), #059669);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.run-btn:active { transform: scale(0.97); }
+.run-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.reset-btn {
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.reset-btn:hover { background: rgba(255,255,255,0.08); }
+
+.code-output {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 12px 14px;
+  display: none;
+}
+.code-output.visible { display: block; }
+.code-output .output-label {
+  font-family: var(--font-code);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.code-output .output-label.success { color: var(--success); }
+.code-output .output-label.error { color: var(--error); }
+.code-output pre {
+  font-family: var(--font-code);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-code);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.code-output pre.error-text { color: var(--error); }
+
+/* ——— Challenge Box ——— */
+.challenge-box {
+  background: linear-gradient(135deg, var(--accent), #7C3AED);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 20px 0;
+  color: #fff;
+}
+.challenge-box h4 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.challenge-box p, .challenge-box li { font-size: 14px; line-height: 1.6; opacity: 0.95; }
+.challenge-box ul, .challenge-box ol { padding-left: 20px; margin-top: 8px; }
+.challenge-box li { margin-bottom: 6px; }
+.challenge-box .try-btn {
+  margin-top: 14px;
+  padding: 10px 20px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.challenge-box .try-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* ——— Lesson nav ——— */
+.lesson-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.lesson-nav button {
+  flex: 1;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.lesson-nav button:hover { background: var(--primary-light); }
+.lesson-nav button.primary-nav {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* ——— Playground Page ——— */
+.playground-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.playground-header h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+.playground-header p { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+/* ——— Custom modal ——— */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+.modal-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+}
+.modal-box h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.modal-box p { font-size: 14px; line-height: 1.5; color: var(--text-dim); margin-bottom: 18px; }
+.modal-box .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-box button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+.modal-box .btn-cancel { background: var(--bg-output); color: var(--text); }
+.modal-box .btn-confirm { background: var(--primary); color: #fff; }
+
+/* ——— Animations ——— */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.anim-delay-1 { animation-delay: 0.08s; }
+.anim-delay-2 { animation-delay: 0.16s; }
+.anim-delay-3 { animation-delay: 0.24s; }
+.anim-delay-4 { animation-delay: 0.32s; }
+.anim-delay-5 { animation-delay: 0.4s; }
+.anim-delay-6 { animation-delay: 0.48s; }
+.anim-delay-7 { animation-delay: 0.56s; }
+.anim-delay-8 { animation-delay: 0.64s; }
+
+/* Responsive */
+@media (min-width: 640px) {
+  .main > .page { padding: 24px 32px calc(var(--nav-height) + 24px); }
+  .hero h1 { font-size: 34px; }
+  .concept-card .dt-grid { grid-template-columns: repeat(3, 1fr); }
+  .dt-chip.full { grid-column: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <button class="back-btn" id="backBtn" aria-label="Go back"><i class="fas fa-chevron-left"></i></button>
+  <div class="title" id="topTitle">C++ <span>Journey</span></div>
+</div>
+
+<!-- Main Content -->
+<div class="main" id="mainScroll">
+  <!-- HOME PAGE -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-icon"><i class="fas fa-terminal"></i></div>
+      <h1>Learn C++ the<br>fun way ✨</h1>
+      <p>Interactive lessons, live code editor, and hands-on challenges — all on your phone.</p>
+    </div>
+    <div class="chapter-grid" id="chapterGrid"></div>
+    <div class="tip-banner">
+      <i class="fas fa-lightbulb"></i>
+      <span>Every lesson has <strong>runnable code</strong> you can edit and experiment with. The best way to learn is by doing!</span>
+    </div>
+  </div>
+
+  <!-- CHAPTER PAGE (lesson list) -->
+  <div class="page" id="page-chapter"></div>
+
+  <!-- LESSON PAGE -->
+  <div class="page" id="page-lesson"></div>
+
+  <!-- PLAYGROUND PAGE -->
+  <div class="page" id="page-playground">
+    <div class="playground-header">
+      <h2>🛠️ Code Playground</h2>
+      <p>Write any C++ code and run it instantly</p>
+    </div>
+    <div id="playgroundEditor"></div>
+  </div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <button class="nav-item active" data-page="home">
+    <i class="fas fa-house"></i>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" data-page="playground">
+    <i class="fas fa-code"></i>
+    <span>Playground</span>
+  </button>
+</div>
+
+<script>
+/* ============================================================
+   DARK MODE DETECTION
+   ============================================================ */
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
+  if (event.matches) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+});
+
+/* ============================================================
+   LESSON DATA
+   ============================================================ */
+var chapters = [
+  {
+    id: 'ch1',
+    title: 'Introduction to C++',
+    desc: 'Variables, data types, input & output',
+    icon: 'fa-rocket',
+    gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)',
+    lessons: [
+      {
+        title: 'What is C++?',
+        subtitle: 'A quick intro',
+        blocks: [
+          { type: 'text', html: '<p>C++ is one of the most powerful programming languages in the world. It was built on top of the C language, adding <strong>object-oriented features</strong> like classes and objects.</p><p style="margin-top:10px">Games, operating systems, browsers — many are built with C++. Learning it gives you a deep understanding of how computers actually work.</p>' },
+          { type: 'note', text: 'Don\'t worry if terms like "object-oriented" sound intimidating right now. We\'ll keep things simple and build up step by step!' }
+        ]
+      },
+      {
+        title: 'Your First Program',
+        subtitle: 'The structure of C++',
+        blocks: [
+          { type: 'text', html: '<p>Every C++ program follows a basic blueprint with three parts:</p>' },
+          { type: 'concept', title: '📐 Program Structure', html: '<ol><li><strong>The Header</strong> — tells the compiler what tools you need</li><li><strong>Declarations</strong> — creating your variables (containers for data)</li><li><strong>The Body</strong> — your actual instructions</li></ol>' },
+          { type: 'text', html: '<p>Here\'s the simplest program you can write — it just prints a message:</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "Hello, World! Welcome to C++!" << endl;\n  return 0;\n}',
+            input: '',
+            desc: 'Your very first C++ program! Hit Run to see it work.'
+          },
+          { type: 'tip', text: '<code>#include &lt;iostream&gt;</code> loads the input/output tools. <code>using namespace std;</code> lets us write <code>cout</code> instead of <code>std::cout</code>. The code lives inside <code>int main() { ... }</code>.' },
+          { type: 'warning', text: 'Notice it\'s <code>main()</code> with a lowercase "m" — C++ is case-sensitive! Some textbooks mistakenly write <code>Main()</code>, which won\'t compile.' }
+        ]
+      },
+      {
+        title: 'Data Types',
+        subtitle: 'Containers for your data',
+        blocks: [
+          { type: 'text', html: '<p>Before you can use a piece of data, you need to tell C++ <strong>what kind of data it is</strong>. Think of data types like different shaped containers — each one holds a specific kind of thing.</p>' },
+          { type: 'datatypes' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int age = 20;\n  float height = 5.7;\n  double pi = 3.14159265358979;\n  char grade = \'A\';\n\n  cout << "Age: " << age << endl;\n  cout << "Height: " << height << endl;\n  cout << "Pi: " << pi << endl;\n  cout << "Grade: " << grade << endl;\n\n  return 0;\n}',
+            input: '',
+            desc: 'See different data types in action.'
+          },
+          { type: 'tip', text: 'Use <code>int</code> for whole numbers, <code>float</code> for decimals, <code>double</code> when you need extra precision, and <code>char</code> for single characters (in single quotes).' }
+        ]
+      },
+      {
+        title: 'Input & Output',
+        subtitle: 'Talking to the user',
+        blocks: [
+          { type: 'text', html: '<p>Programs are boring if they can\'t communicate! C++ uses two key commands:</p><ul><li><strong><code>cout</code></strong> (see-out) — sends output to the screen</li><li><strong><code>cin</code></strong> (see-in) — reads input from the user</li></ul>' },
+          { type: 'text', html: '<p>The <code>&lt;&lt;</code> arrows point data <em>toward</em> the screen (output), while <code>&gt;&gt;</code> arrows point data <em>into</em> a variable (input).</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int age;\n  cout << "What is your age? ";\n  cin >> age;\n  cout << "Nice! You are " << age << " years old." << endl;\n\n  if (age >= 18) {\n    cout << "You are an adult!" << endl;\n  } else {\n    cout << "You are still young!" << endl;\n  }\n\n  return 0;\n}',
+            input: '20',
+            desc: 'This program reads your age and responds. Try changing the input!'
+          },
+          { type: 'note', text: 'In the code runner, type your input values in the "Input" box below the code — one value per line. This simulates what you\'d type on the keyboard.' }
+        ]
+      },
+      {
+        title: 'Sum & Average',
+        subtitle: 'Program Illustration I',
+        blocks: [
+          { type: 'text', html: '<p>Let\'s build a real program! We\'ll accept two numbers, then calculate their <strong>sum</strong> and <strong>average</strong>.</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int x, y, sum;\n  float avg;\n\n  cout << "Enter 1st number: ";\n  cin >> x;\n  cout << "Enter 2nd number: ";\n  cin >> y;\n\n  sum = x + y;\n  avg = (float)sum / 2;\n\n  cout << "The sum is: " << sum << endl;\n  cout << "The average is: " << avg << endl;\n\n  return 0;\n}',
+            input: '10\n20',
+            desc: 'Calculates sum and average of two numbers.'
+          },
+          { type: 'tip', text: 'We use <code>(float)sum / 2</code> to get a decimal result. Without the cast, dividing two integers gives an integer (10+11 → avg would be 10 instead of 10.5).' },
+          {
+            type: 'challenge',
+            title: '🧪 Lab Challenges',
+            items: [
+              'Modify the program to accept <strong>three</strong> variables x, y, z and compute their sum and average.',
+              'Add code to also compute the <strong>product</strong> (x × y × z).',
+              'Write a program that takes one integer X, and computes X × X (self-multiply).',
+              'Write a program that accepts Y and computes its cube (Y³).'
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ch2',
+    title: 'Control Statements',
+    desc: 'Decisions, branches & loops',
+    icon: 'fa-code-branch',
+    gradient: 'linear-gradient(135deg, #8B5CF6, #A78BFA)',
+    lessons: [
+      {
+        title: 'What are Control Statements?',
+        subtitle: 'Changing the flow',
+        blocks: [
+          { type: 'text', html: '<p>Normally, a program runs line by line from top to bottom. But real programs need to <strong>make decisions</strong> and <strong>repeat tasks</strong>.</p><p style="margin-top:10px"><strong>Control statements</strong> let your program branch off or loop around — like choosing a path at a fork in the road.</p>' },
+          { type: 'concept', title: '🗺️ Two Main Types', html: '<ul><li><strong>Selection (Branching)</strong> — choose which code to run based on a condition. Like: <em>"if it\'s raining, take an umbrella"</em></li><li><strong>Iteration (Looping)</strong> — repeat code multiple times. Like: <em>"do 10 push-ups"</em></li></ul>' }
+        ]
+      },
+      {
+        title: 'IF Statement',
+        subtitle: 'One-way decisions',
+        blocks: [
+          { type: 'text', html: '<p>The <code>if</code> statement checks a condition. If it\'s <strong>true</strong>, the code runs. If <strong>false</strong>, nothing happens — the program just moves on.</p>' },
+          { type: 'concept', title: '📝 Syntax', html: '<code>if (condition) { code to run; }</code><br><br>Think of it like: <em>"<strong>IF</strong> the condition is met, do this thing."</em>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int score;\n  cout << "Enter your score: ";\n  cin >> score;\n\n  if (score > 39) {\n    cout << "Congrats, you passed! 🎉" << endl;\n  }\n\n  if (score < 40) {\n    cout << "Sorry, you failed. Try again next session." << endl;\n  }\n\n  return 0;\n}',
+            input: '75',
+            desc: 'Try different scores — above and below 40.'
+          }
+        ]
+      },
+      {
+        title: 'IF-ELSE Statement',
+        subtitle: 'Two-way decisions',
+        blocks: [
+          { type: 'text', html: '<p><code>if-else</code> gives you <strong>two paths</strong> — one for when the condition is true, another for when it\'s false. Exactly one path always runs.</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int m;\n  cout << "Enter an integer: ";\n  cin >> m;\n\n  if (m > 0) {\n    cout << m << " is a positive number ✅" << endl;\n  } else {\n    cout << m << " is a negative number ❌" << endl;\n  }\n\n  return 0;\n}',
+            input: '-5',
+            desc: 'Detects if a number is positive or negative.'
+          },
+          {
+            type: 'challenge',
+            title: '🧪 Challenge',
+            items: [
+              'Modify the program above to handle <strong>three cases</strong>: positive, negative, and <strong>zero</strong>. (Hint: you\'ll need <code>else if</code>!)'
+            ]
+          }
+        ]
+      },
+      {
+        title: 'IF — ELSE IF — ELSE',
+        subtitle: 'Multi-way decisions',
+        blocks: [
+          { type: 'text', html: '<p>When you have <strong>more than two options</strong>, chain conditions with <code>else if</code>. The program checks each condition in order and runs the <strong>first one that\'s true</strong>.</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int score;\n  cout << "Enter your score (0-100): ";\n  cin >> score;\n\n  if (score >= 70) {\n    cout << "Grade: A — Excellent! 🌟" << endl;\n  } else if (score >= 60) {\n    cout << "Grade: B — Very Good! 👍" << endl;\n  } else if (score >= 50) {\n    cout << "Grade: C — Good 👌" << endl;\n  } else if (score >= 40) {\n    cout << "Grade: D — Pass ✅" << endl;\n  } else {\n    cout << "Grade: F — Fail. Keep trying! 💪" << endl;\n  }\n\n  return 0;\n}',
+            input: '65',
+            desc: 'A grading system! Try scores like 85, 55, 35.'
+          },
+          { type: 'warning', text: 'It\'s <code>else if</code> (two words), not <code>elseif</code>. Some textbooks write it incorrectly as one word.' }
+        ]
+      },
+      {
+        title: 'Switch-Case',
+        subtitle: 'The menu selector',
+        blocks: [
+          { type: 'text', html: '<p><code>switch</code> is perfect when you\'re choosing between <strong>specific known values</strong> — like a menu. It\'s cleaner than writing many <code>if-else if</code> blocks.</p>' },
+          { type: 'concept', title: '📝 Syntax', html: '<pre style="font-family:var(--font-code);font-size:13px;line-height:1.5">switch (variable) {\n  case 1: ...; break;\n  case 2: ...; break;\n  default: ...;\n}</pre><p style="margin-top:8px">Each <code>case</code> must end with <code>break;</code> or it "falls through" to the next case!</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int num1, num2, choice;\n\n  cout << "Enter first number: ";\n  cin >> num1;\n  cout << "Enter second number: ";\n  cin >> num2;\n\n  cout << "\\n--- Calculator Menu ---" << endl;\n  cout << "1: Add" << endl;\n  cout << "2: Subtract" << endl;\n  cout << "3: Multiply" << endl;\n  cout << "4: Divide" << endl;\n  cout << "Choose operation (1-4): ";\n  cin >> choice;\n\n  switch (choice) {\n    case 1:\n      cout << "Result: " << num1 + num2 << endl;\n      break;\n    case 2:\n      cout << "Result: " << num1 - num2 << endl;\n      break;\n    case 3:\n      cout << "Result: " << num1 * num2 << endl;\n      break;\n    case 4:\n      if (num2 != 0) {\n        cout << "Result: " << (float)num1 / num2 << endl;\n      } else {\n        cout << "Error: Cannot divide by zero!" << endl;\n      }\n      break;\n    default:\n      cout << "Invalid choice!" << endl;\n  }\n\n  return 0;\n}',
+            input: '24\n6\n4',
+            desc: 'A simple calculator! Input: num1, num2, then choice (1-4).'
+          },
+          {
+            type: 'challenge',
+            title: '🧪 Lab Challenge',
+            items: [
+              'Build an <strong>ATM simulator</strong> using switch-case with options: Withdrawal, Balance Check, Deposit.',
+              'Create a <strong>TV subscription menu</strong> with packages like Basic, Standard, Premium — each showing a price and channel list.'
+            ]
+          }
+        ]
+      },
+      {
+        title: 'Do-While Loop',
+        subtitle: 'Act first, check later',
+        blocks: [
+          { type: 'text', html: '<p>A <code>do-while</code> loop <strong>always executes at least once</strong> before checking the condition. It\'s like jumping in a pool first, then checking the temperature!</p>' },
+          { type: 'concept', title: '📝 Syntax', html: '<pre style="font-family:var(--font-code);font-size:13px;line-height:1.5">do {\n  // code runs at least once\n} while (condition);</pre>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int y = 0;\n\n  cout << "Value of y is: " << y << endl;\n  cout << "Condition is y > 1, which is FALSE..." << endl;\n  cout << endl;\n\n  do {\n    cout << "But I still ran once! (do-while)" << endl;\n  } while (y > 1);\n\n  cout << endl;\n  cout << "See? The loop body ran even though" << endl;\n  cout << "the condition was false!" << endl;\n\n  return 0;\n}',
+            input: '',
+            desc: 'Shows how do-while runs even when the condition is false.'
+          },
+          { type: 'note', text: 'Use <code>do-while</code> when you want code to run <strong>at least once</strong> — e.g., asking for input until it\'s valid.' }
+        ]
+      },
+      {
+        title: 'While Loop',
+        subtitle: 'Check first, then act',
+        blocks: [
+          { type: 'text', html: '<p>The <code>while</code> loop checks the condition <strong>before</strong> running the code. If the condition is already false, the loop body <strong>never runs</strong>.</p>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  int evennum = 2;\n  int sumeven = 0;\n  int n = 1;\n\n  while (n <= 5) {\n    cout << "Adding " << evennum << " to sum..." << endl;\n    sumeven = sumeven + evennum;\n    evennum = evennum + 2;\n    n++;\n  }\n\n  cout << endl;\n  cout << "Sum of the first 5 even numbers = " << sumeven << endl;\n\n  return 0;\n}',
+            input: '',
+            desc: 'Computes the sum of the first 5 even integers (2+4+6+8+10).'
+          },
+          {
+            type: 'challenge',
+            title: '🧪 Lab Challenges',
+            items: [
+              'Rewrite this using a <code>do-while</code> loop instead.',
+              'Modify it to sum the first <strong>10 odd</strong> integers (1+3+5+...+19).'
+            ]
+          }
+        ]
+      },
+      {
+        title: 'FOR Loop',
+        subtitle: 'Count and repeat',
+        blocks: [
+          { type: 'text', html: '<p>The <code>for</code> loop is the most popular loop when you know <strong>exactly how many times</strong> to repeat. It packs three things into one line:</p><ol><li><strong>Start</strong> — where to begin counting</li><li><strong>Condition</strong> — when to stop</li><li><strong>Step</strong> — how to count (usually +1)</li></ol>' },
+          { type: 'concept', title: '📝 Syntax', html: '<code>for (start; condition; step) { code }</code><br><br>Example: <code>for (int i = 1; i &lt;= 7; i++)</code> means: <em>"start at 1, go up to 7, add 1 each time"</em>' },
+          {
+            type: 'code',
+            code: '#include <iostream>\nusing namespace std;\n\nint main() {\n  cout << "=== Counting to 7 ===" << endl;\n  for (int i = 1; i <= 7; i++) {\n    cout << "Round " << i << ": Hello, C++!" << endl;\n  }\n\n  cout << endl;\n\n  // Bonus: sum of first 10 even numbers\n  int sum = 0;\n  for (int i = 1; i <= 10; i++) {\n    sum = sum + (i * 2);\n  }\n  cout << "Sum of first 10 even numbers = " << sum << endl;\n\n  return 0;\n}',
+            input: '',
+            desc: 'Prints a message 7 times, then sums even numbers with a for loop.'
+          },
+          {
+            type: 'challenge',
+            title: '🧪 Lab Challenges',
+            items: [
+              'Use a <code>for</code> loop to sum the first 10 odd integers.',
+              'Use a <code>for</code> loop to sum the first 20 even integers.',
+              'Build a score-grade application that processes <strong>10 students</strong> with 3 courses each (use nested for loops + if-else if).'
+            ]
+          }
+        ]
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   APP STATE
+   ============================================================ */
+var state = {
+  currentPage: 'home',
+  currentChapter: null,
+  currentLesson: null,
+  history: [],
+  completedLessons: {}
+};
+
+/* ============================================================
+   DOM REFERENCES
+   ============================================================ */
+var mainScroll = document.getElementById('mainScroll');
+var backBtn = document.getElementById('backBtn');
+var topTitle = document.getElementById('topTitle');
+var navItems = document.querySelectorAll('.nav-item');
+var playgroundInitialized = false;
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navigate(page, data) {
+  if (state.currentPage !== page || data) {
+    state.history.push({ page: state.currentPage, chapter: state.currentChapter, lesson: state.currentLesson });
+  }
+  state.currentPage = page;
+  if (data) {
+    if (data.chapter !== undefined) state.currentChapter = data.chapter;
+    if (data.lesson !== undefined) state.currentLesson = data.lesson;
+  }
+  render();
+}
+
+function goBack() {
+  if (state.history.length > 0) {
+    var prev = state.history.pop();
+    state.currentPage = prev.page;
+    state.currentChapter = prev.chapter;
+    state.currentLesson = prev.lesson;
+    render();
+  }
+}
+
+function render() {
+  // Hide all pages
+  var pages = document.querySelectorAll('.page');
+  pages.forEach(function(p) { p.classList.remove('active'); });
+
+  // Show active page
+  var targetPage = document.getElementById('page-' + state.currentPage);
+  if (targetPage) targetPage.classList.add('active');
+
+  // Update nav
+  navItems.forEach(function(n) {
+    n.classList.toggle('active', n.getAttribute('data-page') === state.currentPage ||
+      (n.getAttribute('data-page') === 'home' && (state.currentPage === 'chapter' || state.currentPage === 'lesson')));
+  });
+
+  // Update back button
+  var showBack = state.currentPage !== 'home' && state.currentPage !== 'playground';
+  backBtn.classList.toggle('visible', showBack);
+
+  // Update title
+  if (state.currentPage === 'home') {
+    topTitle.innerHTML = 'C++ <span>Journey</span>';
+  } else if (state.currentPage === 'chapter' && state.currentChapter !== null) {
+    topTitle.textContent = chapters[state.currentChapter].title;
+  } else if (state.currentPage === 'lesson' && state.currentChapter !== null && state.currentLesson !== null) {
+    topTitle.textContent = chapters[state.currentChapter].lessons[state.currentLesson].title;
+  } else if (state.currentPage === 'playground') {
+    topTitle.innerHTML = 'C++ <span>Journey</span>';
+  }
+
+  // Render page content
+  if (state.currentPage === 'chapter') renderChapterPage();
+  if (state.currentPage === 'lesson') renderLessonPage();
+  if (state.currentPage === 'playground' && !playgroundInitialized) {
+    initPlayground();
+    playgroundInitialized = true;
+  }
+
+  mainScroll.scrollTop = 0;
+}
+
+/* ============================================================
+   RENDER: HOME
+   ============================================================ */
+function renderHome() {
+  var grid = document.getElementById('chapterGrid');
+  grid.innerHTML = '';
+  chapters.forEach(function(ch, i) {
+    var card = document.createElement('div');
+    card.className = 'chapter-card';
+    card.style.animationDelay = (i * 0.1) + 's';
+    card.innerHTML =
+      '<div class="ch-icon" style="background:' + ch.gradient + '"><i class="fas ' + ch.icon + '"></i></div>' +
+      '<div class="ch-info"><h3>Chapter ' + (i + 1) + ': ' + ch.title + '</h3><p>' + ch.desc + ' · ' + ch.lessons.length + ' lessons</p></div>' +
+      '<div class="ch-arrow"><i class="fas fa-chevron-right"></i></div>';
+    card.addEventListener('click', function() { navigate('chapter', { chapter: i }); });
+    grid.appendChild(card);
+  });
+}
+
+/* ============================================================
+   RENDER: CHAPTER (Lesson List)
+   ============================================================ */
+function renderChapterPage() {
+  var ch = chapters[state.currentChapter];
+  var page = document.getElementById('page-chapter');
+  var html = '<div class="lesson-list-header">' +
+    '<div class="ch-badge" style="background:' + ch.gradient + '"><i class="fas ' + ch.icon + '"></i></div>' +
+    '<div><h2>' + ch.title + '</h2><p>' + ch.lessons.length + ' lessons</p></div></div>' +
+    '<div class="lesson-list">';
+
+  ch.lessons.forEach(function(lesson, i) {
+    var key = state.currentChapter + '-' + i;
+    var done = state.completedLessons[key];
+    html += '<div class="lesson-item' + (done ? ' completed' : '') + ' anim-delay-' + i + '" data-idx="' + i + '">' +
+      '<div class="l-num">' + (done ? '<i class="fas fa-check"></i>' : (i + 1)) + '</div>' +
+      '<div class="l-info"><h4>' + lesson.title + '</h4><p>' + lesson.subtitle + '</p></div>' +
+      '<div class="l-arrow"><i class="fas fa-chevron-right"></i></div></div>';
+  });
+
+  html += '</div>';
+  page.innerHTML = html;
+
+  page.querySelectorAll('.lesson-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var idx = parseInt(this.getAttribute('data-idx'));
+      navigate('lesson', { lesson: idx });
+    });
+  });
+}
+
+/* ============================================================
+   RENDER: LESSON DETAIL
+   ============================================================ */
+function renderLessonPage() {
+  var ch = chapters[state.currentChapter];
+  var lesson = ch.lessons[state.currentLesson];
+  var page = document.getElementById('page-lesson');
+  var html = '<div class="lesson-detail"><h2>' + lesson.title + '</h2>';
+  var editorId = 0;
+
+  lesson.blocks.forEach(function(block, bi) {
+    html += '<div class="content-block anim-delay-' + Math.min(bi, 8) + '">';
+
+    if (block.type === 'text') {
+      html += block.html;
+    } else if (block.type === 'concept') {
+      html += '<div class="concept-card"><h4>' + block.title + '</h4>' + block.html + '</div>';
+    } else if (block.type === 'datatypes') {
+      html += renderDataTypes();
+    } else if (block.type === 'tip') {
+      html += '<div class="tip-box"><i class="fas fa-lightbulb"></i><div>' + block.text + '</div></div>';
+    } else if (block.type === 'note') {
+      html += '<div class="note-box"><i class="fas fa-info-circle"></i><div>' + block.text + '</div></div>';
+    } else if (block.type === 'warning') {
+      html += '<div class="warning-box"><i class="fas fa-exclamation-triangle"></i><div>' + block.text + '</div></div>';
+    } else if (block.type === 'code') {
+      html += renderCodeEditor('lesson-editor-' + editorId, block.code, block.input, block.desc);
+      editorId++;
+    } else if (block.type === 'challenge') {
+      html += '<div class="challenge-box"><h4><i class="fas fa-flask"></i> ' + block.title + '</h4>';
+      if (block.items) {
+        html += '<ol>';
+        block.items.forEach(function(item) { html += '<li>' + item + '</li>'; });
+        html += '</ol>';
+      }
+      html += '<button class="try-btn" onclick="navigate(\'playground\')"><i class="fas fa-code"></i> Try in Playground</button></div>';
+    }
+
+    html += '</div>';
+  });
+
+  // Lesson navigation
+  html += '<div class="lesson-nav">';
+  if (state.currentLesson > 0) {
+    html += '<button onclick="navigateLesson(-1)"><i class="fas fa-chevron-left"></i> Previous</button>';
+  }
+  if (state.currentLesson < ch.lessons.length - 1) {
+    html += '<button class="primary-nav" onclick="navigateLesson(1)">Next <i class="fas fa-chevron-right"></i></button>';
+  } else {
+    html += '<button class="primary-nav" onclick="markComplete()"><i class="fas fa-check"></i> Complete Chapter</button>';
+  }
+  html += '</div>';
+
+  html += '</div>';
+  page.innerHTML = html;
+
+  // Mark lesson as complete
+  var key = state.currentChapter + '-' + state.currentLesson;
+  state.completedLessons[key] = true;
+}
+
+function renderDataTypes() {
+  return '<div class="concept-card"><h4>📦 The 5 Data Types</h4><div class="dt-grid">' +
+    '<div class="dt-chip"><span class="dt-name" style="color:var(--primary)">int</span><span class="dt-desc">Whole numbers<br>e.g. 42, -7</span></div>' +
+    '<div class="dt-chip"><span class="dt-name" style="color:var(--secondary)">float</span><span class="dt-desc">Decimal numbers<br>e.g. 3.14</span></div>' +
+    '<div class="dt-chip"><span class="dt-name" style="color:var(--accent)">double</span><span class="dt-desc">Big decimals<br>e.g. 3.14159265</span></div>' +
+    '<div class="dt-chip"><span class="dt-name" style="color:var(--success)">char</span><span class="dt-desc">Single character<br>e.g. \'A\'</span></div>' +
+    '<div class="dt-chip full"><span class="dt-name" style="color:var(--error)">string</span><span class="dt-desc">Text — a sequence of characters, e.g. "Hello"</span></div>' +
+    '</div></div>';
+}
+
+function navigateLesson(dir) {
+  var ch = chapters[state.currentChapter];
+  var newIdx = state.currentLesson + dir;
+  if (newIdx >= 0 && newIdx < ch.lessons.length) {
+    state.currentLesson = newIdx;
+    topTitle.textContent = ch.lessons[newIdx].title;
+    renderLessonPage();
+    mainScroll.scrollTop = 0;
+  }
+}
+
+function markComplete() {
+  var ch = chapters[state.currentChapter];
+  ch.lessons.forEach(function(_lesson, i) {
+    state.completedLessons[state.currentChapter + '-' + i] = true;
+  });
+  showModal('Chapter Complete! 🎉', 'Great job finishing "' + ch.title + '"! Head to the Playground to practice what you learned.', function() {
+    navigate('home');
+  });
+}
+
+/* ============================================================
+   CODE EDITOR COMPONENT
+   ============================================================ */
+function renderCodeEditor(id, code, input, desc) {
+  var hasInput = input !== undefined && input !== null;
+  var inputHtml = hasInput
+    ? '<div class="code-input-section"><label><i class="fas fa-keyboard"></i> Input (one value per line — simulates keyboard input)</label>' +
+      '<textarea id="' + id + '-input" rows="2" placeholder="Type input values here...">' + escapeHtml(input) + '</textarea></div>'
+    : '';
+
+  return '<div class="code-playground">' +
+    '<div class="code-toolbar"><div class="dots"><span></span><span></span><span></span></div>' +
+    '<span class="file-name">' + (desc || 'main.cpp') + '</span>' +
+    '<button class="copy-btn" title="Copy code" onclick="copyCode(\'' + id + '\')"><i class="fas fa-copy"></i></button></div>' +
+    '<textarea id="' + id + '" class="code-editor" spellcheck="false">' + escapeHtml(code) + '</textarea>' +
+    inputHtml +
+    '<div class="code-actions">' +
+    '<button class="run-btn" onclick="runCode(\'' + id + '\')"><i class="fas fa-play"></i> Run Code</button>' +
+    '<button class="reset-btn" onclick="resetCode(\'' + id + '\', ' + JSON.stringify(JSON.stringify(code)) + ', ' + JSON.stringify(JSON.stringify(input || '')) + ')"><i class="fas fa-undo"></i></button>' +
+    '</div>' +
+    '<div class="code-output" id="' + id + '-output"></div>' +
+    '</div>';
+}
+
+/* ============================================================
+   CODE EXECUTION (JSCPP)
+   ============================================================ */
+function runCode(editorId) {
+  var codeEl = document.getElementById(editorId);
+  var inputEl = document.getElementById(editorId + '-input');
+  var outputDiv = document.getElementById(editorId + '-output');
+
+  if (!codeEl || !outputDiv) return;
+
+  var code = codeEl.value;
+  var input = inputEl ? inputEl.value : '';
+
+  outputDiv.classList.add('visible');
+  outputDiv.innerHTML = '<div class="output-label" style="color:var(--warning)"><i class="fas fa-spinner" style="animation:pulse 1s infinite"></i> Running...</div>';
+
+  setTimeout(function() {
+    try {
+      var output = '';
+      var config = {
+        stdio: {
+          write: function(s) { output += s; }
+        },
+        unsigned_overflow: 'warn',
+        maxTimeout: 5000
+      };
+
+      JSCPP.run(code, input, config);
+
+      if (output.trim() === '') output = '(No output)';
+      outputDiv.innerHTML = '<div class="output-label success"><i class="fas fa-check-circle"></i> Output</div><pre>' + escapeHtml(output) + '</pre>';
+    } catch (e) {
+      var errMsg = e.message || String(e);
+      outputDiv.innerHTML = '<div class="output-label error"><i class="fas fa-times-circle"></i> Error</div><pre class="error-text">' + escapeHtml(errMsg) + '</pre>';
+    }
+  }, 100);
+}
+
+function resetCode(editorId, originalCode, originalInput) {
+  var codeEl = document.getElementById(editorId);
+  var inputEl = document.getElementById(editorId + '-input');
+  var outputDiv = document.getElementById(editorId + '-output');
+  if (codeEl) codeEl.value = originalCode;
+  if (inputEl) inputEl.value = originalInput;
+  if (outputDiv) { outputDiv.classList.remove('visible'); outputDiv.innerHTML = ''; }
+}
+
+function copyCode(editorId) {
+  var codeEl = document.getElementById(editorId);
+  if (!codeEl) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(codeEl.value).then(function() {
+      showToast('Code copied!');
+    });
+  }
+}
+
+/* ============================================================
+   PLAYGROUND
+   ============================================================ */
+function initPlayground() {
+  var container = document.getElementById('playgroundEditor');
+  var defaultCode = '#include <iostream>\nusing namespace std;\n\nint main() {\n  // Write your C++ code here!\n  cout << "Hello from the Playground!" << endl;\n\n  return 0;\n}';
+  container.innerHTML = renderCodeEditor('playground-ed', defaultCode, '', 'playground.cpp');
+}
+
+/* ============================================================
+   CUSTOM MODAL
+   ============================================================ */
+function showModal(title, message, onConfirm) {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = '<div class="modal-box"><h3>' + title + '</h3><p>' + message + '</p>' +
+    '<div class="modal-actions"><button class="btn-confirm">OK</button></div></div>';
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('.btn-confirm').addEventListener('click', function() {
+    overlay.remove();
+    if (onConfirm) onConfirm();
+  });
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      overlay.remove();
+      if (onConfirm) onConfirm();
+    }
+  });
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg) {
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg-code);color:#fff;padding:10px 20px;border-radius:30px;font-size:14px;font-weight:600;z-index:200;animation:fadeUp 0.3s ease;font-family:var(--font-body);box-shadow:var(--shadow-lg);';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 1800);
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+/* ============================================================
+   EVENT LISTENERS
+   ============================================================ */
+backBtn.addEventListener('click', goBack);
+
+navItems.forEach(function(item) {
+  item.addEventListener('click', function() {
+    var page = this.getAttribute('data-page');
+    state.history = [];
+    state.currentChapter = null;
+    state.currentLesson = null;
+    navigate(page);
+  });
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderHome();
+</script>
+</body>
+</html>
+
