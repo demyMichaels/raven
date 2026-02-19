@@ -1,0 +1,1 @@
+Reversible reaction and factors governing the equilibrium position. Dynamic equilibrum. Le Chatelier’s principle and its industrial, applications, equilibrium constant. Simple examples to include action of steam on iron and N2O 4 2NO2 (No calculation will be required)

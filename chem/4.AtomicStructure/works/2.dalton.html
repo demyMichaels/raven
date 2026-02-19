@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Dalton's Atomic Theory · 2D visualization</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e2e8f0;
+            padding: 16px;
+        }
+        
+        /* Main container */
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Header card */
+        .header {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 20px 16px;
+            border-left: 6px solid #fbbf24;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #fbbf24;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .header h1 span {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        
+        .header p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .badge {
+            background: #2d3b4f;
+            color: #a5d8ff;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        /* Section titles */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #fbbf24;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .section-title small {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+        
+        /* Atoms display */
+        .atoms-container {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 24px 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        .atom-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .atom-group {
+            flex: 1;
+            min-width: 140px;
+        }
+        
+        .atom-group h3 {
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 400;
+            color: #cbd5e1;
+            font-size: 1rem;
+        }
+        
+        .atoms-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        /* Atom sphere styles */
+        .atom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 70px;
+        }
+        
+        .sphere {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+            margin-bottom: 4px;
+        }
+        
+        /* Sodium spheres - SHINY METALLIC */
+        .sphere.na {
+            background: linear-gradient(145deg, #e0e8ff, #a0b8e0);
+            color: #1e293b;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 0 #5a6b8c, 0 8px 12px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+        }
+        
+        /* Chlorine spheres - MATTE GREEN */
+        .sphere.cl {
+            background: #5f8b6f;
+            color: #f0fff0;
+            border: 2px solid #a5d6a5;
+            box-shadow: 0 4px 0 #2d4a3a, 0 8px 12px rgba(0,0,0,0.4);
+            text-shadow: 1px 1px 0 #2d4a3a;
+        }
+        
+        .atom-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+        
+        /* Reaction arrow */
+        .reaction-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0 20px;
+            color: #fbbf24;
+            font-size: 1.5rem;
+        }
+        
+        .reaction-arrow .line {
+            height: 2px;
+            width: 50px;
+            background: #fbbf24;
+        }
+        
+        /* Products section */
+        .products {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 24px 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        
+        .pairs-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 24px;
+            margin: 20px 0;
+        }
+        
+        .pair {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #2d3b4f;
+            padding: 8px 12px;
+            border-radius: 50px;
+            border: 1px solid #4b5569;
+        }
+        
+        .pair .sphere {
+            width: 45px;
+            height: 45px;
+            font-size: 1rem;
+        }
+        
+        .pair-bond {
+            width: 20px;
+            height: 3px;
+            background: #94a3b8;
+            border-radius: 2px;
+        }
+        
+        /* Count indicator */
+        .count {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 16px 0 8px;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .count span {
+            background: #0f172a;
+            padding: 4px 12px;
+            border-radius: 30px;
+            border: 1px solid #334155;
+        }
+        
+        .count strong {
+            color: #fbbf24;
+            margin-right: 4px;
+        }
+        
+        /* Hammer card */
+        .hammer-card {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid #fbbf24;
+        }
+        
+        .hammer-icon {
+            font-size: 2.5rem;
+            background: #2d3b4f;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fbbf24;
+        }
+        
+        .hammer-text {
+            flex: 1;
+        }
+        
+        .hammer-text strong {
+            color: #fbbf24;
+            font-size: 1.1rem;
+        }
+        
+        .hammer-text p {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        
+        /* Footer */
+        .footer-note {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-top: 8px;
+            padding: 8px;
+        }
+        
+        /* Animation for hammer */
+        @keyframes hammer-hit {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            50% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        .animate-hammer {
+            animation: hammer-hit 2s infinite ease-in-out;
+        }
+        
+        /* Stark contrast indicator */
+        .contrast-badge {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 10px 0;
+        }
+        
+        .contrast-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #2d3b4f;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+        }
+        
+        .dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .dot.na {
+            background: linear-gradient(145deg, #e0e8ff, #a0b8e0);
+            border: 1px solid white;
+        }
+        
+        .dot.cl {
+            background: #5f8b6f;
+            border: 1px solid #a5d6a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                ⚛️ DALTON'S ATOMS
+                <span>1803</span>
+            </h1>
+            <p>🔹 <strong>Indivisible, indestructible</strong> solid spheres</p>
+            <p>🔹 <span style="color:#a5d8ff;">Sodium atoms identical</span> · <span style="color:#a5f7a5;">Chlorine atoms identical</span></p>
+            <p>🔹 <strong>Reaction:</strong> atoms rearrange — never created/destroyed</p>
+            <div class="badge">4 Na + 4 Cl → 4 NaCl (same atoms)</div>
+        </div>
+        
+        <!-- Stark contrast visual -->
+        <div class="contrast-badge">
+            <div class="contrast-item">
+                <div class="dot na"></div>
+                <span>Shiny metallic Na</span>
+            </div>
+            <div class="contrast-item">
+                <div class="dot cl"></div>
+                <span>Matte green Cl</span>
+            </div>
+        </div>
+        
+        <!-- Reactants section -->
+        <div class="atoms-container">
+            <div class="section-title">
+                ⚛️ REACTANTS <small>separate atoms</small>
+            </div>
+            
+            <div class="atom-row">
+                <!-- Sodium group -->
+                <div class="atom-group">
+                    <h3>SODIUM (Na) — identical shiny spheres</h3>
+                    <div class="atoms-grid">
+                        <div class="atom">
+                            <div class="sphere na">Na</div>
+                            <span class="atom-label">atom 1</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere na">Na</div>
+                            <span class="atom-label">atom 2</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere na">Na</div>
+                            <span class="atom-label">atom 3</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere na">Na</div>
+                            <span class="atom-label">atom 4</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chlorine group -->
+                <div class="atom-group">
+                    <h3>CHLORINE (Cl) — identical matte spheres</h3>
+                    <div class="atoms-grid">
+                        <div class="atom">
+                            <div class="sphere cl">Cl</div>
+                            <span class="atom-label">atom 1</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere cl">Cl</div>
+                            <span class="atom-label">atom 2</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere cl">Cl</div>
+                            <span class="atom-label">atom 3</span>
+                        </div>
+                        <div class="atom">
+                            <div class="sphere cl">Cl</div>
+                            <span class="atom-label">atom 4</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Atom count -->
+            <div class="count">
+                <span><strong>4</strong> Na atoms</span>
+                <span><strong>4</strong> Cl atoms</span>
+                <span><strong>8</strong> total</span>
+            </div>
+        </div>
+        
+        <!-- Reaction arrow -->
+        <div class="reaction-arrow">
+            <div class="line"></div>
+            <span>⚡ REARRANGEMENT ⚡</span>
+            <div class="line"></div>
+        </div>
+        
+        <!-- Products section -->
+        <div class="products">
+            <div class="section-title">
+                🧂 PRODUCTS <small>atoms rearranged into NaCl</small>
+            </div>
+            
+            <div class="pairs-grid">
+                <!-- Pair 1 -->
+                <div class="pair">
+                    <div class="sphere na">Na</div>
+                    <div class="pair-bond"></div>
+                    <div class="sphere cl">Cl</div>
+                </div>
+                
+                <!-- Pair 2 -->
+                <div class="pair">
+                    <div class="sphere na">Na</div>
+                    <div class="pair-bond"></div>
+                    <div class="sphere cl">Cl</div>
+                </div>
+                
+                <!-- Pair 3 -->
+                <div class="pair">
+                    <div class="sphere na">Na</div>
+                    <div class="pair-bond"></div>
+                    <div class="sphere cl">Cl</div>
+                </div>
+                
+                <!-- Pair 4 -->
+                <div class="pair">
+                    <div class="sphere na">Na</div>
+                    <div class="pair-bond"></div>
+                    <div class="sphere cl">Cl</div>
+                </div>
+            </div>
+            
+            <!-- Atom count (same!) -->
+            <div class="count">
+                <span><strong>4</strong> Na atoms</span>
+                <span><strong>4</strong> Cl atoms</span>
+                <span><strong>8</strong> total</span>
+            </div>
+            
+            <p style="text-align: center; color: #a5d8ff; margin-top: 12px; font-size: 0.9rem;">
+                ✦ Same atoms, just rearranged ✦
+            </p>
+        </div>
+        
+        <!-- Hammer - demonstrates indestructibility -->
+        <div class="hammer-card">
+            <div class="hammer-icon animate-hammer">🔨</div>
+            <div class="hammer-text">
+                <strong>INDESTRUCTIBLE SPHERES</strong>
+                <p>The hammer bounces off — atoms cannot be broken, created, or destroyed. They stay perfectly whole.</p>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="footer-note">
+            <p>⚛️ All sodium atoms are identical (shiny metallic) · All chlorine atoms are identical (matte green) · Stark contrast between elements</p>
+            <p style="margin-top: 6px;">← 4 Na + 4 Cl → 4 NaCl · Atoms are conserved, only rearranged</p>
+        </div>
+    </div>
+</body>
+</html>
