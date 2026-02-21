@@ -1,427 +1,1669 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Neutron Blitz · nucleus arcade</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: #0a1424;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', monospace;
-        }
-        .game-wrapper {
-            background: #142b3c;
-            border-radius: 50px;
-            padding: 30px;
-            border: 5px solid #4d8cb0;
-            box-shadow: 0 30px 40px black;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 40px;
-            background: #1f3a4b;
-            box-shadow: inset 0 0 0 3px #6b9fc0, 0 15px 20px #00000070;
-            cursor: none;
-        }
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            background: #08212e;
-            border-radius: 60px;
-            padding: 15px 25px;
-            margin-top: 25px;
-            color: #b4f0ff;
-            font-size: 1.7rem;
-            font-weight: bold;
-            border: 3px solid #2779a5;
-        }
-        .meter-bar {
-            width: 200px;
-            height: 30px;
-            background: #2d1f1a;
-            border-radius: 30px;
-            border: 3px solid #fea;
-            overflow: hidden;
-        }
-        .meter-fill {
-            height: 100%;
-            width: 100%;
-            background: #fdde5c;
-            box-shadow: 0 0 20px #f4b642;
-        }
-        .warning {
-            background: #c04c2e;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
-            font-size: 1.8rem;
-            animation: blink 0.4s infinite;
-        }
-        @keyframes blink { 0%{opacity:0.3} 50%{opacity:1} }
-        button {
-            background: #3584a0;
-            border: none;
-            border-bottom: 5px solid #1d4c63;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            border-radius: 60px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum Orbitals Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #161e2e;
+  --bg-card-hover: #1c2740;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8892a8;
+  --text-muted: #5a6478;
+  --accent-cyan: #00e5ff;
+  --accent-magenta: #e040fb;
+  --accent-gold: #ffd740;
+  --accent-green: #69f0ae;
+  --accent-red: #ff5252;
+  --accent-blue: #448aff;
+  --border-color: #1e2a3f;
+  --glow-cyan: 0 0 20px rgba(0,229,255,0.3);
+  --glow-magenta: 0 0 20px rgba(224,64,251,0.3);
+  --orbital-s: #00e5ff;
+  --orbital-p: #e040fb;
+  --orbital-d: #ffd740;
+  --orbital-f: #69f0ae;
+  --shell-1: #00e5ff;
+  --shell-2: #e040fb;
+  --shell-3: #ffd740;
+}
+
+html.dark {
+  /* already dark by default */
+}
+
+html:not(.dark) {
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f9fc;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --border-color: #e2e8f0;
+  --glow-cyan: 0 0 15px rgba(0,150,200,0.15);
+  --glow-magenta: 0 0 15px rgba(180,50,200,0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+
+/* Background grid effect */
+.bg-grid {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html:not(.dark) .bg-grid {
+  background-image:
+    linear-gradient(rgba(0,100,200,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,100,200,0.04) 1px, transparent 1px);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.hero {
+  text-align: center;
+  padding: 50px 20px 30px;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  animation: fadeIn 0.8s ease;
+}
+
+html:not(.dark) .hero-badge {
+  background: rgba(0,150,200,0.08);
+  border-color: rgba(0,150,200,0.3);
+  color: #0077aa;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  animation: fadeIn 0.8s ease 0.1s both;
+}
+
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero p {
+  font-size: clamp(15px, 2.5vw, 18px);
+  color: var(--text-secondary);
+  max-width: 650px;
+  margin: 0 auto;
+  font-weight: 300;
+  animation: fadeIn 0.8s ease 0.2s both;
+}
+
+/* Navigation tabs */
+.nav-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 20px 30px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+}
+
+.nav-tabs::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, var(--bg-primary), transparent);
+  pointer-events: none;
+}
+
+.nav-tab {
+  padding: 10px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(224,64,251,0.1));
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+html:not(.dark) .nav-tab.active {
+  color: #0077aa;
+}
+
+/* Sections */
+.section {
+  display: none;
+  animation: fadeIn 0.5s ease;
+  padding-bottom: 60px;
+}
+
+.section.active { display: block; }
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  font-weight: 300;
+}
+
+/* Cards */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: rgba(0,229,255,0.2);
+  background: var(--bg-card-hover);
+}
+
+/* Canvas containers */
+.canvas-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(0,229,255,0.03), transparent 70%);
+}
+
+.canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Quantum Numbers Section */
+.qn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.qn-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.qn-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 16px 16px 0 0;
+}
+
+.qn-card[data-qn="n"]::before { background: var(--accent-cyan); }
+.qn-card[data-qn="l"]::before { background: var(--accent-magenta); }
+.qn-card[data-qn="ml"]::before { background: var(--accent-gold); }
+.qn-card[data-qn="s"]::before { background: var(--accent-green); }
+
+.qn-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,229,255,0.3);
+}
+
+.qn-card.selected {
+  border-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.qn-symbol {
+  font-family: 'Space Mono', monospace;
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.qn-card[data-qn="n"] .qn-symbol { color: var(--accent-cyan); }
+.qn-card[data-qn="l"] .qn-symbol { color: var(--accent-magenta); }
+.qn-card[data-qn="ml"] .qn-symbol { color: var(--accent-gold); }
+.qn-card[data-qn="s"] .qn-symbol { color: var(--accent-green); }
+
+.qn-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.qn-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.qn-detail-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 30px;
+  margin-top: 20px;
+  display: none;
+}
+
+.qn-detail-panel.active { display: block; }
+
+.qn-detail-panel h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.qn-detail-panel p {
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.qn-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.qn-value-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  transition: all 0.3s ease;
+}
+
+/* Orbital Shapes Section */
+.orbital-selector {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.orbital-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orbital-btn:hover { transform: scale(1.1); }
+
+.orbital-btn.active-s {
+  border-color: var(--orbital-s);
+  color: var(--orbital-s);
+  background: rgba(0,229,255,0.1);
+  box-shadow: 0 0 20px rgba(0,229,255,0.2);
+}
+
+.orbital-btn.active-p {
+  border-color: var(--orbital-p);
+  color: var(--orbital-p);
+  background: rgba(224,64,251,0.1);
+  box-shadow: 0 0 20px rgba(224,64,251,0.2);
+}
+
+.orbital-btn.active-d {
+  border-color: var(--orbital-d);
+  color: var(--orbital-d);
+  background: rgba(255,215,64,0.1);
+  box-shadow: 0 0 20px rgba(255,215,64,0.2);
+}
+
+.orbital-info-box {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.orbital-info-box .orbital-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.orbital-info-box .orbital-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Table Section */
+.quantum-table-wrapper {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.quantum-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.quantum-table th {
+  background: var(--bg-card);
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+
+.quantum-table td {
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.quantum-table tr:hover td {
+  background: var(--bg-card-hover);
+}
+
+.quantum-table .shell-1 td:first-child { border-left: 3px solid var(--shell-1); }
+.quantum-table .shell-2 td:first-child { border-left: 3px solid var(--shell-2); }
+.quantum-table .shell-3 td:first-child { border-left: 3px solid var(--shell-3); }
+
+.table-highlight {
+  background: rgba(0,229,255,0.08) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* Spin Section */
+.spin-demo {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  flex-wrap: wrap;
+  margin: 30px 0;
+}
+
+.spin-box {
+  text-align: center;
+}
+
+.spin-canvas-wrap {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 12px;
+}
+
+.spin-canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.spin-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.spin-label.up { color: var(--accent-cyan); }
+.spin-label.down { color: var(--accent-magenta); }
+
+/* Shells Section */
+.shell-viewer {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1;
+  margin: 0 auto 20px;
+}
+
+.shell-viewer canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.shell-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.shell-btn {
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shell-btn:hover { transform: scale(1.05); }
+.shell-btn.active-1 { border-color: var(--shell-1); color: var(--shell-1); background: rgba(0,229,255,0.1); }
+.shell-btn.active-2 { border-color: var(--shell-2); color: var(--shell-2); background: rgba(224,64,251,0.1); }
+.shell-btn.active-3 { border-color: var(--shell-3); color: var(--shell-3); background: rgba(255,215,64,0.1); }
+
+.shell-info {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.shell-info h3 {
+  font-family: 'Space Mono', monospace;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.shell-info p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Probability cloud */
+.prob-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.prob-controls label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.prob-controls input[type="range"] {
+  width: 200px;
+  accent-color: var(--accent-cyan);
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hero { padding: 30px 16px 20px; }
+  .nav-tabs { gap: 6px; padding: 8px 12px 20px; }
+  .nav-tab { padding: 8px 14px; font-size: 12px; }
+  .qn-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .qn-card { padding: 16px; }
+  .qn-symbol { font-size: 28px; }
+  .spin-demo { gap: 30px; }
+  .card { padding: 16px; }
+  .orbital-btn { width: 52px; height: 52px; font-size: 18px; }
+  .quantum-table { font-size: 12px; }
+  .quantum-table th, .quantum-table td { padding: 8px 6px; }
+}
+
+/* Tooltip */
+.tooltip {
+  position: relative;
+}
+
+.tooltip-text {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.tooltip:hover .tooltip-text { display: block; }
+
+/* Notation display */
+.notation-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 20px 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+}
+
+.notation-n { color: var(--accent-cyan); }
+.notation-l { color: var(--accent-magenta); }
+.notation-ml { color: var(--accent-gold); }
+
+.notation-display sup {
+  font-size: 20px;
+  position: relative;
+  top: -8px;
+}
+
+/* Energy diagram */
+.energy-diagram {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+.energy-level {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.energy-level:hover {
+  border-color: rgba(0,229,255,0.3);
+}
+
+.energy-level.highlighted {
+  border-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.energy-bar {
+  height: 4px;
+  border-radius: 2px;
+  flex: 1;
+}
+
+.energy-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 30px;
+}
+
+.energy-electrons {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 60px;
+  text-align: right;
+}
+
+/* Footer info */
+.footer-note {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 40px;
+}
+</style>
 </head>
 <body>
-<div class="game-wrapper">
-    <canvas id="gameCanvas" width="700" height="500"></canvas>
+<div class="bg-grid"></div>
 
-    <div class="stats">
-        <span>💪 A = <span id="massVal">1</span></span>
-        <div class="meter-bar"><div class="meter-fill" id="strongForceMeter" style="width:100%"></div></div>
-        <span>🎯 <span id="targetA">10</span></span>
-    </div>
+<div class="container">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge"><i class="fas fa-atom"></i> Quantum Chemistry</div>
+    <h1>Atomic <span class="gradient-text">Orbitals</span> Explorer</h1>
+    <p>Visualize the shapes, quantum numbers, and probability clouds that define where electrons live inside atoms.</p>
+  </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px;">
-        <div id="decayMessage" style="background:#261d45; color:#ffb981; padding:10px 25px; border-radius:40px; font-size:1.3rem;">⚡</div>
-        <button id="restartBtn">⟲ Restart</button>
+  <!-- Navigation -->
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-section="quantum-numbers"><i class="fas fa-hashtag"></i> Quantum Numbers</button>
+    <button class="nav-tab" data-section="orbital-shapes"><i class="fas fa-shapes"></i> Orbital Shapes</button>
+    <button class="nav-tab" data-section="shells"><i class="fas fa-circle-notch"></i> Shells &amp; Energy</button>
+    <button class="nav-tab" data-section="spin"><i class="fas fa-sync-alt"></i> Electron Spin</button>
+    <button class="nav-tab" data-section="table"><i class="fas fa-table"></i> Quantum Table</button>
+  </div>
+
+  <!-- Section 1: Quantum Numbers -->
+  <div class="section active" id="quantum-numbers">
+    <div class="container">
+      <h2 class="section-title">The Four Quantum Numbers</h2>
+      <p class="section-subtitle">Each electron is described by a unique set of four quantum numbers. Tap a card to learn more.</p>
+
+      <div class="qn-grid">
+        <div class="qn-card selected" data-qn="n" onclick="selectQN('n')">
+          <div class="qn-symbol">n</div>
+          <div class="qn-name">Principal</div>
+          <div class="qn-desc">Shell / Energy level</div>
+        </div>
+        <div class="qn-card" data-qn="l" onclick="selectQN('l')">
+          <div class="qn-symbol">ℓ</div>
+          <div class="qn-name">Angular Momentum</div>
+          <div class="qn-desc">Orbital shape</div>
+        </div>
+        <div class="qn-card" data-qn="ml" onclick="selectQN('ml')">
+          <div class="qn-symbol">m<sub>ℓ</sub></div>
+          <div class="qn-name">Magnetic</div>
+          <div class="qn-desc">Orbital orientation</div>
+        </div>
+        <div class="qn-card" data-qn="s" onclick="selectQN('s')">
+          <div class="qn-symbol">m<sub>s</sub></div>
+          <div class="qn-name">Spin</div>
+          <div class="qn-desc">Electron spin direction</div>
+        </div>
+      </div>
+
+      <div class="qn-detail-panel active" id="qn-detail-n">
+        <h3 style="color:var(--accent-cyan)">n — Principal Quantum Number</h3>
+        <p>Relates to the <strong>distance</strong> from the nucleus and the <strong>energy</strong> of the electron. It divides orbitals into shells and defines the row in the periodic table.</p>
+        <p style="font-size:13px;color:var(--text-muted)">Allowed values: positive integers 1, 2, 3, 4 …</p>
+        <div class="qn-values" id="qn-values-n"></div>
+      </div>
+
+      <div class="qn-detail-panel" id="qn-detail-l">
+        <h3 style="color:var(--accent-magenta)">ℓ — Orbital Angular Momentum</h3>
+        <p>Related to the <strong>shape</strong> of the orbital. It depends on n and takes integer values from 0 to n − 1.</p>
+        <p style="font-size:13px;color:var(--text-muted)">Letter codes: s (ℓ=0), p (ℓ=1), d (ℓ=2), f (ℓ=3)</p>
+        <div class="qn-values" id="qn-values-l"></div>
+      </div>
+
+      <div class="qn-detail-panel" id="qn-detail-ml">
+        <h3 style="color:var(--accent-gold)">m<sub>ℓ</sub> — Magnetic Quantum Number</h3>
+        <p>Related to the <strong>orientation</strong> of the orbital in 3D space. For p orbitals, these correspond to the x, y, and z axes.</p>
+        <p style="font-size:13px;color:var(--text-muted)">Allowed values: integers from −ℓ to +ℓ</p>
+        <div class="qn-values" id="qn-values-ml"></div>
+      </div>
+
+      <div class="qn-detail-panel" id="qn-detail-s">
+        <h3 style="color:var(--accent-green)">m<sub>s</sub> — Spin Quantum Number</h3>
+        <p>Describes the <strong>intrinsic angular momentum</strong> of the electron spinning on its own axis. Only two orientations are possible.</p>
+        <p style="font-size:13px;color:var(--text-muted)">Allowed values: +½ (spin up ↑) and −½ (spin down ↓)</p>
+        <div class="qn-values" id="qn-values-s"></div>
+      </div>
+
+      <!-- Interactive builder -->
+      <div class="card" style="margin-top:30px">
+        <h3 style="margin-bottom:12px"><i class="fas fa-sliders-h" style="color:var(--accent-cyan)"></i> &nbsp;Build a Quantum State</h3>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px">Choose values for each quantum number and see the resulting orbital notation.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);margin-bottom:4px;display:block">n (Shell)</label>
+            <select id="builder-n" onchange="updateBuilder()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:16px;font-family:'Space Mono',monospace">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);margin-bottom:4px;display:block">ℓ (Shape)</label>
+            <select id="builder-l" onchange="updateBuilder()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:16px;font-family:'Space Mono',monospace"></select>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);margin-bottom:4px;display:block">m<sub>ℓ</sub> (Orientation)</label>
+            <select id="builder-ml" onchange="updateBuilder()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:16px;font-family:'Space Mono',monospace"></select>
+          </div>
+          <div>
+            <label style="font-size:13px;color:var(--text-muted);margin-bottom:4px;display:block">m<sub>s</sub> (Spin)</label>
+            <select id="builder-s" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:16px;font-family:'Space Mono',monospace">
+              <option value="+1/2">+½ ↑</option>
+              <option value="-1/2">−½ ↓</option>
+            </select>
+          </div>
+        </div>
+        <div class="notation-display" id="notation-display">
+          <span class="notation-n">3</span><span class="notation-l">d</span><span class="notation-ml" style="font-size:16px;opacity:0.6">(m<sub>ℓ</sub>=0)</span>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Section 2: Orbital Shapes -->
+  <div class="section" id="orbital-shapes">
+    <div class="container">
+      <h2 class="section-title">Orbital Shapes</h2>
+      <p class="section-subtitle">The wave function ψ² gives us the probability cloud — here's what each orbital type looks like.</p>
+
+      <div class="orbital-selector" id="orbitalSelector">
+        <button class="orbital-btn active-s" data-orbital="1s" onclick="selectOrbital('1s')">1s</button>
+        <button class="orbital-btn" data-orbital="2s" onclick="selectOrbital('2s')">2s</button>
+        <button class="orbital-btn" data-orbital="2p" onclick="selectOrbital('2p')">2p</button>
+        <button class="orbital-btn" data-orbital="3s" onclick="selectOrbital('3s')">3s</button>
+        <button class="orbital-btn" data-orbital="3p" onclick="selectOrbital('3p')">3p</button>
+        <button class="orbital-btn" data-orbital="3d" onclick="selectOrbital('3d')">3d</button>
+      </div>
+
+      <div class="orbital-info-box" id="orbitalInfoBox">
+        <div class="orbital-label" id="orbitalLabel" style="color:var(--orbital-s)">1s orbital</div>
+        <div class="orbital-meta" id="orbitalMeta">n=1, ℓ=0 · Spherical · 1 orientation · Max 2 electrons</div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="orbitalCanvas"></canvas>
+      </div>
+
+      <div class="prob-controls" style="margin-top:16px">
+        <label>Particle density:</label>
+        <input type="range" id="densitySlider" min="100" max="2000" value="800" oninput="updateOrbitalDensity()">
+        <span id="densityValue" style="font-family:'Space Mono',monospace;font-size:13px;color:var(--accent-cyan)">800</span>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h3 style="margin-bottom:8px"><i class="fas fa-lightbulb" style="color:var(--accent-gold)"></i> &nbsp;Key Insight</h3>
+        <p style="font-size:14px;color:var(--text-secondary)" id="orbitalInsight">
+          The 1s orbital is a perfect sphere centered on the nucleus. The probability of finding the electron is highest near the center and drops off in all directions equally. Think of it as a fuzzy ball of electron probability!
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Shells & Energy -->
+  <div class="section" id="shells">
+    <div class="container">
+      <h2 class="section-title">Shells &amp; Energy Levels</h2>
+      <p class="section-subtitle">Higher n means farther from the nucleus and higher energy. See how orbitals nest inside each other.</p>
+
+      <div class="shell-controls">
+        <button class="shell-btn active-1" data-shell="1" onclick="selectShell(1)">n=1</button>
+        <button class="shell-btn" data-shell="2" onclick="selectShell(2)">n=2</button>
+        <button class="shell-btn" data-shell="3" onclick="selectShell(3)">n=3</button>
+      </div>
+
+      <div class="shell-viewer">
+        <canvas id="shellCanvas"></canvas>
+      </div>
+
+      <div class="shell-info" id="shellInfo">
+        <h3 style="color:var(--shell-1)">Shell n = 1</h3>
+        <p>Contains: <strong>1s</strong> orbital only</p>
+        <p>Max electrons: <strong>2</strong></p>
+      </div>
+
+      <h3 style="margin:30px 0 16px">Energy Level Diagram</h3>
+      <div class="energy-diagram" id="energyDiagram"></div>
+    </div>
+  </div>
+
+  <!-- Section 4: Electron Spin -->
+  <div class="section" id="spin">
+    <div class="container">
+      <h2 class="section-title">Electron Spin</h2>
+      <p class="section-subtitle">Every electron spins on its own axis. The magnitude is always the same, but it has two orientations: up (+½) and down (−½).</p>
+
+      <div class="spin-demo">
+        <div class="spin-box">
+          <div class="spin-canvas-wrap"><canvas id="spinUpCanvas"></canvas></div>
+          <div class="spin-label up">+½ &nbsp;Spin Up ↑</div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Counterclockwise</p>
+        </div>
+        <div class="spin-box">
+          <div class="spin-canvas-wrap"><canvas id="spinDownCanvas"></canvas></div>
+          <div class="spin-label down">−½ &nbsp;Spin Down ↓</div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Clockwise</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:8px"><i class="fas fa-info-circle" style="color:var(--accent-green)"></i> &nbsp;Pauli Exclusion Principle</h3>
+        <p style="font-size:14px;color:var(--text-secondary)">
+          No two electrons in an atom can have the same set of four quantum numbers. Since each orbital is defined by (n, ℓ, m<sub>ℓ</sub>), the only difference between two electrons in the same orbital is their spin. This is why <strong>each orbital holds a maximum of 2 electrons</strong> — one spin-up and one spin-down.
+        </p>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:12px"><i class="fas fa-box" style="color:var(--accent-cyan)"></i> &nbsp;Orbital Box Diagram</h3>
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px">See how electrons fill orbitals with paired spins (for carbon, Z = 6):</p>
+        <div id="boxDiagram" style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Quantum Table -->
+  <div class="section" id="table">
+    <div class="container">
+      <h2 class="section-title">Quantum Numbers Table (n = 1–3)</h2>
+      <p class="section-subtitle">All valid combinations of quantum numbers for the first three shells. Hover or tap a row to highlight it.</p>
+
+      <div class="quantum-table-wrapper">
+        <table class="quantum-table" id="quantumTable">
+          <thead>
+            <tr>
+              <th>n</th>
+              <th>ℓ</th>
+              <th>Letter</th>
+              <th>m<sub>ℓ</sub> values</th>
+              <th>Orbitals</th>
+              <th>Max e⁻</th>
+            </tr>
+          </thead>
+          <tbody id="quantumTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h3 style="margin-bottom:8px"><i class="fas fa-calculator" style="color:var(--accent-magenta)"></i> &nbsp;Quick Rules</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:12px">
+          <div style="padding:12px;border-radius:10px;background:var(--bg-secondary);border:1px solid var(--border-color)">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent-cyan);margin-bottom:4px">ℓ = 0 → n − 1</div>
+            <div style="font-size:12px;color:var(--text-secondary)">Shape depends on n</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;background:var(--bg-secondary);border:1px solid var(--border-color)">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent-magenta);margin-bottom:4px">m<sub>ℓ</sub> = −ℓ → +ℓ</div>
+            <div style="font-size:12px;color:var(--text-secondary)">Orientations depend on ℓ</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;background:var(--bg-secondary);border:1px solid var(--border-color)">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent-gold);margin-bottom:4px">2(2ℓ + 1) e⁻</div>
+            <div style="font-size:12px;color:var(--text-secondary)">Max electrons per subshell</div>
+          </div>
+          <div style="padding:12px;border-radius:10px;background:var(--bg-secondary);border:1px solid var(--border-color)">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;color:var(--accent-green);margin-bottom:4px">2n² e⁻ total</div>
+            <div style="font-size:12px;color:var(--text-secondary)">Max electrons per shell</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-note">
+  Atomic Orbitals Explorer · Based on the Schrödinger Wave Equation · For educational purposes
 </div>
 
 <script>
-    (function() {
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+/* ===== Dark Mode Detection ===== */
+if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.classList.add('dark');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
+  if (event.matches) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+});
 
-        // ----- player (proton) -----
-        let player = { x: 350, y: 250, r: 18 };
+/* ===== Navigation ===== */
+document.querySelectorAll('.nav-tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+    tab.classList.add('active');
+    var target = document.getElementById(tab.dataset.section);
+    if (target) target.classList.add('active');
+    initCurrentSection();
+  });
+});
 
-        // ----- game state -----
-        let A = 1;               // mass number (starts as proton)
-        const TARGET_A = 12;      // win condition
-        let strongForce = 100;    // max 100
-        let gameOver = false;
-        let win = false;
+function initCurrentSection() {
+  var activeId = document.querySelector('.section.active');
+  if (!activeId) return;
+  var id = activeId.id;
+  if (id === 'orbital-shapes') initOrbitalCanvas();
+  if (id === 'shells') initShellCanvas();
+  if (id === 'spin') initSpinCanvases();
+}
 
-        // neutrons array
-        let neutrons = [];
-        const NEUTRON_RADIUS = 12;
-        const NEUTRON_SPEED = 2.2;
-        const MAX_NEUTRONS = 8;
+/* ===== Quantum Number Cards ===== */
+function selectQN(qn) {
+  document.querySelectorAll('.qn-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.querySelector('.qn-card[data-qn="' + qn + '"]').classList.add('selected');
+  document.querySelectorAll('.qn-detail-panel').forEach(function(p) { p.classList.remove('active'); });
+  var panel = document.getElementById('qn-detail-' + qn);
+  if (panel) panel.classList.add('active');
+}
 
-        // decay event
-        let decayActive = false;
-        let decayType = null;     // 'betaMinus' or 'betaPlus'
-        let decayParticles = [];
-        let decayTimer = null;
-        let decayMessage = '';
+function buildQNValues() {
+  var nContainer = document.getElementById('qn-values-n');
+  [1,2,3,4].forEach(function(v) {
+    var chip = document.createElement('div');
+    chip.className = 'qn-value-chip';
+    chip.textContent = v;
+    chip.style.color = 'var(--accent-cyan)';
+    nContainer.appendChild(chip);
+  });
 
-        // keys
-        const keys = {};
+  var lContainer = document.getElementById('qn-values-l');
+  var lLabels = ['0 (s)', '1 (p)', '2 (d)', '3 (f)'];
+  lLabels.forEach(function(v) {
+    var chip = document.createElement('div');
+    chip.className = 'qn-value-chip';
+    chip.textContent = v;
+    chip.style.color = 'var(--accent-magenta)';
+    lContainer.appendChild(chip);
+  });
 
-        // ----- UI elements -----
-        const massSpan = document.getElementById('massVal');
-        const targetSpan = document.getElementById('targetA');
-        const forceMeter = document.getElementById('strongForceMeter');
-        const decayMsgDiv = document.getElementById('decayMessage');
+  var mlContainer = document.getElementById('qn-values-ml');
+  [-3,-2,-1,0,1,2,3].forEach(function(v) {
+    var chip = document.createElement('div');
+    chip.className = 'qn-value-chip';
+    chip.textContent = (v > 0 ? '+' : '') + v;
+    chip.style.color = 'var(--accent-gold)';
+    mlContainer.appendChild(chip);
+  });
 
-        targetSpan.textContent = TARGET_A;
+  var sContainer = document.getElementById('qn-values-s');
+  ['+½ ↑', '−½ ↓'].forEach(function(v) {
+    var chip = document.createElement('div');
+    chip.className = 'qn-value-chip';
+    chip.textContent = v;
+    chip.style.color = 'var(--accent-green)';
+    sContainer.appendChild(chip);
+  });
+}
+buildQNValues();
 
-        // ----- helper: spawn neutron (random edge) -----
-        function spawnNeutron() {
-            const side = Math.floor(Math.random() * 4);
-            let x, y;
-            if (side === 0) { // top
-                x = Math.random() * canvas.width;
-                y = -NEUTRON_RADIUS;
-            } else if (side === 1) { // right
-                x = canvas.width + NEUTRON_RADIUS;
-                y = Math.random() * canvas.height;
-            } else if (side === 2) { // bottom
-                x = Math.random() * canvas.width;
-                y = canvas.height + NEUTRON_RADIUS;
-            } else { // left
-                x = -NEUTRON_RADIUS;
-                y = Math.random() * canvas.height;
-            }
-            const angle = Math.random() * 2 * Math.PI;
-            const vx = Math.cos(angle) * NEUTRON_SPEED;
-            const vy = Math.sin(angle) * NEUTRON_SPEED;
-            neutrons.push({ x, y, vx, vy, r: NEUTRON_RADIUS });
-        }
+/* ===== Builder ===== */
+var lLetters = ['s','p','d','f'];
 
-        // ----- spawn decay particle (electron or positron) -----
-        function spawnDecayParticle(type) {
-            decayParticles = [];
-            const count = 3;
-            for (let i = 0; i < count; i++) {
-                let x = Math.random() * canvas.width;
-                let y = Math.random() * canvas.height;
-                let vx = (Math.random() - 0.5) * 2.5;
-                let vy = (Math.random() - 0.5) * 2.5;
-                decayParticles.push({ x, y, vx, vy, r: 10, type: type });
-            }
-        }
+function updateBuilder() {
+  var n = parseInt(document.getElementById('builder-n').value);
+  var lSelect = document.getElementById('builder-l');
+  var mlSelect = document.getElementById('builder-ml');
 
-        // ----- trigger a random decay event -----
-        function triggerDecay() {
-            if (decayActive || gameOver || win) return;
-            decayType = Math.random() < 0.5 ? 'betaMinus' : 'betaPlus';
-            decayActive = true;
-            decayMessage = decayType === 'betaMinus' ? '⚡ BETA⁻ NEEDED (blue)' : '⚡ BETA⁺ NEEDED (red)';
-            decayMsgDiv.innerHTML = `<span class="warning">${decayMessage}</span>`;
-            spawnDecayParticle(decayType);
-            // auto‑fail after 7 seconds
-            if (decayTimer) clearTimeout(decayTimer);
-            decayTimer = setTimeout(() => {
-                if (decayActive && !gameOver && !win) {
-                    gameOver = true;
-                    decayMsgDiv.innerHTML = '💥 FISSION! Too late.';
-                }
-            }, 7000);
-        }
+  var prevL = parseInt(lSelect.value) || 0;
+  lSelect.innerHTML = '';
+  for (var i = 0; i < n; i++) {
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i + ' (' + lLetters[i] + ')';
+    lSelect.appendChild(opt);
+  }
+  if (prevL < n) lSelect.value = prevL;
 
-        // ----- reset game -----
-        function restart() {
-            gameOver = false;
-            win = false;
-            A = 1;
-            strongForce = 100;
-            neutrons = [];
-            decayActive = false;
-            if (decayTimer) clearTimeout(decayTimer);
-            decayParticles = [];
-            decayMsgDiv.innerHTML = '⚡';
-            player.x = 350;
-            player.y = 250;
+  var l = parseInt(lSelect.value);
+  var prevMl = parseInt(mlSelect.value) || 0;
+  mlSelect.innerHTML = '';
+  for (var m = -l; m <= l; m++) {
+    var opt2 = document.createElement('option');
+    opt2.value = m;
+    opt2.textContent = (m > 0 ? '+' : '') + m;
+    mlSelect.appendChild(opt2);
+  }
+  if (prevMl >= -l && prevMl <= l) mlSelect.value = prevMl;
 
-            // initial neutrons
-            for (let i = 0; i < 4; i++) spawnNeutron();
+  var finalL = parseInt(lSelect.value);
+  var finalMl = parseInt(mlSelect.value);
+  var display = document.getElementById('notation-display');
+  display.innerHTML =
+    '<span class="notation-n">' + n + '</span>' +
+    '<span class="notation-l">' + lLetters[finalL] + '</span>' +
+    '<span class="notation-ml" style="font-size:16px;opacity:0.6">(m<sub>ℓ</sub>=' + (finalMl > 0 ? '+' : '') + finalMl + ')</span>';
+}
+updateBuilder();
 
-            // schedule decays every ~15 seconds
-            setRandomDecay();
-        }
+/* ===== Orbital Shapes Canvas ===== */
+var currentOrbital = '1s';
+var orbitalParticles = [];
+var orbitalAnimId = null;
+var particleDensity = 800;
 
-        function setRandomDecay() {
-            if (gameOver || win) return;
-            const next = 8000 + Math.random() * 10000;
-            setTimeout(() => {
-                if (!gameOver && !win && !decayActive) {
-                    triggerDecay();
-                }
-                setRandomDecay();
-            }, next);
-        }
+var orbitalData = {
+  '1s': {name:'1s orbital', color:'#00e5ff', n:1, l:0, meta:'n=1, ℓ=0 · Spherical · 1 orientation · Max 2 electrons',
+    insight:'The 1s orbital is a perfect sphere centered on the nucleus. The probability of finding the electron is highest near the center and drops off in all directions equally. Think of it as a fuzzy ball of electron probability!'},
+  '2s': {name:'2s orbital', color:'#00e5ff', n:2, l:0, meta:'n=2, ℓ=0 · Spherical with node · 1 orientation · Max 2 electrons',
+    insight:'The 2s orbital is also spherical but larger, with a radial node — a shell where the probability of finding the electron drops to zero. Higher n means the electron is farther from the nucleus on average.'},
+  '2p': {name:'2p orbital', color:'#e040fb', n:2, l:1, meta:'n=2, ℓ=1 · Dumbbell · 3 orientations (px, py, pz) · Max 6 electrons',
+    insight:'The p orbital has a dumbbell (figure-8) shape with a nodal plane through the nucleus where electron probability is zero. There are three p orbitals oriented along the x, y, and z axes.'},
+  '3s': {name:'3s orbital', color:'#00e5ff', n:3, l:0, meta:'n=3, ℓ=0 · Spherical with 2 nodes · 1 orientation · Max 2 electrons',
+    insight:'The 3s orbital is even larger than 2s and has two radial nodes — concentric spherical shells of zero probability. It\'s like a series of nested probability clouds.'},
+  '3p': {name:'3p orbital', color:'#e040fb', n:3, l:1, meta:'n=3, ℓ=1 · Dumbbell with node · 3 orientations · Max 6 electrons',
+    insight:'The 3p orbital is like the 2p but larger and with an additional radial node in each lobe. The dumbbell shape persists but extends further from the nucleus.'},
+  '3d': {name:'3d orbital', color:'#ffd740', n:3, l:2, meta:'n=3, ℓ=2 · Cloverleaf · 5 orientations · Max 10 electrons',
+    insight:'The d orbital has a distinctive four-lobed cloverleaf shape (for most orientations). There are 5 d orbitals per shell. Organic chemists seldom need these, but they\'re crucial in transition metal chemistry!'}
+};
 
-        // ----- input handling -----
-        window.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-            if (e.key.startsWith('Arrow')) e.preventDefault();
-        });
-        window.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-        });
+function selectOrbital(name) {
+  currentOrbital = name;
+  document.querySelectorAll('.orbital-btn').forEach(function(b) {
+    b.className = 'orbital-btn';
+  });
+  var btn = document.querySelector('.orbital-btn[data-orbital="' + name + '"]');
+  var data = orbitalData[name];
+  var activeClass = 'active-' + lLetters[data.l];
+  btn.classList.add(activeClass);
 
-        function movePlayer() {
-            if (gameOver || win) return;
-            const speed = 4.5;
-            if (keys['ArrowUp'] || keys['w']) player.y -= speed;
-            if (keys['ArrowDown'] || keys['s']) player.y += speed;
-            if (keys['ArrowLeft'] || keys['a']) player.x -= speed;
-            if (keys['ArrowRight'] || keys['d']) player.x += speed;
-            // boundaries
-            player.x = Math.max(player.r, Math.min(canvas.width - player.r, player.x));
-            player.y = Math.max(player.r, Math.min(canvas.height - player.r, player.y));
-        }
+  document.getElementById('orbitalLabel').textContent = data.name;
+  document.getElementById('orbitalLabel').style.color = data.color;
+  document.getElementById('orbitalMeta').textContent = data.meta;
+  document.getElementById('orbitalInsight').textContent = data.insight;
+  initOrbitalCanvas();
+}
 
-        // ----- update game (collisions, meter, win) -----
-        function update() {
-            if (gameOver || win) return;
+function generateOrbitalParticles(name, count, w, h) {
+  var particles = [];
+  var cx = w / 2;
+  var cy = h / 2;
+  var scale = Math.min(w, h) * 0.4;
+  var data = orbitalData[name];
+  var n = data.n;
+  var l = data.l;
 
-            // move neutrons
-            for (let n of neutrons) {
-                n.x += n.vx;
-                n.y += n.vy;
-                // bounce off walls (optional, but more fun)
-                if (n.x < n.r || n.x > canvas.width - n.r) n.vx *= -0.9;
-                if (n.y < n.r || n.y > canvas.height - n.r) n.vy *= -0.9;
-                // keep inside roughly
-                n.x = Math.max(n.r, Math.min(canvas.width - n.r, n.x));
-                n.y = Math.max(n.r, Math.min(canvas.height - n.r, n.y));
-            }
+  for (var i = 0; i < count; i++) {
+    var x, y, prob;
+    var attempts = 0;
 
-            // move decay particles
-            for (let p of decayParticles) {
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.x < p.r || p.x > canvas.width - p.r) p.vx *= -0.9;
-                if (p.y < p.r || p.y > canvas.height - p.r) p.vy *= -0.9;
-            }
+    do {
+      // Generate in spherical-ish coordinates then project
+      var r = Math.random() * n * 1.2;
+      var theta = Math.random() * Math.PI * 2;
+      var phi = Math.random() * Math.PI;
 
-            // check neutron collection
-            for (let i = neutrons.length - 1; i >= 0; i--) {
-                const n = neutrons[i];
-                const dx = player.x - n.x;
-                const dy = player.y - n.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < player.r + n.r) {
-                    // collect
-                    neutrons.splice(i, 1);
-                    A++;
-                    strongForce = Math.max(0, strongForce - 12);
-                    if (strongForce <= 0) {
-                        gameOver = true;
-                        decayMsgDiv.innerHTML = '💥 Strong force failed!';
-                    }
-                    // spawn new neutron to keep chaos
-                    if (neutrons.length < MAX_NEUTRONS) spawnNeutron();
-                }
-            }
+      var px = r * Math.sin(phi) * Math.cos(theta);
+      var py = r * Math.sin(phi) * Math.sin(theta);
+      var pz = r * Math.cos(phi);
 
-            // strong force slowly decays
-            strongForce = Math.max(0, strongForce - 0.15);
-            if (strongForce <= 0 && !gameOver) {
-                gameOver = true;
-                decayMsgDiv.innerHTML = '💥 Strong force depleted.';
-            }
+      // Probability based on orbital type
+      if (l === 0) {
+        // s orbital: spherical with radial nodes
+        var radialPart = Math.exp(-r / n) * laguerreApprox(r, n);
+        prob = radialPart * radialPart;
+      } else if (l === 1) {
+        // p orbital: dumbbell along z
+        var radialPart2 = r * Math.exp(-r / n) * laguerreApprox(r, n);
+        var angularPart = pz / (r + 0.001); // cos(theta) for pz
+        prob = radialPart2 * radialPart2 * angularPart * angularPart;
+      } else {
+        // d orbital: cloverleaf in xy plane
+        var radialPart3 = r * r * Math.exp(-r / n);
+        var angularPart2 = px * py / ((r * r) + 0.001);
+        prob = radialPart3 * radialPart3 * angularPart2 * angularPart2 * 20;
+      }
 
-            // check win
-            if (A >= TARGET_A && !gameOver) {
-                win = true;
-                decayMsgDiv.innerHTML = '✨ STABLE! You win! ✨';
-            }
+      attempts++;
+    } while (Math.random() > prob * 5 && attempts < 50);
 
-            // check decay particle collection
-            if (decayActive) {
-                for (let i = decayParticles.length - 1; i >= 0; i--) {
-                    const p = decayParticles[i];
-                    const dx = player.x - p.x;
-                    const dy = player.y - p.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < player.r + p.r) {
-                        // correct type?
-                        if ((decayType === 'betaMinus' && p.type === 'betaMinus') ||
-                            (decayType === 'betaPlus' && p.type === 'betaPlus')) {
-                            // success!
-                            decayActive = false;
-                            decayParticles = [];
-                            clearTimeout(decayTimer);
-                            decayMsgDiv.innerHTML = '✅ Decay averted!';
-                            // small reward: strong force boost
-                            strongForce = Math.min(100, strongForce + 15);
-                        } else {
-                            // wrong particle -> fission
-                            gameOver = true;
-                            decayMsgDiv.innerHTML = '💥 Wrong decay! Fission.';
-                        }
-                        break;
-                    }
-                }
-            }
+    // Project 3D to 2D with slight perspective
+    var depth = 1 / (1 + pz * 0.1);
+    x = cx + px * scale * 0.5 * depth;
+    y = cy + py * scale * 0.5 * depth;
 
-            // update meter UI
-            const meterPercent = Math.max(0, strongForce);
-            forceMeter.style.width = meterPercent + '%';
-            massSpan.textContent = A;
-        }
+    var size = (0.5 + Math.random() * 2) * depth;
+    var alpha = (0.3 + prob * 3) * depth;
+    alpha = Math.min(alpha, 0.9);
 
-        // ----- draw everything -----
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.push({
+      x: x, y: y,
+      baseX: x, baseY: y,
+      size: size,
+      alpha: alpha,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 1.5,
+      drift: 0.3 + Math.random() * 1
+    });
+  }
+  return particles;
+}
 
-            // draw grid lines (cosmetic)
-            ctx.strokeStyle = '#36698b';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= canvas.width; i += 40) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.strokeStyle = '#2e5775';
-                ctx.stroke();
-            }
-            for (let i = 0; i <= canvas.height; i += 40) {
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.strokeStyle = '#2e5775';
-                ctx.stroke();
-            }
+function laguerreApprox(r, n) {
+  // Simplified radial nodes
+  if (n === 1) return 1;
+  if (n === 2) return 1 - r / 2;
+  if (n === 3) return 1 - 2 * r / 3 + 2 * r * r / 27;
+  return 1;
+}
 
-            // draw neutrons
-            ctx.shadowColor = '#aaa';
-            ctx.shadowBlur = 12;
-            for (let n of neutrons) {
-                ctx.beginPath();
-                ctx.arc(n.x, n.y, n.r, 0, 2*Math.PI);
-                ctx.fillStyle = '#acb8c1';
-                ctx.shadowColor = '#d0e0ff';
-                ctx.fill();
-                ctx.strokeStyle = '#586e7a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+function initOrbitalCanvas() {
+  if (orbitalAnimId) cancelAnimationFrame(orbitalAnimId);
 
-            // draw decay particles
-            for (let p of decayParticles) {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, 2*Math.PI);
-                ctx.fillStyle = p.type === 'betaMinus' ? '#5da5d9' : '#f05a5a';
-                ctx.shadowColor = 'white';
-                ctx.fill();
-                ctx.strokeStyle = 'white';
-                ctx.stroke();
-            }
+  var canvas = document.getElementById('orbitalCanvas');
+  if (!canvas) return;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
 
-            // draw proton (player)
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = '#b3ffa7';
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.r, 0, 2*Math.PI);
-            ctx.fillStyle = '#b3ff80';
-            ctx.fill();
-            ctx.strokeStyle = '#f6ffb3';
-            ctx.lineWidth = 4;
-            ctx.stroke();
+  orbitalParticles = generateOrbitalParticles(currentOrbital, particleDensity, canvas.width, canvas.height);
+  animateOrbital();
+}
 
-            // draw game over / win
-            if (gameOver) {
-                ctx.shadowBlur = 0;
-                ctx.font = 'bold 40px monospace';
-                ctx.fillStyle = '#ffbaba';
-                ctx.fillText('GAME OVER', 150, 250);
-            } else if (win) {
-                ctx.shadowBlur = 0;
-                ctx.font = 'bold 44px monospace';
-                ctx.fillStyle = '#f5ffb2';
-                ctx.fillText('STABLE!', 200, 250);
-            }
-        }
+function animateOrbital() {
+  var canvas = document.getElementById('orbitalCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width;
+  var h = canvas.height;
+  var time = performance.now() * 0.001;
 
-        // ----- game loop -----
-        function gameLoop() {
-            if (!gameOver && !win) {
-                movePlayer();
-                update();
-            }
-            draw();
-            requestAnimationFrame(gameLoop);
-        }
+  ctx.clearRect(0, 0, w, h);
 
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            restart();
-        });
+  // Draw nucleus glow
+  var cx = w / 2;
+  var cy = h / 2;
+  var nucleusGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30);
+  nucleusGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+  nucleusGrad.addColorStop(0.3, 'rgba(255,200,100,0.6)');
+  nucleusGrad.addColorStop(1, 'rgba(255,200,100,0)');
+  ctx.fillStyle = nucleusGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+  ctx.fill();
 
-        // start everything
-        restart();
-        gameLoop();
-    })();
+  // Nucleus dot
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Draw particles
+  var color = orbitalData[currentOrbital].color;
+  var r = parseInt(color.slice(1, 3), 16);
+  var g = parseInt(color.slice(3, 5), 16);
+  var b = parseInt(color.slice(5, 7), 16);
+
+  for (var i = 0; i < orbitalParticles.length; i++) {
+    var p = orbitalParticles[i];
+    var dx = Math.sin(time * p.speed + p.phase) * p.drift;
+    var dy = Math.cos(time * p.speed * 0.7 + p.phase) * p.drift;
+
+    var px = p.baseX + dx;
+    var py = p.baseY + dy;
+
+    var flickerAlpha = p.alpha * (0.6 + 0.4 * Math.sin(time * 2 + p.phase));
+
+    ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + flickerAlpha + ')';
+    ctx.beginPath();
+    ctx.arc(px, py, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  orbitalAnimId = requestAnimationFrame(animateOrbital);
+}
+
+function updateOrbitalDensity() {
+  particleDensity = parseInt(document.getElementById('densitySlider').value);
+  document.getElementById('densityValue').textContent = particleDensity;
+  initOrbitalCanvas();
+}
+
+/* ===== Shell Visualization ===== */
+var currentShell = 1;
+var shellAnimId = null;
+
+var shellData = {
+  1: {color: '#00e5ff', label: 'Shell n = 1', orbitals: '1s', maxE: 2},
+  2: {color: '#e040fb', label: 'Shell n = 2', orbitals: '2s, 2p', maxE: 8},
+  3: {color: '#ffd740', label: 'Shell n = 3', orbitals: '3s, 3p, 3d', maxE: 18}
+};
+
+function selectShell(n) {
+  currentShell = n;
+  document.querySelectorAll('.shell-btn').forEach(function(b) { b.className = 'shell-btn'; });
+  document.querySelector('.shell-btn[data-shell="' + n + '"]').classList.add('active-' + n);
+
+  var data = shellData[n];
+  var info = document.getElementById('shellInfo');
+  info.innerHTML = '<h3 style="color:' + data.color + '">' + data.label + '</h3>' +
+    '<p>Contains: <strong>' + data.orbitals + '</strong> orbitals</p>' +
+    '<p>Max electrons: <strong>' + data.maxE + '</strong> (2n² = 2×' + n + '² = ' + data.maxE + ')</p>';
+
+  initShellCanvas();
+  updateEnergyDiagram();
+}
+
+function initShellCanvas() {
+  if (shellAnimId) cancelAnimationFrame(shellAnimId);
+
+  var canvas = document.getElementById('shellCanvas');
+  if (!canvas) return;
+  var rect = canvas.parentElement.getBoundingClientRect();
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  animateShells();
+}
+
+function animateShells() {
+  var canvas = document.getElementById('shellCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width;
+  var h = canvas.height;
+  var cx = w / 2;
+  var cy = h / 2;
+  var time = performance.now() * 0.001;
+  var maxR = Math.min(w, h) * 0.42;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Draw shells up to currentShell
+  var shellColors = ['#00e5ff', '#e040fb', '#ffd740'];
+  var electronCounts = [[2], [2, 6], [2, 6, 10]];
+  var subshellLabels = [['1s'], ['2s','2p'], ['3s','3p','3d']];
+
+  for (var s = 0; s < currentShell; s++) {
+    var radius = maxR * (s + 1) / 3.5;
+    var color = shellColors[s];
+
+    // Shell ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = s === currentShell - 1 ? 0.5 : 0.15;
+    ctx.lineWidth = s === currentShell - 1 ? 2 : 1;
+    ctx.setLineDash(s === currentShell - 1 ? [] : [4, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Shell label
+    ctx.fillStyle = color;
+    ctx.globalAlpha = s === currentShell - 1 ? 1 : 0.4;
+    ctx.font = (s === currentShell - 1 ? 'bold ' : '') + '13px "Space Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('n=' + (s + 1), cx + radius + 20, cy - 8);
+    ctx.globalAlpha = 1;
+
+    // Draw electrons on this shell
+    var subshells = electronCounts[s];
+    var totalE = 0;
+    for (var j = 0; j < subshells.length; j++) totalE += subshells[j];
+
+    for (var e = 0; e < totalE; e++) {
+      var angle = (e / totalE) * Math.PI * 2 + time * (0.3 + s * 0.15) * (s % 2 === 0 ? 1 : -1);
+      var wobble = Math.sin(time * 2 + e) * 3;
+      var ex = cx + (radius + wobble) * Math.cos(angle);
+      var ey = cy + (radius + wobble) * Math.sin(angle);
+
+      // Glow
+      var eGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, 10);
+      eGrad.addColorStop(0, color);
+      eGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = eGrad;
+      ctx.globalAlpha = s === currentShell - 1 ? 0.6 : 0.15;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Dot
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = s === currentShell - 1 ? 1 : 0.3;
+      ctx.beginPath();
+      ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Nucleus
+  var nGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 20);
+  nGrad.addColorStop(0, 'rgba(255,255,255,0.9)');
+  nGrad.addColorStop(0.5, 'rgba(255,180,80,0.5)');
+  nGrad.addColorStop(1, 'rgba(255,180,80,0)');
+  ctx.fillStyle = nGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = 'bold 11px "Space Mono", monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText('nucleus', cx, cy + 22);
+
+  shellAnimId = requestAnimationFrame(animateShells);
+}
+
+function updateEnergyDiagram() {
+  var container = document.getElementById('energyDiagram');
+  container.innerHTML = '';
+
+  var levels = [
+    {label:'1s', color:'#00e5ff', e:2, shell:1, width:20},
+    {label:'2s', color:'#e040fb', e:2, shell:2, width:30},
+    {label:'2p', color:'#e040fb', e:6, shell:2, width:50},
+    {label:'3s', color:'#ffd740', e:2, shell:3, width:40},
+    {label:'3p', color:'#ffd740', e:6, shell:3, width:60},
+    {label:'3d', color:'#ffd740', e:10, shell:3, width:80}
+  ];
+
+  // Reverse so highest energy at top
+  levels.reverse().forEach(function(lv) {
+    var div = document.createElement('div');
+    div.className = 'energy-level' + (lv.shell === currentShell ? ' highlighted' : '');
+
+    div.innerHTML =
+      '<span class="energy-label" style="color:' + lv.color + '">' + lv.label + '</span>' +
+      '<div class="energy-bar" style="background:' + lv.color + ';width:' + lv.width + '%"></div>' +
+      '<span class="energy-electrons">' + lv.e + ' e⁻ max</span>';
+
+    container.appendChild(div);
+  });
+}
+
+/* ===== Spin Canvases ===== */
+var spinAnimId = null;
+
+function initSpinCanvases() {
+  if (spinAnimId) cancelAnimationFrame(spinAnimId);
+  var canvases = ['spinUpCanvas', 'spinDownCanvas'];
+
+  canvases.forEach(function(id) {
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+  });
+
+  animateSpin();
+}
+
+function animateSpin() {
+  var time = performance.now() * 0.001;
+
+  drawSpinElectron('spinUpCanvas', time, 1, '#00e5ff');
+  drawSpinElectron('spinDownCanvas', time, -1, '#e040fb');
+
+  spinAnimId = requestAnimationFrame(animateSpin);
+}
+
+function drawSpinElectron(canvasId, time, direction, color) {
+  var canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width;
+  var h = canvas.height;
+  var cx = w / 2;
+  var cy = h / 2;
+  var r = Math.min(w, h) * 0.3;
+
+  ctx.clearRect(0, 0, w, h);
+
+  var angle = time * 2 * direction;
+
+  // Draw axis (vertical line)
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r - 15);
+  ctx.lineTo(cx, cy + r + 15);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Arrow at top
+  var arrowY = direction > 0 ? cy - r - 15 : cy + r + 15;
+  var arrowDir = direction > 0 ? 1 : -1;
+  ctx.beginPath();
+  ctx.moveTo(cx, arrowY);
+  ctx.lineTo(cx - 6, arrowY + 10 * arrowDir);
+  ctx.lineTo(cx + 6, arrowY + 10 * arrowDir);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.8;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Draw rotation trail (ellipse)
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, r, r * 0.35, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = color;
+  ctx.globalAlpha = 0.15;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Draw trail segments with gradient
+  var segments = 30;
+  for (var i = 0; i < segments; i++) {
+    var a1 = angle + (i / segments) * Math.PI * 2;
+    var a2 = angle + ((i + 1) / segments) * Math.PI * 2;
+    var alpha = (segments - i) / segments * 0.6;
+
+    ctx.beginPath();
+    ctx.moveTo(cx + r * Math.cos(a1), cy + r * 0.35 * Math.sin(a1));
+    ctx.lineTo(cx + r * Math.cos(a2), cy + r * 0.35 * Math.sin(a2));
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // Electron sphere (at front of trail)
+  var ex = cx + r * Math.cos(angle);
+  var ey = cy + r * 0.35 * Math.sin(angle);
+
+  var eGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, 14);
+  eGrad.addColorStop(0, '#ffffff');
+  eGrad.addColorStop(0.4, color);
+  eGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = eGrad;
+  ctx.beginPath();
+  ctx.arc(ex, ey, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+/* ===== Box Diagram (Carbon) ===== */
+function buildBoxDiagram() {
+  var container = document.getElementById('boxDiagram');
+  // Carbon: 1s² 2s² 2p²
+  var orbitals = [
+    {label:'1s', electrons:2, color:'#00e5ff'},
+    {label:'2s', electrons:2, color:'#e040fb'},
+    {label:'2pₓ', electrons:1, color:'#e040fb'},
+    {label:'2pᵧ', electrons:1, color:'#e040fb'},
+    {label:'2p_z', electrons:0, color:'#e040fb'}
+  ];
+
+  orbitals.forEach(function(orb) {
+    var box = document.createElement('div');
+    box.style.cssText = 'text-align:center;';
+
+    var square = document.createElement('div');
+    square.style.cssText = 'width:56px;height:56px;border:2px solid ' + orb.color + ';border-radius:8px;display:flex;align-items:center;justify-content:center;gap:4px;margin:0 auto 6px;background:rgba(0,0,0,0.2);';
+
+    if (orb.electrons >= 1) {
+      var up = document.createElement('span');
+      up.textContent = '↑';
+      up.style.cssText = 'font-size:22px;color:#00e5ff;';
+      square.appendChild(up);
+    }
+    if (orb.electrons >= 2) {
+      var down = document.createElement('span');
+      down.textContent = '↓';
+      down.style.cssText = 'font-size:22px;color:#e040fb;';
+      square.appendChild(down);
+    }
+
+    var label = document.createElement('div');
+    label.textContent = orb.label;
+    label.style.cssText = 'font-family:"Space Mono",monospace;font-size:12px;color:' + orb.color + ';';
+
+    box.appendChild(square);
+    box.appendChild(label);
+    container.appendChild(box);
+  });
+}
+buildBoxDiagram();
+
+/* ===== Quantum Table ===== */
+function buildQuantumTable() {
+  var tbody = document.getElementById('quantumTableBody');
+  var tableData = [
+    {n:1, l:0, letter:'s', ml:'0', orbitals:1, maxE:2},
+    {n:2, l:0, letter:'s', ml:'0', orbitals:1, maxE:2},
+    {n:2, l:1, letter:'p', ml:'-1, 0, +1', orbitals:3, maxE:6},
+    {n:3, l:0, letter:'s', ml:'0', orbitals:1, maxE:2},
+    {n:3, l:1, letter:'p', ml:'-1, 0, +1', orbitals:3, maxE:6},
+    {n:3, l:2, letter:'d', ml:'-2, -1, 0, +1, +2', orbitals:5, maxE:10}
+  ];
+
+  tableData.forEach(function(row) {
+    var tr = document.createElement('tr');
+    tr.className = 'shell-' + row.n;
+
+    tr.innerHTML =
+      '<td style="font-weight:700;color:var(--shell-' + row.n + ')">' + row.n + '</td>' +
+      '<td>' + row.l + '</td>' +
+      '<td style="font-weight:700">' + row.letter + '</td>' +
+      '<td>' + row.ml + '</td>' +
+      '<td>' + row.orbitals + '</td>' +
+      '<td style="font-weight:700">' + row.maxE + '</td>';
+
+    tr.addEventListener('mouseenter', function() {
+      tr.querySelectorAll('td').forEach(function(td) { td.classList.add('table-highlight'); });
+    });
+    tr.addEventListener('mouseleave', function() {
+      tr.querySelectorAll('td').forEach(function(td) { td.classList.remove('table-highlight'); });
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+buildQuantumTable();
+
+/* ===== Energy Diagram Init ===== */
+updateEnergyDiagram();
+
+/* ===== Resize Handler ===== */
+var resizeTimeout;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(function() {
+    initCurrentSection();
+  }, 200);
+});
+
+/* ===== Init first section ===== */
+initCurrentSection();
 </script>
 </body>
 </html>
+
