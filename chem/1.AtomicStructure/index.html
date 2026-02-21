@@ -1,61 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Neutron Blitz · nucleus arcade</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a1424;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+        }
+        .game-wrapper {
+            background: #142b3c;
+            border-radius: 50px;
+            padding: 30px;
+            border: 5px solid #4d8cb0;
+            box-shadow: 0 30px 40px black;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 40px;
+            background: #1f3a4b;
+            box-shadow: inset 0 0 0 3px #6b9fc0, 0 15px 20px #00000070;
+            cursor: none;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: #08212e;
+            border-radius: 60px;
+            padding: 15px 25px;
+            margin-top: 25px;
+            color: #b4f0ff;
+            font-size: 1.7rem;
+            font-weight: bold;
+            border: 3px solid #2779a5;
+        }
+        .meter-bar {
+            width: 200px;
+            height: 30px;
+            background: #2d1f1a;
+            border-radius: 30px;
+            border: 3px solid #fea;
+            overflow: hidden;
+        }
+        .meter-fill {
+            height: 100%;
+            width: 100%;
+            background: #fdde5c;
+            box-shadow: 0 0 20px #f4b642;
+        }
+        .warning {
+            background: #c04c2e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 1.8rem;
+            animation: blink 0.4s infinite;
+        }
+        @keyframes blink { 0%{opacity:0.3} 50%{opacity:1} }
+        button {
+            background: #3584a0;
+            border: none;
+            border-bottom: 5px solid #1d4c63;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="game-wrapper">
+    <canvas id="gameCanvas" width="700" height="500"></canvas>
 
-=================================
-# Atomic Structure and Bonding
+    <div class="stats">
+        <span>💪 A = <span id="massVal">1</span></span>
+        <div class="meter-bar"><div class="meter-fill" id="strongForceMeter" style="width:100%"></div></div>
+        <span>🎯 <span id="targetA">10</span></span>
+    </div>
 
-a(i) The concept of atoms, molecules and ions
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px;">
+        <div id="decayMessage" style="background:#261d45; color:#ffb981; padding:10px 25px; border-radius:40px; font-size:1.3rem;">⚡</div>
+        <button id="restartBtn">⟲ Restart</button>
+    </div>
+</div>
 
-atoms- show the simplest representation
+<script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-molecules - instruction : 
-molecules are not two Dimensional objects as we draw on paper; 
-they are three dimensional and their overall size and shape can have a profound effect on some of their properties, 
-especially biological properties.have the simplest exmple with framework, ball and stick and space-filling.
+        // ----- player (proton) -----
+        let player = { x: 350, y: 250, r: 18 };
 
+        // ----- game state -----
+        let A = 1;               // mass number (starts as proton)
+        const TARGET_A = 12;      // win condition
+        let strongForce = 100;    // max 100
+        let gameOver = false;
+        let win = false;
 
-ions
+        // neutrons array
+        let neutrons = [];
+        const NEUTRON_RADIUS = 12;
+        const NEUTRON_SPEED = 2.2;
+        const MAX_NEUTRONS = 8;
 
+        // decay event
+        let decayActive = false;
+        let decayType = null;     // 'betaMinus' or 'betaPlus'
+        let decayParticles = [];
+        let decayTimer = null;
+        let decayMessage = '';
 
+        // keys
+        const keys = {};
 
+        // ----- UI elements -----
+        const massSpan = document.getElementById('massVal');
+        const targetSpan = document.getElementById('targetA');
+        const forceMeter = document.getElementById('strongForceMeter');
+        const decayMsgDiv = document.getElementById('decayMessage');
 
-===============================
-HOW THESE scientistS Work contributed to the model of atom we believe today.
+        targetSpan.textContent = TARGET_A;
 
-The works of Dalton:
+        // ----- helper: spawn neutron (random edge) -----
+        function spawnNeutron() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            if (side === 0) { // top
+                x = Math.random() * canvas.width;
+                y = -NEUTRON_RADIUS;
+            } else if (side === 1) { // right
+                x = canvas.width + NEUTRON_RADIUS;
+                y = Math.random() * canvas.height;
+            } else if (side === 2) { // bottom
+                x = Math.random() * canvas.width;
+                y = canvas.height + NEUTRON_RADIUS;
+            } else { // left
+                x = -NEUTRON_RADIUS;
+                y = Math.random() * canvas.height;
+            }
+            const angle = Math.random() * 2 * Math.PI;
+            const vx = Math.cos(angle) * NEUTRON_SPEED;
+            const vy = Math.sin(angle) * NEUTRON_SPEED;
+            neutrons.push({ x, y, vx, vy, r: NEUTRON_RADIUS });
+        }
 
-Visual of Dalton's atom: 
-a.indivisible, indestructible solid spheres
-b.atoms of same element e.g Sodium atoms are identical in mass and chemical properties but atoms of another element are different e.g chlorine are not.
-Make the differene stark.
-c.During chemical reaction, new atoms are never created nor destroyed. Instead they 
-are re-arranged, seperated or combined.
+        // ----- spawn decay particle (electron or positron) -----
+        function spawnDecayParticle(type) {
+            decayParticles = [];
+            const count = 3;
+            for (let i = 0; i < count; i++) {
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                let vx = (Math.random() - 0.5) * 2.5;
+                let vy = (Math.random() - 0.5) * 2.5;
+                decayParticles.push({ x, y, vx, vy, r: 10, type: type });
+            }
+        }
 
+        // ----- trigger a random decay event -----
+        function triggerDecay() {
+            if (decayActive || gameOver || win) return;
+            decayType = Math.random() < 0.5 ? 'betaMinus' : 'betaPlus';
+            decayActive = true;
+            decayMessage = decayType === 'betaMinus' ? '⚡ BETA⁻ NEEDED (blue)' : '⚡ BETA⁺ NEEDED (red)';
+            decayMsgDiv.innerHTML = `<span class="warning">${decayMessage}</span>`;
+            spawnDecayParticle(decayType);
+            // auto‑fail after 7 seconds
+            if (decayTimer) clearTimeout(decayTimer);
+            decayTimer = setTimeout(() => {
+                if (decayActive && !gameOver && !win) {
+                    gameOver = true;
+                    decayMsgDiv.innerHTML = '💥 FISSION! Too late.';
+                }
+            }, 7000);
+        }
 
+        // ----- reset game -----
+        function restart() {
+            gameOver = false;
+            win = false;
+            A = 1;
+            strongForce = 100;
+            neutrons = [];
+            decayActive = false;
+            if (decayTimer) clearTimeout(decayTimer);
+            decayParticles = [];
+            decayMsgDiv.innerHTML = '⚡';
+            player.x = 350;
+            player.y = 250;
 
-The works of Millikan:
-Visual of Milikan's atom
+            // initial neutrons
+            for (let i = 0; i < 4; i++) spawnNeutron();
 
-The works of Rutherford
-Visual of Rutherford's atom
+            // schedule decays every ~15 seconds
+            setRandomDecay();
+        }
 
-The fun biography and works of Moseley
+        function setRandomDecay() {
+            if (gameOver || win) return;
+            const next = 8000 + Math.random() * 10000;
+            setTimeout(() => {
+                if (!gameOver && !win && !decayActive) {
+                    triggerDecay();
+                }
+                setRandomDecay();
+            }, next);
+        }
 
-The fun biography and works of J.J Thompson
+        // ----- input handling -----
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (e.key.startsWith('Arrow')) e.preventDefault();
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
 
-The fun biography and works of Bohr
+        function movePlayer() {
+            if (gameOver || win) return;
+            const speed = 4.5;
+            if (keys['ArrowUp'] || keys['w']) player.y -= speed;
+            if (keys['ArrowDown'] || keys['s']) player.y += speed;
+            if (keys['ArrowLeft'] || keys['a']) player.x -= speed;
+            if (keys['ArrowRight'] || keys['d']) player.x += speed;
+            // boundaries
+            player.x = Math.max(player.r, Math.min(canvas.width - player.r, player.x));
+            player.y = Math.max(player.r, Math.min(canvas.height - player.r, player.y));
+        }
 
-Visual of Bohr's atom.
+        // ----- update game (collisions, meter, win) -----
+        function update() {
+            if (gameOver || win) return;
 
+            // move neutrons
+            for (let n of neutrons) {
+                n.x += n.vx;
+                n.y += n.vy;
+                // bounce off walls (optional, but more fun)
+                if (n.x < n.r || n.x > canvas.width - n.r) n.vx *= -0.9;
+                if (n.y < n.r || n.y > canvas.height - n.r) n.vy *= -0.9;
+                // keep inside roughly
+                n.x = Math.max(n.r, Math.min(canvas.width - n.r, n.x));
+                n.y = Math.max(n.r, Math.min(canvas.height - n.r, n.y));
+            }
 
+            // move decay particles
+            for (let p of decayParticles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < p.r || p.x > canvas.width - p.r) p.vx *= -0.9;
+                if (p.y < p.r || p.y > canvas.height - p.r) p.vy *= -0.9;
+            }
 
+            // check neutron collection
+            for (let i = neutrons.length - 1; i >= 0; i--) {
+                const n = neutrons[i];
+                const dx = player.x - n.x;
+                const dy = player.y - n.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < player.r + n.r) {
+                    // collect
+                    neutrons.splice(i, 1);
+                    A++;
+                    strongForce = Math.max(0, strongForce - 12);
+                    if (strongForce <= 0) {
+                        gameOver = true;
+                        decayMsgDiv.innerHTML = '💥 Strong force failed!';
+                    }
+                    // spawn new neutron to keep chaos
+                    if (neutrons.length < MAX_NEUTRONS) spawnNeutron();
+                }
+            }
 
+            // strong force slowly decays
+            strongForce = Math.max(0, strongForce - 0.15);
+            if (strongForce <= 0 && !gameOver) {
+                gameOver = true;
+                decayMsgDiv.innerHTML = '💥 Strong force depleted.';
+            }
 
+            // check win
+            if (A >= TARGET_A && !gameOver) {
+                win = true;
+                decayMsgDiv.innerHTML = '✨ STABLE! You win! ✨';
+            }
 
-Task 1:
-Flashcard - Get 50 out of 70
-Task 2: 
-In less 200 words, write on the contribution of Dalton,
-Milikan, Rutherford, Moseley, Thompson, Bohr. 
-Structure the assignment in a way that makes it easy for them 
-To see the pros and cons of each scientist.
+            // check decay particle collection
+            if (decayActive) {
+                for (let i = decayParticles.length - 1; i >= 0; i--) {
+                    const p = decayParticles[i];
+                    const dx = player.x - p.x;
+                    const dy = player.y - p.y;
+                    if (Math.sqrt(dx*dx + dy*dy) < player.r + p.r) {
+                        // correct type?
+                        if ((decayType === 'betaMinus' && p.type === 'betaMinus') ||
+                            (decayType === 'betaPlus' && p.type === 'betaPlus')) {
+                            // success!
+                            decayActive = false;
+                            decayParticles = [];
+                            clearTimeout(decayTimer);
+                            decayMsgDiv.innerHTML = '✅ Decay averted!';
+                            // small reward: strong force boost
+                            strongForce = Math.min(100, strongForce + 15);
+                        } else {
+                            // wrong particle -> fission
+                            gameOver = true;
+                            decayMsgDiv.innerHTML = '💥 Wrong decay! Fission.';
+                        }
+                        break;
+                    }
+                }
+            }
 
+            // update meter UI
+            const meterPercent = Math.max(0, strongForce);
+            forceMeter.style.width = meterPercent + '%';
+            massSpan.textContent = A;
+        }
 
+        // ----- draw everything -----
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // draw grid lines (cosmetic)
+            ctx.strokeStyle = '#36698b';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.strokeStyle = '#2e5775';
+                ctx.stroke();
+            }
+            for (let i = 0; i <= canvas.height; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.strokeStyle = '#2e5775';
+                ctx.stroke();
+            }
+
+            // draw neutrons
+            ctx.shadowColor = '#aaa';
+            ctx.shadowBlur = 12;
+            for (let n of neutrons) {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, n.r, 0, 2*Math.PI);
+                ctx.fillStyle = '#acb8c1';
+                ctx.shadowColor = '#d0e0ff';
+                ctx.fill();
+                ctx.strokeStyle = '#586e7a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // draw decay particles
+            for (let p of decayParticles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, 2*Math.PI);
+                ctx.fillStyle = p.type === 'betaMinus' ? '#5da5d9' : '#f05a5a';
+                ctx.shadowColor = 'white';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.stroke();
+            }
+
+            // draw proton (player)
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#b3ffa7';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.r, 0, 2*Math.PI);
+            ctx.fillStyle = '#b3ff80';
+            ctx.fill();
+            ctx.strokeStyle = '#f6ffb3';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // draw game over / win
+            if (gameOver) {
+                ctx.shadowBlur = 0;
+                ctx.font = 'bold 40px monospace';
+                ctx.fillStyle = '#ffbaba';
+                ctx.fillText('GAME OVER', 150, 250);
+            } else if (win) {
+                ctx.shadowBlur = 0;
+                ctx.font = 'bold 44px monospace';
+                ctx.fillStyle = '#f5ffb2';
+                ctx.fillText('STABLE!', 200, 250);
+            }
+        }
+
+        // ----- game loop -----
+        function gameLoop() {
+            if (!gameOver && !win) {
+                movePlayer();
+                update();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            restart();
+        });
+
+        // start everything
+        restart();
+        gameLoop();
+    })();
+</script>
+</body>
+</html>
