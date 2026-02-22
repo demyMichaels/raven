@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Polity | Government Course Map</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Civic Blue & Gold) --- */
+        :root {
+            --bg-deep: #0A1A2F;      /* Deep navy - represents authority/stability */
+            --bg-surface: #11223A;    /* Slightly lighter navy */
+            --primary: #2A5C8F;       /* Civic blue - trust/justice */
+            --accent: #C6A43F;         /* Gold - represents excellence/leadership */
+            --text-main: #FFFFFF;
+            --text-muted: #9BB7D4;     /* Soft blue for muted text */
+            --border: rgba(42, 92, 143, 0.3); /* Blue-tinted border */
+            --card-hover: rgba(42, 92, 143, 0.2);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-serif: 'Crimson Pro', serif;
+        }
+
+        /* --- RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .glow-orb {
+            position: fixed; width: 400px; height: 400px;
+            background: var(--primary); filter: blur(150px); opacity: 0.15;
+            border-radius: 50%; z-index: -1; pointer-events: none;
+        }
+        .glow-1 { top: -100px; left: -100px; }
+        .glow-2 { bottom: -100px; right: -100px; background: var(--accent); opacity: 0.1; }
+
+        /* Grid Pattern (subtle - represents order/structure) */
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                              linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.2;
+        }
+
+        /* --- HEADER --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10, 26, 47, 0.8); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 32px; height: 32px; background: var(--accent); border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            color: var(--bg-deep); font-weight: bold;
+        }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 50px; border: 1px solid var(--border);
+        }
+        .user-avatar { 
+            width: 28px; height: 28px; background: var(--accent); border-radius: 50%; 
+            display:flex; align-items:center; justify-content:center; font-size:0.8rem; 
+            font-weight:bold; color:var(--bg-deep);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px; margin: 0 auto;
+        }
+
+        .hero h1 { 
+            font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; 
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .hero p { color: var(--text-muted); margin-bottom: 2rem; }
+
+        /* --- SEARCH BAR --- */
+        .search-container {
+            position: relative; max-width: 500px; margin: 0 auto 3rem auto;
+        }
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: white; font-family: var(--font); font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 20px rgba(198, 164, 63, 0.2); }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        /* --- GRID LAYOUT --- */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            padding: 0 1.5rem 4rem 1.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* --- MODULE CARD --- */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            aspect-ratio: 1 / 1.1;
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(145deg, var(--bg-surface), var(--card-hover));
+            border-color: var(--accent);
+        }
+
+        /* Card Visuals */
+        .card-top { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+        .card-num { 
+            font-size: 0.75rem; 
+            color: var(--accent); 
+            font-weight: 700; 
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        .card-icon { font-size: 1.8rem; }
+        
+        .card-title {
+            font-size: 1rem; font-weight: 700; line-height: 1.3; margin-bottom: auto;
+            color: #E2E8F0;
+        }
+
+        .card-footer {
+            margin-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            background: var(--bg-deep); 
+            border: 1px solid var(--border); 
+        }
+        .status-dot.done { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            box-shadow: 0 0 8px var(--accent); 
+        }
+        
+        .arrow-btn { 
+            width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .card:hover .arrow-btn { background: var(--accent); color: var(--bg-deep); }
+
+        /* Section Header */
+        .section-header {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            width: 100px;
+            margin-top: 4px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (min-width: 768px) {
+            .module-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+            .card { aspect-ratio: 1.5 / 1; }
+            .hero h1 { font-size: 3rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Backgrounds -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚖️</div>
+            <span>The</span> Polity
+        </div>
+        <div class="user-pill">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Citizen</span>
+            <div class="user-avatar">C</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Government</h1>
+            <div class="hero-subtitle">Principles, Institutions, and Nigerian Politics</div>
+            <p>Master the concepts, structures, and political development for JAMB/WAEC/NECO success.</p>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search topics (e.g. 'Federalism', 'Constitution', 'ECOWAS')..." onkeyup="filterModules()">
+        </div>
+
+        <!-- The Grid -->
+        <div class="module-grid" id="gridContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </main>
+
+    <script>
+        // === 1. DATA CONFIGURATION ===
+        // Government Syllabus mapped to folders (based on your syllabus structure)
+        const modules = [
+            // PART I: ELEMENTS OF GOVERNMENT
+            { id: 1, section: "1", folder: "01_BasicConcepts", title: "Basic Concepts in Government", icon: "📚", keywords: "power authority legitimacy sovereignty state nation" },
+            { id: 2, section: "1", folder: "02_PoliticalProcesses", title: "Political Processes", icon: "🔄", keywords: "political participation socialization culture" },
+            { id: 3, section: "1", folder: "03_FormsGovernment", title: "Forms of Government", icon: "🏛️", keywords: "monarchy autocracy aristocracy oligarchy republicanism democracy" },
+            { id: 4, section: "1", folder: "04_ArmsGovernment", title: "Arms of Government", icon: "⚖️", keywords: "legislature executive judiciary separation powers" },
+            { id: 5, section: "1", folder: "05_StructuresGovernance", title: "Structures of Governance", icon: "🏗️", keywords: "unitary federal confederal" },
+            { id: 6, section: "1", folder: "06_SystemsGovernance", title: "Systems of Governance", icon: "⚙️", keywords: "presidential parliamentary monarchical" },
+            { id: 7, section: "1", folder: "07_PoliticalIdeologies", title: "Political Ideologies", icon: "💭", keywords: "communalism feudalism capitalism socialism communism totalitarianism fascism nazism" },
+            { id: 8, section: "1", folder: "08_Constitution", title: "Constitution", icon: "📜", keywords: "written unwritten rigid flexible sources functions" },
+            { id: 9, section: "1", folder: "09_DemocraticPrinciples", title: "Principles of Democratic Government", icon: "🤝", keywords: "ethics accountability separation powers checks balances rule of law" },
+            { id: 10, section: "1", folder: "10_Legislation", title: "Processes of Legislation", icon: "📝", keywords: "acts edicts bye-laws delegated legislation decrees" },
+            { id: 11, section: "1", folder: "11_Citizenship", title: "Citizenship", icon: "🪪", keywords: "rights dual citizenship duties obligations" },
+            { id: 12, section: "1", folder: "12_ElectoralProcess", title: "The Electoral Process", icon: "🗳️", keywords: "suffrage election electoral system commission" },
+            { id: 13, section: "1", folder: "13_PoliticalParties", title: "Political Parties & Party Systems", icon: "🎯", keywords: "parties party systems organization functions" },
+            { id: 14, section: "1", folder: "14_PressureGroups", title: "Pressure Groups", icon: "📢", keywords: "interest groups lobbying modes of operation" },
+            { id: 15, section: "1", folder: "15_PublicOpinion", title: "Public Opinion", icon: "💬", keywords: "formation measurement functions limitations" },
+            { id: 16, section: "1", folder: "16_CivilService", title: "The Civil Service", icon: "🏢", keywords: "characteristics functions structure control problems" },
+
+            // PART II: POLITICAL DEVELOPMENT IN NIGERIA
+            { id: 17, section: "2", folder: "17_PreColonial", title: "Pre-colonial Polities", icon: "👑", keywords: "hausa emirate tiv igbo yoruba structural organization" },
+            { id: 18, section: "2", folder: "18_ImperialistPenetration", title: "Imperialist Penetration", icon: "⚓", keywords: "british acquisition trade missionary company rule crown colony" },
+            { id: 19, section: "2", folder: "19_ColonialPolicy", title: "Colonial Administrative Policies", icon: "📋", keywords: "direct rule indirect rule assimilation association" },
+            { id: 20, section: "2", folder: "20_ImpactColonial", title: "Impact of British Colonial Rule", icon: "💥", keywords: "economic political socio-cultural" },
+            { id: 21, section: "2", folder: "21_Decolonization", title: "Process of Decolonization", icon: "🔓", keywords: "nationalism nationalist movements leaders" },
+            { id: 22, section: "2", folder: "22_NationalistLeaders", title: "Nationalist Leaders", icon: "👥", keywords: "macaulay azikiwe awolowo ahmadu bello aminu kano tarka balewa" },
+            { id: 23, section: "2", folder: "23_ConstitutionalDev", title: "Constitutional Development", icon: "📜", keywords: "clifford 1922 richards 1946 macpherson 1951 lyttleton 1954 independence 1960" },
+            { id: 24, section: "2", folder: "24_PostIndependenceConst", title: "Post-Independence Constitutions", icon: "📜", keywords: "1963 1979 1989 1999 characteristics shortcomings" },
+            { id: 25, section: "2", folder: "25_PostIndependenceInstitutions", title: "Institutions of Government", icon: "🏛️", keywords: "legislature executive judiciary post-independence" },
+            { id: 26, section: "2", folder: "26_PublicCommissions", title: "Public Commissions", icon: "📊", keywords: "civil service commission public complaints electoral commission boundary" },
+            { id: 27, section: "2", folder: "27_PoliticalPartiesNigeria", title: "Political Parties in Nigeria", icon: "🎯", keywords: "first republic second republic third republic fourth republic" },
+            { id: 28, section: "2", folder: "28_NigerianFederalism", title: "Nigerian Federalism", icon: "🤝", keywords: "tiers of government state creation revenue allocation federal character" },
+            { id: 29, section: "2", folder: "29_PublicCorporations", title: "Public Corporations & Parastatals", icon: "🏢", keywords: "deregulation privatization commercialization" },
+            { id: 30, section: "2", folder: "30_LocalGovernment", title: "Local Government", icon: "🏘️", keywords: "reforms 1976 1989 traditional rulers problems" },
+            { id: 31, section: "2", folder: "31_MilitaryRule", title: "The Military in Nigerian Politics", icon: "🎖️", keywords: "coups intervention military regimes SAP unification decree" },
+
+            // PART III: FOREIGN POLICY AND NIGERIA'S RELATIONS
+            { id: 32, section: "3", folder: "32_ForeignPolicy", title: "Foreign Policy Basics", icon: "🌐", keywords: "definition purpose determining factors formulation implementation" },
+            { id: 33, section: "3", folder: "33_NigeriaForeignPolicy", title: "Nigeria's Foreign Policy", icon: "🗺️", keywords: "major powers developing countries technical aid corps non-alignment" },
+            { id: 34, section: "3", folder: "34_AfricaCentrePiece", title: "Africa as Centre Piece", icon: "🌍", keywords: "africa centerpiece guiding principles NEPAD" },
+            { id: 35, section: "3", folder: "35_InternationalOrganizations", title: "Nigeria in International Organizations", icon: "🏛️", keywords: "UN commonwealth OAU AU ECOWAS OPEC" },
+
+            // PART IV: INTERNATIONAL ORGANIZATIONS
+            { id: 36, section: "4", folder: "36_ECOWAS", title: "ECOWAS", icon: "🤝", keywords: "economic community west african states origin objectives structure functions" },
+            { id: 37, section: "4", folder: "37_OAU_AU", title: "OAU & African Union", icon: "🌍", keywords: "organization african unity union origin objectives" },
+            { id: 38, section: "4", folder: "38_Commonwealth", title: "The Commonwealth", icon: "👑", keywords: "commonwealth of nations british origin objectives" },
+            { id: 39, section: "4", folder: "39_OPEC", title: "OPEC", icon: "🛢️", keywords: "organization petroleum exporting countries oil" },
+            { id: 40, section: "4", folder: "40_UNO", title: "United Nations Organization", icon: "🇺🇳", keywords: "UN security council general assembly" },
+            { id: 41, section: "4", folder: "41_APPA", title: "African Petroleum Producers Association", icon: "⛽", keywords: "APPA african oil producers" }
+        ];
+
+        const grid = document.getElementById('gridContainer');
+
+        // === 2. RENDER FUNCTION WITH SECTION HEADERS ===
+        function renderModules(data) {
+            grid.innerHTML = '';
+            
+            // Group by section
+            const sections = {
+                '1': 'PART I: Elements of Government',
+                '2': 'PART II: Political Development in Nigeria',
+                '3': 'PART III: Foreign Policy & Nigeria\'s Relations',
+                '4': 'PART IV: International Organizations'
+            };
+            
+            // For each section, add header and cards
+            ['1', '2', '3', '4'].forEach(sectionCode => {
+                const sectionModules = data.filter(m => m.section === sectionCode);
+                
+                if (sectionModules.length > 0) {
+                    // Add section header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'section-header';
+                    headerDiv.innerHTML = `
+                        <div class="section-title">${sections[sectionCode]}</div>
+                        <div class="section-divider"></div>
+                    `;
+                    grid.appendChild(headerDiv);
+                    
+                    // Add cards for this section
+                    sectionModules.forEach(mod => {
+                        const link = `./${mod.folder}/index.html`;
+                        
+                        // Random progress for demo - in real app, this would come from user data
+                        const isCompleted = [1, 4, 8, 17, 23, 28, 32, 36].includes(mod.id); 
+                        const dotClass = isCompleted ? 'status-dot done' : 'status-dot';
+
+                        const card = document.createElement('a');
+                        card.href = link;
+                        card.className = 'card';
+                        card.setAttribute('data-keywords', mod.keywords || '');
+                        card.innerHTML = `
+                            <div class="card-top">
+                                <span class="card-num">${mod.id.toString().padStart(2, '0')}</span>
+                                <span class="card-icon">${mod.icon}</span>
+                            </div>
+                            <div class="card-title">${mod.title}</div>
+                            <div class="card-footer">
+                                <div class="${dotClass}"></div>
+                                <div class="arrow-btn">➜</div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            });
+        }
+
+        // === 3. SEARCH FILTER ===
+        function filterModules() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = modules.filter(m => 
+                m.title.toLowerCase().includes(query) || 
+                m.id.toString().includes(query) ||
+                (m.keywords && m.keywords.toLowerCase().includes(query))
+            );
+            
+            renderModules(filtered);
+        }
+
+        // Initial Load
+        renderModules(modules);
+
+    </script>
+</body>
+</html>
