@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Way | CRS Course Map</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Warm Dark Mode for CRS) --- */
+        :root {
+            --bg-deep: #0F0B1A;      /* Slightly purple-tinted dark */
+            --bg-surface: #1A152B;    /* Match the purple undertone */
+            --primary: #B453B6;       /* Purple - symbolic of royalty/sovereignty */
+            --accent: #F59E0B;        /* Amber - symbolic of fire/glory/refinement */
+            --text-main: #FFFFFF;
+            --text-muted: #A78BFA;    /* Soft purple for muted text */
+            --border: rgba(180, 83, 182, 0.15); /* Purple-tinted border */
+            --card-hover: rgba(180, 83, 182, 0.15);
+            --font: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* --- RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .glow-orb {
+            position: fixed; width: 400px; height: 400px;
+            background: var(--primary); filter: blur(150px); opacity: 0.12;
+            border-radius: 50%; z-index: -1; pointer-events: none;
+        }
+        .glow-1 { top: -100px; left: -100px; }
+        .glow-2 { bottom: -100px; right: -100px; background: var(--accent); opacity: 0.1; }
+
+        /* --- HEADER --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(15, 11, 26, 0.8); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; 
+        }
+        .brand span { color: var(--primary); }
+        .brand-icon { 
+            width: 32px; height: 32px; background: var(--primary); border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            color: var(--bg-deep);
+        }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 50px; border: 1px solid var(--border);
+        }
+        .user-avatar { 
+            width: 28px; height: 28px; background: var(--accent); border-radius: 50%; 
+            display:flex; align-items:center; justify-content:center; font-size:0.8rem; 
+            font-weight:bold; color:var(--bg-deep);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px; margin: 0 auto;
+        }
+        .hero h1 { 
+            font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; 
+            background: linear-gradient(135deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { color: var(--text-muted); margin-bottom: 2rem; }
+
+        /* --- SEARCH BAR --- */
+        .search-container {
+            position: relative; max-width: 500px; margin: 0 auto 3rem auto;
+        }
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: white; font-family: var(--font); font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 20px rgba(180, 83, 182, 0.2); }
+        .search-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+
+        /* --- GRID LAYOUT --- */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            padding: 0 1.5rem 4rem 1.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* --- MODULE CARD --- */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            aspect-ratio: 1 / 1.1;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(145deg, var(--bg-surface), var(--card-hover));
+            border-color: var(--primary);
+        }
+
+        /* Card Visuals */
+        .card-top { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+        .card-num { 
+            font-size: 0.75rem; 
+            color: var(--accent); 
+            font-weight: 700; 
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        .card-icon { font-size: 1.8rem; }
+        
+        .card-title {
+            font-size: 1rem; font-weight: 700; line-height: 1.3; margin-bottom: auto;
+            color: #E2E8F0;
+        }
+
+        .card-footer {
+            margin-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            background: var(--bg-deep); 
+            border: 1px solid var(--border); 
+        }
+        .status-dot.done { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            box-shadow: 0 0 8px var(--accent); 
+        }
+        
+        .arrow-btn { 
+            width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .card:hover .arrow-btn { background: var(--primary); color: white; }
+
+        /* Section Header */
+        .section-header {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            width: 100px;
+            margin-top: 4px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (min-width: 768px) {
+            .module-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+            .card { aspect-ratio: 1.5 / 1; }
+            .hero h1 { font-size: 3rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Backgrounds -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">✝️</div>
+            <span>The</span> Way
+        </div>
+        <div class="user-pill">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Pilgrim</span>
+            <div class="user-avatar">JW</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Christian Religious Studies</h1>
+            <p>Walking through the story from Creation to the Epistles.</p>
+        </div>
+
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search topics (e.g. 'David', 'Covenant', 'Parables')..." onkeyup="filterModules()">
+        </div>
+
+        <!-- The Grid -->
+        <div class="module-grid" id="gridContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </main>
+
+    <script>
+        // === 1. DATA CONFIGURATION ===
+        // CRS Syllabus mapped to folders
+        const modules = [
+            // SECTION A: Creation to Division of Kingdom
+            { id: 1, section: "A", folder: "01_Sovereignty", title: "Sovereignty of God", icon: "👑", keywords: "creation creator controller genesis amos isaiah psalms jeremiah romans" },
+            { id: 2, section: "A", folder: "02_Covenant", title: "The Covenant", icon: "📜", keywords: "noah abraham israel new covenant flood sinai" },
+            { id: 3, section: "A", folder: "03_Leadership", title: "Leadership Qualities", icon: "⚔️", keywords: "joseph moses joshua deborah gideon samson judges" },
+            { id: 4, section: "A", folder: "04_DivineProvidence", title: "Divine Providence", icon: "🕊️", keywords: "guidance protection provision exodus daniel psalms elijah" },
+            { id: 5, section: "A", folder: "05_ParentalResponsibility", title: "Parental Responsibility", icon: "👪", keywords: "eli samuel david asa children family" },
+            { id: 6, section: "A", folder: "06_Obedience", title: "Obedience & Disobedience", icon: "⚖️", keywords: "abraham hebrew youths david adam golden calf saul" },
+            { id: 7, section: "A", folder: "07_DavidsHeart", title: "A Man After God's Heart", icon: "🎵", keywords: "david anointing submission repentance psalm 51" },
+            { id: 8, section: "A", folder: "08_DecisionMaking", title: "Decision Making", icon: "🤔", keywords: "solomon wisdom rehoboam saul medium witch" },
+
+            // SECTION B: Division of Kingdom to Return from Exile
+            { id: 9, section: "B", folder: "09_Greed", title: "Greed & Its Effects", icon: "💰", keywords: "ahab gehazi naboth vineyard" },
+            { id: 10, section: "B", folder: "10_Supremacy", title: "Supremacy of God", icon: "🔥", keywords: "elijah carmel baal prophets contest" },
+            { id: 11, section: "B", folder: "11_Reforms", title: "Religious Reforms", icon: "🧹", keywords: "josiah temple cleansing covenant renewal" },
+            { id: 12, section: "B", folder: "12_ConcernForJudah", title: "Concern for Judah", icon: "🏛️", keywords: "jerusalem fall exile nehemiah ezra rebuilding" },
+            { id: 13, section: "B", folder: "13_FaithCourage", title: "Faith, Courage & Protection", icon: "🦁", keywords: "daniel shadrach meshach abednego furnace lions" },
+            { id: 14, section: "B", folder: "14_Jonah", title: "Message to Nineveh", icon: "🐋", keywords: "jonah nineveh disobedience repentance" },
+            { id: 15, section: "B", folder: "15_SocialJustice", title: "Social Justice & Divine Love", icon: "🤝", keywords: "amos hosea justice mercy love" },
+            { id: 16, section: "B", folder: "16_Holiness", title: "Holiness & Divine Call", icon: "✨", keywords: "isaiah ezekiel jeremiah call vision" },
+            { id: 17, section: "B", folder: "17_PunishmentHope", title: "Punishment & Hope", icon: "🌱", keywords: "jeremiah ezekiel dry bones restoration" },
+
+            // SECTION C: The Gospels and Acts
+            { id: 18, section: "C", folder: "18_BirthOfJesus", title: "Birth & Early Life of Jesus", icon: "👶", keywords: "john the baptist forerunner mary christmas" },
+            { id: 19, section: "C", folder: "19_BaptismTemptation", title: "Baptism & Temptation", icon: "💧", keywords: "jesus baptism wilderness satan" },
+            { id: 20, section: "C", folder: "20_Discipleship", title: "Discipleship", icon: "🐟", keywords: "call of disciples follow me cost" },
+            { id: 21, section: "C", folder: "21_Miracles", title: "Miracles of Jesus", icon: "✨", keywords: "nature miracles healing resurrection stilling storm feeding" },
+            { id: 22, section: "C", folder: "22_Parables", title: "The Parables", icon: "🌾", keywords: "sower prodigal son good samaritan kingdom" },
+            { id: 23, section: "C", folder: "23_SermonMount", title: "Sermon on the Mount", icon: "⛰️", keywords: "beatitudes lords prayer salt light" },
+            { id: 24, section: "C", folder: "24_MissionDisciples", title: "Mission of the Disciples", icon: "👥", keywords: "twelve seventy go preach" },
+            { id: 25, section: "C", folder: "25_GreatConfession", title: "The Great Confession", icon: "🗣️", keywords: "peter christ son of god" },
+            { id: 26, section: "C", folder: "26_Transfiguration", title: "The Transfiguration", icon: "☁️", keywords: "moses elijah glory mountain" },
+            { id: 27, section: "C", folder: "27_TriumphalEntry", title: "Triumphal Entry & Temple", icon: "🌴", keywords: "palm sunday cleansing temple" },
+            { id: 28, section: "C", folder: "28_LastSupper", title: "The Last Supper", icon: "🍷", keywords: "passover communion bread wine betrayal" },
+            { id: 29, section: "C", folder: "29_TrialsDeath", title: "Trials & Death of Jesus", icon: "✝️", keywords: "pilate herod crucifixion cross" },
+            { id: 30, section: "C", folder: "30_Resurrection", title: "Resurrection & Ascension", icon: "🌅", keywords: "empty tomb mary magdalene easter" },
+            { id: 31, section: "C", folder: "31_TeachingsHimself", title: "Jesus' Teachings About Himself", icon: "🍞", keywords: "bread of life light of world good shepherd" },
+            { id: 32, section: "C", folder: "32_Love", title: "Love", icon: "❤️", keywords: "god's love agape one another john 3 16" },
+            { id: 33, section: "C", folder: "33_EarlyChurch", title: "Fellowship in Early Church", icon: "🤲", keywords: "acts communal living ananias sapphira" },
+            { id: 34, section: "C", folder: "34_HolySpirit", title: "Holy Spirit & Mission", icon: "🔥", keywords: "pentecost tongues holy spirit power" },
+            { id: 35, section: "C", folder: "35_Opposition", title: "Opposition to Gospel", icon: "⛓️", keywords: "persecution stephen martyrdom saul paul imprisoned" },
+            { id: 36, section: "C", folder: "36_MissionGentiles", title: "Mission to the Gentiles", icon: "🌍", keywords: "cornelius peter vision paul conversion" },
+
+            // SECTION D: Selected Epistles
+            { id: 37, section: "D", folder: "37_Justification", title: "Justification by Faith", icon: "⚖️", keywords: "romans galatians faith grace righteous" },
+            { id: 38, section: "D", folder: "38_LawGrace", title: "The Law and Grace", icon: "🎁", keywords: "romans 4 galatians 3 law moses grace" },
+            { id: 39, section: "D", folder: "39_NewLife", title: "New Life in Christ", icon: "🌿", keywords: "romans 6 colossians 3 old self new creation" },
+            { id: 40, section: "D", folder: "40_JointHeirs", title: "Joint Heirs with Christ", icon: "👑", keywords: "galatians 4 adoption sons children of god" },
+            { id: 41, section: "D", folder: "41_Humility", title: "Humility", icon: "🕊️", keywords: "philippians 2 james 4 peter 5" },
+            { id: 42, section: "D", folder: "42_Forgiveness", title: "Forgiveness", icon: "🤝", keywords: "philemon onesimus corinthians 2 forgive" },
+            { id: 43, section: "D", folder: "43_SpiritualGifts", title: "Spiritual Gifts", icon: "🎁", keywords: "1 corinthians 12 romans 12 gifts holy spirit" },
+            { id: 44, section: "D", folder: "44_ChristianGiving", title: "Christian Giving", icon: "💰", keywords: "2 corinthians 8 9 philippians 4 giving" },
+            { id: 45, section: "D", folder: "45_CivicResponsibility", title: "Civic Responsibility", icon: "🏛️", keywords: "romans 13 authority government submit" },
+            { id: 46, section: "D", folder: "46_DignityLabour", title: "Dignity of Labour", icon: "⚒️", keywords: "2 thessalonians 3 work colossians 3" },
+            { id: 47, section: "D", folder: "47_SecondComing", title: "The Second Coming", icon: "☁️", keywords: "1 thessalonians 4 5 matthew 25 judgment" },
+            { id: 48, section: "D", folder: "48_Impartiality", title: "Impartiality", icon: "⚖️", keywords: "james 2 favoritism discrimination" },
+            { id: 49, section: "D", folder: "49_EffectivePrayer", title: "Effective Prayer", icon: "🙏", keywords: "james 1 4 5 prayer faith" },
+            { id: 50, section: "D", folder: "50_ChristianLiving", title: "Christian Living in Community", icon: "👥", keywords: "1 peter relationships family persecution" },
+            { id: 51, section: "D", folder: "51_Corruption", title: "Corruption", icon: "💸", keywords: "1 timothy 6 2 timothy 3 james 5" },
+            { id: 52, section: "D", folder: "52_SexualImmorality", title: "Sexual Immorality", icon: "⚠️", keywords: "1 corinthians 6 hebrews 13 romans 1" }
+        ];
+
+        const grid = document.getElementById('gridContainer');
+
+        // === 2. RENDER FUNCTION WITH SECTION HEADERS ===
+        function renderModules(data) {
+            grid.innerHTML = '';
+            
+            // Group by section
+            const sections = {
+                'A': 'SECTION A: Creation to Division of Kingdom',
+                'B': 'SECTION B: Division of Kingdom to Return from Exile',
+                'C': 'SECTION C: The Gospels and Acts',
+                'D': 'SECTION D: Selected Epistles'
+            };
+            
+            // For each section, add header and cards
+            ['A', 'B', 'C', 'D'].forEach(sectionCode => {
+                const sectionModules = data.filter(m => m.section === sectionCode);
+                
+                if (sectionModules.length > 0) {
+                    // Add section header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'section-header';
+                    headerDiv.innerHTML = `
+                        <div class="section-title">${sections[sectionCode]}</div>
+                        <div class="section-divider"></div>
+                    `;
+                    grid.appendChild(headerDiv);
+                    
+                    // Add cards for this section
+                    sectionModules.forEach(mod => {
+                        const link = `./${mod.folder}/index.html`;
+                        
+                        // Random progress for demo - in real app, this would come from user data
+                        const isCompleted = [1, 2, 7, 18, 19, 30, 37].includes(mod.id); 
+                        const dotClass = isCompleted ? 'status-dot done' : 'status-dot';
+
+                        const card = document.createElement('a');
+                        card.href = link;
+                        card.className = 'card';
+                        card.setAttribute('data-keywords', mod.keywords || '');
+                        card.innerHTML = `
+                            <div class="card-top">
+                                <span class="card-num">${mod.id.toString().padStart(2, '0')}</span>
+                                <span class="card-icon">${mod.icon}</span>
+                            </div>
+                            <div class="card-title">${mod.title}</div>
+                            <div class="card-footer">
+                                <div class="${dotClass}"></div>
+                                <div class="arrow-btn">➜</div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            });
+        }
+
+        // === 3. SEARCH FILTER ===
+        function filterModules() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = modules.filter(m => 
+                m.title.toLowerCase().includes(query) || 
+                m.id.toString().includes(query) ||
+                (m.keywords && m.keywords.toLowerCase().includes(query))
+            );
+            
+            renderModules(filtered);
+        }
+
+        // Initial Load
+        renderModules(modules);
+
+    </script>
+</body>
+</html>
