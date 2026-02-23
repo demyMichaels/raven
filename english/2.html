@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Language Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            DEFAULT: "#0F2C59",
+                            50: "#f0f3f8",
+                            100: "#d6e1ee",
+                            500: "#0F2C59",
+                            600: "#0a2549",
+                            700: "#081e39",
+                        },
+                        accent: {
+                            DEFAULT: "#009F9D",
+                            50: "#e6f7f7",
+                            100: "#b3ebea",
+                            500: "#009F9D",
+                            600: "#008280",
+                            700: "#006663",
+                        },
+                        neutral: {
+                            25: "#FEFEFE",
+                            50: "#F8F9FA",
+                            100: "#F1F3F4",
+                            200: "#E8EAED",
+                            300: "#DADCE0",
+                            400: "#BDC1C6",
+                            500: "#9AA0A6",
+                            600: "#80868B",
+                            700: "#5F6368",
+                            800: "#2D3748",
+                            900: "#1F2937",
+                        },
+                        premium: {
+                            DEFAULT: "#D2C1A7",
+                            50: "#fbf9f6",
+                            100: "#f4efe6",
+                            500: "#D2C1A7",
+                            600: "#c4b095",
+                            700: "#8B7355",
+                            800: "#6B563F",
+                        },
+                        data: {
+                            DEFAULT: "#5A7B9E",
+                            50: "#f2f5f9",
+                            100: "#e1e9f2",
+                            500: "#5A7B9E",
+                            600: "#4d6a87",
+                            700: "#405970",
+                        },
+                        success: "#22c55e",
+                        warning: "#f59e0b",
+                        error: "#ef4444",
+                    },
+                    fontFamily: {
+                        'sans': ['Roboto', 'system-ui', 'sans-serif'],
+                        'display': ['Playfair Display', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+
+        .section-card {
+            transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--card-accent), var(--card-accent-light));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .section-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .section-card.available:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 159, 157, 0.15);
+        }
+
+        .section-card.locked {
+            opacity: 0.85;
+        }
+
+        .section-card.locked:hover {
+            cursor: not-allowed;
+        }
+
+        .subsection-tag {
+            transition: all 0.2s ease;
+        }
+
+        .subsection-tag:hover {
+            transform: scale(1.05);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #0F2C59 0%, #1a3d6e 50%, #0F2C59 100%);
+        }
+
+        .dark .hero-gradient {
+            background: linear-gradient(135deg, #081e39 0%, #0F2C59 50%, #081e39 100%);
+        }
+
+        .pattern-bg {
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(0, 159, 157, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(210, 193, 167, 0.1) 0%, transparent 50%);
+        }
+
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .section-card.available:hover .icon-circle {
+            transform: scale(1.1);
+        }
+
+        .lock-overlay {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(15, 44, 89, 0.85);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .book-cover {
+            box-shadow:
+                0 8px 16px rgba(0, 0, 0, 0.15),
+                0 20px 40px rgba(0, 0, 0, 0.2),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .book-cover:hover {
+            transform: rotate(-2deg) scale(1.02);
+            box-shadow:
+                0 12px 24px rgba(0, 0, 0, 0.2),
+                0 30px 60px rgba(0, 0, 0, 0.25),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #1F2937;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #009F9D;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #008280;
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 dark:bg-neutral-900 min-h-screen font-sans">
+    <!-- Header -->
+    <header class="hero-gradient text-white py-8 md:py-12 pattern-bg">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 md:w-12 md:h-12 bg-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-lg md:text-xl"></i>
+                    </div>
+                    <span class="font-display text-xl md:text-2xl font-bold">Raven</span>
+                </div>
+                <button id="themeToggle" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <i class="fas fa-moon text-white dark:hidden"></i>
+                    <i class="fas fa-sun text-white hidden dark:block"></i>
+                </button>
+            </div>
+
+            <div class="text-center py-6 md:py-10 fade-in">
+                <p class="text-accent-100 text-sm md:text-base uppercase tracking-wider mb-2">Welcome to</p>
+                <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                    Master English
+                </h1>
+                <p class="text-neutral-200 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                    Excel in the English section of your <span class="text-accent-100 font-semibold">JAMB, WAEC, NECO,</span> and <span class="text-accent-100 font-semibold">NABTEB</span> exams through our rigorous and interactive English platform designed to guarantee your success.
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+        <!-- Section B: The Lekki Headmaster (Available) - Moved to top -->
+        <a href="lekki-headmaster.html" class="section-card available bg-white dark:bg-neutral-800 rounded-2xl p-5 md:p-8 mb-6 shadow-lg cursor-pointer fade-in stagger-1 block" style="--card-accent: #009F9D; --card-accent-light: #00c4c1;">
+            <div class="absolute top-3 right-3">
+                <span class="flex items-center gap-1.5 px-3 py-1 bg-success/10 text-success rounded-full text-xs font-semibold">
+                    <span class="w-2 h-2 bg-success rounded-full pulse-dot"></span>
+                    Available
+                </span>
+            </div>
+
+            <div class="flex flex-col md:flex-row md:items-start gap-6">
+                <!-- Book Cover - Prominently on the left -->
+                <div class="flex justify-center md:justify-start shrink-0">
+                    <div class="book-cover rounded-xl overflow-hidden w-40 sm:w-48 md:w-56 lg:w-64">
+                        <img src="https://pfst.cf2.poecdn.net/base/image/44067e777c827977c7930759decdee201abebf6869255dc93fd42d36162b645e?w=416&h=444"
+                             alt="The Lekki Headmaster"
+                             class="w-full h-auto object-cover">
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="icon-circle bg-accent-50 dark:bg-accent-700/30 text-accent-600 dark:text-accent-100 shrink-0 w-12 h-12 md:w-14 md:h-14">
+                            <i class="fas fa-book text-lg md:text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-accent-600 dark:text-accent-100 font-bold text-sm">Section B</span>
+                            <h2 class="text-xl md:text-2xl lg:text-3xl font-bold text-neutral-800 dark:text-white">The Lekki Headmaster</h2>
+                        </div>
+                    </div>
+
+                    <p class="text-neutral-700 dark:text-neutral-300 mb-4 text-sm md:text-base lg:text-lg leading-relaxed">
+                        A captivating Nigerian novel by <span class="font-semibold text-accent-600 dark:text-accent-100">Kabir Alabi Garba</span> exploring the life of a dedicated teacher navigating societal expectations and personal aspirations.
+                    </p>
+
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-700 dark:text-neutral-300 mb-5">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-layer-group text-accent-600 dark:text-accent"></i>
+                            12 Chapters
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-graduation-cap text-accent-600 dark:text-accent"></i>
+                            Literature Study
+                        </span>
+                    </div>
+
+                    <div class="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                        <span class="inline-flex items-center gap-2 text-accent-700 dark:text-accent font-semibold text-base group bg-accent-100 dark:bg-accent/10 px-4 py-2 rounded-lg hover:bg-accent-50 dark:hover:bg-accent/20 transition-colors">
+                            Start Learning
+                            <i class="fas fa-arrow-right transform group-hover:translate-x-1 transition-transform"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Section A: Comprehension and Summary -->
+        <div class="section-card locked bg-white dark:bg-neutral-800 rounded-2xl p-5 md:p-6 mb-6 shadow-lg fade-in stagger-2" style="--card-accent: #5A7B9E; --card-accent-light: #7a9bc0;">
+            <div class="lock-overlay">
+                <i class="fas fa-lock text-xs"></i>
+                <span>Coming Soon:</span>
+                <span class="text-accent-100">In Development</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div class="icon-circle bg-data-100 dark:bg-data-700/30 text-data-600 dark:text-data-100 shrink-0">
+                    <i class="fas fa-file-lines"></i>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-data-600 dark:text-data-100 font-bold text-sm">A</span>
+                        <h2 class="text-xl md:text-2xl font-bold text-neutral-800 dark:text-white">Comprehension and Summary</h2>
+                    </div>
+                    <p class="text-neutral-700 dark:text-neutral-300 mb-4 text-sm md:text-base">
+                        Develop critical reading skills and master the art of summarizing complex texts.
+                    </p>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="subsection-tag px-3 py-1.5 bg-data-100 dark:bg-data-600/20 text-data-700 dark:text-data-100 rounded-full text-xs md:text-sm font-medium">
+                            (a) Description
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-data-100 dark:bg-data-600/20 text-data-700 dark:text-data-100 rounded-full text-xs md:text-sm font-medium">
+                            (b) Narration
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-data-100 dark:bg-data-600/20 text-data-700 dark:text-data-100 rounded-full text-xs md:text-sm font-medium">
+                            (c) Exposition
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-data-100 dark:bg-data-600/20 text-data-700 dark:text-data-100 rounded-full text-xs md:text-sm font-medium">
+                            (d) Argumentation/Persuasion
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section C: Lexis and Structure -->
+        <div class="section-card locked bg-white dark:bg-neutral-800 rounded-2xl p-5 md:p-6 mb-6 shadow-lg fade-in stagger-3" style="--card-accent: #D2C1A7; --card-accent-light: #e5d9c7;">
+            <div class="lock-overlay">
+                <i class="fas fa-lock text-xs"></i>
+                <span>Coming Soon:</span>
+                <span class="text-accent-100">In Development</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div class="icon-circle bg-premium-100 dark:bg-premium-600/30 text-premium-800 dark:text-premium-100 shrink-0">
+                    <i class="fas fa-spell-check"></i>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-premium-800 dark:text-premium-100 font-bold text-sm">C</span>
+                        <h2 class="text-xl md:text-2xl font-bold text-neutral-800 dark:text-white">Lexis and Structure</h2>
+                    </div>
+                    <p class="text-neutral-700 dark:text-neutral-300 mb-4 text-sm md:text-base">
+                        Master vocabulary, word relationships, and the structural foundations of English grammar.
+                    </p>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (a) Synonyms
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (b) Antonyms
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (c) Clause & Sentence Patterns
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (d) Word Classes & Functions
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (e) Mood, Tense, Aspect & More
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (f) Mechanics
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-premium-100 dark:bg-premium-600/20 text-premium-800 dark:text-premium-100 rounded-full text-xs md:text-sm font-medium">
+                            (g) Ordinary, Figurative & Idiomatic Usage
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section D: Oral Forms -->
+        <div class="section-card locked bg-white dark:bg-neutral-800 rounded-2xl p-5 md:p-6 mb-6 shadow-lg fade-in stagger-4" style="--card-accent: #0F2C59; --card-accent-light: #1a4a8f;">
+            <div class="lock-overlay">
+                <i class="fas fa-lock text-xs"></i>
+                <span>Coming Soon:</span>
+                <span class="text-accent-100">In Development</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div class="icon-circle bg-primary-100 dark:bg-primary-700/50 text-primary-600 dark:text-primary-100 shrink-0">
+                    <i class="fas fa-microphone-lines"></i>
+                </div>
+
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-primary-600 dark:text-primary-100 font-bold text-sm">D</span>
+                        <h2 class="text-xl md:text-2xl font-bold text-neutral-800 dark:text-white">Oral Forms</h2>
+                    </div>
+                    <p class="text-neutral-700 dark:text-neutral-300 mb-4 text-sm md:text-base">
+                        Perfect your pronunciation, master stress patterns, and develop fluent spoken English.
+                    </p>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="subsection-tag px-3 py-1.5 bg-primary-100 dark:bg-primary-600/30 text-primary-600 dark:text-primary-100 rounded-full text-xs md:text-sm font-medium">
+                            (a) Vowels (Monothongs, Diphthongs, Triphthongs)
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-primary-100 dark:bg-primary-600/30 text-primary-600 dark:text-primary-100 rounded-full text-xs md:text-sm font-medium">
+                            (b) Consonants (Including Clusters)
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-primary-100 dark:bg-primary-600/30 text-primary-600 dark:text-primary-100 rounded-full text-xs md:text-sm font-medium">
+                            (c) Rhymes (Including Homophones)
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-primary-100 dark:bg-primary-600/30 text-primary-600 dark:text-primary-100 rounded-full text-xs md:text-sm font-medium">
+                            (d) Word Stress
+                        </span>
+                        <span class="subsection-tag px-3 py-1.5 bg-primary-100 dark:bg-primary-600/30 text-primary-600 dark:text-primary-100 rounded-full text-xs md:text-sm font-medium">
+                            (e) Emphatic Stress
+                        </span>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-primary-100 dark:bg-primary-600/20 rounded-lg border-l-4 border-primary">
+                        <p class="text-xs md:text-sm text-primary-600 dark:text-primary-100">
+                            <i class="fas fa-info-circle mr-1.5"></i>
+                            <strong>Note:</strong> Emphatic stress involves the placement of stress on words in an utterance for the purpose of emphasis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Overview -->
+        <div class="bg-gradient-to-r from-primary to-primary-600 rounded-2xl p-5 md:p-6 text-white mt-8 fade-in" style="animation-delay: 0.5s;">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg md:text-xl font-bold mb-1">Your Learning Journey</h3>
+                    <p class="text-neutral-200 text-sm md:text-base">1 of 4 modules available. More content coming soon!</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex -space-x-1">
+                        <div class="w-8 h-8 rounded-full bg-success border-2 border-white flex items-center justify-center">
+                            <i class="fas fa-check text-xs text-white"></i>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-neutral-400 border-2 border-white flex items-center justify-center">
+                            <i class="fas fa-lock text-xs text-white"></i>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-neutral-400 border-2 border-white flex items-center justify-center">
+                            <i class="fas fa-lock text-xs text-white"></i>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-neutral-400 border-2 border-white flex items-center justify-center">
+                            <i class="fas fa-lock text-xs text-white"></i>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold">25%</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-100 dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 mt-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-neutral-700 dark:text-neutral-300">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-book-open text-white text-sm"></i>
+                    </div>
+                    <span class="font-semibold text-neutral-800 dark:text-white">Raven</span>
+                </div>
+                <p>© 2025 English Language Learning. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Dark mode detection and toggle
+        function initTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+        }
+
+        // Theme toggle button
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // Open section function
+        function openSection(sectionId) {
+            if (sectionId === 'lekki-headmaster') {
+                // This will be the navigation to the Lekki Headmaster section
+                showNotification('Opening The Lekki Headmaster...', 'success');
+                // In a real app, this would navigate to the section
+                // window.location.href = '#lekki-headmaster';
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-5 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 transform translate-y-full opacity-0 transition-all duration-300 ${
+                type === 'success' ? 'bg-success text-white' : 'bg-neutral-800 text-white'
+            }`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            `;
+
+            document.body.appendChild(notification);
+
+            requestAnimationFrame(() => {
+                notification.classList.remove('translate-y-full', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                notification.classList.add('translate-y-full', 'opacity-0');
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Initialize
+        initTheme();
+    </script>
+</body>
+</html>
+
