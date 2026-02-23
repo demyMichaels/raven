@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Harvest | Agriculture Course Map</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Agricultural Earth & Green) --- */
+        :root {
+            --bg-deep: #1C2E1C;      /* Deep forest green */
+            --bg-surface: #253B25;    /* Slightly lighter green */
+            --primary: #4A7A4A;       /* Medium green - represents crops/vegetation */
+            --accent: #C69C6D;         /* Wheat/earth brown - represents soil/harvest */
+            --text-main: #FFFFFF;
+            --text-muted: #B8D9B8;     /* Soft green for muted text */
+            --border: rgba(74, 122, 74, 0.3); /* Green-tinted border */
+            --card-hover: rgba(74, 122, 74, 0.2);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-serif: 'DM Serif Display', serif;
+        }
+
+        /* --- RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .glow-orb {
+            position: fixed; width: 400px; height: 400px;
+            background: var(--primary); filter: blur(150px); opacity: 0.15;
+            border-radius: 50%; z-index: -1; pointer-events: none;
+        }
+        .glow-1 { top: -100px; left: -100px; }
+        .glow-2 { bottom: -100px; right: -100px; background: var(--accent); opacity: 0.1; }
+
+        /* Field Pattern Overlay (subtle - represents rows of crops) */
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 19px, var(--border) 20px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border) 40px);
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* --- HEADER --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(28, 46, 28, 0.8); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 32px; height: 32px; background: var(--accent); border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            color: var(--bg-deep); font-weight: bold;
+        }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 50px; border: 1px solid var(--border);
+        }
+        .user-avatar { 
+            width: 28px; height: 28px; background: var(--accent); border-radius: 50%; 
+            display:flex; align-items:center; justify-content:center; font-size:0.8rem; 
+            font-weight:bold; color:var(--bg-deep);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px; margin: 0 auto;
+        }
+
+        .hero h1 { 
+            font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; 
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            color: var(--accent);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .hero p { color: var(--text-muted); margin-bottom: 2rem; }
+
+        /* --- GRID LAYOUT --- */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            padding: 0 1.5rem 4rem 1.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* --- MODULE CARD --- */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex; flex-direction: column; justify-content: space-between;
+            aspect-ratio: 1 / 1.1;
+            transition: transform 0.2s, background 0.2s, border-color 0.2s;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(145deg, var(--bg-surface), var(--card-hover));
+            border-color: var(--accent);
+        }
+
+        /* Card Visuals */
+        .card-top { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+        .card-num { 
+            font-size: 0.75rem; 
+            color: var(--accent); 
+            font-weight: 700; 
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+        .card-icon { font-size: 1.8rem; }
+        
+        .card-title {
+            font-size: 1rem; font-weight: 700; line-height: 1.3; margin-bottom: auto;
+            color: #E2E8F0;
+        }
+
+        .card-footer {
+            margin-top: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            background: var(--bg-deep); 
+            border: 1px solid var(--border); 
+        }
+        .status-dot.done { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            box-shadow: 0 0 8px var(--accent); 
+        }
+        
+        .arrow-btn { 
+            width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .card:hover .arrow-btn { background: var(--accent); color: var(--bg-deep); }
+
+        /* Section Header */
+        .section-header {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), transparent);
+            width: 100px;
+            margin-top: 4px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (min-width: 768px) {
+            .module-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+            .card { aspect-ratio: 1.5 / 1; }
+            .hero h1 { font-size: 3rem; }
+            .hero-subtitle { font-size: 1.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Backgrounds -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🌾</div>
+            <span>The</span> Harvest
+        </div>
+        <div class="user-pill">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Cultivator</span>
+            <div class="user-avatar">A</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Agriculture</h1>
+            <div class="hero-subtitle">From Soil to Society</div>
+            <p>Master agronomy, animal production, economics and technology for JAMB/WAEC/NECO success.</p>
+        </div>
+
+        <!-- The Grid -->
+        <div class="module-grid" id="gridContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </main>
+
+    <script>
+        // === 1. DATA CONFIGURATION ===
+        // Agriculture Syllabus mapped to folders (based on your syllabus structure)
+        const modules = [
+            // SECTION A: BASIC CONCEPTS
+            { id: 1, section: "A", folder: "01_MeaningScope", title: "Meaning & Scope of Agriculture", icon: "🌱" },
+            { id: 2, section: "A", folder: "02_Importance", title: "Importance of Agriculture", icon: "📈" },
+            { id: 3, section: "A", folder: "03_Ecology", title: "Agricultural Ecology", icon: "🌍" },
+            { id: 4, section: "A", folder: "04_Genetics", title: "Agricultural Genetics", icon: "🧬" },
+            { id: 5, section: "A", folder: "05_FarmInputs", title: "Farm Inputs", icon: "🧪" },
+            { id: 6, section: "A", folder: "06_HistoryDevelopment", title: "History of Agricultural Development", icon: "📜" },
+            { id: 7, section: "A", folder: "07_RolesGovernmentNGOs", title: "Roles of Government & NGOs", icon: "🏛️" },
+
+            // SECTION B: AGRONOMY
+            { id: 8, section: "B", folder: "08_RocksSoilFormation", title: "Rocks & Soil Formation", icon: "🪨" },
+            { id: 9, section: "B", folder: "09_SoilWaterConservation", title: "Soil Water & Conservation", icon: "💧" },
+            { id: 10, section: "B", folder: "10_SoilFertility", title: "Soil Fertility", icon: "🌿" },
+            { id: 11, section: "B", folder: "11_LandPreparation", title: "Land Preparation & Soil Tillage", icon: "🚜" },
+            { id: 12, section: "B", folder: "12_PlantFormsFunctions", title: "Plant Forms & Functions", icon: "🌻" },
+            { id: 13, section: "B", folder: "13_GrowthReproduction", title: "Growth, Development & Reproduction", icon: "🥚" },
+            { id: 14, section: "B", folder: "14_PropagationMethods", title: "Plant Propagation Methods", icon: "🌱" },
+            { id: 15, section: "B", folder: "15_CroppingSystems", title: "Cropping Systems & Patterns", icon: "🌽" },
+            
+            // CROP HUSBANDRY GROUPS
+            { id: 16, section: "B", folder: "16_Cereals", title: "Cereals (Maize, Rice, Guinea Corn)", icon: "🌽" },
+            { id: 17, section: "B", folder: "17_Legumes", title: "Legumes (Cowpea, Groundnut)", icon: "🥜" },
+            { id: 18, section: "B", folder: "18_Tubers", title: "Tubers (Yam, Cassava)", icon: "🍠" },
+            { id: 19, section: "B", folder: "19_VegetablesSpices", title: "Vegetables & Spices", icon: "🍅" },
+            { id: 20, section: "B", folder: "20_Fruits", title: "Fruits (Citrus, Pineapple)", icon: "🍊" },
+            { id: 21, section: "B", folder: "21_Beverages", title: "Beverages (Cocoa, Kola)", icon: "☕" },
+            { id: 22, section: "B", folder: "22_Oils", title: "Oils (Oil Palm, Coconut)", icon: "🫒" },
+            { id: 23, section: "B", folder: "23_Latex", title: "Latex (Rubber, Gum Arabic)", icon: "🧴" },
+            { id: 24, section: "B", folder: "24_Fibres", title: "Fibres (Cotton, Jute)", icon: "🧵" },
+            { id: 25, section: "B", folder: "25_Sugars", title: "Sugars (Sugarcane)", icon: "🎋" },
+            
+            { id: 26, section: "B", folder: "26_PastureForage", title: "Pasture & Forage Crops", icon: "🌾" },
+            { id: 27, section: "B", folder: "27_Floriculture", title: "Floriculture", icon: "🌸" },
+            { id: 28, section: "B", folder: "28_Weeds", title: "Weeds", icon: "🌿" },
+            { id: 29, section: "B", folder: "29_CropDiseases", title: "Crop Diseases", icon: "🦠" },
+            { id: 30, section: "B", folder: "30_CropPests", title: "Crop Pests", icon: "🐛" },
+            { id: 31, section: "B", folder: "31_ForestManagement", title: "Forest Management", icon: "🌲" },
+
+            // SECTION C: ANIMAL PRODUCTION
+            { id: 32, section: "C", folder: "32_FarmAnimals", title: "Forms & Classification of Farm Animals", icon: "🐄" },
+            { id: 33, section: "C", folder: "33_Terminology", title: "General Terminologies", icon: "📋" },
+            { id: 34, section: "C", folder: "34_AnatomyPhysiology", title: "Anatomy & Physiology", icon: "🧠" },
+            { id: 35, section: "C", folder: "35_Reproduction", title: "Reproduction in Farm Animals", icon: "🥚" },
+            { id: 36, section: "C", folder: "36_AnimalNutrition", title: "Animal Nutrition", icon: "🥩" },
+            { id: 37, section: "C", folder: "37_LivestockManagement", title: "Livestock Management", icon: "🏡" },
+            { id: 38, section: "C", folder: "38_AnimalHealth", title: "Animal Health", icon: "💊" },
+            { id: 39, section: "C", folder: "39_Parasites", title: "Parasites", icon: "🪱" },
+            { id: 40, section: "C", folder: "40_Fisheries", title: "Fisheries", icon: "🐟" },
+            { id: 41, section: "C", folder: "41_Wildlife", title: "Wildlife Management", icon: "🦒" },
+            { id: 42, section: "C", folder: "42_Apiculture", title: "Bee-keeping (Apiculture)", icon: "🐝" },
+
+            // SECTION D: AGRICULTURAL ECONOMICS & EXTENSION
+            { id: 43, section: "D", folder: "43_FactorsProduction", title: "Factors of Production", icon: "📊" },
+            { id: 44, section: "D", folder: "44_EconomicPrinciples", title: "Basic Economic Principles", icon: "📈" },
+            { id: 45, section: "D", folder: "45_LabourManagement", title: "Labour Management", icon: "👥" },
+            { id: 46, section: "D", folder: "46_FarmManagement", title: "Farm Management", icon: "📋" },
+            { id: 47, section: "D", folder: "47_Marketing", title: "Marketing of Agricultural Produce", icon: "🏪" },
+            { id: 48, section: "D", folder: "48_Extension", title: "Agricultural Extension", icon: "📢" },
+
+            // SECTION E: AGRICULTURAL TECHNOLOGY
+            { id: 49, section: "E", folder: "49_FarmSurveying", title: "Farm Surveying & Planning", icon: "📐" },
+            { id: 50, section: "E", folder: "50_SimpleTools", title: "Simple Farm Tools", icon: "🔨" },
+            { id: 51, section: "E", folder: "51_Machinery", title: "Farm Machinery & Implements", icon: "🚜" },
+            { id: 52, section: "E", folder: "52_Mechanization", title: "Mechanization & Farm Power", icon: "⚡" },
+            { id: 53, section: "E", folder: "53_ProcessingStorage", title: "Processing & Storage", icon: "🏭" },
+            { id: 54, section: "E", folder: "54_Biotechnology", title: "Introduction to Biotechnology", icon: "🧬" },
+            { id: 55, section: "E", folder: "55_ICT", title: "Application of ICT in Agriculture", icon: "💻" },
+            { id: 56, section: "E", folder: "56_ResearchStatistics", title: "Agricultural Research & Statistics", icon: "📊" }
+        ];
+
+        const grid = document.getElementById('gridContainer');
+
+        // === 2. RENDER FUNCTION WITH SECTION HEADERS ===
+        function renderModules() {
+            grid.innerHTML = '';
+            
+            // Group by section
+            const sections = {
+                'A': 'SECTION A: Basic Concepts',
+                'B': 'SECTION B: Agronomy (Crop Production)',
+                'C': 'SECTION C: Animal Production',
+                'D': 'SECTION D: Agricultural Economics & Extension',
+                'E': 'SECTION E: Agricultural Technology'
+            };
+            
+            // For each section, add header and cards
+            ['A', 'B', 'C', 'D', 'E'].forEach(sectionCode => {
+                const sectionModules = modules.filter(m => m.section === sectionCode);
+                
+                if (sectionModules.length > 0) {
+                    // Add section header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'section-header';
+                    headerDiv.innerHTML = `
+                        <div class="section-title">${sections[sectionCode]}</div>
+                        <div class="section-divider"></div>
+                    `;
+                    grid.appendChild(headerDiv);
+                    
+                    // Add cards for this section
+                    sectionModules.forEach(mod => {
+                        const link = `./${mod.folder}/index.html`;
+                        
+                        // Random progress for demo - in real app, this would come from user data
+                        const isCompleted = [1, 2, 8, 10, 16, 32, 36, 43, 46, 49, 51].includes(mod.id); 
+                        const dotClass = isCompleted ? 'status-dot done' : 'status-dot';
+
+                        const card = document.createElement('a');
+                        card.href = link;
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <div class="card-top">
+                                <span class="card-num">${mod.id.toString().padStart(2, '0')}</span>
+                                <span class="card-icon">${mod.icon}</span>
+                            </div>
+                            <div class="card-title">${mod.title}</div>
+                            <div class="card-footer">
+                                <div class="${dotClass}"></div>
+                                <div class="arrow-btn">➜</div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            });
+        }
+
+        // Initial Load
+        renderModules();
+
+    </script>
+</body>
+</html>
