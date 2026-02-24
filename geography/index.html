@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Compass | Geography Course Map</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (High School Theme) --- */
+        :root {
+            --bg-deep: #0B0F19;
+            --bg-surface: #151B2B;
+            --primary: #6366F1;       /* Indigo */
+            --accent: #10B981;        /* Emerald */
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(99, 102, 241, 0.1);
+            --font: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* --- RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .glow-orb {
+            position: fixed; width: 400px; height: 400px;
+            background: var(--primary); filter: blur(150px); opacity: 0.15;
+            border-radius: 50%; z-index: -1; pointer-events: none;
+        }
+        .glow-1 { top: -100px; left: -100px; }
+        .glow-2 { bottom: -100px; right: -100px; background: var(--accent); }
+
+        /* --- HEADER --- */
+        header {
+            padding: 1.5rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(11, 15, 25, 0.8); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; 
+        }
+        .brand span { color: var(--primary); }
+        .brand-icon { 
+            width: 32px; height: 32px; background: var(--primary); border-radius: 8px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            color: white;
+        }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 50px; border: 1px solid var(--border);
+        }
+        .user-avatar { 
+            width: 28px; height: 28px; background: var(--accent); border-radius: 50%; 
+            display:flex; align-items:center; justify-content:center; font-size:0.8rem; 
+            font-weight:bold; color:black;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px; margin: 0 auto;
+        }
+        .hero h1 { 
+            font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; 
+            background: linear-gradient(135deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p { color: var(--text-muted); }
+
+        /* --- GRID LAYOUT --- */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 0 1.5rem 4rem 1.5rem;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* --- MODULE CARD --- */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.2rem;
+            display: flex; flex-direction: column;
+            min-height: 160px;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: linear-gradient(145deg, var(--bg-surface), var(--card-hover));
+            border-color: var(--primary);
+        }
+
+        /* Card Visuals */
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-num { 
+            font-size: 0.75rem; 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+        .card-icon { font-size: 1.8rem; flex-shrink: 0; margin-left: 5px; }
+        
+        .card-title {
+            font-size: 0.95rem; 
+            font-weight: 700; 
+            line-height: 1.4; 
+            color: #E2E8F0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            margin-bottom: auto;
+            flex: 1;
+        }
+
+        .card-footer {
+            margin-top: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .status-dot { 
+            width: 8px; height: 8px; border-radius: 50%; 
+            background: var(--bg-deep); 
+            border: 1px solid var(--border); 
+        }
+        .status-dot.done { 
+            background: var(--accent); 
+            border-color: var(--accent); 
+            box-shadow: 0 0 8px var(--accent); 
+        }
+        
+        .arrow-btn { 
+            width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+        .card:hover .arrow-btn { background: var(--primary); color: white; }
+
+        /* Section Header */
+        .section-header {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            width: 100px;
+            margin-top: 4px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (min-width: 768px) {
+            .module-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+            .card { min-height: 170px; }
+            .hero h1 { font-size: 3rem; }
+        }
+
+        @media (max-width: 480px) {
+            .module-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            .card-title { font-size: 0.9rem; }
+            .card-icon { font-size: 1.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Backgrounds -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🧭</div>
+            <span>Geo</span>graphy
+        </div>
+        <div class="user-pill">
+            <span style="font-size:0.8rem; color:var(--text-muted);">Student</span>
+            <div class="user-avatar">G</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="hero">
+            <h1>Geography</h1>
+            <p>30 modules to get you ready.</p>
+        </div>
+
+        <!-- The Grid -->
+        <div class="module-grid" id="gridContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </main>
+
+    <script>
+        // === 1. DATA CONFIGURATION ===
+        const modules = [
+            // SECTION A: PRACTICAL GEOGRAPHY
+            { id: 1, section: "A", folder: "01_Maps", title: "Maps", icon: "🗺️" },
+            { id: 2, section: "A", folder: "02_Scale_Measurement", title: "Scale & Measurement", icon: "📏" },
+            { id: 3, section: "A", folder: "03_Map_Reading", title: "Map Reading & Interpretation", icon: "🔍" },
+            { id: 4, section: "A", folder: "04_Statistical_Data", title: "Interpretation of Statistical Data", icon: "📊" },
+            { id: 5, section: "A", folder: "05_Surveying", title: "Elementary Surveying", icon: "📐" },
+            { id: 6, section: "A", folder: "06_GIS", title: "Geographic Information System", icon: "💻" },
+            
+            // SECTION B: PHYSICAL GEOGRAPHY
+            { id: 7, section: "B", folder: "07_Earth_Planet", title: "The Earth as a Planet", icon: "🌍" },
+            { id: 8, section: "B", folder: "08_Earth_Crust", title: "The Earth Crust", icon: "🗻" },
+            { id: 9, section: "B", folder: "09_Volcanism", title: "Volcanism & Earthquakes", icon: "🌋" },
+            { id: 10, section: "B", folder: "10_Denudation", title: "Denudation Processes", icon: "💨" },
+            { id: 11, section: "B", folder: "11_Water_Bodies", title: "Water Bodies", icon: "🌊" },
+            { id: 12, section: "B", folder: "12_Weather_Climate", title: "Weather & Climate", icon: "☁️" },
+            { id: 13, section: "B", folder: "13_Vegetation", title: "Vegetation", icon: "🌿" },
+            { id: 14, section: "B", folder: "14_Soils", title: "Soils", icon: "🪨" },
+            { id: 15, section: "B", folder: "15_Environmental_Resources", title: "Environmental Resources", icon: "⛏️" },
+            { id: 16, section: "B", folder: "16_Environmental_Interaction", title: "Environmental Interaction", icon: "🔄" },
+            { id: 17, section: "B", folder: "17_Environmental_Hazards", title: "Environmental Hazards", icon: "⚠️" },
+            { id: 18, section: "B", folder: "18_Environmental_Conservation", title: "Environmental Conservation", icon: "🌱" },
+            
+            // SECTION C: HUMAN GEOGRAPHY
+            { id: 19, section: "C", folder: "19_Population", title: "Population", icon: "👥" },
+            { id: 20, section: "C", folder: "20_Settlement", title: "Settlement", icon: "🏘️" },
+            { id: 21, section: "C", folder: "21_Economic_Activities", title: "Economic Activities", icon: "⚙️" },
+            
+            // SECTION D: REGIONAL GEOGRAPHY
+            { id: 22, section: "D", folder: "22_Nigeria_Outline", title: "Nigeria: Broad Outline", icon: "🇳🇬" },
+            { id: 23, section: "D", folder: "23_Nigeria_Economic", title: "Nigeria: Economic & Human", icon: "📈" },
+            { id: 24, section: "D", folder: "24_ECOWAS", title: "ECOWAS", icon: "🤝" }
+        ];
+
+        const grid = document.getElementById('gridContainer');
+
+        // === 2. RENDER FUNCTION WITH SECTION HEADERS ===
+        function renderModules() {
+            grid.innerHTML = '';
+            
+            // Group by section
+            const sections = {
+                'A': 'SECTION A: Practical Geography',
+                'B': 'SECTION B: Physical Geography',
+                'C': 'SECTION C: Human Geography',
+                'D': 'SECTION D: Regional Geography'
+            };
+            
+            // For each section, add header and cards
+            ['A', 'B', 'C', 'D'].forEach(sectionCode => {
+                const sectionModules = modules.filter(m => m.section === sectionCode);
+                
+                if (sectionModules.length > 0) {
+                    // Add section header
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'section-header';
+                    headerDiv.innerHTML = `
+                        <div class="section-title">${sections[sectionCode]}</div>
+                        <div class="section-divider"></div>
+                    `;
+                    grid.appendChild(headerDiv);
+                    
+                    // Add cards for this section
+                    sectionModules.forEach(mod => {
+                        const link = `./${mod.folder}/index.html`;
+                        
+                        // Visual check: first 3 modules have "active" glow in this demo
+                        const isCompleted = [1, 2, 3, 7, 8, 19, 22].includes(mod.id);
+                        const dotClass = isCompleted ? 'status-dot done' : 'status-dot';
+
+                        const card = document.createElement('a');
+                        card.href = link;
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <div class="card-top">
+                                <span class="card-num">MOD ${mod.id.toString().padStart(2, '0')}</span>
+                                <span class="card-icon">${mod.icon}</span>
+                            </div>
+                            <div class="card-title">${mod.title}</div>
+                            <div class="card-footer">
+                                <div class="${dotClass}"></div>
+                                <div class="arrow-btn">➜</div>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            });
+        }
+
+        // Initial Load
+        renderModules();
+
+    </script>
+</body>
+</html>
