@@ -1,0 +1,1 @@
+https://images.now/ib/cAh87dYB7xt0VSB_1772365381.jpeg - mnemonics
