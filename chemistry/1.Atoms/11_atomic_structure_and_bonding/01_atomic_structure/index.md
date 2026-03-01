@@ -1,1 +1,95 @@
 https://images.now/ib/cAh87dYB7xt0VSB_1772365381.jpeg - mnemonics
+
+Atomic structure
+
+LIke we have seen in earlier modules,
+Atoms are composed of protons which are positively charged, 
+neutrons which are neutral and
+electrons which are negatively charged particles.
+ 
+In earlier modules (which module?) we mentioned that In a neutral atom, the nucleus of protons and neutrons
+is surrounded by electrons, the number of which is equal to the number of protons. 
+This number is also the same as the atomic number of the atom.
+
+insert image : 
+https://images.now/ib/9sPIHly4GIfkFei_1772358344.png
+
+
+Ordinarily, the number of electrons and protons is same but in cases where the number is not equal, that atom
+will carry a charge called an ion.
+insert image:https://images.now/ib/koil5Yr8tqBiWJb_1772364267.jpg
+
+When it carries a negatively charged atom or molecule is termed an anion, and a positively charged species is called a cation.
+
+
+This is similar to saying that if you have a child but your friend does not have a child, 
+you can decide to send the child over to your friend's house on weekends to keep your friend company. 
+In this case, you are the cation (positive charge) and your friend is the anion (negative charge).
+This is similar to sharing electrons in a covalent bond, which we will cover in the next module.
+However, if your friend fully adopts the child and takes full responsibility for it, then that's electron transfer, which is what happens in ionic bonding.
+
+insert image here to show the difference between ionic and covalent bonding: https://images.now/ib/WCojrUKRJEJBX29_1772364838.jpg" alt="ionic-vs-covalent.jpg
+
+Let's go back to chemical examples of ions.
+Example: Na⁺, Ca²⁺
+Looking at the sodium ion (Na⁺) and the calcium ion (Ca²⁺), we can see that they are both cations, meaning they have lost electrons.
+Sodium (Na) has an atomic number of 11, which means it has 11 protons and, in its neutral state, 11 electrons. When it loses one electron, it becomes Na⁺ with 10 electrons and a +1 charge.
+Calcium (Ca) has an atomic number of 20, which means it has 20 protons and, in its neutral state, 20 electrons. When it loses two electrons, it becomes Ca²⁺ with 18 electrons and a +2 charge.
+
+
+https://images.now/ib/afe9LNFQX4s0CVm_1772364624.jpg" alt="NaCl ion.jpg
+
+
+Ions are important in many processes such as 
+conduction of electricity in solutions, 
+biological functions in the human body (like nerve impulses), and 
+chemical reactions like ionic bonding in salts (e.g., NaCl).
+
+Insert video so they see where ions are important in real life.
+
+
+
+Insert image here to help remember anion and cation
+Here is the link: https://images.now/ib/qlP8S06LFOijIdM_1772364190.jpg
+
+
+The inert or noble gases, such as helium, neon,
+and argon, are particularly unreactive, and this has
+been related to the characteristic number of electrons
+they contain, 2 for helium, 10 for neon (2 + 8),
+and 18 for argon (2 + 8 + 8). 
+
+
+Insert image here that highlights the noble gases on the periodic
+table.
+
+They are described as possessing ‘filled shells’ of electrons, which, 
+except for helium, contain eight electrons, an octet.
+
+
+Atoms are always looking to acquire a stable state whenever they release or accept electrons.
+They want to be stable like the noble gases. If Lithium with its one valence electron needs to give up its
+lone electron to be stable, it will do just that. If an halogen such as Chlrine needs to accept an electron to be stable, it will be
+really aggressive in terms of drawing an electron to itself. 
+
+To attain this stable state, atoms can gain, lose or share electrons that are associated with the unfilled shell.
+This leads to what we refer to as ionic bonds or covalent bonds.
+
+insert image to show The unfilled shell involved in bonding is termed the valence shell, and 
+the electrons in it are termed valence electrons.
+
+The unfilled shell involved in bonding is termed the valence shell, and 
+the electrons in it are termed valence electrons.
+
+In the next module, we will cover bonding and valency.
+
+
+
+2. Real-World Applications
+Electrolytes in Sports Drinks: Chemical Kim demonstrates how the minerals (ions) in sports drinks allow them to conduct electricity, linking chemistry to human nutrition and hydration.
+Industrial Metal Extraction: The Royal Society of Chemistry provides resources on aluminium extraction, a massive industrial process that relies entirely on conducting electricity through a molten ionic solution.
+Metal Purification & Electroplating: This video on Applications of Electrolysis explains how ionic solutions are used to purify metals like copper and to coat objects to prevent corrosion.
+Water Quality Testing: Science with Tyler explains how conductivity is used to measure minerals and "electrolytes" in tap water, a key real-world application in environmental science
+3. Safety & Human Body
+Human Conductivity: The Human Circuit Experiment demonstrates that because the human body contains water and dissolved ions, we are conductors ourselves.
+The "MythBusters" Context: Some educational demonstrations reference how salt on skin or in bathwater significantly increases conductivity, explaining why electricity and water are a dangerous mix. 
