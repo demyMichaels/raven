@@ -1,11 +1,15 @@
 2. Bonding and valency
 For many years now, these types of bonding have
 been represented in chemistry via a shorthand
-notation. Ionic bonds have been shown as a simple
+notation. 
+
+Ionic bonds have been shown as a simple
 electrostatic interaction of appropriate counter ions,
 so that sodium chloride and magnesium chloride
 are conveniently drawn as Na+Cl- and Mg2+ 2Cl-
-respectively. It becomes increasingly difficult to
+respectively.
+
+It becomes increasingly difficult to
 remove successive electrons from an atom, and ionic
 bonding is not usually encountered for some atoms,
 especially carbon. Organic chemistry, the study of
@@ -16,7 +20,10 @@ A covalent bond between atoms involves the
 sharing of two electrons, one from each atom. The
 sharing of two electrons is described as a single
 bond, and is indicated in shorthand notation by a
-single line. Depending upon the number of electrons
+single line. 
+
+
+Depending upon the number of electrons
 an atom carries, it is able to form a certain number
 of bonds, and this number is called the valency of
 the atom. The valency of hydrogen is 1, of oxygen 2,

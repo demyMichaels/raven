@@ -1,0 +1,552 @@
+2.6.1 Molecular orbitals: ó and ð bonds
+We have used the electronic energy levels for atomic
+hydrogen to serve as a model for other atoms. In
+a similar way, we can use the interaction of two
+hydrogen atoms giving the hydrogen molecule as
+a model for bonding between other atoms. In its
+simplest form, we can consider the bond between two hydrogen atoms originates by bringing the two
+atoms together so that the atomic orbitals overlap,
+allowing the electrons from each atom to mingle and
+become associated with both atoms. This sharing of
+electrons effectively brings each atom up to the noble
+gas electronic configuration (He, two electrons).
+Furthermore, it creates a new orbital spanning both
+atoms in which the two electrons are located; this is
+called a molecular orbital.
+
+Graphically, we can represent this as in Figure 2.5.
+There must be some energy advantage by bonding,
+otherwise it would not occur. The two atomic
+orbitals, therefore, are used to create a new molecular
+orbital of rather lower energy, the bonding molecular
+orbital. However, since we are considering
+mathematical solutions to a wave equation, there is
+an alternative higher energy solution also possible.
+Remind yourself that the solution to x2 = 1 is x =
++1 or -1. The higher energy solution is represented
+by the antibonding molecular orbital. The bonding
+molecular orbital is where combination of atomic
+orbitals leads to an increased probability of finding
+the electrons between the two atoms, i.e. bonding.
+The antibonding molecular orbital is where combination
+of atomic orbitals leads to a reduced or negligible
+probability of finding the electrons between the two
+atoms, and does not produce bonding (Figure 2.6).
+Combining the two atomic orbitals produces two
+molecular orbitals, here shown as ø1 + ø2, and
+ø1 . ø2: in the additive mode the electronic probability
+increases between the atoms, whereas in the
+subtractive mode the electronic probability between
+the atoms decreases, i.e. the antibonding situation.
+Bonding results where we have interaction of orbitals
+with the same phase sign of the wave function,
+whereas the antibonding orbital originates from interaction
+of orbitals with different phase signs of the
+wave function. This approach to molecular orbitals
+is called a linear combination of atomic orbitals:
+wave functions for the atomic orbitals are combined
+in a linear fashion, by simple addition or subtraction,
+to generate new wave functions for molecular
+orbitals. The number of molecular orbitals formed
+is the same as the number of atomic orbitals combined.
+Electrons are allocated to the resultant molecular
+orbitals as with atomic orbitals. We start with the lower energy orbital, putting one electron in each
+degenerate orbital, before we add a second with spin
+pairing. In the case of hydrogen, therefore, we have
+two spin-paired electrons in the bonding molecular
+orbital. The antibonding orbital remains empty in the
+so-called ground state of the molecule, unless we
+input enough energy to promote one electron to the
+higher energy state, the excited state. This type of
+transfer gives rise to spectral absorption or emission.
+The bonding in the hydrogen molecule formed by
+overlap of s orbitals is called a sigma (¥ò) bond;
+the antibonding orbital is designated ¥ò
+.. It is a
+term generally applied where orbital overlap gives
+a bond that is cylindrically symmetrical in crosssection
+when viewed along the bond axis. All single
+bonds are sigma bonds. The other important type of
+bonding in organic molecules is the pi (¥ð) bond, the
+result of side-to-side interaction of p orbitals. Here,
+we consider the two lobes separately overlapping; the
+p orbitals have lobes of different phase signs, and for
+bonding we require overlap of lobes with the same
+phase sign (Figure 2.7). This produces a bonding ¥ð
+molecular orbital with regions of greatest probability
+of finding electrons above and below the atomic
+axis. The ¥ð bond thus has a nodal plane passing
+through the bonded atoms. The antibonding ¥ð
+. orbital
+can be deduced in a similar manner. Double and
+triple bonds are characterized by ¥ð bonding. ¥ð bonds
+possess an enhanced reactivity not associated with
+¥ò bonds.
+
+2.6.2 Hybrid orbitals in carbon
+We start this section with a word of caution. Students
+frequently find hybridization a rather difficult concept
+to understand and appreciate. However, there is
+no particular reason why this should be so.
+Chemistry is an experimental science, and to
+rationalize our observations we gradually develop and
+invoke a number of rules and principles. Theories
+may have to change as scientific data increase, and
+as old principles cease to explain the facts. All of
+the foregoing description of atomic and molecular
+orbitals is a hypothesis for atomic and molecular
+structure supported by experimental data. So far, the
+description meets most of our needs and provides a
+good rationalization of chemical behaviour. However,
+it falls short in certain ways, and we have to invoke
+a further modification to explain the facts. Here are
+three observations based upon sound experimental
+evidence, which are not accommodated by the above
+description of bonding:
+. The hydrocarbon methane (CH4) is tetrahedral in
+shape with bond angles of about 109., and the
+four C.H bonds are all equivalent and identical
+in reactivity.
+. Ethylene (ethene, C2H4) is planar, with bond
+angles of about 120., and it contains one ƒÎ bond.
+. Acetylene (ethyne, C2H2) is linear, i.e. bond angles
+180., and it contains two ƒÎ bonds.
+None of these observations follows immediately from
+the electronic configuration of carbon (1s22s22px
+1 2py
+1), which shows that carbon has two unpaired
+electrons, each in a 2p orbital. From our study of
+bonding so far, we might predict that carbon will be
+able to bond to two other atoms, i.e. it should be
+divalent, though this would not lead to an octet of
+electrons. Carbon is usually tetravalent and bonds to
+up to four other atoms. Therefore, we need to modify
+the model to explain this behaviour. This modification
+is hybridization.
+
+
+sp3 hybrid orbitals
+Methane is a chemical combination of one carbon
+atom and four hydrogen atoms. Each hydrogen atom
+contributes one electron to a bond; so, logically,
+carbon needs to provide four unpaired electrons to
+allow formation of four σ bonds. The ability of
+carbon to bond to four other atoms requires unpairing
+of the 2s2 electrons. We might consider promoting
+one electron from a 2s orbital to the third, as
+yet unoccupied, 2p orbital (Figure 2.8). This would
+produce an excited-state carbon; since the 2p orbital
+is of higher energy than the 2s orbital, the process
+would require the input of energy. We could assume
+that the ability to form extra bonds would more
+than compensate for this proposed change. We now
+have four unpaired electrons in separate orbitals, and
+the electronic configuration of carbon has become
+1s22s2px
+12py
+12pz
+1. Each electron can now form a
+bond by pairing with the electron of a hydrogen atom.
+However, this does not explain why methane
+is tetrahedral and has four equivalent bonds. The
+bond that utilizes the 2s electron would surely be
+different from those that involve 2p electrons, and
+the geometry of the molecule should somehow reflect
+
+that the p orbitals are positioned at right angles to
+each other, whilst the s orbital is spherical and might
+bond in any direction. If all the bonds in methane
+turn out to be equivalent, they must be some sort of
+‘hybrid’ version of those we have predicted. We can
+explain many features of organic chemicals, including
+their reactivity and shape, by a mathematical model
+in which hybrid orbitals for carbon are derived by
+mixing the one 2s orbital and three 2p atomic orbitals
+(Figure 2.9). This generates four equivalent hybrid
+orbitals, which we designate sp3, since they are
+derived from one s orbital and three p orbitals. The
+sp3 orbitals will be at an energy level intermediate
+between those of the 2s and 2p orbitals, and will
+have properties intermediate between s and p, though
+with greater p character. The mathematical model
+then provides us with the shape and orientation of
+these hybrid orbitals (Figure 2.10). For convenience
+of drawing, we tend to omit the small lobes at the
+centre of the array.
+These new hybrid orbitals are then all equivalent,
+and spaced to minimize any interaction; this is a
+tetrahedral array, the best way of arranging four
+groups around a central point. Each hybrid orbital
+can now accommodate one electron.
+Now we can consider the bonding in methane.
+Using orbital overlap as in the hydrogen molecule as
+a model, each sp3 orbital of carbon can now overlap
+with a 1s orbital of a hydrogen atom, generating a
+bonding molecular orbital, i.e. a ó bond. Four such
+
+
+
+Figure  Electronic configuration: sp3-hybridized carbon atom
+Figure  sp3 hybrid orbitals
+Figure 2.11 Bonding in methane
+Figure 2.12 Bonding in ethane
+Figure 2.13 Electronic configuration: sp2-hybridized carbon atom
+Figure 2.14 sp2 hybrid orbitals
+Figure 2.15 Bonding in ethylene
+
+bonds can be created, and they will be produced in a
+tetrahedral array (Figure 2.11).
+We can also consider C–C ó bonding, as in ethane
+(C2H6), by overlap of two carbon sp3 orbitals. The
+three remaining sp3 orbitals of each carbon are
+used to make C–H ó bonds to hydrogen atoms
+(Figure 2.12).
+It may be argued that we have actually started
+from the tetrahedral array in methane to propose
+a tetrahedral array of atomic orbitals in carbon
+
+This is undoubtedly true, but is part of the process
+of refining the model as we need to explain new
+observations. We make models to describe nature;
+nature merely adopts a minimum energy situation.
+We gain confidence in the approach by using similar
+rationale to account for the second of the observations
+above, that ethylene is planar, with bond angles of
+about 120., and contains one ƒÎ bond.
+
+
+sp2 hybrid orbitals
+The sp3 hybrid orbitals of carbon were considered
+as a mix of the 2s orbital with three 2p orbitals.
+To provide a model for ethylene, we now need to
+consider hybrid orbitals that are a mix of the 2s
+orbital with two 2p orbitals, giving three equivalent
+sp2 orbitals. In this case, we use just three orbitals
+to create three new hybrid orbitals. Accordingly, we
+find that the energy level associated with an sp2
+orbital will be below that of the sp3 orbital: this
+time, we have mixed just two high-energy p orbitals
+with the lower energy s orbital (Figure 2.13). The
+
+four electrons are accommodated one in each hybrid
+orbital and one in the remaining 2p orbital.
+The sp2 hybrid orbitals are distributed in a
+planar array around the atom; this spacing minimizes
+any interactions. The 2p orbital is then located
+perpendicular to this plane. Such information is
+again obtained from the mathematical analysis, but
+simple logic would lead us to predict that this is
+the most favourable arrangement to incorporate the
+components. The sp2 orbital will be similar in shape
+to the sp3 orbital, but somewhat shorter and fatter,
+in that it has more s character and less p character
+(Figure 2.14).
+The bonding in ethylene is based initially on one
+C.C ƒÐ bond together with four C.H ƒÐ bonds, much
+as we have seen in ethane. We are then left with a p
+orbital for each carbon, each carrying one electron,
+and these interact by side-to-side overlap to produce
+a ƒÎ bond (Figure 2.15). This makes the ethylene
+molecule planar, with bond angles of 120., and the
+ƒÎ bond has its electron density above and below
+this plane. The combination of the C.C ƒÐ bond and
+the C.C ƒÎ bond is what we refer to as a double
+bond; note that we cannot have ƒÎ bond formation
+
+without the accompanying ¥ò bond. You will observe
+that it becomes progressively more difficult to draw a
+combination of ¥ò and ¥ð molecular orbitals to illustrate
+the bonding that constitutes a double bond. We often
+resort to a picture that illustrates the potential overlap
+of p orbitals by means of a dotted line or similar
+device. This cleans up the picture, but leaves rather
+more to the imagination. The properties of an alkene
+(like ethylene) are special, in that the ¥ð bond is more
+reactive than the ¥ò bond, so that alkenes show a range
+of properties that alkanes (like ethane) do not (see
+Chapter 8).
+We can only get overlap of the p orbitals if their
+axes are parallel. If their axes were perpendicular,
+then there would be no overlap and, consequently,
+no bonding (Figure 2.16). This situation might arise
+if we tried to twist the two parts of the ethylene
+molecule about the C.C link. This is not easily
+achieved, and would require a lot of energy (see
+Section 3.4.3). It can be achieved by absorbing
+sufficient energy to promote an electron to the
+antibonding ¥ð
+. orbital. This temporarily destroys the
+¥ð bond, allows rotation about the remaining ¥ò bond,
+and the ¥ð bond may reform as the electron is restored
+to the bonding orbital. It accounts for a change in
+configuration (see Section 3.4.3) of the double bond,
+so-called cis–trans isomerism, and we shall see an
+example shortly (see Box 2.1).
+Compounds with ð bonds are said to be unsaturated,
+whereas compounds without ð bonds containing
+only ó bonds are referred to as saturated.
+
+
+sp hybrid orbitals
+The third observation relates to acetylene (ethyne,
+C2H2), which is linear, i.e. bond angles of 180., and
+contains two ƒÎ bonds. This introduces what we term
+triple bonds, actually a combination of one ƒÐ bond
+and two ƒÎ bonds. In this molecule, we invoke another
+type of hybridization for carbon, that of sp hybrid
+orbitals. These are a mix of the 2s orbital with one
+2p orbital, giving two equivalent sp orbitals. Each
+hybrid orbital takes one electron, whilst the remaining
+two electrons are accommodated in two different 2p
+orbitals (Figure 2.17).
+The sp hybrid orbitals can be visualized as a
+straight combination of an s and a p orbital, so that it will now be the shortest and fattest of the hybrid
+orbitals, with most s character and least p character.
+Its energy will be above that of the s orbital, but
+below that of sp2 orbitals, since the p contribution is
+the higher energy component. The atomic orbitals in
+sp-hybridized carbon are going to be two equivalent
+sp orbitals, arranged opposite each other to minimize
+interaction, plus the two remaining p orbitals, which
+will be at right angles to each other, and also at right
+angles to the sp orbitals (Figure 2.18).
+The bonding in acetylene has one C–C σ bond
+together with two C–H σ bonds; the p orbitals on
+each carbon, each carrying one electron, interact
+by side-to-side overlap to produce two π bonds
+(Figure 2.19). Note again that the p orbitals can only
+overlap if their axes are parallel.
+This makes the acetylene molecule linear, i.e. bond
+angles of 180◦, and there are two π bonds with
+electron density either side of this axis. The properties
+of an alkyne, like acetylene, are also special in that
+the π bonds are again much more reactive than the
+σ bond.
+
+Figure 2.17 Electronic configuration: sp-hybridized carbon atom
+Figure 2.19 Bonding in acetylene
+Figure 2.20 Electronic configurations: sp3-hybridized nitrogen and oxygen
+
+Hybridization and bond lengths
+We also note that there are significant differences in
+bond lengths for single, double, and triple bonds. The
+carbon atoms in ethane are further apart (1.54 A° ) than
+in ethylene (1.34 A° ), and those in acetylene are even
+closer together (1.20 °A); °A refers to the A° ngstro¨m
+unit, 10.10 m. This is primarily a consequence of
+the different nature of the ó bonds joining the two
+
+carbons. Because sp2 hybrid orbitals have less p
+character than sp3 hybrid orbitals, they are less
+elongated; consequently, a ó bond formed from sp2
+orbitals will be rather shorter than one involving sp3
+orbitals. By similar reasoning, sp hybrid orbitals will
+be shorter than sp2 orbitals, because they have even
+less p character, and will form even shorter C–C
+ó bonds.
+
+
+There is a similar effect in the length of C–H
+bonds, but this is less dramatic, primarily because the
+hydrogen atomic orbital involved (1s) is considerably
+smaller than any of the hybrid orbitals we are
+considering. Nevertheless, C–H bonds involving sphybridized
+carbon are shorter than those involving
+sp2-hybridized carbon, and those with sp3-hybridized
+carbon are the longest.
+Note how we have resorted to another form of
+representation of the ethane, ethylene, and acetylene
+molecules here, representations that are probably
+familiar to you (see Section 1.1). These line drawings
+are simpler, much easier to draw, and clearly
+show how the atoms are bonded – we use a line to
+indicate the bonding molecular orbital. They do not
+show the difference between ó and ð bonds, however.
+We also introduce here the way in which we
+can represent the tetrahedral array of bonds around
+carbon in a two-dimensional drawing. This is to
+use wedges and dots for bonds instead of lines.
+By convention, the wedge means the bond is coming
+towards you, out of the plane of the paper.
+The dotted bond means it is going away from you,
+behind the plane of the paper. We shall discuss stereochemical
+representations in more detail later (see
+Section 3.1).
+
+At the beginning of this section we suggested
+that students often found hybridization a difficult
+concept to understand. We should emphasize that
+hybridization is a model that helps us to appreciate
+molecular structure and predict chemical reactivity.
+Do not think in terms of atomic orbitals merging to
+form hybrid orbitals, but consider that such orbitals
+already exist as the lowest energy arrangement.
+Hybridization is our modification of the first model,
+which we saw had its limitations, to an improved
+model that provides a rationale for experimental
+observations. As research progresses, we may have
+to apply even further modifications! At the present,
+though, the concept of hybrid orbitals provides us
+with satisfactory explanations for many chemical
+features. We have already seen that hybridization
+helps to define features such as bond angles
+and bond lengths that dictate molecular shape
+(stereochemistry; see Section 3.1). In later sections
+we shall see that hybridization gives us good
+explanations for other aspects of chemistry, such as
+acidity and basicity (see Sections 4.3.4 and 4.5.3), the
+relative reactivity of nucleophiles (see Section 6.1.2),
+and the chemical behaviour of compounds having conjugation (see Section 8.2) or aromatic rings (see
+Section 8.4).
+Carbanions, carbocations and radicals
+Before we move on from the hybrid orbitals of carbon,
+we should take a look at the electronic structure
+of important reactive species that will figure prominently
+in our consideration of chemical reactions.
+First, let us consider carbanions and carbocations.
+We shall consider the simplest examples, the methyl
+anion CH3
+- and the methyl cation CH3
++, though
+these are not going to be typical of the carbanions
+and carbocations we shall be meeting, in that they
+lack features to enhance their stability and utility.
+The methyl anion is what would arise if we
+removed H+ (a proton) from methane by fission of
+the C–H bond so that the two electrons are left with
+carbon. We can immediately deduce that carbon has
+its full octet of electrons, and that we shall have a
+tetrahedral array of three bonds and a lone pair of
+electrons in sp3 orbitals.
+
+On the other hand, the methyl carbocation is
+the result of removing a hydride anion (a hydrogen
+atom and an electron) from methane by fission of
+the C–H bond so that the two electrons are removed
+with hydrogen. We can now deduce that carbon has only six electrons in its outer shell. This arrangement
+is best accommodated by sp2 hybridization and a
+vacant p orbital. The alternative of four sp3 hybrid
+orbitals with one unfilled does not minimize repulsion
+between the filled orbitals, and is also a higher
+energy arrangement. To deduce this, we need to
+go back to the energy diagrams for sp3 and sp2
+hybrid orbitals. The lower p character of sp2 hybrid
+orbitals means they are of lower energy than sp3
+orbitals; this is because the 2p orbitals are of higher
+energy than the 2s orbital. Consequently, we can
+work out that six electrons in sp2 orbitals will have
+a lower energy than six electrons in sp3 orbitals.
+Hence, the methyl carbocation is of planar sp2 nature
+with an unoccupied p orbital at right angles to this
+plane. The consequences of this will be developed in
+Section 6.2.
+There is also a third type of reactive species that we
+shall discuss in detail in Chapter 9, namely radicals.
+Briefly, radicals are uncharged entities that carry
+an unpaired electron. A methyl radical CH3
+• results
+from the fission of a C–H bond in methane so that
+each atom retains one of the electrons. In the methyl
+radical, carbon is sp2 hybridized and forms three
+ó C–H bonds, whilst a single unpaired electron is
+held in a 2p orbital oriented at right angles to the
+plane containing the ó bonds. The unpaired electron
+is always shown as a dot. The simplest of the radical
+species is the other fission product, a hydrogen  
+2.6.3 Hybrid orbitals in oxygen and nitrogen
+Hybridization concepts can also be applied to atoms
+other than carbon. Here, we look at how we can
+understand the properties of oxygen and nitrogen
+compounds by considering hybrid orbitals for these
+atoms.
+Let us recap on the electronic configurations of
+oxygen and nitrogen. Nitrogen has one more electron
+than carbon, and oxygen has two more. For each
+atom, we can consider hybrid sp3 orbitals derived
+from the 2s and 2p orbitals as we have seen with
+carbon (Figure 2.20). We shall then obtain electronic
+configurations in which nitrogen has two paired
+electrons in one of these orbitals, whilst the remaining
+three orbitals each have a single unpaired electron
+available for bonding. Oxygen has two sets of paired
+electrons and has two unpaired electrons available for
+bonding. 
+
+The simplest compounds to consider here are ammonia
+and water. It is apparent from the above electronic
+configurations that nitrogen will be able to
+bond to three hydrogen atoms, whereas oxygen can
+only bond to two. Both compounds share part of the
+tetrahedral shape we saw with sp3-hybridized carbon.
+Those orbitals not involved in bonding already
+have their full complement of electrons, and these
+occupy the remaining part of the tetrahedral array
+(Figure 2.21). These electrons are not inert, but play
+a major role in chemical reactions; we refer to them
+as lone pair electrons.
+These orbital pictures tend to get a little confusing,
+in that we really need to put in the elemental symbol
+to distinguish it from carbon, and we usually wish
+to show the lone pair electrons. We accordingly
+use a compromise representation that employs the
+cleaner line drawings for part of the structure and
+shows the all-important orbital with its lone pair
+of electrons. These are duly shown for ammonia
+and water.
+The tetrahedral geometry resultant from these sp3-
+hybridized nitrogen and oxygen atoms is found to
+exist in both ammonia and water. Bond angles in
+these molecules are not quite the 109. of the perfect
+tetrahedron, because the electrons in the lone pair
+atomic orbital are not involved in bonding. They are,
+therefore, closer to the nucleus than the electrons
+in the N.H or O.H bond ƒÐ molecular orbitals.
+Lone pairs thus tend to exert a greater electronic
+repulsive force between themselves, and also towards
+the bonding electrons, than the ƒÐ bonding electrons
+do to each other. The net result is that bond angles
+between lone pairs, or between lone pairs and ƒÐ
+bonds, are somewhat greater than between ƒÐ bonds,
+a distortion of the perfect tetrahedral array.
+
+
+Lone pair electrons may be used in bonding. Since
+they already have a complement of two electrons,
+bonds will need to be made to an atom that is electron
+deficient, e.g. a proton. Thus, the ammonium cation
+and the hydronium cation also share tetrahedral
+geometry, and each possesses a ó bond formed from
+lone pair electrons.
+
+The hydronium cation still possesses a lone pair of
+electrons. It does not bond to a second proton for the
+simple reason that the cation would then be required
+to take on an unfavourable double positive charge.
+ð bonds
+When we consider double bonds to oxygen, as in
+carbonyl groups (C=O) or to nitrogen, as in imine
+functions (C=N), we find that experimental data are
+best accommodated by the premise that these atoms
+are sp2 hybridized (Figure 2.22). This effectively
+follows the pattern for carbon–carbon double bonds
+(see Section 2.6.2). The double bond is again a
+combination of a ó bond plus a ð bond resulting
+from overlap of p atomic orbitals. The carbony
+oxygen carries two lone pairs in sp2 orbitals, whereas
+nitrogen carries one. Thus, the main difference from
+the alkene structure, apart from the atoms involved,
+is that lone pairs in atomic orbitals replace one or
+more of the ó molecular orbitals that constituted the
+C–H bonds. The atoms around the double bond are
+in a planar array, just as in an alkene.
+Triple bonds are also encountered in cyanides/nitriles.
+We can compare these with alkynes in much
+the same way (see Section 2.6.2). With sp-hybridized
+nitrogen, we can form one C–N ó bond and two C–N ð bonds, leaving a lone pair of electrons on
+nitrogen in an sp atomic orbital (Figure 2.23). The
+cyanide/nitrile system is linear, just like an alkyne.
+
+
+
+
+Non-Polar Covalent Bond: a bond where the electrons are shared equally
