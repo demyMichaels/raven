@@ -1,0 +1,1 @@
+The resources below on Chemistry have been provided by WAEC to assist you understand the required standards expected in Chemistry final Examination. Students performance in examination under review was done by the Chief examiner, this you will see while exploring links like General Comment, Performance, Weaknesses, Strength and Expected Answers to Questions.
