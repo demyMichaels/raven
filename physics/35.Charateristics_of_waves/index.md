@@ -1,6 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Characteristics of Waves| The Nucleus</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-c. Characteristics/Properties
-i. reflection, refraction, diffraction and plane polarization
-ii. Superposition of waves e.g. interfernce 
-iii. Beats
-iv. Doppler effects (qualitative treatement only)
+    <style>
+        /* --- THEME VARIABLES (Scientific Blue & Teal) --- */
+        :root {
+            --bg-deep: #0B1A2F;
+            --bg-surface: #12263A;
+            --primary: #2A7F8F;
+            --accent: #4ECDC4;
+            --text-main: #FFFFFF;
+            --text-muted: #9FC7D4;
+            --border: rgba(42, 127, 143, 0.25);
+            --card-hover: rgba(42, 127, 143, 0.15);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'Inter', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Background */
+        .glow-orb {
+            position: fixed; 
+            width: min(400px, 80vw); 
+            height: min(400px, 80vw);
+            background: var(--primary); 
+            filter: blur(min(150px, 10vw)); 
+            opacity: 0.12;
+            border-radius: 50%; 
+            z-index: -1; 
+            pointer-events: none;
+        }
+        .glow-1 { top: -10vh; left: -10vw; }
+        .glow-2 { bottom: -10vh; right: -10vw; background: var(--accent); opacity: 0.1; }
+
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 30px 30px, var(--border) 1px, transparent 1px),
+                linear-gradient(var(--border) 0.5px, transparent 0.5px),
+                linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
+            background-size: 60px 60px, 30px 30px, 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Header */
+        header {
+            padding: 0.8rem 1.5rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(11, 26, 47, 0.95); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 28px; height: 28px; 
+            background: var(--accent); 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem;
+            color: var(--bg-deep); 
+        }
+
+        .back-button {
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            background: rgba(255,255,255,0.05); 
+            padding: 6px 14px; 
+            border-radius: 50px; 
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .back-button:hover {
+            background: var(--accent);
+            color: var(--bg-deep);
+            border-color: var(--accent);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin: 2rem 0 1rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin: 1.5rem 0 0.8rem;
+            font-weight: 600;
+        }
+
+        p, li {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .definition {
+            background: rgba(78, 205, 196, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .objectives {
+            background: rgba(42, 127, 143, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .objectives h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .objectives ul {
+            columns: 2;
+            column-gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .objectives ul { columns: 1; }
+        }
+
+        .objectives li {
+            break-inside: avoid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .diagram-placeholder {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+            color: var(--text-muted);
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background orbs -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚛️</div>
+            <span>The</span> Nucleus
+        </div>
+        <a href="index.html" class="back-button">← Back to Course Map</a>
+    </header>
+
+    <main class="container">
+        <h1>Characteristics / Properties of Waves</h1>
+        <p>Waves exhibit various phenomena when they interact with obstacles, boundaries, or other waves. Understanding these properties is essential for explaining natural phenomena and technological applications.</p>
+
+        <!-- Learning Objectives (based on typical syllabus) -->
+        <div class="objectives">
+            <h3>📌 Learning Objectives</h3>
+            <p><em>Candidates should be able to:</em></p>
+            <ul>
+                <li>describe reflection, refraction, diffraction and plane polarization of waves</li>
+                <li>explain the principle of superposition of waves</li>
+                <li>distinguish between constructive and destructive interference</li>
+                <li>explain the formation of beats and determine beat frequency</li>
+                <li>describe the Doppler effect qualitatively and give examples</li>
+                <li>solve problems involving these wave properties</li>
+            </ul>
+        </div>
+
+        <!-- i. Reflection, Refraction, Diffraction and Plane Polarization -->
+        <h2>i. Reflection, Refraction, Diffraction and Plane Polarization</h2>
+
+        <h3>Reflection</h3>
+        <p>Reflection occurs when a wave hits a boundary or obstacle and bounces back. The angle of incidence equals the angle of reflection (for smooth surfaces). Examples: echo (sound), mirror image (light), water waves reflecting off a barrier.</p>
+
+        <h3>Refraction</h3>
+        <p>Refraction is the change in direction of a wave when it passes from one medium to another due to a change in speed. Frequency remains constant, but wavelength and velocity change. Examples: bending of light in water, sound waves bending in different temperature layers.</p>
+
+        <h3>Diffraction</h3>
+        <p>Diffraction is the spreading out of waves when they pass through an aperture or around an obstacle. The effect is most noticeable when the aperture size is comparable to the wavelength. Examples: sound waves bending around a door, light spreading through a narrow slit.</p>
+
+        <h3>Plane Polarization</h3>
+        <p>Polarization is the restriction of vibrations of a transverse wave to a single plane. Only transverse waves (like light) can be polarized; longitudinal waves (sound) cannot. Polarization occurs when waves pass through a polarizing filter or reflect off surfaces. Examples: Polaroid sunglasses, 3D movie glasses, antenna orientation.</p>
+
+        <div class="diagram-placeholder">
+            [Diagrams: Reflection (incident = reflected angle), Refraction (bending at interface), Diffraction (spreading through slit), Polarization (vibrations restricted to one plane)]
+        </div>
+
+        <!-- ii. Superposition of Waves e.g. Interference -->
+        <h2>ii. Superposition of Waves e.g. Interference</h2>
+        <p>The <strong>principle of superposition</strong> states that when two or more waves meet at a point, the resultant displacement is the vector sum of the individual displacements. This leads to interference.</p>
+        <ul>
+            <li><strong>Constructive interference:</strong> occurs when waves are in phase (path difference = nλ) – amplitudes add, resulting in a larger amplitude.</li>
+            <li><strong>Destructive interference:</strong> occurs when waves are out of phase (path difference = (n+½)λ) – amplitudes cancel, resulting in smaller or zero amplitude.</li>
+        </ul>
+        <p><strong>Examples:</strong> Young's double-slit experiment (light), interference patterns from two speakers (sound), thin film colors (soap bubbles).</p>
+
+        <div class="card">
+            <p><strong>Important condition for observable interference:</strong> The sources must be coherent (same frequency and constant phase difference).</p>
+        </div>
+
+        <!-- iii. Beats -->
+        <h2>iii. Beats</h2>
+        <p>Beats are periodic variations in loudness (or intensity) heard when two sound waves of slightly different frequencies interfere. The frequency of the beats (beat frequency) equals the difference between the two frequencies:</p>
+        <div class="definition">
+            <strong>Beat frequency:</strong> f<sub>beat</sub> = |f₁ – f₂|
+        </div>
+        <p><strong>Explanation:</strong> When two waves with frequencies f₁ and f₂ superpose, they alternately reinforce and cancel, producing a waxing and waning sound. Beats are used in tuning musical instruments and detecting small frequency differences.</p>
+        <p><strong>Example:</strong> If two tuning forks of frequencies 256 Hz and 260 Hz are sounded together, the beat frequency is 4 Hz (four beats per second).</p>
+
+        <!-- iv. Doppler Effect (qualitative treatment only) -->
+        <h2>iv. Doppler Effect (qualitative treatment only)</h2>
+        <p>The Doppler effect is the apparent change in frequency of a wave due to relative motion between the source and the observer. It occurs for all types of waves (sound, light, etc.).</p>
+        <ul>
+            <li><strong>Source moving towards observer:</strong> Waves are compressed, wavelength decreases → frequency increases (higher pitch for sound; blueshift for light).</li>
+            <li><strong>Source moving away from observer:</strong> Waves are stretched, wavelength increases → frequency decreases (lower pitch; redshift).</li>
+            <li><strong>Observer moving relative to source:</strong> Similar effect; the relative speed matters.</li>
+        </ul>
+        <p><strong>Everyday examples:</strong> Siren of an ambulance sounds higher as it approaches and lower as it recedes. Radar speed guns use Doppler shift of radio waves. In astronomy, redshift of galaxies indicates they are moving away (expanding universe).</p>
+        <div class="definition">
+            <strong>Qualitative summary:</strong> The frequency increases when source and observer approach each other; decreases when they move apart.
+        </div>
+
+        <!-- Additional notes / summary table -->
+        <h2>Summary Table: Wave Properties</h2>
+        <table>
+            <thead>
+                <tr><th>Phenomenon</th><th>Description</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Reflection</td><td>Bouncing back of waves at a boundary</td><td>Echo, mirror image</td></tr>
+                <tr><td>Refraction</td><td>Change of direction due to speed change</td><td>Light bending in water</td></tr>
+                <tr><td>Diffraction</td><td>Spreading of waves around obstacles</td><td>Sound heard around a corner</td></tr>
+                <tr><td>Polarization</td><td>Restriction of vibration to one plane (transverse waves only)</td><td>Polaroid sunglasses</td></tr>
+                <tr><td>Interference</td><td>Superposition of waves leading to reinforcement or cancellation</td><td>Young's double-slit</td></tr>
+                <tr><td>Beats</td><td>Periodic variation in intensity due to superposition of waves of slightly different frequencies</td><td>Piano tuning</td></tr>
+                <tr><td>Doppler Effect</td><td>Apparent frequency change due to relative motion</td><td>Ambulance siren</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Check Your Understanding -->
+        <h2>Check Your Understanding</h2>
+        <div class="card">
+            <p><strong>Q1:</strong> What is the difference between constructive and destructive interference?</p>
+            <p><em>Answer:</em> Constructive occurs when waves are in phase, amplitudes add; destructive occurs when waves are out of phase, amplitudes cancel.</p>
+            <hr>
+            <p><strong>Q2:</strong> Why can sound waves not be polarized?</p>
+            <p><em>Answer:</em> Because sound waves are longitudinal; polarization requires transverse vibrations.</p>
+            <hr>
+            <p><strong>Q3:</strong> A stationary observer hears a frequency drop as a source passes by. What wave property does this illustrate?</p>
+            <p><em>Answer:</em> Doppler effect.</p>
+            <hr>
+            <p><strong>Q4:</strong> Two tuning forks of frequencies 512 Hz and 508 Hz are sounded together. Calculate the beat frequency.</p>
+            <p><em>Answer:</em> f_beat = |512 – 508| = 4 Hz.</p>
+        </div>
+
+        <hr>
+        <p>This guide covers the essential characteristics of waves. Use the back button to return to the course map.</p>
+    </main>
+
+    <footer>
+        <p>The Nucleus – Physics Education for JAMB/WAEC/NECO</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Propagation of Sound | The Nucleus</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Scientific Blue & Teal) --- */
+        :root {
+            --bg-deep: #0B1A2F;
+            --bg-surface: #12263A;
+            --primary: #2A7F8F;
+            --accent: #4ECDC4;
+            --text-main: #FFFFFF;
+            --text-muted: #9FC7D4;
+            --border: rgba(42, 127, 143, 0.25);
+            --card-hover: rgba(42, 127, 143, 0.15);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'Inter', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Background */
+        .glow-orb {
+            position: fixed; 
+            width: min(400px, 80vw); 
+            height: min(400px, 80vw);
+            background: var(--primary); 
+            filter: blur(min(150px, 10vw)); 
+            opacity: 0.12;
+            border-radius: 50%; 
+            z-index: -1; 
+            pointer-events: none;
+        }
+        .glow-1 { top: -10vh; left: -10vw; }
+        .glow-2 { bottom: -10vh; right: -10vw; background: var(--accent); opacity: 0.1; }
+
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 30px 30px, var(--border) 1px, transparent 1px),
+                linear-gradient(var(--border) 0.5px, transparent 0.5px),
+                linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
+            background-size: 60px 60px, 30px 30px, 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Header */
+        header {
+            padding: 0.8rem 1.5rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(11, 26, 47, 0.95); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 28px; height: 28px; 
+            background: var(--accent); 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem;
+            color: var(--bg-deep); 
+        }
+
+        .back-button {
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            background: rgba(255,255,255,0.05); 
+            padding: 6px 14px; 
+            border-radius: 50px; 
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .back-button:hover {
+            background: var(--accent);
+            color: var(--bg-deep);
+            border-color: var(--accent);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin: 2rem 0 1rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin: 1.5rem 0 0.8rem;
+            font-weight: 600;
+        }
+
+        p, li {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .definition {
+            background: rgba(78, 205, 196, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .objectives {
+            background: rgba(42, 127, 143, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .objectives h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .objectives ul {
+            columns: 2;
+            column-gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .objectives ul { columns: 1; }
+        }
+
+        .objectives li {
+            break-inside: avoid;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .diagram-placeholder {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+            color: var(--text-muted);
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background orbs -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚛️</div>
+            <span>The</span> Nucleus
+        </div>
+        <a href="index.html" class="back-button">← Back to Course Map</a>
+    </header>
+
+    <main class="container">
+        <h1>Propagation of Sound</h1>
+        <p>Sound is a mechanical wave that requires a material medium for its propagation. This page covers the fundamental principles of sound propagation, speed in different media, reflection phenomena (echoes and reverberation), and their practical applications.</p>
+
+        <!-- Learning Objectives -->
+        <div class="objectives">
+            <h3>📌 Learning Objectives</h3>
+            <p><em>Candidates should be able to:</em></p>
+            <ul>
+                <li>determine the need for a material medium in the propagation of sound waves</li>
+                <li>compare the speed of sound in solids, liquids and air</li>
+                <li>relate the effects of temperature and pressure to the speed of sound in air</li>
+                <li>solve problems on echoes, reverberation and speed</li>
+                <li>compare the disadvantages and advantages of echoes</li>
+                <li>explain applications of echoes and reverberation</li>
+            </ul>
+        </div>
+
+        <!-- i. Necessity for a material medium -->
+        <h2>i. Necessity for a Material Medium</h2>
+        <p>Sound is a mechanical wave, meaning it requires a material medium (solid, liquid, or gas) to travel. It cannot propagate through a vacuum because there are no particles to transmit the vibrations.</p>
+        <p><strong>Experiment:</strong> An electric bell is placed inside a glass jar and the air is gradually removed. As the air is pumped out, the sound becomes fainter until it is no longer heard, demonstrating that sound needs a medium.</p>
+        <div class="definition">
+            <strong>Key point:</strong> Sound travels through solids, liquids, and gases, but not through vacuum.
+        </div>
+
+        <!-- ii. Speed of sound in solids, liquids and air -->
+        <h2>ii. Speed of Sound in Solids, Liquids and Air</h2>
+        <p>The speed of sound depends on the elasticity and density of the medium. In general, sound travels fastest in solids, slower in liquids, and slowest in gases.</p>
+        <table>
+            <thead>
+                <tr><th>Medium</th><th>Typical Speed (m/s)</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Solids (e.g., steel)</td><td>~5000 – 6000</td><td>High elasticity; particles are closely packed.</td></tr>
+                <tr><td>Liquids (e.g., water)</td><td>~1500</td><td>Moderate elasticity; particles less tightly bound than solids.</td></tr>
+                <tr><td>Gases (e.g., air at 0°C)</td><td>~331</td><td>Low elasticity; particles far apart.</td></tr>
+            </tbody>
+        </table>
+        <p>Formula for speed in air: <strong>v = 331 + 0.6T</strong> (where T is temperature in °C). Speed increases with temperature.</p>
+        <p>Effect of pressure: At constant temperature, speed of sound in air is independent of pressure (because density changes proportionally with pressure).</p>
+
+        <!-- iii. Reflection of sound: echoes, reverberation and applications -->
+        <h2>iii. Reflection of Sound: Echoes, Reverberation and Applications</h2>
+        <p>Sound waves reflect off hard surfaces (e.g., walls, cliffs) just like light reflects off mirrors.</p>
+        <h3>Echo</h3>
+        <p>An echo is a distinct, reflected sound heard after the original sound. It occurs when the reflecting surface is far enough (typically >17 m) that the reflected sound arrives after the original sound has ceased (persistence of hearing ~0.1 s).</p>
+        <div class="card">
+            <p><strong>Distance calculation:</strong> If the speed of sound is v and the time between the original sound and echo is t, then the distance to the reflecting surface d is: <span class="formula">d = (v × t) / 2</span> (because sound travels to the surface and back).</p>
+        </div>
+
+        <h3>Reverberation</h3>
+        <p>Reverberation is the persistence of sound in an enclosed space due to multiple reflections. It is the "echo" effect you hear in a large hall or auditorium where sound lingers for a short time. Reverberation time is the time taken for the sound to decay by 60 dB.</p>
+        <p><strong>Applications of echoes and reverberation:</strong></p>
+        <ul>
+            <li><strong>Sonar (Sound Navigation and Ranging):</strong> Ships use echoes of ultrasonic waves to detect underwater objects and measure depth.</li>
+            <li><strong>Echo sounding / Depth finding:</strong> Determining ocean depth using reflected sound.</li>
+            <li><strong>Medical imaging (ultrasound):</strong> Echoes of high-frequency sound waves create images of internal organs.</li>
+            <li><strong>Architectural acoustics:</strong> Controlling reverberation in concert halls, auditoriums, and recording studios to enhance sound quality.</li>
+            <li><strong>Bats and dolphins:</strong> Use echolocation (echoes) to navigate and hunt.</li>
+        </ul>
+
+        <!-- iv. Advantages and disadvantages of echoes and reverberations -->
+        <h2>iv. Advantages and Disadvantages of Echoes and Reverberations</h2>
+        <table>
+            <thead>
+                <tr><th>Phenomenon</th><th>Advantages</th><th>Disadvantages</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Echo</strong></td>
+                    <td>
+                        <ul style="margin:0; padding-left:1.2rem;">
+                            <li>Used in sonar, ultrasound, depth sounding.</li>
+                            <li>Used in navigation by bats/dolphins.</li>
+                            <li>Can be used to measure distance (e.g., cliff or wall).</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul style="margin:0; padding-left:1.2rem;">
+                            <li>In telephone/radio communication, echoes cause distortion.</li>
+                            <li>Unwanted echoes in large empty halls can make speech unclear.</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Reverberation</strong></td>
+                    <td>
+                        <ul style="margin:0; padding-left:1.2rem;">
+                            <li>Adds richness to music (concerts, churches).</li>
+                            <li>Improves sound quality in auditoriums when controlled.</li>
+                            <li>Used in sound recording to create ambiance.</li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul style="margin:0; padding-left:1.2rem;">
+                            <li>Excessive reverberation causes speech to become indistinct (e.g., in large empty halls).</li>
+                            <li>Interferes with clarity in classrooms or conference rooms.</li>
+                            <li>In recording studios, unwanted reverberation can ruin a take.</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Solving problems on echoes -->
+        <h2>Numerical Problems on Echoes and Speed</h2>
+        <div class="card">
+            <p><strong>Example 1:</strong> A man stands between two cliffs and claps his hands. He hears the first echo after 2 seconds and the second echo after 3 seconds. If the speed of sound is 340 m/s, find the distance between the cliffs.</p>
+            <p><em>Solution:</em> Distance to first cliff d₁ = (v × t₁)/2 = (340 × 2)/2 = 340 m. Distance to second cliff d₂ = (340 × 3)/2 = 510 m. Distance between cliffs = d₁ + d₂ = 340 + 510 = 850 m.</p>
+            <hr>
+            <p><strong>Example 2:</strong> A ship sends out an ultrasound pulse and receives its echo from the seabed after 4 seconds. If the speed of sound in water is 1500 m/s, find the depth of the sea.</p>
+            <p><em>Solution:</em> Depth d = (v × t)/2 = (1500 × 4)/2 = 3000 m.</p>
+            <hr>
+            <p><strong>Example 3:</strong> What is the minimum distance to hear a distinct echo if the speed of sound is 340 m/s and the persistence of hearing is 0.1 s?</p>
+            <p><em>Solution:</em> For echo to be distinct, the reflected sound must arrive after 0.1 s. Distance = (v × t)/2 = (340 × 0.1)/2 = 17 m.</p>
+        </div>
+
+        <!-- Effects of temperature and pressure -->
+        <h2>Effect of Temperature and Pressure on Speed of Sound in Air</h2>
+        <ul>
+            <li><strong>Temperature:</strong> Speed increases with temperature. v ∝ √T (in Kelvin). Approximate formula: v = 331 + 0.6T (T in °C).</li>
+            <li><strong>Pressure:</strong> At constant temperature, speed is independent of pressure. Reason: Increase in pressure increases density proportionally, so v = √(γP/ρ) remains constant.</li>
+        </ul>
+
+        <!-- Check Your Understanding -->
+        <h2>Check Your Understanding</h2>
+        <div class="card">
+            <p><strong>Q1:</strong> Why can sound not travel through a vacuum?</p>
+            <p><em>Answer:</em> Sound is a mechanical wave and requires particles to transmit vibrations; vacuum has no particles.</p>
+            <hr>
+            <p><strong>Q2:</strong> In which medium does sound travel fastest: air, water, or steel?</p>
+            <p><em>Answer:</em> Steel (solids).</p>
+            <hr>
+            <p><strong>Q3:</strong> How does an increase in temperature affect the speed of sound in air?</p>
+            <p><em>Answer:</em> Speed increases by approximately 0.6 m/s per °C.</p>
+            <hr>
+            <p><strong>Q4:</strong> A person shouts in a valley and hears an echo after 2.5 s. If the speed of sound is 340 m/s, how far away is the cliff?</p>
+            <p><em>Answer:</em> d = (340 × 2.5)/2 = 425 m.</p>
+            <hr>
+            <p><strong>Q5:</strong> Give one advantage and one disadvantage of reverberation.</p>
+            <p><em>Answer:</em> Advantage: enhances music in concert halls. Disadvantage: can make speech unclear if excessive.</p>
+        </div>
+
+        <hr>
+        <p>This guide covers the propagation of sound, including speed in different media, reflection phenomena, and practical applications. Use the back button to return to the course map.</p>
+    </main>
+
+    <footer>
+        <p>The Nucleus – Physics Education for JAMB/WAEC/NECO</p>
+    </footer>
+</body>
+</html>
