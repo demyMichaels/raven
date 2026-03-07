@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Classification of Waves | The Nucleus</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Scientific Blue & Teal) --- */
+        :root {
+            --bg-deep: #0B1A2F;
+            --bg-surface: #12263A;
+            --primary: #2A7F8F;
+            --accent: #4ECDC4;
+            --text-main: #FFFFFF;
+            --text-muted: #9FC7D4;
+            --border: rgba(42, 127, 143, 0.25);
+            --card-hover: rgba(42, 127, 143, 0.15);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'Inter', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Background */
+        .glow-orb {
+            position: fixed; 
+            width: min(400px, 80vw); 
+            height: min(400px, 80vw);
+            background: var(--primary); 
+            filter: blur(min(150px, 10vw)); 
+            opacity: 0.12;
+            border-radius: 50%; 
+            z-index: -1; 
+            pointer-events: none;
+        }
+        .glow-1 { top: -10vh; left: -10vw; }
+        .glow-2 { bottom: -10vh; right: -10vw; background: var(--accent); opacity: 0.1; }
+
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 30px 30px, var(--border) 1px, transparent 1px),
+                linear-gradient(var(--border) 0.5px, transparent 0.5px),
+                linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
+            background-size: 60px 60px, 30px 30px, 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Header */
+        header {
+            padding: 0.8rem 1.5rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(11, 26, 47, 0.95); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 28px; height: 28px; 
+            background: var(--accent); 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem;
+            color: var(--bg-deep); 
+        }
+
+        .back-button {
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            background: rgba(255,255,255,0.05); 
+            padding: 6px 14px; 
+            border-radius: 50px; 
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .back-button:hover {
+            background: var(--accent);
+            color: var(--bg-deep);
+            border-color: var(--accent);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin: 2rem 0 1rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin: 1.5rem 0 0.8rem;
+            font-weight: 600;
+        }
+
+        p, li {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Cards for formulas / key points */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .definition {
+            background: rgba(78, 205, 196, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .objectives {
+            background: rgba(42, 127, 143, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .objectives h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .objectives ul {
+            columns: 2;
+            column-gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .objectives ul { columns: 1; }
+        }
+
+        .objectives li {
+            break-inside: avoid;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        /* Diagram placeholders */
+        .diagram-placeholder {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+            color: var(--text-muted);
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background orbs -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚛️</div>
+            <span>The</span> Nucleus
+        </div>
+        <a href="index.html" class="back-button">← Back to Course Map</a>
+    </header>
+
+    <main class="container">
+        <h1>Classification of Waves</h1>
+        <p>Waves can be classified based on their nature, the direction of particle vibration, and their energy transfer characteristics. This page covers the fundamental classifications required for secondary school physics (JAMB/WAEC/NECO).</p>
+
+        <!-- Learning Objectives -->
+        <div class="objectives">
+            <h3>📌 Learning Objectives</h3>
+            <p><em>Candidates should be able to:</em></p>
+            <ul>
+                <li>distinguish between mechanical and electromagnetic waves</li>
+                <li>differentiate between longitudinal and transverse waves</li>
+                <li>distinguish between stationary and progressive waves</li>
+                <li>give examples of waves from springs, ropes, stretched strings and the ripple tank</li>
+                <li>identify the type of wave produced in different media</li>
+                <li>explain the formation of stationary waves</li>
+            </ul>
+        </div>
+
+        <!-- i. Mechanical vs Electromagnetic Waves -->
+        <h2>i. Mechanical vs Electromagnetic Waves</h2>
+        <p>Waves are broadly divided based on whether they require a medium to travel.</p>
+        <table>
+            <thead>
+                <tr><th>Mechanical Waves</th><th>Electromagnetic Waves</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Require a material medium (solid, liquid, or gas).</td><td>Can travel through vacuum; no medium needed.</td></tr>
+                <tr><td>Examples: sound waves, water waves, seismic waves, waves on a string.</td><td>Examples: light, radio waves, X‑rays, microwaves, ultraviolet.</td></tr>
+                <tr><td>Speed depends on the elastic and inertial properties of the medium.</td><td>Speed in vacuum is constant (c ≈ 3.0 × 10⁸ m/s).</td></tr>
+                <tr><td>Cannot travel through vacuum.</td><td>Can travel through vacuum and through some media (slower than in vacuum).</td></tr>
+            </tbody>
+        </table>
+
+        <!-- ii. Longitudinal and Transverse Waves -->
+        <h2>ii. Longitudinal and Transverse Waves</h2>
+        <p>This classification is based on the direction of vibration of particles relative to the direction of wave propagation.</p>
+        
+        <h3>Transverse Waves</h3>
+        <p>In transverse waves, particles vibrate perpendicular to the direction of wave travel.</p>
+        <ul>
+            <li><strong>Crest:</strong> the maximum displacement point above the equilibrium position.</li>
+            <li><strong>Trough:</strong> the maximum displacement point below the equilibrium position.</li>
+            <li><strong>Examples:</strong> waves on a string, light (electromagnetic), water waves (surface waves).</li>
+        </ul>
+
+        <h3>Longitudinal Waves</h3>
+        <p>In longitudinal waves, particles vibrate parallel to the direction of wave travel.</p>
+        <ul>
+            <li><strong>Compression:</strong> region where particles are closest together (high pressure).</li>
+            <li><strong>Rarefaction:</strong> region where particles are farthest apart (low pressure).</li>
+            <li><strong>Examples:</strong> sound waves in air, ultrasound, compression waves in a spring.</li>
+        </ul>
+
+        <div class="diagram-placeholder">
+            [Diagram: Transverse wave showing crests & troughs; Longitudinal wave showing compressions & rarefactions]
+        </div>
+
+        <!-- iii. Stationary (Standing) vs Progressive Waves -->
+        <h2>iii. Stationary vs Progressive Waves</h2>
+        <p>Progressive waves transfer energy from one point to another, while stationary waves are formed by the superposition of two waves of same frequency and amplitude traveling in opposite directions.</p>
+        <table>
+            <thead>
+                <tr><th>Progressive Wave</th><th>Stationary Wave</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Energy is transmitted from one place to another.</td><td>Energy is confined within the medium; no net energy transfer.</td></tr>
+                <tr><td>All particles oscillate with the same amplitude (except for phase differences).</td><td>Different particles have different amplitudes: nodes (zero amplitude) and antinodes (maximum amplitude) are formed.</td></tr>
+                <tr><td>Phase changes continuously along the wave.</td><td>All particles between two nodes are in phase; particles on opposite sides of a node are out of phase.</td></tr>
+                <tr><td>Equation: y = A sin(ωt – kx) or y = A sin(ωt + kx).</td><td>Equation: y = 2A sin(kx) cos(ωt) (result of superposition).</td></tr>
+                <tr><td>Example: wave on a long rope.</td><td>Example: vibration of a stretched string fixed at both ends (musical instruments).</td></tr>
+            </tbody>
+        </table>
+
+        <!-- iv. Examples from Springs, Ropes, Stretched Strings, and Ripple Tank -->
+        <h2>iv. Examples from Springs, Ropes, Stretched Strings, and Ripple Tank</h2>
+        
+        <h3>Springs (Slinky)</h3>
+        <ul>
+            <li><strong>Transverse wave:</strong> Shake one end of the spring sideways – a transverse pulse travels along the spring.</li>
+            <li><strong>Longitudinal wave:</strong> Push and pull one end – compressions and rarefactions travel along the spring.</li>
+        </ul>
+
+        <h3>Ropes / Stretched Strings</h3>
+        <ul>
+            <li>A flick or pluck at one end sends a transverse wave along the rope.</li>
+            <li>If the rope is fixed at both ends, standing waves (harmonics) can be set up at specific frequencies (fundamental, overtones).</li>
+        </ul>
+
+        <h3>Ripple Tank</h3>
+        <ul>
+            <li>A ripple tank is used to demonstrate water wave phenomena.</li>
+            <li>A vibrating dipper creates circular or plane waves.</li>
+            <li>It shows <strong>reflection</strong> (from barriers), <strong>refraction</strong> (by changing depth), <strong>diffraction</strong> (through gaps), and <strong>interference</strong> (from two dippers).</li>
+            <li>Water waves are mainly transverse (with some longitudinal components near the surface).</li>
+        </ul>
+
+        <div class="card">
+            <p><strong>Quick Reference:</strong></p>
+            <ul>
+                <li><strong>Spring:</strong> both transverse and longitudinal waves can be produced.</li>
+                <li><strong>Rope/String:</strong> transverse waves (progressive and standing).</li>
+                <li><strong>Ripple tank:</strong> surface water waves (mainly transverse).</li>
+            </ul>
+        </div>
+
+        <!-- Summary table of all classifications -->
+        <h2>Summary: Wave Classification at a Glance</h2>
+        <table>
+            <thead>
+                <tr><th>Classification Basis</th><th>Types</th><th>Examples</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Need for medium</td><td>Mechanical / Electromagnetic</td><td>Sound / Light</td></tr>
+                <tr><td>Direction of vibration</td><td>Transverse / Longitudinal</td><td>Rope wave / Sound wave</td></tr>
+                <tr><td>Energy transfer</td><td>Progressive / Stationary</td><td>Traveling wave on rope / Standing wave on string</td></tr>
+            </tbody>
+        </table>
+
+        <!-- Check Your Understanding -->
+        <h2>Check Your Understanding</h2>
+        <div class="card">
+            <p><strong>Q1:</strong> What type of wave is produced when you move one end of a stretched spring up and down rapidly?</p>
+            <p><em>Answer:</em> Transverse wave.</p>
+            <hr>
+            <p><strong>Q2:</strong> Can sound waves travel through vacuum? Why?</p>
+            <p><em>Answer:</em> No, sound is a mechanical wave and requires a material medium.</p>
+            <hr>
+            <p><strong>Q3:</strong> In a stationary wave on a string, what are nodes and antinodes?</p>
+            <p><em>Answer:</em> Nodes are points of zero displacement; antinodes are points of maximum displacement.</p>
+        </div>
+
+        <hr>
+        <p>This guide covers the essential classification of waves. Use the back button to return to the course map.</p>
+    </main>
+
+    <footer>
+        <p>The Nucleus – Physics Education for JAMB/WAEC/NECO</p>
+    </footer>
+</body>
+</html>
