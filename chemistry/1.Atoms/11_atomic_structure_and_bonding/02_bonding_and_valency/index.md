@@ -1,7 +1,14 @@
 2. Bonding and valency
 For many years now, these types of bonding have
-been represented in chemistry via a shorthand
+been represented in chemistry with the use of  a shorthand
 notation. 
+
+Chemists have shown them as a simple elecrostatic interaction of appropriate countr ions so that sodium chloride is conveniently draen as Na+Cl- for instance. 
+
+Ionic bonding is not usually encoutered for some atoms especially carbon.
+
+
+
 
 Ionic bonds have been shown as a simple
 electrostatic interaction of appropriate counter ions,

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Production and Propagation of Waves | The Nucleus</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- THEME VARIABLES (Scientific Blue & Teal) --- */
+        :root {
+            --bg-deep: #0B1A2F;
+            --bg-surface: #12263A;
+            --primary: #2A7F8F;
+            --accent: #4ECDC4;
+            --text-main: #FFFFFF;
+            --text-muted: #9FC7D4;
+            --border: rgba(42, 127, 143, 0.25);
+            --card-hover: rgba(42, 127, 143, 0.15);
+            --font: 'Plus Jakarta Sans', sans-serif;
+            --font-mono: 'Inter', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Background */
+        .glow-orb {
+            position: fixed; 
+            width: min(400px, 80vw); 
+            height: min(400px, 80vw);
+            background: var(--primary); 
+            filter: blur(min(150px, 10vw)); 
+            opacity: 0.12;
+            border-radius: 50%; 
+            z-index: -1; 
+            pointer-events: none;
+        }
+        .glow-1 { top: -10vh; left: -10vw; }
+        .glow-2 { bottom: -10vh; right: -10vw; background: var(--accent); opacity: 0.1; }
+
+        .pattern-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                radial-gradient(circle at 30px 30px, var(--border) 1px, transparent 1px),
+                linear-gradient(var(--border) 0.5px, transparent 0.5px),
+                linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
+            background-size: 60px 60px, 30px 30px, 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Header */
+        header {
+            padding: 0.8rem 1.5rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            background: rgba(11, 26, 47, 0.95); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; 
+            top: 0; 
+            z-index: 50;
+        }
+
+        .brand { 
+            font-size: 1.2rem; 
+            font-weight: 800; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        .brand span { color: var(--accent); }
+        .brand-icon { 
+            width: 28px; height: 28px; 
+            background: var(--accent); 
+            border-radius: 6px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem;
+            color: var(--bg-deep); 
+        }
+
+        .back-button {
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            background: rgba(255,255,255,0.05); 
+            padding: 6px 14px; 
+            border-radius: 50px; 
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .back-button:hover {
+            background: var(--accent);
+            color: var(--bg-deep);
+            border-color: var(--accent);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin: 2rem 0 1rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+            margin: 1.5rem 0 0.8rem;
+            font-weight: 600;
+        }
+
+        p, li {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Cards for formulas / key points */
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .formula {
+            font-family: var(--font-mono);
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .definition {
+            background: rgba(78, 205, 196, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .objectives {
+            background: rgba(42, 127, 143, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .objectives h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .objectives ul {
+            columns: 2;
+            column-gap: 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .objectives ul { columns: 1; }
+        }
+
+        .objectives li {
+            break-inside: avoid;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        /* Diagram placeholders */
+        .diagram-placeholder {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+            color: var(--text-muted);
+        }
+        th {
+            background: var(--bg-surface);
+            color: var(--accent);
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background orbs -->
+    <div class="glow-orb glow-1"></div>
+    <div class="glow-orb glow-2"></div>
+    <div class="pattern-overlay"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">⚛️</div>
+            <span>The</span> Nucleus
+        </div>
+        <a href="index.html" class="back-button">← Back to Course Map</a>
+    </header>
+
+    <main class="container">
+        <h1>Production and Propagation of Waves</h1>
+        <p>Wave motion is a fundamental concept in physics, describing how energy travels through a medium or vacuum. This page covers everything from basic definitions to advanced wave phenomena, aligned with JAMB/WAEC/NECO syllabi.</p>
+
+        <!-- Learning Objectives -->
+        <div class="objectives">
+            <h3>📌 Learning Objectives</h3>
+            <p><em>Candidates should be able to:</em></p>
+            <ul>
+                <li>interpret wave motion</li>
+                <li>identify vibrating systems as sources of waves</li>
+                <li>use waves as a mode of energy transfer</li>
+                <li>distinguish between particle motion and wave motion</li>
+                <li>relate frequency and wavelength to wave velocity</li>
+                <li>determine phase difference, wave number and wave vector</li>
+                <li>use the progressive wave equation to compute basic wave parameters</li>
+                <li>solve examples on wave equations</li>
+                <li>differentiate between mechanical and electromagnetic waves</li>
+                <li>differentiate between longitudinal and transverse waves</li>
+                <li>distinguish between stationary and progressive waves</li>
+                <li>indicate examples from springs, ropes, strings, ripple tank</li>
+                <li>differentiate between reflection, refraction, diffraction, polarization</li>
+                <li>analyse the principle of superposition of waves</li>
+                <li>explain beats, beat frequency and uses</li>
+                <li>explain Doppler effect of sound and applications</li>
+                <li>solve numerical problems on waves</li>
+            </ul>
+        </div>
+
+        <!-- 1. Wave Motion -->
+        <h2>1. Wave Motion</h2>
+        <p>A <strong>wave</strong> is a disturbance that travels through a medium (or vacuum) transferring energy from one point to another without the permanent displacement of the particles of the medium. In wave motion, it is the <em>energy</em> that moves, not the matter.</p>
+        <div class="definition">
+            <strong>Key idea:</strong> In a wave, particles oscillate about their mean positions but do not travel with the wave.
+        </div>
+
+        <!-- 2. Vibrating Systems as Sources -->
+        <h2>2. Vibrating Systems as Sources of Waves</h2>
+        <p>Any object that vibrates can generate waves. Examples:</p>
+        <ul>
+            <li><strong>Tuning fork:</strong> prongs vibrate, producing sound waves in air.</li>
+            <li><strong>Loudspeaker:</strong> diaphragm vibrates, creating compressions and rarefactions.</li>
+            <li><strong>String instruments:</strong> plucked strings vibrate, transferring energy to the air.</li>
+            <li><strong>Earthquake:</strong> vibrations in the Earth's crust generate seismic waves.</li>
+            <li><strong>Ripple tank:</strong> a vibrating dipper creates water waves.</li>
+        </ul>
+
+        <!-- 3. Waves as Energy Transfer -->
+        <h2>3. Waves as a Mode of Energy Transfer</h2>
+        <p>Waves carry energy without transporting matter. The energy of a wave depends on its amplitude and frequency. For example:</p>
+        <ul>
+            <li>Sound waves transfer energy from a source to a listener.</li>
+            <li>Light waves from the Sun carry energy across space.</li>
+            <li>Ocean waves can erode coastlines.</li>
+        </ul>
+
+        <!-- 4. Particle Motion vs Wave Motion -->
+        <h2>4. Particle Motion vs Wave Motion</h2>
+        <table>
+            <tr><th>Particle Motion</th><th>Wave Motion</th></tr>
+            <tr><td>Particles move from one place to another.</td><td>Particles oscillate about fixed positions.</td></tr>
+            <tr><td>Involves transfer of matter.</td><td>Involves transfer of energy only.</td></tr>
+            <tr><td>Example: a ball thrown through air.</td><td>Example: a wave on a string.</td></tr>
+        </table>
+
+        <!-- 5. Relationship v = fλ -->
+        <h2>5. Relationship between Frequency, Wavelength and Wave Velocity</h2>
+        <div class="card">
+            <p>The fundamental wave equation is:</p>
+            <div class="formula">v = f λ</div>
+            <p>where <strong>v</strong> = wave velocity (m/s), <strong>f</strong> = frequency (Hz), <strong>λ</strong> = wavelength (m).</p>
+            <p>For all waves, velocity depends on the medium (and for light, on the refractive index).</p>
+        </div>
+
+        <!-- 6. Phase Difference, Wave Number, Wave Vector -->
+        <h2>6. Phase Difference, Wave Number, Wave Vector</h2>
+        <ul>
+            <li><strong>Phase difference (Δφ):</strong> The amount by which one wave leads or lags behind another. Measured in radians or degrees. Two points on a wave separated by a distance Δx have a phase difference Δφ = (2π/λ) Δx.</li>
+            <li><strong>Wave number (k):</strong> Spatial frequency of a wave, defined as k = 2π/λ (radians per meter).</li>
+            <li><strong>Wave vector (k):</strong> A vector whose magnitude is the wave number and direction is the direction of wave propagation.</li>
+        </ul>
+        <div class="formula">k = 2π/λ &nbsp;&nbsp; Δφ = k Δx (for same direction)</div>
+
+        <!-- 7. Progressive Wave Equation -->
+        <h2>7. Progressive Wave Equation</h2>
+        <p>A progressive wave (traveling wave) transfers energy from one point to another. Its general form is:</p>
+        <div class="formula">y(x,t) = A sin(ωt ± kx + φ₀)</div>
+        <p>Where:</p>
+        <ul>
+            <li><strong>y</strong> = displacement of particle at position x and time t</li>
+            <li><strong>A</strong> = amplitude</li>
+            <li><strong>ω</strong> = angular frequency = 2πf</li>
+            <li><strong>k</strong> = wave number = 2π/λ</li>
+            <li><strong>φ₀</strong> = initial phase</li>
+            <li>Sign: <strong>–</strong> for wave traveling in +x direction, <strong>+</strong> for –x direction.</li>
+        </ul>
+
+        <!-- 8. Examples in Wave Equations -->
+        <h2>8. Examples in Wave Equations</h2>
+        <p><strong>Example 1:</strong> A wave is described by y = 0.05 sin(10πt – 2πx). Find amplitude, frequency, wavelength, and velocity.</p>
+        <p><em>Solution:</em> Compare with y = A sin(ωt – kx).<br>
+        A = 0.05 m, ω = 10π → f = ω/2π = 5 Hz, k = 2π → λ = 2π/k = 1 m, v = fλ = 5 m/s.</p>
+
+        <!-- 9. Mechanical vs Electromagnetic Waves -->
+        <h2>9. Mechanical vs Electromagnetic Waves</h2>
+        <table>
+            <tr><th>Mechanical Waves</th><th>Electromagnetic Waves</th></tr>
+            <tr><td>Require a material medium to propagate.</td><td>Can travel through vacuum.</td></tr>
+            <tr><td>Examples: sound, water waves, seismic waves.</td><td>Examples: light, radio waves, X‑rays.</td></tr>
+            <tr><td>Speed depends on elasticity and density of medium.</td><td>Speed in vacuum is constant c ≈ 3×10⁸ m/s.</td></tr>
+        </table>
+
+        <!-- 10. Longitudinal vs Transverse Waves -->
+        <h2>10. Longitudinal vs Transverse Waves</h2>
+        <ul>
+            <li><strong>Transverse waves:</strong> Particles vibrate perpendicular to direction of wave propagation. Examples: waves on a string, electromagnetic waves.</li>
+            <li><strong>Longitudinal waves:</strong> Particles vibrate parallel to direction of wave propagation. Examples: sound waves in air, compression waves in a spring.</li>
+        </ul>
+        <div class="diagram-placeholder">
+            [Diagram: Transverse vs Longitudinal wave motion would be placed here]
+        </div>
+
+        <!-- 11. Stationary vs Progressive Waves -->
+        <h2>11. Stationary (Standing) vs Progressive Waves</h2>
+        <table>
+            <tr><th>Progressive Wave</th><th>Stationary Wave</th></tr>
+            <tr><td>Energy is transferred from one point to another.</td><td>Energy is confined within the medium; no net transfer.</td></tr>
+            <tr><td>All particles oscillate with same amplitude except phase differences.</td><td>Particles have different amplitudes; nodes (zero amplitude) and antinodes (max amplitude) are formed.</td></tr>
+            <tr><td>Equation: y = A sin(ωt – kx).</td><td>Equation: y = 2A sin(kx) cos(ωt) (superposition of two opposite waves).</td></tr>
+        </table>
+
+        <!-- 12. Examples from Springs, Ropes, Strings, Ripple Tank -->
+        <h2>12. Examples from Springs, Ropes, Strings, Ripple Tank</h2>
+        <ul>
+            <li><strong>Spring:</strong> Push and pull generates longitudinal waves; shake end generates transverse waves.</li>
+            <li><strong>Rope/String:</strong> Plucking or flicking creates transverse waves.</li>
+            <li><strong>Ripple tank:</strong> Vibrating bar creates circular or plane water waves; demonstrates reflection, refraction, diffraction.</li>
+        </ul>
+
+        <!-- 13. Reflection, Refraction, Diffraction, Polarization -->
+        <h2>13. Wave Phenomena: Reflection, Refraction, Diffraction, Polarization</h2>
+        <ul>
+            <li><strong>Reflection:</strong> Waves bounce off a barrier. Angle of incidence = angle of reflection.</li>
+            <li><strong>Refraction:</strong> Change in wave speed and direction when entering a different medium. (v = fλ, frequency constant).</li>
+            <li><strong>Diffraction:</strong> Spreading of waves around obstacles or through apertures. Noticeable when gap size ≈ wavelength.</li>
+            <li><strong>Polarization:</strong> Restriction of vibration to a single plane. Only transverse waves (e.g., light) can be polarized; longitudinal waves (sound) cannot.</li>
+        </ul>
+
+        <!-- 14. Principle of Superposition -->
+        <h2>14. Principle of Superposition of Waves</h2>
+        <p>When two or more waves meet at a point, the resultant displacement is the vector sum of the individual displacements. This leads to interference:</p>
+        <ul>
+            <li><strong>Constructive interference:</strong> Waves in phase (path difference = nλ) → amplitude increases.</li>
+            <li><strong>Destructive interference:</strong> Waves out of phase (path difference = (n+½)λ) → amplitude decreases or cancels.</li>
+        </ul>
+
+        <!-- 15. Beats and Beat Frequency -->
+        <h2>15. Beats and Beat Frequency</h2>
+        <p>Beats occur when two sound waves of slightly different frequencies interfere. The loudness waxes and wanes periodically. Beat frequency:</p>
+        <div class="formula">f<sub>beat</sub> = |f₁ – f₂|</div>
+        <p><strong>Uses:</strong> Tuning musical instruments, detecting small frequency differences.</p>
+
+        <!-- 16. Doppler Effect -->
+        <h2>16. Doppler Effect of Sound and Applications</h2>
+        <p>The apparent change in frequency of a wave due to relative motion between source and observer.</p>
+        <ul>
+            <li>Source moving towards observer → frequency increases (higher pitch).</li>
+            <li>Source moving away → frequency decreases.</li>
+        </ul>
+        <p><strong>Formula (sound):</strong> f' = f (v ± v<sub>o</sub>) / (v ∓ v<sub>s</sub>) where v is speed of sound, v<sub>o</sub> observer speed, v<sub>s</sub> source speed.</p>
+        <p><strong>Applications:</strong> Radar speed guns, medical ultrasound (Doppler flow meters), astronomy (redshift).</p>
+
+        <!-- Numerical Problems -->
+        <h2>Numerical Problems on Waves</h2>
+        <div class="card">
+            <p><strong>Problem 1:</strong> A wave has a frequency of 50 Hz and a wavelength of 0.1 m. Calculate its velocity.</p>
+            <p><em>Solution:</em> v = fλ = 50 × 0.1 = 5 m/s.</p>
+            <hr>
+            <p><strong>Problem 2:</strong> Two waves of frequencies 256 Hz and 260 Hz are sounded together. Find the beat frequency.</p>
+            <p><em>Solution:</em> f_beat = |260 – 256| = 4 Hz.</p>
+            <hr>
+            <p><strong>Problem 3:</strong> A wave is represented by y = 0.02 sin(300t – 15x). Find amplitude, frequency, wavelength, and velocity.</p>
+            <p><em>Solution:</em> A = 0.02 m; ω = 300 → f = 300/(2π) ≈ 47.7 Hz; k = 15 → λ = 2π/15 ≈ 0.419 m; v = fλ ≈ 20 m/s (or v = ω/k = 300/15 = 20 m/s).</p>
+        </div>
+
+        <hr>
+        <p>This comprehensive guide covers all required topics for secondary school physics examinations. Use the back button to return to the course map.</p>
+    </main>
+
+    <footer>
+        <p>The Nucleus – Physics Education for JAMB/WAEC/NECO</p>
+    </footer>
+</body>
+</html>
