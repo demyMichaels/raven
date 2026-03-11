@@ -1,17 +1,367 @@
-Constitution:
-Meaning, Sources, Functions, Types - Written, Unwritten, Rigid and Flexible
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constitution</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .module-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+    </style>
+
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white text-center mb-4">
+                Constitution 
+            </h1>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-6">
+                
+            </p>
+
+            <!-- Overall Progress -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Overall Progress</h2>
+                    <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="overallProgress">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-6 overflow-hidden">
+                    <div id="overallProgressBar" class="progress-bar bg-gradient-to-r from-indigo-500 to-purple-600 h-6 rounded-full flex items-center justify-end px-2" style="width: 0%">
+                        <span class="text-white text-xs font-semibold" id="progressText"></span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="completedModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="inProgressModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="averageScore">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Avg. Score</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="totalQuizzes">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Quizzes Taken</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Objectives -->
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Learning Objectives</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="moduleContainer">
+            <!-- Module cards will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" id="insightsSection" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Performance Insights</h2>
+            <div id="insightsContent" class="space-y-3"></div>
+        </div>
+
+        <!-- Reset Progress Button -->
+        <div class="mt-8 text-center">
+            <button onclick="resetProgress()" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">
+                Reset All Progress
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Storage solution compatible with iframe environment
+        class StorageManager {
+            constructor() {
+                this.storage = {};
+                this.storageKey = 'constitution';
+                this.loadFromCookie();
+            }
+
+            loadFromCookie() {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === this.storageKey) {
+                        try {
+                            this.storage = JSON.parse(decodeURIComponent(value));
+                        } catch (e) {
+                            this.storage = {};
+                        }
+                        break;
+                    }
+                }
+            }
+
+            saveToCookie() {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+                document.cookie = `${this.storageKey}=${encodeURIComponent(JSON.stringify(this.storage))}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+            }
+
+            getItem(key) {
+                return this.storage[key] || null;
+            }
+
+            setItem(key, value) {
+                this.storage[key] = value;
+                this.saveToCookie();
+            }
+
+            removeItem(key) {
+                delete this.storage[key];
+                this.saveToCookie();
+            }
+
+            clear() {
+                this.storage = {};
+                this.saveToCookie();
+            }
+        }
+
+        const storage = new StorageManager();
+
+        // Learning modules data
+        const modules = [
+            {
+                id: 'lo1',
+                title: 'LO 1: Definition, sources, types and functions ',
+                file: 'define-source.html',
+                description: ''
+            },
+            {
+                id: 'lo2',
+                title: 'LO 2: 1999 Constitution',
+                file: '1999.html',
+                description: ''
+            }
+        ];
 
 
 
+        // Get progress data from storage
+        function getProgress(moduleId) {
+            const data = storage.getItem(`progress_${moduleId}`);
+            return data ? JSON.parse(data) : { completed: false, score: 0, quizTaken: false, lastVisited: null };
+        }
 
 
-Candidates should be able to:
-i. Define and identify sources and functions of constitutions;
-ii. compare the nature of constitutions.
+        // Calculate overall statistics
+        function calculateStats() {
+            let completed = 0;
+            let inProgress = 0;
+            let totalScore = 0;
+            let quizzesTaken = 0;
+
+            modules.forEach(module => {
+                const progress = getProgress(module.id);
+                if (progress.completed) {
+                    completed++;
+                }
+                if (progress.lastVisited && !progress.completed) {
+                    inProgress++;
+                }
+                if (progress.quizTaken) {
+                    quizzesTaken++;
+                    totalScore += progress.score;
+                }
+            });
+
+            const overallProgress = Math.round((completed / modules.length) * 100);
+            const averageScore = quizzesTaken > 0 ? Math.round(totalScore / quizzesTaken) : 0;
+
+            return { completed, inProgress, overallProgress, averageScore, quizzesTaken };
+        }
 
 
-CONSTITUTION 
-Definition: A constitution is defined as a body of agreed rules and principles stating how the powers of governing a country are given and how these powers are to be exercised. It also establishes a basic framework or fundamental law of the land. By so doing, it checks and sets limits not only to the actions of government but also to the actions of ordinary citizens. The constitution also states the rights, duties and obligations of the citizens. 4.3 SOURCES OF CONSTITUTION** 1. History of the people: It is necessary that the history of the people should be considered in preparing the basic rules that govern them. Past political developments do form a part of their history. 2. Acts of parliament: The laws or enactments by parliaments form part of constitutional framing. 3. Customs and traditions: They are the beliefs, institutions, norms and values of the people, and these are important in the formulation of the constitution. 4. Pasteonstitutions: Past constitutions of Nigeria and other countries most often form the basis of any new constitution. For example, the American Constitution provided a model for the 1979 Constitution of Nigeria. 5. Conventions: These are accepted political precepts and practices which often form a part of the instruments of a country’s constitution. 6. Constitutional conferences: These are meetings at which difficult constitutional issues are discussed and resolved in preparation for a new constitution. Decisions at such conferences often form the basis for a new constitution. 7. Judicial precedents: These are past judgements at law courts on constitutional matters and they often form the basis for a new constitution. **4.4 FEATURES OF A CONSTITUTION** 1. The preamble: A constitution contains a preamble which declares its aspiration. 2. The political structure: It states the structure of government; whether unitary or federal and at the same time defines the division of powers among the component units in the state. 3. The political institutions: The constitution also defines the powers and functions of these institutions such as the executive, legislative and judicial arms of government. 4. Type of relationship: It states the type of relationship that would exist among the institutions of government, i.e. whether there would be separation of powers as in the presidential system of the USA or fused separation of powers as in the parliamentary system of Britain, together with necessary checks and balances. 5. **The party system:** The constitution also reveals the type of party system to adopt – one-party, two-party or multi-party systems. 6. **Type of administrative structure:** The constitution states the administrative structure that would be operated. 7. **Fundamental human rights:** It defines the rights of citizens, their duties and obligations to the state. 8. **Fundamental objectives of the state:** It also states the fundamental principles and objectives of the state, e.g. its political ideology. 9. **The process of amendment:** The constitution equally states the process by which it (the constitution) can be amended. This is very common with all rigid constitutions where the methods of amendment are clearly stated. 10. **Citizenship:** It defines the qualifications for citizenship. It states who the citizens of a country are and how citizenship can be acquired. 11. **Tenure of office of government:** It states how long a government can stay in office. For example, the Nigerian Constitution of 1979 states that a government should stay in office for four years. 12. **How political leaders are elected:** It states how the political leaders of a country can be elected. For example, it states whether by simple majority votes or by absolute majority. 13. **Single document:** Written constitution is contained in a single document. 14. **Structure:** It defines the structure of both public and civil services. **4.5 TYPES OF CONSTITUTION** **Written Constitution** **Definition:** A written constitution is defined as a document or set of documents establishing the selection of rules embodied in a document in which the fundamental principles concerning the organisation of a political system and powers of its various agencies are written down and codified. Thus, the constitution of the USA (1789) outlines the composition of the legislature, the executive and the judiciary and their powers, as well as the fundamental rights of citizens. It also mentions a method for its amendment. **Reasons Why some Countries Adopt Written Constitution or Merits of Written Constitution** 1. **Proper documentation:** It allows for proper documentation and entrenchment of fundamental human rights. 2. **It plays the fear of domination:** It protects the minority interests against the domination by the majority. 3. **Procedure for amendment:** This is clearly stated so that no one group can change the constitution to suit their selfish purpose. 4. **Prevention of conflict in the exercise of power:**m This is possible because the constitution has stated clearly and separately the powers and functions of each organ of government. 5. **Provision of a means of assessment:** It helps in measuring and assessing the performance of government as the principles governing their operations are written down. 6. **For ease of reference:** For example, judges in the law courts can easily turn to it while deciding cases. 7. **It is easily available:** Since it is a single document, it can easily be obtained and . 8. It ensures political stability: Since it is a single document, the method of acquiring power is clearly stated. This makes for political stability. 9. Removal of uncertainty: The uncertainty usually experienced with unwritten constitution is absent here. This constitution is written and documented. 10. Unconstitutional act: In a written constitution, it is easy to ascertain unconstitutional acts. Powers and functions of organs and tiers of government are clearly defined. If there is a breach, the judiciary has the power to stop or question such unconstitutional act from any of the organs or tiers of government. 11. Organs of government: A written constitution clearly defines the powers and functions of each organ of government. 12. Emergence of dictatorship: It prevents the possible emergence of dictatorship. **Demerits of a Written Constitution** 1. Written constitutions are generally rigid: They are not easily adaptable to changing situations. 2. Discouragement of reforms: The process of amendment can take a very long time and this may discourage necessary reforms. 3. Change cannot be effected quickly: Change cannot be effected quickly as the people might desire. 4. Types of government: A written constitution may not fully accommodate different types of government, for instance, a unitary form of government. 5. Tendency to cause political tension: This may result if it does not favour a disaffection and bad blood within the political system. 6. Frequent conflict: Written constitution can cause frequent conflict among the three arms of government, especially if their functions are not properly defined. 7. A reference point: It is written and can easily be referred to, resulting in litigation as often as possible between individuals, individuals against the government, etc., especially when their rights are trampled upon. **Unwritten Constitution** Definition: It is defined as one in which the fundamental principles of the organisation and powers of a government are not codified in one document. It is usually a combination of statutes, judicial principles, customs and conventions which guide the operation of government. The constitution of Great Britain is a good example. However, the English (Britain) has left different parts of their constitution without attempting to bring them together, to classify or codify them into a coherent whole. For example, the Magna Carta Act of 1215, the Bill of Rights of 1689, Reform Act of 1832, Parliaments Acts of 1911 and 1949 respectively are part of the British Constitution that were written down but not codified in one document. **Merits of Unwritten Constitution** 1. It is flexible: It does not require special procedure for its amendment. It can be done in the same way ordinary laws are made. 2. It can be changed quickly: Since it is flexible, it can be changed as quickly as the people might desire. 3. Few individual cases: Cases involving individuals, institutions, etc. may not be as frequent as in a written constitution. 4. **Quick decisions:** Decisions are easily made and taken too. 5. **Easy to interpret:** It is flexible and not rigid and so, the constitution can easily be interpreted. 6. **Issue of flexibility:** This can help to reduce friction among the three organs of government. 7. **Emergencies:** Flexible constitutions are suitable in time of emergencies. ## Demerits of Unwritten Constitution 1. **No checks and balances:** An unwritten constitution does not have checks and balances which are usually entrenched in written constitution. 2. **Arbitrary government:** This could be made possible in the exercise of powers and functions by political leaders. 3. **Encouragement of arbitrary changes:** Since the parliament is supreme, an unwritten constitution creates way for them to act arbitrarily; they have the power to manipulate and change the constitution easily. 4. **Not easily known:** Since the customs, conventions, statutes, etc. making up an unwritten constitution are not contained in a single document, they are not easily known. 5. **No ease of reference:** It cannot be easily turned to or studied the way we study a written constitution. 6. **Violation of the rights of citizens:** This could be made possible in the process of arbitrary changes of the constitution. 7. **Violation of rights:** Lack of codification of fundamental rights of citizens undermines the ability to seek redress when rights are violated. 8. **Ambiguities:** An unwritten constitution creates ambiguities which can lead to general misinterpretations. 9. **Unsuitability:** An unwritten constitution is not suitable for multi-ethnic/multi-nacial societies. 10. **Unconstitutional acts:** It is not easy to ascertain unconstitutional acts of some public officers even among the three organs of government. 11. **Emergence of conflicts:** There is possible emergence of conflicts among the organs of government due to none definition of their roles and powers. ## Differences between written and unwritten constitutions | Written | Unwritten | |---|---| | It is written and documented. | It is unwritten and not documented. | | The constitution is rigid and difficult to amend. | The constitution is flexible and easy to amend. | | A written constitution can easily be referred to, for example, in law courts. | An unwritten constitution cannot be easily referred to because it is not written. | | It is easily available in a single document and can easily be obtained and read. | It cannot be easily documented, obtained or studied. | | The rights of individuals are entrenched in the constitution. | Individuals rights are not stated. | | Rights of individuals are easily known and they can easily seek redress in court when their rights are violated. | The rights of individuals are not known and they cannot seek redress in law court when their rights are violated. | | It ensures political stability since the method of acquiring power is clearly defined. | It cannot make for political stability since the method of acquiring powers is not properly defined. | | Written constitutions are generally rigid and not easily adaptable to changing situations. | It is flexible and can easily adapt to changing situations. | 9. Written constitutions are not useful in emergencies. 10. Method of amendment is clearly stated and no one group or individual can change the constitution. 11. Decisions are not easily made because of the large number of people involved in decision-making. 12. Powers and functions of three organs of government are clearly stated. 13. It protects the minority against the domination of the majority. Unwritten constitutions are suitable in time of emergencies. Method of amendment is not stated. Arbitrary changes could be made in the constitution by a few selfish individuals. Decisions are easily made because a few people are involved in the decision-making process. Powers and functions are not clearly defined and stated. The interests of the minority are not adequately protected. ## Methods of Amendment of Constitution Constitutions should have the ability to change with time and circumstances. Classification of constitutions, therefore, is dependent on the method of amendment. There are two different methods of amending a constitution and these are: (1) Rigid constitution (2) Flexible constitution. ### Rigid constitution Rigid constitution is defined as one that is very difficult to amend or change. It requires a special process or a complicated method before it can be amended or changed. Most written constitutions are rigid. USA, Ghana, Nigeria, Australia, etc. have rigid constitutions. ### Rigid constitutions are of four types: 1. Where the legislature could be involved in some constitutional amendment with some restrictions and at the same time may go through the electorate (referendum) before adoption. 2. Secondly, the method by which the consent of the majority of the voters is needed for constitutional amendment. 3. Final decision is undertaken by the majority of the component units or regions in a federal set-up. For example, 3/4 of the majority of states in the USA are needed for such amendment. 4. The development of new customs in the course of time or final decisions in the hands of an outside authority, e.g. leaving such decisions to the sovereign in parliament in Britain. ## Advantages of a Rigid Constitution 1. Enhancement of individuals rights: These rights are not subject to arbitrary change by the government. Adequate consideration is mostly given to the people when a change is sought. 2. Political stability: It makes way for political stability in a country. This is because of the laid down procedure for constitutional changes. 3. Reduction of violent or revolutionary intentions: It reduces violent or revolutionary intention to the barest minimum. 4. It is a check: A rigid method of amendment is a check against rash and hasty decisions. Issues have to be properly examined before actions are taken on them. 5. It serves as a restraint: A rigid constitution restrains or prevents unscrupulous politicians from manipulating the constitution to achieve selfish or sectional ends. ## Disadvantages of a Rigid Constitution 1. **Delay to rapid growth:** It is a delay to rapid growth and development. A cross-section of the citizens are consulted before amendments are made or introduced. 2. **Abuse of rights:** The democratic rights of the people may be abused or trampled upon. 3. **Complicated method of amendment:** The method of amendment is complicated and so cannot be reasonably adopted in times of emergencies. 4. **Innovations:** Rigid constitutions are resistant to change and innovations. 5. **Slow economic growth:** The amendment of a rigid constitution may lead to slow economic growth and development. ## Flexible Constitution **Definition:** It is defined as the type of constitution that is easy to amend. If the method of amending the constitution is the same as that of the passing of ordinary law, the constitution is said to be flexible. Again, the amendment can easily be done by a simple majority in the legislature. Britain, Italy, etc. have flexible constitutions. However, a flexible constitution may be written or unwritten. It is, however, opposite in some ways to rigid constitution. The constitutions of Great Britain and Italy are not written but are flexible constitutions. ## Merits of a Flexible Constitution 1. **It can easily be changed:** This is easily done to meet with fresh and unforeseen contingencies. 2. **Decision-making:** It helps government to take a quick action or decision. 3. **Introduction of new laws:** Obsolete laws can easily be replaced with new ones. 4. **It can easily meet with people's needs:** The needs and aspirations of the people can easily be met because of the ease in amending the constitution. ## Demerits of a Flexible constitution 1. **Manipulation:** The provisions of the constitution can easily be manipulated by a powerful leader. 2. **Unsuitable for a federal set-up:** This is because the rights of autonomy of some states may be jeopardised by some radical reforms. 3. **Rights of individuals:** Fundamental rights of individuals may be infringed upon and may increase the fears of the minority and inter-ethnic disharmony. 4. **Different interests and opinions:** Different interests and opinions may not be promoted but could be suppressed. 5. **Sectional interest:** A section of the country can use its influence or position to amend the constitution to achieve sectional interest. ## Differences between rigid and flexible constitutions | Rigid | Flexible | |---|---| | 1. A rigid constitution is one that is very difficult to amend. | A flexible constitution is one that is very easy to amend. | | 2. The process of amendment is a complicated method. | The amendment can easily be done by a simple majority in the legislature. | | 3. Most written constitutions are rigid. | A flexible constitution may be written or unwritten. | | 4. The provision cannot be easily manipulated because there is a procedure legally laid down for its amendment. | The provisions of the constitution can easily be manipulated by a powerful leader. | | 5. Rigid constitutions are resistant to change and innovations. | Changes and innovations can easily be brought in | - 6. The rights of individuals are enhanced and not subject to arbitrary change. 7. It is suitable for a federal set-up. This is because the rights of autonomy of the units are enhanced and respected. Decisions are based on consensus. 8. It ensures political stability since issues about political power and acquisition are clearly defined in the constitution. 9. Rigid constitutions are not suitable in time of emergencies. 10. There is no room for the arbitrary rule. Fundamental rights of citizens may be infringed upon and this may increase the fears of the minority. It is not suitable for a federal set-up. This is because the rights of autonomy of some of the units may be jeopardised by some radical reforms. Political stability is not as pronounced as in rigid constitution. Issues about governance are not clearly defined. Flexible constitutions are suitable in time of emergencies. There is possibility of an arbitrary government to evolve
+
+        // Update dashboard
+        function updateDashboard() {
+            const stats = calculateStats();
+
+            // Update overall progress
+            document.getElementById('overallProgress').textContent = stats.overallProgress + '%';
+            document.getElementById('overallProgressBar').style.width = stats.overallProgress + '%';
+            document.getElementById('progressText').textContent = stats.overallProgress >= 10 ? stats.overallProgress + '%' : '';
+
+            // Update stats
+            document.getElementById('completedModules').textContent = stats.completed;
+            document.getElementById('inProgressModules').textContent = stats.inProgress;
+            document.getElementById('averageScore').textContent = stats.averageScore + '%';
+            document.getElementById('totalQuizzes').textContent = stats.quizzesTaken;
+
+            // Update insights
+            updateInsights(stats);
+        }
+
+        // Generate insights
+        function updateInsights(stats) {
+            const insights = [];
+
+            if (stats.completed === modules.length) {
+                insights.push({ type: 'success', message: '🎉 Congratulations! You\'ve completed all learning objectives!' });
+            } else if (stats.completed > 0) {
+                insights.push({ type: 'info', message: `Great progress! You've completed ${stats.completed} out of ${modules.length} modules.` });
+            }
+
+            if (stats.averageScore >= 80) {
+                insights.push({ type: 'success', message: '✨ Excellent performance! Your average score is above 80%.' });
+            } else if (stats.averageScore >= 60 && stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '📚 Good effort! Review the material to improve your scores above 80%.' });
+            } else if (stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '💪 Keep practicing! Review the lessons and retake quizzes to improve.' });
+            }
+
+            if (stats.inProgress > 0) {
+                insights.push({ type: 'info', message: `You have ${stats.inProgress} module${stats.inProgress > 1 ? 's' : ''} in progress. Keep going!` });
+            }
+
+            if (insights.length > 0) {
+                const insightsSection = document.getElementById('insightsSection');
+                const insightsContent = document.getElementById('insightsContent');
+                insightsSection.style.display = 'block';
+
+                insightsContent.innerHTML = insights.map(insight => {
+                    const colors = {
+                        success: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+                        warning: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
+                        info: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
+                    };
+                    return `<div class="p-4 rounded-lg border ${colors[insight.type]}">${insight.message}</div>`;
+                }).join('');
+            }
+        }
+
+        
+        // Render module cards
+        function renderModules() {
+            const container = document.getElementById('moduleContainer');
+
+            container.innerHTML = modules.map(module => {
+                const progress = getProgress(module.id);
+                const statusClass = progress.completed ? 'bg-green-500' : (progress.lastVisited ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600');
+                const statusText = progress.completed ? 'Completed' : (progress.lastVisited ? 'In Progress' : 'Not Started');
+                const statusIcon = progress.completed ? '✓' : (progress.lastVisited ? '⋯' : '○');
+
+                return `
+                    <a href="${module.file}" class="
+                    module-card 
+                    block 
+                    bg-white 
+                    dark:bg-gray-800 
+                    rounded-lg 
+                    shadow-md 
+                    hover:shadow-xl 
+                    p-6 
+                    transition">
+                        <div class="
+                        flex 
+                        items-start j
+                        ustify-between 
+                        mb-3">
+                            <h3 class="
+                            text-lg 
+                            font-bold 
+                            text-gray-800 
+                            dark:text-white 
+                            flex-1">${module.title}</h3>
+                            
+                            <span class="${statusClass} 
+                            text-white 
+                            text-xs 
+                            px-2 
+                            py-1 
+                            rounded-full 
+                            font-semibold 
+                            ml-2">${statusIcon}</span>
+                        
+                            </div>
+
+                        <p class="
+                        text-sm 
+                        text-gray-600 
+                        dark:text-gray-400 
+                        mb-4">${module.description}</p>
 
 
-24. THE 1999 FOURTH REPUBLICAN CONSTITUTION OF NIGERIA 24.1 PERFORMANCE OBJECTIVES At the end of this chapter, students should be able to: (1) Highlight the origin and features of the 1999 Nigerian constitution. (2) Discuss the strengths and weaknesses of the 1999 constitution. (3) Discuss the process of constitutional review in the 1999 constitution. (4) Identify the parts of the 1999 constitution requiring review. (5) Describe the process of law making by state and national assemblies. Historical Background The Federal Republic of Nigeria is a sovereign country located in West Africa. The 1999 constitution of Nigeria is the supreme law of the Federal Republic of Nigeria since 29th May, 1999. Abdulsalami Abubakar – Head of State of Nigeria, a General in Nigerian Army, was in office between June 1998 and 29th May, 1999. It was during his leadership that Nigeria adopted this new constitution. However, the 1999 Constitution is largely a re-creation of the Second Republic Constitution of 1979 with the features of an American presidential system. 24.2 MAIN FEATURES OF THE 1999 FOURTH REPUBLICAN CONSTITUTION (1) The Executive President: A presidential system of government was adopted. Executive President is both Head of State and Government. (2) Term of Office: He stays in office for four years and can only stay for two terms of eight years. (3) The Office of the President: To occupy this office, will require the following conditions: (a) The individual must be at least 35 years of age. (b) Birth: He must be a citizen of Nigeria by birth. (2) Vice President: The office of the Vice President as second in command was created. (3) Sovereign immunity: Section 308 of the constitution provides immunity from Court proceedings i.e. namely the President and his Vice. (4) Nigerian Armed Forces: This is the Armed Forces of the Federal Republic of Nigeria. The Executive President of Nigeria is the commander-in-Chief of the Armed Forces. (5) National Assembly (NASS): A bicameral legislature was established. House of Senate and House of Representatives. Composition: Senate – 109, Representatives 360. Senate: It has elected President and Deputy President. Representatives: It also has elected speaker and deputy speaker. Terms of Office: Four years and could be re-elected as members of Senate and House of Representatives. (6) Executive Governors: Each State has an elected Executive Governor. He stays in office for four years and could be re-elected for another term of four years. In all, he stays 302 for only eight years (two terms) in office. There is a Deputy Governor to assist him. (7) **Impeachment:** Elected political leaders, e.g. President, Governors, Senate President and House of Representatives Speaker, can be impeached or removed from office, if found to have violated the provisions of the constitution. (8) **Supreme Court:** This is the highest Court in Nigeria and is located in Chapter VII of the 1999 constitution. (9) **Council of State:** It is an organ of the Nigerian Government. (10) **Freedom of religion:** The constitution allows freedom of religion – Christianity and Islam are the two major religions in Nigeria. (11) **Appointment of ministers:** Appointment of ministers (cabinet) is made by the President with approval from the National Assembly. (12) **Fundamental Human Rights:** These rights are entrenched in the constitution for e.g. right to life, right to personal liberty and right to vote and be voted for. (13) **Separation of powers:** The Constitution makes the provision for strict separation of powers among the three organs of government – Executive, Legislative and the judiciary. (14) **Federal character:** Appointments of political officers in government should not be restricted or segmented but should spread across the whole country. For example, the appointment of chairmen into federal agencies or establishments has to be done to reflect federal character, so also the appointment of ministers. (15) **Legislative powers:** Powers are shared between the federal and other tiers of government – State and local governments. (16) **Renunciation of citizenship:** The right to renounce Nigerian Citizenship is established. (17) **Democratisation:** This constitution restores democratic rule in Nigeria. 24.3 **MERITS OF THE 1999 CONSTITUTION** 1. **Popularly elected:** The Executive President and Governors of States are popularly elected by the people. 2. **Fundamental Human Rights:** These rights are respected and guaranteed in the constitution. 3. **Separation of powers:** Separation of power is also recognised by this constitution, thereby making for non-interference in the activities of each organ. 4. **Supreme Court:** It still retains the power of judicial review. That is, the power to check the excesses or the unconstitutional activities of other arms of government. 5. **Fixed term of office:** This will help to remove the tendency of any ruling party in government perpetuating itself in power. 6. **Supremacy of the constitution:** The constitution remains supreme and the provisions must be respected by all and sundry. 7. **Federal character:** This appointment respects the rights of both the majority and minority groups in the country. It brings in representatives from almost different interest groups in the country. 24.4 **DEMERITS OF THE 1999 CONSTITUTION** 1. **Costly to run:** The constitution operates a presidential system of government with comprehensive duplication of political functions, thereby making it too expensive and costly to run. 1. **Impeachment:** The impeachment clause as stipulated in the constitution could be abused by the law-makers. They can use it to victimise a political opponent. 2. **Execution of programmes:** Separation of powers could result to delay in the implementation or carrying out of government programmes. For example, the National Assembly can delay the approval of budget, ministerial and other appointments to be made by the President. 3. **Refusal of the Executive to honour the judgement of the Supreme Court:** The Executive can refuse to honour the judgement of the Supreme Court because of the Sovereign immunity it has. For example, the case between the Federal Government over non-release of funds for the local governments in Lagos State. The judgement was in favour of Lagos State, yet the Federal Government refused to oblige. 4. **Activities in government:** This could be brought to a stand-still because there is a problem between the Executive and the Legislature, especially when the ruling party does not have majority seat in parliament. The party forming the majority in the House would do everything possible to strangulate the programme of the ruling party because they are not in harmony and not ready to work together. 5. **Concentration of powers:** Some Critics have both argued that the Executive President as both Head of State and Government has too much powers concentrated in him, creating the room for abuse of powers. **Revision Questions** 1. What were the aims and objectives of Richards Constitution? 2. Discuss the provisions of the Lagos Conference of 1954. 3. What were some of the achievements of the Lyttleton Constitution? 4. What were the agreements reached at the London Constitutional Conference of 1957? 5. Mention and explain fully, the merits of the 1963 Republican Constitution. 6. What were the differences between 1963 and 1979 constitutions? 7. In what ways was 1922 Clifford Constitution in Nigeria significant? (SSCE Nov., 1989). 8. Justify the Nationalists’ opposition to the 1946 Constitution of Nigeria (SSCE Nov., 1993). 9. What were the main decisions of the General Conference of 1950 in Ibadan? (SSCE Nov., 1990). 10. Highlight the main changes introduced into the Nigerian government by the 1963 Constitution (WASSCE June, 1996). 11. What led to the collapse of the Macpherson Constitution of 1951? (SSCE Nov., 1995). 12. What were the major decisions of the London Constitutional Conference of 1953 on Nigeria? (SSCE Nov., 1976).
+                        ${progress.quizTaken ? `
+                            <div class="mb-3">
+
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600 dark:text-gray-400">Quiz Score</span>
+                                    <span class="font-semibold ${progress.score >= 80 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${progress.score}%</span>
+                                </div>
+
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                    <div class="progress-bar ${progress.score >= 80 ? 'bg-green-500' : 'bg-yellow-500'} h-2 rounded-full" style="width: ${progress.score}%"></div>
+                                </div>''
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${statusText}</span>
+                            ${progress.lastVisited ? `<span class="text-xs text-gray-400 dark:text-gray-500">Last: ${new Date(progress.lastVisited).toLocaleDateString()}</span>` : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Reset progress
+        function resetProgress() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Reset Progress?</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">This will delete all your progress, scores, and quiz results. This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition" onclick="this.closest('.fixed').remove()">Cancel</button>
+                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition" onclick="confirmReset()">Reset All</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmReset() {
+            modules.forEach(module => {
+                storage.removeItem(`progress_${module.id}`);
+            });
+            document.querySelector('.fixed').remove();
+            renderModules();
+            updateDashboard();
+        }
+
+        // Initialize
+        renderModules();
+        updateDashboard();
+    </script>
+</body>
+</html>

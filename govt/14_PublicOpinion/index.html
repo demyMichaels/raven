@@ -1,34 +1,368 @@
-Public Opinion
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Opinion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-Public Opinion:
-a. Meaning, formation and measurement.
-b. Functions and limitations.
+    <style>
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .module-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+    </style>
 
-Candidates should be able to:
-i. compare methods of assessing public opinion;
-ii. assess the functions of public opinion;
-iii. analyse the limitations of public opinion.
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white text-center mb-4">
+                Public Opinion
+            </h1>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-6">
+                
+            </p>
+
+            <!-- Overall Progress -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Overall Progress</h2>
+                    <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="overallProgress">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-6 overflow-hidden">
+                    <div id="overallProgressBar" class="progress-bar bg-gradient-to-r from-indigo-500 to-purple-600 h-6 rounded-full flex items-center justify-end px-2" style="width: 0%">
+                        <span class="text-white text-xs font-semibold" id="progressText"></span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="completedModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="inProgressModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="averageScore">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Avg. Score</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="totalQuizzes">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Quizzes Taken</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Objectives -->
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Learning Objectives</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="moduleContainer">
+            <!-- Module cards will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" id="insightsSection" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Performance Insights</h2>
+            <div id="insightsContent" class="space-y-3"></div>
+        </div>
+
+        <!-- Reset Progress Button -->
+        <div class="mt-8 text-center">
+            <button onclick="resetProgress()" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">
+                Reset All Progress
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Storage solution compatible with iframe environment
+        class StorageManager {
+            constructor() {
+                this.storage = {};
+                this.storageKey = 'publicOpinion';
+                this.loadFromCookie();
+            }
+
+            loadFromCookie() {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === this.storageKey) {
+                        try {
+                            this.storage = JSON.parse(decodeURIComponent(value));
+                        } catch (e) {
+                            this.storage = {};
+                        }
+                        break;
+                    }
+                }
+            }
+
+            saveToCookie() {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+                document.cookie = `${this.storageKey}=${encodeURIComponent(JSON.stringify(this.storage))}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+            }
+
+            getItem(key) {
+                return this.storage[key] || null;
+            }
+
+            setItem(key, value) {
+                this.storage[key] = value;
+                this.saveToCookie();
+            }
+
+            removeItem(key) {
+                delete this.storage[key];
+                this.saveToCookie();
+            }
+
+            clear() {
+                this.storage = {};
+                this.saveToCookie();
+            }
+        }
+
+        const storage = new StorageManager();
+
+        // Learning modules data
+        const modules = [
+            
+            {
+                id: 'lo1',
+                title: 'LO 1: Public Opinion.',
+                file: 'public.html',
+                description: ''
+            },
+            {
+                id: 'lo2',
+                title: 'LO 2: Mass Media. ',
+                file: 'mass-media.html',
+                description: ''
+            }
+        ];
 
 
-Overall Progress
-0%
-0
-Completed
-0
-In Progress
-0%
-Avg. Score
-0
-Quizzes Taken
-Learning Objectives
-LO 1: Public Opinion.
-○
-Not Started
-LO 2: Mass Media.
-○
-Not Started
+
+        // Get progress data from storage
+        function getProgress(moduleId) {
+            const data = storage.getItem(`progress_${moduleId}`);
+            return data ? JSON.parse(data) : { completed: false, score: 0, quizTaken: false, lastVisited: null };
+        }
 
 
-### **14. PUBLIC OPINION** **14.1 PERFORMANCE OBJECTIVES** At the end of this chapter, students should be able to: (1) Explain the term ‘public opinion’. (2) List the agents involved in the formation of public opinion. (3) Indicate the ways of measuring public opinion. (4) Examine the importance or functions of public opinion. **14.2 PUBLIC OPINION** **Definition:** Public opinion may be defined as the belief, values and attitudes which are commonly held and expressed by the majority of the people on a given public issue. In addition, it is about what people think concerning a particular national issue or question as proposed by the government. Similarly, a consensus of opinion may be formed when majority of people in a given country have a similar or same opinion on any sensitive issue of national importance. For example, during Babangida’s administration, the issue of IMF came up whether Nigeria should go to IMF or not for a loan. In the end, there was a consensus of opinion; majority of the citizens objected to the idea and the government had to shelve the plan. **14.3 CHARACTERISTICS OF PUBLIC OPINION** 1. **It is the opinion shared:** Public opinion deals with an issue affecting most citizens of a particular country and every citizen has to participate in expressing opinion. 2. **It involves public issues:** Public opinion involves public issues. 3. **Expression by private persons:** Private individuals express public opinion. It is not the government or any public institutions. 4. **The role of communication:** Communication and information play a significant role in public opinion formation. 5. **Specific issues:** Opinions expressed by the public are mainly on specific issues rather than on a general public issue. 6. **Public opinion is not static:** It is dynamic and changes from time to time. **14.4 FORMATION OF PUBLIC OPINION** 1. **Through elections:** Political parties educate the people on important public issues during campaigns, rallies, etc. and by this, opinions are formed. 2. **Through mass media:** Public opinion can be formed through mass media: radio, newspapers, television, etc. 3. **Through pressure groups and political parties:** These two groups help in the formation of public opinion. They are capable of shaping the views of the people on matters of public importance. This can be done through their manifestos, conferences, debates, etc. 4. **Bureau of information:** This bureau is established by the government to inform the public on the activities of government. It helps the public to form opinions on policies made and implemented by the government. 5. **Symposia and lectures:** It can be formed through holding of lectures and symposia where ideas on matters of public importance are expressed. 6. **Individual’s influence:** Members of the community, friends and relatives can also influence one’s opinion about public issues. 7. **The organisations that people belong to, e.g. religious/social.** 8. **Trade unions:** The trade unions that people belong to serve as the source of information which eventually helps them in building public opinion. 9. **Educational institutions:** This also helps in the formation of public opinion. 10. **Peer groups:** These groups assist in forming public opinion. 11. **Families:** Families play a major role in helping to form public opinion. **14.5 HOW PUBLIC OPINION IS DETERMINED AND MEASURED** 1. **Channels of communication:** Government can determine people’s opinion through exploring all the channels of communication, e.g. opinions expressed in newspapers, radio, television, etc. 2. **Opinions expressed by leaders of thought:** It can also be determined or measured through opinions expressed by local leaders of thought or leaders in the representative assemblies. 3. **Letters to government:** Citizens may write letters to government agencies expressing their opinions on a particular issue of national importance. 4. **Response to government policies:** Government can also take notice of public response to its policies. It could be through mass protests and demonstration for or against its programmes. 5. **Referendum or plebiscite:** Government may conduct a referendum or plebiscite to determine what the people want on any particular issue. It determines the acceptability or not of proposals put forward by the government. 6. **Telephone calls:** Most of the radio stations in Nigeria today adopt this method by presenting phone-in programmes, a sort of random sampling of the opinions of the public. 7. **Opinion poll:** Government may use opinion polls to determine the mind and views of the people on a given issue, by interviewing a cross section of the public. Those interviewed will then represent the opinions of the citizens. 8. **Through elections:** It can be measured through the outcome of elections. The result of an election could help to determine how popular or unpopular a government and its policies are. **14.6 FUNCTIONS/IMPORTANCE OF PUBLIC OPINION** 1. **Policies and activities of government:** Public opinion helps the government to know the feelings of the people concerning its policies and activities. 2. **Needs of the people:** The people’s problems, needs and desires are known to the government through public opinion. 3. **Good policies:** Public opinion helps the government to formulate adequate policies that will meet the demands and alleviate the suffering of the people. 4. **Checking the excesses of government:** Through this method, the government is made to account for its actions. 5. **Cabinet reshuffle:** Public opinion can bring about the removal of a minister or his movement to other departments. 6. **Support of the people:** It determines the extent of support the people have for such government. 7. **To be watchful:** Public opinion helps the government to be watchful over its actions or activities as it relates to the people. **14.7 DEMERITS OF PUBLIC OPINION** 1. **Difficult to measure:** It is difficult to measure the opinion of the people on a particular issue. 2. **Public opinion can be manipulated:** It can be manipulated by a few influential individuals in the society for their own selfish ends. 3. **It may not represent general opinion:** Public opinion may be the views of very few powerful and influential individuals in the society. 4. **It may give wrong picture:** It may give a wrong, confusing and distortful picture on a given issue. 5. **Not often reliable:** It is not often reliable and therefore not advisable for governments to rely on it. 6. **Views expressed by a cross-section of the society cannot be adequate:** They are few and as such cannot adequately represent the opinions of the citizens that are in the majority. Such does not make for a consensus of opinion as long as the majority is not involved. **Factors that can Promote Public Opinion in a State** 1. **Press freedom:** The use of the mass media should be maintained, so as to maintain press freedom. 2. **Bureau of information:** This should be established to receive, compile, and disseminate information. 3. **Freedom of speech and association:** By encouraging and allowing freedom of speech and association. 4. **Activities of pressure groups:** By encouraging the activities of pressure groups and other voluntary organisations. 5. **Opinion polls:** Encouraging the use of opinion polls on issues of general importance. 6. **Existence of political parties:** This will help to mould the opinion of the people. 7. **Responsible and responsive:** For example, social institutions such as families and religious centres should be able to demonstrate these. 8. **Raising literacy level:** If citizens can read and write, they will be in a better position to view and assess government polices. 9. **Democratic government:** It encourages people’s participation in the governance of their country. This involves taking part in voting and standing as a candidate to be elected in any political office. **Opinion Poll** **Meaning:** Opinion poll is a scientific method of measuring the wishes/choice of the people on a given social, political or economic issue or, for example, popularity of a government or predicting election results. **Factors that Make the Conduct of Opinion Poll Unreliable in West Africa** 1. **Lack of expertise:** Officials conducting the polls lack the necessary expert knowledge. 2. **Absence of reliable technology:** This may produce inaccurate results. 3. **Illiteracy:** A high level of illiteracy and ignorance among the people can make the conduct of opinion poll unreliable in West Africa. 4. **Problems of analysing statistical data:** This can also make the conduct of opinion poll unreliable. 5. **Lack of objectivity:** This is highly noticeable among respondents. 6. **People are scared:** Many people are not ready to cooperate with the officials conducting the polls because they are scared of being interviewed. 7. **Poor communication network:** This has the capacity of making the conduct of opinion poll unreliable in West Africa. 8. **Manipulation:** There is the possibility of manipulating the figures generated or gathered during the exercise. 9. **Traditional sentiments:** Respondents may be highly influenced by cultural, religious or traditional sentiments. 10. **Selection of sampling:** The selection of sampling may be misleading if it cannot produce the desired results. 11. **Poor funding:** This can affect negatively the expected outcome of the poll. 12. **Poor knowledge of instrument design and administration:** For example, misleading sampling techniques, incomplete or inaccurate questions and structured interview formats. 13. **Principle of confidentiality:** This principle is mostly prevalent in the civil and public services and is capable of producing inaccurate results. 14. **Falsification of information or data:** This can be done by both sources and data collectors. 15. **Nature of government:** For example, military or civilian government in place may want to influence the outcome of any opinion poll unreliable in West Africa. **Revision Questions** 1. (a) Define public opinion. (b) What are its characteristics? (WASSCE June, 1997). 2. Outline the factors that make the conduct of opinion poll unreliable in West Africa. 3. Highlight four factors that can promote public opinion in your state. ---
+        // Calculate overall statistics
+        function calculateStats() {
+            let completed = 0;
+            let inProgress = 0;
+            let totalScore = 0;
+            let quizzesTaken = 0;
 
-### **15. MASS MEDIA** **15.1 PERFORMANCE OBJECTIVES** At the end of this chapter, students should be able to: (1) Explain the meaning of mass media. (2) Discuss the roles of mass media in the day-to-day running of Government. (3) State the impact of mass media in Nigerian politics. **15.2 MASS MEDIA** **Definition:** It is the totality of means of communication within a society, state, etc. such as television, film production, radio, newspaper, magazine and the Internet including newsletter in which messages, news and information get across the population, government and its agencies. Mass media also stands as a means of entertaining, informing and instructing in a pleasurable manner. **15.3 ROLES OF MASS MEDIA IN THE DAY-TO-DAY RUNNING OF GOVERNMENT** 1. **It disseminates information:** The mass media informs the people about the activities of political parties, their programme and preparations towards any political election in the country. 2. **Education:** The mass media educates the populace on government activities, for example, in the areas of education, roads construction, transportation and health. 3. **It enlightens the people on the activities of some organisations.** For example, oil companies can use the mass media to enlighten the people on their position on youth restiveness in the Niger Delta region. Secondly, the plans to reduce environmental pollution in the area. Thirdly, it also enlightens the people on government’s amnesty plan for repentant militants in the Niger Delta area. 4. **Social responsibility:** Mass media also reports some organisations’ corporate social responsibility development programmes and projects to improve the standard of living of their host communities, e.g. some oil companies. 5. **Two-way channel:** It serves as a two-way channel of communication between the government and the people. 6. **Accountability:** It enables the people to hold their government accountable especially in the areas they have failed in their campaign promises. Governance is all about accountability. Government should be able to give account of their stewardship to the people, even while in office. For example, Lagos State government has been demonstrating this since 1999 to date. 7. **Security challenges:** The mass media is playing a crucial role in this area. It informs the public about the areas in the country where lives and property are threatened. 8. **Employment opportunities:** It provides employment opportunities to a large number of people such as editors, script writers, pressmen, etc. 9. **Revenue for the state through the payment of taxes.** 10. **Feedback:** Mass media provides feedback to government on its policies. 11. **Education:** It educates the people about their rights, duties and obligation towards the state. 12. **Instrument for change:** Mass media serves as an instrument for change in society, e.g. fighting corruption and preaching morality. 13. **Human rights:** It serves as an instrument for protecting and promoting the fundamental Human Rights of the people. 14. **Medium of national issues:** It serves as a medium through which important national issues can be raised and debated and solutions provided. 15. **Provision of a forum for criticism:** It provides a forum for making constructive criticisms on government policies. 16. **Expression of opinion:** Mass media offers an avenue for expression of opinion by the public on both national and international issues. 17. **National development:** It mobilises the people towards national development. 18. **Political participation:** People are mobilised for political participation. **15.4 THE IMPACT OF MASS MEDIA IN NIGERIAN POLITICS/ WATCHDOG** 1. **Choice of political parties:** Through the mass media, choice of political parties is always made possible. 2. **Popularising political parties:** Through T.V. advertising, political parties are made popular by impacting negatively or positively in the minds of the populace on political issues. 3. **Learner’s interest:** Mass media generally stands in the position of sustaining the leaner’s interest on any subject. 4. **Focusing and directing:** The media focuses and directs the individual’s attention towards a particular objective with a singular goal of enhancing behavioural change. 5. **Instructional media:** It has been found to occupy a prominent position in assisting individual learners to accomplish a desired level of competence. 6. **Generation of people’s interest:** One of the impacts of mass media is the generation of people’s interest for popular political participation in government. 7. **People’s mouthpiece:** The mass media developed and is now the people’s mouthpiece on issues affecting them socially, politically and economically. 8. **Accountability:** People can now hold the government accountable for their deplorable state in life and the government’s unconcerned and uncaring attitude towards their welfare generally. 9. **Awakening people’s feelings:** Another impact is the awakening of the people’s feelings to fight for their political and civic rights. 10. **Political education:** Another effect is that the people now have negative and positive feelings about their government and style of leadership. **Types of Media** In education, instructional materials, media and educational media are used interchangeably. The following are the basic classification of instructional materials: 1. **Visuals:** Visuals appeal to the sense of sight only – charts, maps, globes, etc. 2. **Audios:** Audios appeal to sense of sound only – radio, recorded tapes, telephones, talking drums, audio compact disc, etc. 3. **Audio-visuals:** Audio-visuals appeal to sense of sound and sight, television, video, video CD, DVD, computer, etc. **Mass Media – as the Watchdog** The media is the people’s watchdog. The media as the Fourth Estate of the Realm watches over the activities of government on behalf of the people. It reports to the people all the activities of government at all levels of governance – local, state and federal governments, thereby exacting much political influence. The mass media also informs and reminds the government of neglect to issues deeply affecting the people, for example, deplorable roads, lack of portable water, alarming rate of poverty, violation of people’s right and insecurity of lives and property across the country. **Revision Questions** 1. What is mass media? 2. (a) Describe the impact of mass media in Nigerian politics. (b) Outline the types of media in Nigeria. 3. Identify any five roles performed by the mass media in nation building. (WASSCE June, 2016).
+            modules.forEach(module => {
+                const progress = getProgress(module.id);
+                if (progress.completed) {
+                    completed++;
+                }
+                if (progress.lastVisited && !progress.completed) {
+                    inProgress++;
+                }
+                if (progress.quizTaken) {
+                    quizzesTaken++;
+                    totalScore += progress.score;
+                }
+            });
+
+            const overallProgress = Math.round((completed / modules.length) * 100);
+            const averageScore = quizzesTaken > 0 ? Math.round(totalScore / quizzesTaken) : 0;
+
+            return { completed, inProgress, overallProgress, averageScore, quizzesTaken };
+        }
+
+
+
+        // Update dashboard
+        function updateDashboard() {
+            const stats = calculateStats();
+
+            // Update overall progress
+            document.getElementById('overallProgress').textContent = stats.overallProgress + '%';
+            document.getElementById('overallProgressBar').style.width = stats.overallProgress + '%';
+            document.getElementById('progressText').textContent = stats.overallProgress >= 10 ? stats.overallProgress + '%' : '';
+
+            // Update stats
+            document.getElementById('completedModules').textContent = stats.completed;
+            document.getElementById('inProgressModules').textContent = stats.inProgress;
+            document.getElementById('averageScore').textContent = stats.averageScore + '%';
+            document.getElementById('totalQuizzes').textContent = stats.quizzesTaken;
+
+            // Update insights
+            updateInsights(stats);
+        }
+
+        // Generate insights
+        function updateInsights(stats) {
+            const insights = [];
+
+            if (stats.completed === modules.length) {
+                insights.push({ type: 'success', message: '🎉 Congratulations! You\'ve completed all learning objectives!' });
+            } else if (stats.completed > 0) {
+                insights.push({ type: 'info', message: `Great progress! You've completed ${stats.completed} out of ${modules.length} modules.` });
+            }
+
+            if (stats.averageScore >= 80) {
+                insights.push({ type: 'success', message: '✨ Excellent performance! Your average score is above 80%.' });
+            } else if (stats.averageScore >= 60 && stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '📚 Good effort! Review the material to improve your scores above 80%.' });
+            } else if (stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '💪 Keep practicing! Review the lessons and retake quizzes to improve.' });
+            }
+
+            if (stats.inProgress > 0) {
+                insights.push({ type: 'info', message: `You have ${stats.inProgress} module${stats.inProgress > 1 ? 's' : ''} in progress. Keep going!` });
+            }
+
+            if (insights.length > 0) {
+                const insightsSection = document.getElementById('insightsSection');
+                const insightsContent = document.getElementById('insightsContent');
+                insightsSection.style.display = 'block';
+
+                insightsContent.innerHTML = insights.map(insight => {
+                    const colors = {
+                        success: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+                        warning: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
+                        info: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
+                    };
+                    return `<div class="p-4 rounded-lg border ${colors[insight.type]}">${insight.message}</div>`;
+                }).join('');
+            }
+        }
+
+        
+        // Render module cards
+        function renderModules() {
+            const container = document.getElementById('moduleContainer');
+
+            container.innerHTML = modules.map(module => {
+                const progress = getProgress(module.id);
+                const statusClass = progress.completed ? 'bg-green-500' : (progress.lastVisited ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600');
+                const statusText = progress.completed ? 'Completed' : (progress.lastVisited ? 'In Progress' : 'Not Started');
+                const statusIcon = progress.completed ? '✓' : (progress.lastVisited ? '⋯' : '○');
+
+                return `
+                    <a href="${module.file}" class="
+                    module-card 
+                    block 
+                    bg-white 
+                    dark:bg-gray-800 
+                    rounded-lg 
+                    shadow-md 
+                    hover:shadow-xl 
+                    p-6 
+                    transition">
+                        <div class="
+                        flex 
+                        items-start j
+                        ustify-between 
+                        mb-3">
+                            <h3 class="
+                            text-lg 
+                            font-bold 
+                            text-gray-800 
+                            dark:text-white 
+                            flex-1">${module.title}</h3>
+                            
+                            <span class="${statusClass} 
+                            text-white 
+                            text-xs 
+                            px-2 
+                            py-1 
+                            rounded-full 
+                            font-semibold 
+                            ml-2">${statusIcon}</span>
+                        
+                            </div>
+
+                        <p class="
+                        text-sm 
+                        text-gray-600 
+                        dark:text-gray-400 
+                        mb-4">${module.description}</p>
+
+
+                        ${progress.quizTaken ? `
+                            <div class="mb-3">
+
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600 dark:text-gray-400">Quiz Score</span>
+                                    <span class="font-semibold ${progress.score >= 80 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${progress.score}%</span>
+                                </div>
+
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                    <div class="progress-bar ${progress.score >= 80 ? 'bg-green-500' : 'bg-yellow-500'} h-2 rounded-full" style="width: ${progress.score}%"></div>
+                                </div>''
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${statusText}</span>
+                            ${progress.lastVisited ? `<span class="text-xs text-gray-400 dark:text-gray-500">Last: ${new Date(progress.lastVisited).toLocaleDateString()}</span>` : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Reset progress
+        function resetProgress() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Reset Progress?</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">This will delete all your progress, scores, and quiz results. This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition" onclick="this.closest('.fixed').remove()">Cancel</button>
+                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition" onclick="confirmReset()">Reset All</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmReset() {
+            modules.forEach(module => {
+                storage.removeItem(`progress_${module.id}`);
+            });
+            document.querySelector('.fixed').remove();
+            renderModules();
+            updateDashboard();
+        }
+
+        // Initialize
+        renderModules();
+        updateDashboard();
+    </script>
+</body>
+</html>

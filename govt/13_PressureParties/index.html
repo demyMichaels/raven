@@ -1,124 +1,368 @@
-Pressure Groups
-Pressure Groups:
-a. Definition, types, functions and modes of operation.
-b. Differences between Pressure Groups and Political Parties.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pressure Groups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-Candidates should be able to:
-i. evaluate the functions and the modus operandi of pressure groups;
-ii. distinguish between pressure groups and political parties
+    <style>
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .module-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+    </style>
+
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white text-center mb-4">
+                Pressure Groups 
+            </h1>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-6">
+                
+            </p>
+
+            <!-- Overall Progress -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Overall Progress</h2>
+                    <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="overallProgress">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-6 overflow-hidden">
+                    <div id="overallProgressBar" class="progress-bar bg-gradient-to-r from-indigo-500 to-purple-600 h-6 rounded-full flex items-center justify-end px-2" style="width: 0%">
+                        <span class="text-white text-xs font-semibold" id="progressText"></span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="completedModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="inProgressModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="averageScore">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Avg. Score</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="totalQuizzes">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Quizzes Taken</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Objectives -->
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Learning Objectives</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="moduleContainer">
+            <!-- Module cards will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" id="insightsSection" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Performance Insights</h2>
+            <div id="insightsContent" class="space-y-3"></div>
+        </div>
+
+        <!-- Reset Progress Button -->
+        <div class="mt-8 text-center">
+            <button onclick="resetProgress()" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">
+                Reset All Progress
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Storage solution compatible with iframe environment
+        class StorageManager {
+            constructor() {
+                this.storage = {};
+                this.storageKey = 'pressureGroups';
+                this.loadFromCookie();
+            }
+
+            loadFromCookie() {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === this.storageKey) {
+                        try {
+                            this.storage = JSON.parse(decodeURIComponent(value));
+                        } catch (e) {
+                            this.storage = {};
+                        }
+                        break;
+                    }
+                }
+            }
+
+            saveToCookie() {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+                document.cookie = `${this.storageKey}=${encodeURIComponent(JSON.stringify(this.storage))}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+            }
+
+            getItem(key) {
+                return this.storage[key] || null;
+            }
+
+            setItem(key, value) {
+                this.storage[key] = value;
+                this.saveToCookie();
+            }
+
+            removeItem(key) {
+                delete this.storage[key];
+                this.saveToCookie();
+            }
+
+            clear() {
+                this.storage = {};
+                this.saveToCookie();
+            }
+        }
+
+        const storage = new StorageManager();
+
+        // Learning modules data
+        const modules = [
+            
+            {
+                id: 'lo1',
+                title: 'LO 1: Definition, types, functions and modes of operation.',
+                file: 'pressure.html',
+                description: ''
+            },
+            {
+                id: 'lo2',
+                title: 'LO 2: Differences between Pressure Groups and Political Parties',
+                file: 'diff.html',
+                description: ''
+            }
+        ];
 
 
 
-
-Overall Progress
-0%
-0
-Completed
-0
-In Progress
-0%
-Avg. Score
-0
-Quizzes Taken
-Learning Objectives
-LO 1: Definition, types, functions and modes of operation.
-○
-Not Started
-LO 2: Differences between Pressure Groups and Political Parties
-○
-Not Started
-Reset All Progress
+        // Get progress data from storage
+        function getProgress(moduleId) {
+            const data = storage.getItem(`progress_${moduleId}`);
+            return data ? JSON.parse(data) : { completed: false, score: 0, quizTaken: false, lastVisited: null };
+        }
 
 
-10. PRESSURE GROUPS
-10.1 PERFORMANCE OBJECTIVES
-At the end of this chapter, students should be able to:
+        // Calculate overall statistics
+        function calculateStats() {
+            let completed = 0;
+            let inProgress = 0;
+            let totalScore = 0;
+            let quizzesTaken = 0;
 
-Define pressure groups.
-Identify types of pressure groups.
-Describe their characteristics.
-Analyse their modes of action.
-Indicate the functions of pressure groups.
-Contrast pressure groups with political parties.
-10.2 PRESSURE GROUP
-Definition: Pressure group is defined as organised groups, which influence government decisions socially or economically, without necessarily entering into election activities for the control of government. In doing this, they influence the executive, legislature and other officials of government to achieve their immediate aims. However, some have argued that pressure groups are part of the political process and that they attempt to reinforce or change the direction of government policy, but do not wish, as it were, to be in government.
+            modules.forEach(module => {
+                const progress = getProgress(module.id);
+                if (progress.completed) {
+                    completed++;
+                }
+                if (progress.lastVisited && !progress.completed) {
+                    inProgress++;
+                }
+                if (progress.quizTaken) {
+                    quizzesTaken++;
+                    totalScore += progress.score;
+                }
+            });
 
-10.3 TYPES OF PRESSURE GROUPS
-Economic pressure groups: These are mostly manufacturers' associations like Chamber of Commerce, Cocoa Farmers Union, Cotton Producers Union, etc. They mount pressure on and at the same time influence the government whenever they have problems on issues affecting their members.
-Professional pressure groups: They are organised professional associations like the Nigerian Medical Association (NMA), Nigerian Bar Association (NBA), Nigeria Union of Teachers (NUT), Nigeria Union of Journalists (NUJ), etc. They can go on strike to press home their demands for an improved better condition of their members.
-Educational pressure groups: These groups have to do with lecturers in colleges and higher institutions of learning, students and the non-academic staff of these institutions.
-Fig. 10.1 Members of the Nigeria Labour Congress
+            const overallProgress = Math.round((completed / modules.length) * 100);
+            const averageScore = quizzesTaken > 0 ? Math.round(totalScore / quizzesTaken) : 0;
 
-[Image placeholder: NLC members demonstration]
+            return { completed, inProgress, overallProgress, averageScore, quizzesTaken };
+        }
 
-These groups mount pressure on government for better conditions of service and for the qualitative funding of the education sector; they sometimes go on strikes to press home their demands.
 
-Nigeria Labour Congress (NLC): All the trade unions in Nigeria are under this body. It is the parent body that officially represents the interests of the workers with the government. There are state chapters of NLC.
-Promotional interest groups: This group is out to champion the cause for an improved condition of the people's welfare. This action may not necessarily benefit the members, but the less privileged in the society. For example, the Nigerian Bar Association gives free legal services to the less privileged in the society.
-Social pressure groups: They are generally out to promote the general welfare of their members. Some of these groups are Boys Scout, Girls Guide, Rotary Club, Old Boys Association, etc.
-Religious pressure groups: These include Christians, Moslems, Traditionalists, etc. Most issues affecting them have been resolved through lobbying of the executive and the parliament.
-10.4 FUNCTIONS/IMPORTANCE OF PRESSURE GROUPS
-Offering useful suggestions: They offer useful suggestions and advise governments at local, state and national levels.
-Promotion of economic stability: This is made possible through the chamber of commerce.
-Welfare services: Pressure groups promote certain general welfare services, e.g. the Nigerian Bar Association which sometimes offers free legal services in courts.
-Acting as a link: They act as an important link between the government and the people.
-Acting as watchdogs: Pressure groups act as watchdogs over public policies and administration.
-Education: They help to educate their members on their political rights especially when these rights are infringed upon by government's decisions.
-Provision of specialised information: Pressure groups provide specialised and expert information to the government.
-Promoting members' interests: This is done through the protection of such interests.
-Provision of manpower bank: They provide manpower bank from which government can draw experts to serve in the government. For example, judges can only be appointed from within the Bar Association.
-Acting as a check: Pressure groups act as a check against dictatorship.
-Bribery and corruption: They help to prevent bribery and corruption in the political system through their activities.
-Useful information: Pressure groups provide useful information in the process of law-making.
-Policy formation: They play a vital role in assisting the government in policy formulation and implementation.
-Provision of educational programmes: These are seminars, lectures, debates, etc.
-Research: They conduct research found useful for the administration of the state on technical issues.
-Serving as yardstick: Pressure groups serve as yardstick for measuring the popularity of government policies.
-Championing the cause of the underprivileged: They assist in championing the cause of the underprivileged in the country.
-10.5 FACTORS THAT CAN AID EFFECTIVE OPERATION OF PRESSURE GROUPS
-Large size: The impact of the activities of pressure groups having large membership is more effective.
-Wealth: Financial resources enable better organization and influence.
-Strong leadership: Effective leadership enhances group effectiveness.
-Organisational structure: Well-organized groups achieve better results.
-Public sympathy: Groups with public support are more influential.
-10.6 MODES OF OPERATION OF PRESSURE GROUPS
-Lobbying: Direct contact with government officials to influence decisions.
-Strikes: Industrial action to press for demands.
-Publicity campaigns: Using media to gain public support.
-Ultimatums: Setting deadlines for government action.
-Association with international unions: Joining global organizations for wider influence.
-Pressure on executive: Influencing the executive branch directly.
-Working alliance with political parties: Collaborating with parties to advance agendas.
-Demonstrations: Public protests to draw attention to issues.
-Consultation: Participating in government policy discussions.
-Work-to-rule: Strict adherence to job descriptions without extra effort.
-Debates and symposia: Educational events to promote their positions.
-Propaganda/Letters to the press: Media engagement to shape public opinion.
-Special publications: Creating their own media materials.
-Presentation of gifts: In some contexts, offering incentives to influence decisions.
-10.7 DANGERS POSED BY THE ACTIVITIES OF PRESSURE GROUPS
-Political instability: This can result especially where the activities of pressure groups lead to the fall of government in power.
-Social disorder: The activities of pressure groups may be accompanied by social disorder, e.g. riot, violent demonstrations, etc.
-The majority may go unrepresented: Pressure groups may be taken to represent more general opinions or people which may not be so. Therefore, the majority of the general public may go unrepresented where they have interest.
-Misrepresentation: There could be misrepresentation of public opinion by a vocal few to the government.
-Misinformation of the general public: Pressure groups may disseminate wrong information through mass propaganda, thereby misinforming the general public.
-Lobbying: Pressure groups may corrupt public officials by engaging in lobbying.
-Strike action: It is two-edged. The company suffers a downturn; also the legitimate support of the people.
-Negative effect on economy: The country's economy is affected by industrial actions.
-They are self-centred: Pressure groups are self-centred. They are mostly vocal about issues affecting their members only.
-Supporting a political party: The support given to a political party by pressure groups may produce a government that does not have the masses at heart.
-10.8 DIFFERENCES BETWEEN POLITICAL PARTIES AND PRESSURE GROUPS
-Political Parties	Pressure Groups
-To contest elections and control the government.	To influence government policies and pursue the interests of the members.
-Political parties are organised to reach everybody in the society, not self-seeking.	Pressure groups are basically self-seeking, not organised to reach everybody in the society.
-Political parties tend to accommodate virtually different interests in the society in terms of membership.	Pressure groups do not accommodate different groups in the society.
-Political parties organise themselves into rallies, debates, lectures, seminars, etc. capable of projecting their ideologies in order to win more followership.	When they have successfully influenced the government, with their aims achieved, they cease to exist.
-Political parties express opinions on several issues, e.g. education, health, agriculture and housing.	Pressure groups are only concerned with matters affecting their members e.g. salaries, allowances and loans.
-Political parties pursue goals and interests that will improve the lifestyle of the people in the society.	Pressure groups pursue interests and goals that will improve the lifestyle of their members only.
-Candidates from political parties are to contest elections with the aim of being in government and ruling the people.	Candidates contest elections for the leadership of their groups or unions and not for the people.
-Revision Questions
-Define pressure groups and explain their mode of operation. (WASSCE June, 1992).
-Identify six merits of pressure groups in a democratic state. (WASSCE June, 2012).
-Outline any five differences between political parties and pressure groups.
-Highlight six dangers posed by the activities of pressure groups.
-List five weaknesses working against the success of pressure groups.
+
+        // Update dashboard
+        function updateDashboard() {
+            const stats = calculateStats();
+
+            // Update overall progress
+            document.getElementById('overallProgress').textContent = stats.overallProgress + '%';
+            document.getElementById('overallProgressBar').style.width = stats.overallProgress + '%';
+            document.getElementById('progressText').textContent = stats.overallProgress >= 10 ? stats.overallProgress + '%' : '';
+
+            // Update stats
+            document.getElementById('completedModules').textContent = stats.completed;
+            document.getElementById('inProgressModules').textContent = stats.inProgress;
+            document.getElementById('averageScore').textContent = stats.averageScore + '%';
+            document.getElementById('totalQuizzes').textContent = stats.quizzesTaken;
+
+            // Update insights
+            updateInsights(stats);
+        }
+
+        // Generate insights
+        function updateInsights(stats) {
+            const insights = [];
+
+            if (stats.completed === modules.length) {
+                insights.push({ type: 'success', message: '🎉 Congratulations! You\'ve completed all learning objectives!' });
+            } else if (stats.completed > 0) {
+                insights.push({ type: 'info', message: `Great progress! You've completed ${stats.completed} out of ${modules.length} modules.` });
+            }
+
+            if (stats.averageScore >= 80) {
+                insights.push({ type: 'success', message: '✨ Excellent performance! Your average score is above 80%.' });
+            } else if (stats.averageScore >= 60 && stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '📚 Good effort! Review the material to improve your scores above 80%.' });
+            } else if (stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '💪 Keep practicing! Review the lessons and retake quizzes to improve.' });
+            }
+
+            if (stats.inProgress > 0) {
+                insights.push({ type: 'info', message: `You have ${stats.inProgress} module${stats.inProgress > 1 ? 's' : ''} in progress. Keep going!` });
+            }
+
+            if (insights.length > 0) {
+                const insightsSection = document.getElementById('insightsSection');
+                const insightsContent = document.getElementById('insightsContent');
+                insightsSection.style.display = 'block';
+
+                insightsContent.innerHTML = insights.map(insight => {
+                    const colors = {
+                        success: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+                        warning: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
+                        info: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
+                    };
+                    return `<div class="p-4 rounded-lg border ${colors[insight.type]}">${insight.message}</div>`;
+                }).join('');
+            }
+        }
+
+        
+        // Render module cards
+        function renderModules() {
+            const container = document.getElementById('moduleContainer');
+
+            container.innerHTML = modules.map(module => {
+                const progress = getProgress(module.id);
+                const statusClass = progress.completed ? 'bg-green-500' : (progress.lastVisited ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600');
+                const statusText = progress.completed ? 'Completed' : (progress.lastVisited ? 'In Progress' : 'Not Started');
+                const statusIcon = progress.completed ? '✓' : (progress.lastVisited ? '⋯' : '○');
+
+                return `
+                    <a href="${module.file}" class="
+                    module-card 
+                    block 
+                    bg-white 
+                    dark:bg-gray-800 
+                    rounded-lg 
+                    shadow-md 
+                    hover:shadow-xl 
+                    p-6 
+                    transition">
+                        <div class="
+                        flex 
+                        items-start j
+                        ustify-between 
+                        mb-3">
+                            <h3 class="
+                            text-lg 
+                            font-bold 
+                            text-gray-800 
+                            dark:text-white 
+                            flex-1">${module.title}</h3>
+                            
+                            <span class="${statusClass} 
+                            text-white 
+                            text-xs 
+                            px-2 
+                            py-1 
+                            rounded-full 
+                            font-semibold 
+                            ml-2">${statusIcon}</span>
+                        
+                            </div>
+
+                        <p class="
+                        text-sm 
+                        text-gray-600 
+                        dark:text-gray-400 
+                        mb-4">${module.description}</p>
+
+
+                        ${progress.quizTaken ? `
+                            <div class="mb-3">
+
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600 dark:text-gray-400">Quiz Score</span>
+                                    <span class="font-semibold ${progress.score >= 80 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${progress.score}%</span>
+                                </div>
+
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                    <div class="progress-bar ${progress.score >= 80 ? 'bg-green-500' : 'bg-yellow-500'} h-2 rounded-full" style="width: ${progress.score}%"></div>
+                                </div>''
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${statusText}</span>
+                            ${progress.lastVisited ? `<span class="text-xs text-gray-400 dark:text-gray-500">Last: ${new Date(progress.lastVisited).toLocaleDateString()}</span>` : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Reset progress
+        function resetProgress() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Reset Progress?</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">This will delete all your progress, scores, and quiz results. This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition" onclick="this.closest('.fixed').remove()">Cancel</button>
+                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition" onclick="confirmReset()">Reset All</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmReset() {
+            modules.forEach(module => {
+                storage.removeItem(`progress_${module.id}`);
+            });
+            document.querySelector('.fixed').remove();
+            renderModules();
+            updateDashboard();
+        }
+
+        // Initialize
+        renderModules();
+        updateDashboard();
+    </script>
+</body>
+</html>

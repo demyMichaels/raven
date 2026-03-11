@@ -1,39 +1,375 @@
-Structure of Government
-4. Structures of Governance:
-a. Unitary – features, reasons for adoption, merits and demerits
-b. Federal – features, reasons for adoption, merits and demerits
-c. Confederal - features, reasons for adoption, merits and demerits.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structure of Government</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-Candidates should be able to:
-i. compare the various political structures of governance.
+    <style>
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .module-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        }
+    </style>
+
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white text-center mb-4">
+                Structure of Government 
+            </h1>
+            <p class="text-center text-gray-600 dark:text-gray-300 mb-6">
+                
+            </p>
+
+            <!-- Overall Progress -->
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200">Overall Progress</h2>
+                    <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="overallProgress">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-6 overflow-hidden">
+                    <div id="overallProgressBar" class="progress-bar bg-gradient-to-r from-indigo-500 to-purple-600 h-6 rounded-full flex items-center justify-end px-2" style="width: 0%">
+                        <span class="text-white text-xs font-semibold" id="progressText"></span>
+                    </div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="completedModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Completed</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="inProgressModules">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">In Progress</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="averageScore">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Avg. Score</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="totalQuizzes">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Quizzes Taken</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Objectives -->
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Learning Objectives</h2>
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3" id="moduleContainer">
+            <!-- Module cards will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6" id="insightsSection" style="display: none;">
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Performance Insights</h2>
+            <div id="insightsContent" class="space-y-3"></div>
+        </div>
+
+        <!-- Reset Progress Button -->
+        <div class="mt-8 text-center">
+            <button onclick="resetProgress()" class="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition">
+                Reset All Progress
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode support
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Storage solution compatible with iframe environment
+        class StorageManager {
+            constructor() {
+                this.storage = {};
+                this.storageKey = 'govtStructure';
+                this.loadFromCookie();
+            }
+
+            loadFromCookie() {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === this.storageKey) {
+                        try {
+                            this.storage = JSON.parse(decodeURIComponent(value));
+                        } catch (e) {
+                            this.storage = {};
+                        }
+                        break;
+                    }
+                }
+            }
+
+            saveToCookie() {
+                const expires = new Date();
+                expires.setFullYear(expires.getFullYear() + 1); // 1 year expiry
+                document.cookie = `${this.storageKey}=${encodeURIComponent(JSON.stringify(this.storage))}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+            }
+
+            getItem(key) {
+                return this.storage[key] || null;
+            }
+
+            setItem(key, value) {
+                this.storage[key] = value;
+                this.saveToCookie();
+            }
+
+            removeItem(key) {
+                delete this.storage[key];
+                this.saveToCookie();
+            }
+
+            clear() {
+                this.storage = {};
+                this.saveToCookie();
+            }
+        }
+
+        const storage = new StorageManager();
+
+        // Learning modules data
+        const modules = [
+            
+            {
+                id: 'lo1',
+                title: 'LO 1: Unitary - features, reasons for adoption, merit and demerits  ',
+                file: 'unitary.html',
+                description: ''
+            },
+            {
+                id: 'lo2',
+                title: 'LO 2: Federal - features, reasons for adoption, merit and demerits',
+                file: 'federal.html',
+                description: ''
+            },
+
+            {
+                id: 'lo3',
+                title: 'LO 3: Confederal - features, reasons for adoption, merit and demerits Judiciary',
+                file: 'confederal.html',
+                description: ''
+            }
+        ];
+
+
+        // Get progress data from storage
+        function getProgress(moduleId) {
+            const data = storage.getItem(`progress_${moduleId}`);
+            return data ? JSON.parse(data) : { completed: false, score: 0, quizTaken: false, lastVisited: null };
+        }
 
 
 
+        // Calculate overall statistics
+        function calculateStats() {
+            let completed = 0;
+            let inProgress = 0;
+            let totalScore = 0;
+            let quizzesTaken = 0;
 
-Overall Progress
-0%
-0
-Completed
-0
-In Progress
-0%
-Avg. Score
-0
-Quizzes Taken
-Learning Objectives
-LO 1: Unitary - features, reasons for adoption, merit and demerits
-○
-Not Started
-LO 2: Federal - features, reasons for adoption, merit and demerits
-○
-Not Started
-LO 3: Confederal - features, reasons for adoption, merit and demerits Judiciary
-○
-Not Started
+            modules.forEach(module => {
+                const progress = getProgress(module.id);
+                if (progress.completed) {
+                    completed++;
+                }
+                if (progress.lastVisited && !progress.completed) {
+                    inProgress++;
+                }
+                if (progress.quizTaken) {
+                    quizzesTaken++;
+                    totalScore += progress.score;
+                }
+            });
+
+            const overallProgress = Math.round((completed / modules.length) * 100);
+            const averageScore = quizzesTaken > 0 ? Math.round(totalScore / quizzesTaken) : 0;
+
+            return { completed, inProgress, overallProgress, averageScore, quizzesTaken };
+        }
 
 
-UNITARY FORM OF GOVERNMENT** Definition: Unitary government may be defined as one in which all powers and authorities for the exercise of the functions of running a state are concentrated in the hands of a single central government. In this respect, powers are not shared between the central government and any other component units. In fact, the constitution has succeeded in depositing all the powers of governance with the central government. However, the central government can delegate powers to the component units created by it. These powers are exercised in line with the wishes of the central government. Unitarianism is the principle guiding a unitary constitution. Britain, France, Italy, etc. are some of the countries adopting a unitary form of government. **Features of a Unitary System** 1. Best practised in a homogeneous state: Unitary system is best practised where there are no sharp differences in religion, language, political belief, etc. of the entire population. 2. Delegation of functions: The central government can delegate power and functions to other component units. 3. Small country: The system is easy to practise in a relatively small country where the government has representatives from every ethnic group in the society. 4. Parliamentary supremacy: There is parliamentary supremacy in a unitary system. Britain is a good example. 5. Flexibility: The constitution of a unitary state is not rigid but flexible. 6. Power to modify the constitution: The central government may have the power to modify the constitution in the same process used to pass laws. Britain adopts this method. 7. No constitutional division of power: There is no such division of powers between the central government and other component units. 8. Source of power: The central government still remains the only source through which power flows to other areas. 9. Power concentration: All the powers and authorities of the state are concentrated in the hands of the central government. 10. No conflict of authority: Since the central government has all the powers, conflict of authority would not arise. 11. Strong central government: Power rests on the central government. **Reasons for the Adoption of a Unitary System** 1. Homogeneous factor: It is best practised in a state where there are no sharp differences in language, religion, political belief, etc. 2. Small country: A unitary system is easy and best adopted in a relatively small country. 3. For coherent and efficient administration: The central government can efficiently prevent waste and duplication both in human and material resources. 4. Control and accountability factor: Accountability and control are best initiated in a unitary system because it involves a single authority, hence one of the reasons for the adoption of a unitary system. 5. Adequate support to the government: This form of government is suitable and adopted where the people can give adequate support to the sole authority. 6. Absence of tribal grouping: Since there is no marked difference in tribes, the unitary system is adopted because no tribe will ever think of dominating others. 7. Management of functions: The central government can adequately manage functions and at the same time monitor effectively functions delegated to other component units. 8. Lack of marked economic inequalities: In a unitary state, there is lack of marked economic inequalities among different sections of the country. 9. Limited human and natural resources: (These) are some of the reasons for the adoption of a unitary system. 10. National consciousness: Encouragement of national consciousness and cohesion is another added reason for the adoption of a unitary system. 11. **Identical political culture:** They have identical political culture and history, i.e. common historical and political experience in administration. 12. **National unity:** They have the desire for the preservation of national unity or identity and values. 13. **Simple and cheap to operate:** Unitary system of government is simple and cheap to operate. 14. **Facilitation of quick decision-making:** It also facilitates quick decision-making. **Advantages of a Unitary System** 1. **Less cost:** The cost of running a unitary government is relatively lower than the federal government. No duplication of functions is experienced in a unitary system. 2. **Quick action:** Quick action is taken in the areas of decision-making and execution. The central government alone takes decisions. 3. **Flexible constitution:** The method of amending the constitution is relatively easy because the constitution is flexible. This can enhance quick political and economic advancement. 4. **Promotes strong government:** A unitary state is stronger than a federal one. Here, all the powers of governance are concentrated in the hands of one central authority. 5. **No conflict of authority:** There can be no conflict of authority or confusion regarding responsibility for work to be performed, since the central government has all the powers. 6. **The absence of red-tapism:** It is less bureaucratic as opposed to the federal system. Red-tapism slows down action in a federal state but not in a unitary state. 7. **Unity:** Absence of tribalism or sectionalism can bring about unity in a country. 8. **Few personnel in government:** In a unitary system of government, not too many officials are in government. This is because functions are not duplicated as obtained in a federal system. It eliminates redundancy. **Disadvantages of a Unitary System** 1. **Poor attention to the local areas:** The attention given to the people in the local areas may be poor. 2. **Dictatorship:** A unitary government may encourage dictatorship as a result of power concentration in the hands of a single authority. 3. **Small and homogeneous state:** A unitary government can only work in a small and homogeneous state. 4. **Development:** Development of the various units of the country could be slow and unprogressive. 5. **Poor representation in government:** The system does not encourage wider representation of the people in the government of their country. 6. **Centre of decision-making:** The centre of decision-making is very far from the area of implementation. 7. **Overloaded with functions:** This is as a result of the concentration of powers in a single central authority. 8. **The issue of minority:** The minority could be oppressed and dominated by the majority tribes. 9. **Tension:** Tension could mount among the various sections in a country over claims that a particular tribe is controlling the government. 10. **Unemployment:** An unemployment rate could be high in a unitary state as a result of low duplication of functions.
 
-FEDERAL SYSTEM OF GOVERNMENT** Definition: A federal state is one in which there is constitutional division of powers among different levels or three tiers of government (federal, state/region, local governments). In a federal system, the federal or central authority represents the whole and acts on behalf of all in certain matters, especially defence, external affairs, currency, national revenue, etc. and any other areas considered to be of common interest. There also exists state/region or local authorities with powers of legislation and administration within constitutional limits. It should be observed as well that in this system, the supremacy of the constitution is not only respected or upheld but also responsible for the division of powers among the tiers of government. (i) A central government is supreme with respect to all matters of common importance to the whole federal state. (ii) Every state and local government has its own government. However, state and local governments are still subordinate to the central government. Central, state and local governments are referred to as three tiers of governmental a federal set-up, e.g. Nigeria. The following methods are used in the division of functions for the three tiers of government as provided by the constitution. 1. The exclusive legislative list: Powers and functions listed here are mainly for the central government alone to exercise, for example, currency, defence, power, customs, immigration, external affairs, etc. 2. The concurrent legislative list: Functions listed here are to be exercised by both the central and state governments. 3. In case of conflict experienced in the course of exercising these functions, the powers of the central government will supersede those of the state governments. Some of these functions are: higher education, labour, roads, industrial development, insurance and research. 3. Residual and legislative list: Functions listed here are for the local governments to exercise. Some of the functions or duties are in the areas of primary education, health or maternity centres, library, market, motor parks, etc. Examples of federal states are USA, Nigeria, India and Russia. **Fiscal Federalism** 1. This is a concept and practice usually associated with a federal system of government. This is because the federal structure provides the grounds for intergovernmental relationship between a central government and other federating units such as states, regions, provinces and local governments. 2. Fiscal federalism is therefore understood to imply a financial arrangement and relations among tiers and units of government which allow significant fiscal functions (both revenue generation and incurring expenditure) to be exercised at lower levels of government. 3. This system also allows for the arrangement in such a way that tax powers of each tier of government are clearly and legally defined. 4. Provisions are equally made on how funds are to be transferred from one level of government to another. This inter-governmental fiscal relations makes for equity and efficiency of the national economy. It becomes definite and obvious that fiscal federalism can only work or exist where there are decentralised political and administrative arrangement involving the transfer of the authority to plan, make decisions and manage public funds from the central government to other tiers of government. Nigeria is a good example of where fiscal federalism is practised, creating the opportunity for federating units to have legal powers to assign taxes and carry out spending activities within clearly established due process. Canada, Brazil, USA, Australia, Switzerland, India, Germany, etc. have stable fiscal relations. **Reasons for the Adoption of a Federal System** 1. **Nearness of the federated units:** If the component units making up the system are very near to each other, e.g. states or regions, etc. a federal system can emerge. 2. **Size of the country:** If the size of the country is too large, this may hinder the effective control from the centre. Therefore, a federal structure is the best bet. 3. **Fears of the minorities:** The minorities in the country may have the fear of being dominated by the majority group. 4. **Security:** Some countries adopt a federal system in order to have military might or power to face a common external enemy. 5. **Diversities in cultures:** The recognition of the diversities in cultures, religious beliefs and languages, e.g. Nigeria, may allow for the adoption of a federal system. 6. **Common historical background:** For example, Britain imposed a federal system on Nigeria by dividing the territory into regions and ruled them separately. 7. **Economic factor:** The need to pool resources together to form a stronger economy, e.g. USA and Nigeria. 8. **Geographical contiguity:** It is advantageous for states which are to form a federation not to be widely separated geographically. The nearness of such states to one another can bring about the desire for a union. 9. **Common political association:** A long period of historical and political association among people living in contiguous state is conducive for a federal union. For example, the experience of people in the former British and French colonies in Africa is a good example. **Main Characteristics of a Federal System** 1. **Constitutional division of powers:** This is a notable feature in a federal system. Powers are constitutionally shared between the central authority and other subordinate units, e.g. state and local governments . 2. **Powers are derived from the constitution:** The central, state and local governments derive their powers from the constitution. 3. **Supremacy of the constitution:** The constitution of a federal state is powerful and supreme. 4. **Written and rigid:** Constitutions of most federal systems are written and rigid. 5. **Separation of powers:** The constitution separates the functions and powers among the three organs of government, namely: executive, legislature and the judiciary. 6. **Bicameral legislature:** Most of the federal constitutions have bicameral legislature. For example, in USA, there are the Senate and the House of Representatives. 7. The supreme court: There is always a supreme court which interprets the constitution and decides on any conflict between the centre and the constituent units. 8. Equal representation: Every interest group is recognised and represented in a federal state. 9. Autonomy of units: The autonomy of each tier of government is guaranteed by the constitution. 10. Grassroots political participation: Provision is made for grassroots political participation of the people in a federal state. **Merits of a Federal System** 1. Integration of different groups: A federal system brings together different ethnic groups within a system. Federalism blends unity within different groups. 2. The issue of autonomy: It allows each unit to be autonomous and affords them the opportunity to develop at their own pace. For example, in the Second Republic in Nigeria (1979-83), the UPN-controlled states adopted free education. 3. Federalism brings government closer: Government is brought closer to the people and it increases the sense of belonging and participation. Government programmes and activities are made more relevant to the people. 4. Elimination of arbitrary rule: This is made possible because the constitution is not easy to amend to satisfy the wishes of a few wealthy and influential individuals. 5. Division of functions: Division of functions has made it possible for matters of local interest to be allocated to the state or local governments. 6. Reduction in workload: The burden of the central government is reduced because functions are divided. 7. Employment opportunities: Since functions are duplicated, employment opportunities are created for more people to be employed in the system. 8. Supremacy of the constitution: The supremacy of the constitution in a federal system makes for adherence to democratic principles, rule of law and respect for fundamental rights of man. 9. Decision-making process: Opportunities are created for more people to take active part in the decision-making process of their country. 10. Grassroot political participation: Greater opportunities are accorded the people of the local areas to participate in the political affairs of the country. 11. Safeguards the interest of the minorities: The rights of the minorities and other interest groups are recognised and guaranteed in a federal system. **Demerits of a Federal System** 1. Statism/Regionalism: Individuals prefer to be more loyal to their states and this can affect national unity. 2. Possibility of conflict: Since no tier of government can claim absolute authority, it is possible for conflict in the area of performance or functions to occur between the central government and other tiers, e.g. state government or local government. 3. Costly to run: Large number of departments and personnel are needed or created in a federal state, thereby making it a costly venture. 4. **Uneven development:** Federalism accommodates the freedom of each unit to develop at its own pace which leads to uneven development. 5. **Duplication of functions:** Duplication of functions can create redundancy which affects productivity. 6. **Delay in the execution of national issues:** Before issues of national concern are concluded and implemented, it needs the approval of all segments of the society. For example, in the area of amending the constitution, the parliament and the state legislative bodies are involved in the process. 7. **Rigid constitution:** Federal constitutions are usually rigid. This means that the constitution cannot easily be amended to reflect the changing time. 8. **No uniformity in administration:** The autonomy granted the units creates imbalances and differences in the area of administration of a federal state. 9. **Neglect of the minorities:** There is the possibility of the minorities being neglected in the areas of appointment to key positions in government, provisions of amenities, etc. 10. **The problem of federal character:** Appointments into federal establishments are not always based on merit. The various ethnic nationalities or groups must be considered in the allocation of appointments. This remains a problem in the Nigerian federalism. 11. **Ethnic disharmony:** There could be distrust among the various ethnic groups in a federal state. This can affect the unity and the very corporate existence of the country. 12. **Threat of secession:** This threat by some units as a factor of divided allegiance or loyalty of citizens poses a great problem to a federal system. 13. **Unhealthy rivalry:** This is very common among the federating units. 14. **Boundary disputes:** This is a common feature in a federal system most especially as it affects the component units. 15. **Fear of domination:** The minorities are always afraid that the majority would dominate them to the extent that issues of national importance are affected. **Federal Character Meaning** Federal character is nothing but an official term for ethnic, religious and regional balance in resource allocation, ministerial and other key appointments in government and enrolment of students in schools. It can also be referred to as the distribution of amenities and resources/appointments, based on the quota system to be applied in the three tiers of government in the country, e.g. political appointments, admission into tertiary institutions, location of iron/steel mills and location of unity secondary schools, etc. **Factors that Determine the Introduction of Federal Character** 1. Diversity in religion, ethnic size, ethnic values, education, economic resources, etc. 2. **Uneven development:** There is disparity in educational, political and economic development in Nigeria. 3. There is discrimination on the basis of education, religion, ethnic affinity, etc. 4. Fear of domination of the minority groups by the majority. 5. Inability of political leaders to translate unity in diversity into reality. 6. Appointment to promote unity and ensure stability and sense of belonging. 7. Unhealthy struggle for a lion’s share of the national cake.
+        // Update dashboard
+        function updateDashboard() {
+            const stats = calculateStats();
 
-CONFEDERAL GOVERNMENT** Definition: Confederation may be defined as a league of sovereign states with a loose political arrangement in which autonomous states come together to form a union. However, the functions of government are exclusively reserved for the component states with a weak centre. It is also seen as a voluntary association of sovereign states with a recognised authority in certain matters affecting the whole and especially in respect of external relations and with a common course of actions in specific areas like foreign affairs, defence, currency, etc. In a confederation, there is no effective and viable central authority. The United Nations (UN), The African Union (AU), etc. have the picture of a confederation. The usual coming together of member states to discuss issues of mutual importance and to co-operate in some areas that will be of benefits to memberships to this fact. Other examples of confederacy are the 19th century German confederacy, American confederation of 1781 to 1789. **Features of Confederal Government** 1. Consultations: This is made among them before taking independent actions. 2. Loose union: Confederation is a loose union of sovereign states. 3. No effective executive authority: Members only send delegates to the centre to discuss issues of common interest like defence, telecommunications, etc. 4. No national armed forces: The various members of the confederacy maintain and retain their separate military establishments. 5. Separate diplomatic representations: Member states have separate diplomatic representations. 6. Right of secession: Members have equal status and have the right of secession from the confederation, if and when the government of member states so desires. 7. Unstable political system: The break away of member states from the union can bring an end to the system. 8. Absence of effective central authority: This is because a sovereign power cannot be located in a confederation. 9. Membership of the union is voluntary: No member state is forced to become a member of the union, since they can see at any time. 10. Control over their internal affairs: The member states of the confederation have control over their internal affairs. 11. Constitution: The constitution may be seen as very accommodating to changes. 12. Sovereignty: Component states making up a confederal union still retain their sovereignty and identity. 13. Even development: The system does not make for even development. 14. Single government: Citizens have to obey only a single government and that is the government of their own states. **Merits of Confederal Government** 1. Mutual benefits accruing to member states: Each member state benefits from one another in different areas of interest. 2. The union is voluntary: No member state was forced to become a member of the union since they can see at any time. 3. Control over their internal affairs: The component states have total control over their internal affairs. 4. Obedience to one government: Citizens have to obey only one government, that is, that of their own state. 5. Equality of states: Equality exists among the states making up the confederation. No state can claim superiority over others. 6. Consensus: Actions are taken by member states of a confederation based on the consensus earlier reached. **]** 7. Unity of states: Independent states, both big and small, rich and poor, are brought together for a common purpose. 8. Expansion of markets: Markets of member states are expanded to accommodate goods and services from member states.
+            // Update overall progress
+            document.getElementById('overallProgress').textContent = stats.overallProgress + '%';
+            document.getElementById('overallProgressBar').style.width = stats.overallProgress + '%';
+            document.getElementById('progressText').textContent = stats.overallProgress >= 10 ? stats.overallProgress + '%' : '';
+
+            // Update stats
+            document.getElementById('completedModules').textContent = stats.completed;
+            document.getElementById('inProgressModules').textContent = stats.inProgress;
+            document.getElementById('averageScore').textContent = stats.averageScore + '%';
+            document.getElementById('totalQuizzes').textContent = stats.quizzesTaken;
+
+            // Update insights
+            updateInsights(stats);
+        }
+
+        // Generate insights
+        function updateInsights(stats) {
+            const insights = [];
+
+            if (stats.completed === modules.length) {
+                insights.push({ type: 'success', message: '🎉 Congratulations! You\'ve completed all learning objectives!' });
+            } else if (stats.completed > 0) {
+                insights.push({ type: 'info', message: `Great progress! You've completed ${stats.completed} out of ${modules.length} modules.` });
+            }
+
+            if (stats.averageScore >= 80) {
+                insights.push({ type: 'success', message: '✨ Excellent performance! Your average score is above 80%.' });
+            } else if (stats.averageScore >= 60 && stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '📚 Good effort! Review the material to improve your scores above 80%.' });
+            } else if (stats.quizzesTaken > 0) {
+                insights.push({ type: 'warning', message: '💪 Keep practicing! Review the lessons and retake quizzes to improve.' });
+            }
+
+            if (stats.inProgress > 0) {
+                insights.push({ type: 'info', message: `You have ${stats.inProgress} module${stats.inProgress > 1 ? 's' : ''} in progress. Keep going!` });
+            }
+
+            if (insights.length > 0) {
+                const insightsSection = document.getElementById('insightsSection');
+                const insightsContent = document.getElementById('insightsContent');
+                insightsSection.style.display = 'block';
+
+                insightsContent.innerHTML = insights.map(insight => {
+                    const colors = {
+                        success: 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700',
+                        warning: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700',
+                        info: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
+                    };
+                    return `<div class="p-4 rounded-lg border ${colors[insight.type]}">${insight.message}</div>`;
+                }).join('');
+            }
+        }
+
+        
+        // Render module cards
+        function renderModules() {
+            const container = document.getElementById('moduleContainer');
+
+            container.innerHTML = modules.map(module => {
+                const progress = getProgress(module.id);
+                const statusClass = progress.completed ? 'bg-green-500' : (progress.lastVisited ? 'bg-yellow-500' : 'bg-gray-300 dark:bg-gray-600');
+                const statusText = progress.completed ? 'Completed' : (progress.lastVisited ? 'In Progress' : 'Not Started');
+                const statusIcon = progress.completed ? '✓' : (progress.lastVisited ? '⋯' : '○');
+
+                return `
+                    <a href="${module.file}" class="
+                    module-card 
+                    block 
+                    bg-white 
+                    dark:bg-gray-800 
+                    rounded-lg 
+                    shadow-md 
+                    hover:shadow-xl 
+                    p-6 
+                    transition">
+                        <div class="
+                        flex 
+                        items-start j
+                        ustify-between 
+                        mb-3">
+                            <h3 class="
+                            text-lg 
+                            font-bold 
+                            text-gray-800 
+                            dark:text-white 
+                            flex-1">${module.title}</h3>
+                            
+                            <span class="${statusClass} 
+                            text-white 
+                            text-xs 
+                            px-2 
+                            py-1 
+                            rounded-full 
+                            font-semibold 
+                            ml-2">${statusIcon}</span>
+                        
+                            </div>
+
+                        <p class="
+                        text-sm 
+                        text-gray-600 
+                        dark:text-gray-400 
+                        mb-4">${module.description}</p>
+
+
+                        ${progress.quizTaken ? `
+                            <div class="mb-3">
+
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600 dark:text-gray-400">Quiz Score</span>
+                                    <span class="font-semibold ${progress.score >= 80 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}">${progress.score}%</span>
+                                </div>
+
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                                    <div class="progress-bar ${progress.score >= 80 ? 'bg-green-500' : 'bg-yellow-500'} h-2 rounded-full" style="width: ${progress.score}%"></div>
+                                </div>''
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">${statusText}</span>
+                            ${progress.lastVisited ? `<span class="text-xs text-gray-400 dark:text-gray-500">Last: ${new Date(progress.lastVisited).toLocaleDateString()}</span>` : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Reset progress
+        function resetProgress() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Reset Progress?</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">This will delete all your progress, scores, and quiz results. This action cannot be undone.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition" onclick="this.closest('.fixed').remove()">Cancel</button>
+                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded transition" onclick="confirmReset()">Reset All</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function confirmReset() {
+            modules.forEach(module => {
+                storage.removeItem(`progress_${module.id}`);
+            });
+            document.querySelector('.fixed').remove();
+            renderModules();
+            updateDashboard();
+        }
+
+        // Initialize
+        renderModules();
+        updateDashboard();
+    </script>
+</body>
+</html>
