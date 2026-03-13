@@ -1,2 +1,1 @@
-README
 Raven Edtech App
