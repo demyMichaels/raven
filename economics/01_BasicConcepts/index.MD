@@ -7,7 +7,6 @@ opportunity cost,
 rationality,
 production, distribution and consumption.
 
-
 b.(i)
 Economic problems of:
 what, how and for whom to produce and
@@ -25,10 +24,7 @@ the concepts;
 (iv) proffer solutions to economic problems
 
 
-
-
-Economics is a broad-ranging discipline, both in the questions it asks and the methods
-it uses to seek answers. 
+Economics is a broad-ranging discipline, both in the questions it asks and the methods it uses to seek answers. 
 
 Many of the world’s most pressing problems are economic
 in nature. 
@@ -37,21 +33,24 @@ The first part of this chapter is intended to give you some idea of the
 sorts of issues that economic analysis helps to clarify and the kinds of solutions that economic principles suggest. 
 
 
-The second part briefly introduces the tools that economists
-use—tools you are likely to find useful in your career, personal life, and role as an
-informed citizen, long after this course is over.
+The second part briefly introduces the tools that economists use — tools you are likely to find useful in your career, personal life, and role as an informed citizen, long after this course is over.
 
 
-Elephants may never forget, but people do. We realize that most students inevitably forget
-much of what they learn in a course—perhaps with a sense of relief—soon after the
-final exam. Nevertheless, we hope that you will remember some of the most significant
-economic ideas and, even more important, the ways of thinking about economic issues
+Elephants may never forget, but people do. We realize that most students inevitably forget much of what they learn in a course—perhaps with a sense of relief—soon after the
+final exam. 
+
+Nevertheless, we hope that you will remember some of the most significant economic ideas and, even more important, the ways of thinking about economic issues
 that will help you evaluate the economic issues that arise in our economy.
+
 To help you identify some of the most crucial concepts, we have selected 10 from the
-many in this book. Some offer key insights into the workings of the economy, and several
-bear on important policy issues that appear in newspapers; others point out common misunderstandings
-that occur among even the most thoughtful lay observers. Most of them
-indicate that it takes more than just good common sense to analyze economic issues effectively.
+many in this book. 
+
+Some offer key insights into the workings of the economy, and several bear on important policy issues that appear in newspapers;
+
+others point out common misunderstandings that occur among even the most thoughtful lay observers. 
+
+Most of them indicate that it takes more than just good common sense to analyze economic issues effectively.
+
 
 As the opening quote of this chapter suggests, many learned judges, politicians,
 and university administrators who failed to understand basic economic principles could
@@ -59,44 +58,64 @@ have made wiser decisions.
 
 
 Try this one on for size. Imagine you own a widget manufacturing company that rents a
-warehouse. Your landlord raises your rent by $10,000 per year. Should you raise the price
+warehouse. 
+Your landlord raises your rent by $10,000 per year. Should you raise the price
 of your widgets to try to recoup some of your higher costs or should you do the opposite—
-lower your price to try to sell more and spread the so-called overhead costs over more
-products? In fact, as we shall see in Chapter 8, both answers are probably wrong!
+lower your price to try to sell more and spread the so-called overhead costs over more products? 
+
+In fact, as we shall see in Chapter 8, both answers are probably wrong!
+
 Each of the 10 Ideas for Beyond the Final Exam, many of which are counterintuitive, will
-be sketched briefly here. More important, each will be discussed in depth when it occurs
-in the course of the book, where it will be called to your attention by a special icon in the
-margin. Don’t expect to master these ideas fully now, but do notice how some of the ideas
-arise again and again as we deal with different topics. By the end of the course you will
-have a better grasp of when common sense works and when it fails, and you will be able
+be sketched briefly here. 
+
+More important, each will be discussed in depth when it occurs in the course of the book, where it will be called to your attention by a special icon in the
+margin.
+
+ Don’t expect to master these ideas fully now, but do notice how some of the ideas
+arise again and again as we deal with different topics.
+
+ By the end of the course you will have a better grasp of when common sense works and when it fails, and you will be able
 to recognize common fallacies that are all too often offered by public figures, the press,
 and television commentators.
 
 Idea 1: How Much Does It Really Cost?
-Because no one has infinite riches, people are constantly forced to make choices. If you
-purchase a new computer, you may have to give up that trip you had planned. If a business
+Because no one has infinite riches, people are constantly forced to make choices. 
+
+If you purchase a new computer, you may have to give up that trip you had planned. 
+
+If a business
 decides to retool its factories, it may have to postpone its plans for new executive offices.
+
 If a government expands its defense program, it may be forced to reduce its outlays
 on school buildings.
-Economists say that the true costs of such decisions are not the number of dollars spent
-on the computer, the new equipment, or the military, but rather the value of what must be
-given up in order to acquire the item—the vacation trip, the new executive offices, and the
-new schools. These are called opportunity costs because they represent the opportunities
-the individual, firm, or government must forgo to make the desired expenditure. Economists
+
+Economists say that the true costs of such decisions are not the number of dollars spent on the computer, the new equipment, or the military, but rather the value of what must be
+given up in order to acquire the item — the vacation trip, the new executive offices, and the new schools. These are called opportunity costs because they represent the opportunities
+the individual, firm, or government must forgo to make the desired expenditure. 
+
+Economists
 maintain that rational decision making must be based on opportunity costs, not just
 dollar costs (see Chapters 3, 8, 14, and 15).
-The cost of a college education provides a vivid example. How much do you think it
-costs to go to college? Most people are likely to answer by adding together their expenditures
+
+The cost of a college education provides a vivid example. How much do you think it costs to go to college? 
+
+Most people are likely to answer by adding together their expenditures
 on tuition, room and board, books, and the like, and then deducting any scholarship
 funds they may receive. Suppose that amount comes to $15,000.
 Economists keep score differently. They first want to know how much you would be
-earning if you were not attending college. Suppose that salary is $20,000 per year. This
-may seem irrelevant, but because you give up these earnings by attending college, they
+earning if you were not attending college. Suppose that salary is $20,000 per year. This may seem irrelevant, but because you give up these earnings by attending college, they
 must be added to your tuition bill. You have that much less income because of your education.
+
 On the other side of the ledger, economists would not count all of the university’s
 bill for room and board as part of the costs of your education. They would want to know
 how much more it costs you to live at school rather than at home. Economists would count
 only these extra costs as an educational expense because you would have incurred these
+costs whether or not you attend college. On balance, college is probably costing you much
+more than you think. And, as we will see later, taking opportunity cost into account in any
+personal planning will help you to make more rational decisions.
+
+
+
 The opportunity cost of a
 decision is the value of the
 next best alternative that
@@ -105,29 +124,28 @@ of that decision (for example,
 working instead of going to
 school).
 
-costs whether or not you attend college. On balance, college is probably costing you much
-more than you think. And, as we will see later, taking opportunity cost into account in any
-personal planning will help you to make more rational decisions.
-
-
 
 Idea 2: Attempts to Repeal the Laws of Supply
 and Demand—The Market Strikes Back
+
 When a commodity is in short supply, its price naturally tends to rise. Sometimes disgruntled
 consumers badger politicians into “solving” this problem by making the high prices
 illegal—by imposing a ceiling on the price. Similarly, when supplies are plentiful—say,
 when fine weather produces extraordinarily abundant crops—prices tend to fall. Falling
-prices naturally dismay producers, who often succeed in getting legislators to impose
-price floors.
-Such attempts to repeal the laws of supply and demand usually backfire and sometimes
-produce results virtually the opposite of those intended. Where rent controls are
-adopted to protect tenants, housing grows scarce because the law makes it unprofitable to
-build and maintain apartments. When price floors are placed under agricultural products,
-surpluses pile up because people buy less.
-As we will see in Chapter 4 and elsewhere in this book, such consequences of interference
-with the price mechanism are not accidental. They follow inevitably from the way in
-which free markets work.
+prices naturally dismay producers, who often succeed in getting legislators to impose price floors.
 
+Such attempts to repeal the laws of supply and demand usually backfire and sometimes
+produce results virtually the opposite of those intended.
+
+Where rent controls are
+adopted to protect tenants, housing grows scarce because the law makes it unprofitable to build and maintain apartments. 
+
+When price floors are placed under agricultural products,
+surpluses pile up because people buy less.
+
+As we will see in Chapter 4 and elsewhere in this book, such consequences of interference with the price mechanism are not accidental. 
+
+They follow inevitably from the way in which free markets work.
 
 
 Idea 3: The Surprising Principle of Comparative Advantage
@@ -145,55 +163,44 @@ case, the two nations could still benefit by trading and that each could gain as
 We will explain this principle first in Chapter 3 and then more fully in Chapter 34.
 For now, a simple parable will make the reason clear.
 
-Suppose Sally grows up on a farm and is a whiz at plowing, but she is also a successful
-country singer who earns $4,000 per performance. Should Sally turn down singing engagements
-to leave time to work the fields? Of course not. Instead, she should hire Alfie, a
-much less efficient farmer, to do the plowing for her. Sally may be better at plowing, but
-she earns so much more by singing that it makes sense for her to specialize in that and
-leave the farming to Alfie. Although Alfie is a less skilled farmer than Sally, he is an even
-worse singer.
-So Alfie earns his living in the job at which he at least has a comparative advantage (his
-farming is not as inferior as his singing), and both Alfie and Sally gain. The same is true of
-two countries. Even if one of them is more efficient at everything, both countries can gain
-by producing the things they do best comparatively.
+Suppose Sally grows up on a farm and is a whiz at plowing, but she is also a successful country singer who earns $4,000 per performance. Should Sally turn down singing engagements to leave time to work the fields? 
+Of course not. Instead, she should hire Alfie, a
+much less efficient farmer, to do the plowing for her. Sally may be better at plowing, but she earns so much more by singing that it makes sense for her to specialize in that and
+leave the farming to Alfie. Although Alfie is a less skilled farmer than Sally, he is an even worse singer.
+So Alfie earns his living in the job at which he at least has a comparative advantage (his farming is not as inferior as his singing), and both Alfie and Sally gain. 
+The same is true of
+two countries. Even if one of them is more efficient at everything, both countries can gain by producing the things they do best comparatively.
 
 
 
 Idea 4: Trade Is a Win-Win Situation
-One of the most fundamental ideas of economics is that both parties must expect to gain
-something in a voluntary exchange. Otherwise, why would they both agree to trade? This
-principle seems self-evident, yet it is amazing how often it is ignored in practice.
-For example, it was widely believed for centuries that in international trade one country’s
-gain from an exchange must be the other country’s loss (Chapter 34). Analogously,
-some people feel instinctively that if Ms. A profits handsomely from a deal with Mr. B, then Mr. B must have been exploited. Laws sometimes prohibit mutually beneficial
+One of the most fundamental ideas of economics is that both parties must expect to gain something in a voluntary exchange. Otherwise, why would they both agree to trade? 
+This principle seems self-evident, yet it is amazing how often it is ignored in practice.
+For example, it was widely believed for centuries that in international trade one country’s gain from an exchange must be the other country’s loss (Chapter 34). 
+
+Analogously, some people feel instinctively that if Ms. A profits handsomely from a deal with Mr. B, then Mr. B must have been exploited. Laws sometimes prohibit mutually beneficial
 exchanges between buyers and sellers—as when a loan transaction is banned because the
 interest rate is “too high” (Chapter 19), or when a willing worker is condemned to remain
-unemployed because the wage she is offered is “too low” (Chapter 20), or when the resale
-of tickets to sporting events (“ticket scalping”) is outlawed even though the buyer is
-happy to get the ticket that he could not obtain at a lower price (Chapter 4).
+unemployed because the wage she is offered is “too low” (Chapter 20), or when the resale of tickets to sporting events (“ticket scalping”) is outlawed even though the buyer is happy to get the ticket that he could not obtain at a lower price (Chapter 4).
 In every one of these cases, well-intentioned but misguided reasoning blocks the possible
 mutual gains that arise from voluntary exchange and thereby interferes with one of
 the most basic functions of an economic system (see Chapter 3).
 
 
 Idea 5: The Importance of Thinking at the Margin
-We will devote many pages of this book to explaining and extolling a type of decisionmaking
-process called marginal analysis (see especially Chapters 5, 7, 8, and 14), which we
+We will devote many pages of this book to explaining and extolling a type of decision making process called marginal analysis (see especially Chapters 5, 7, 8, and 14), which we
 can best illustrate through an example.
 Suppose an airline is told by its accountants that the full average cost of transporting
-one passenger from Los Angeles to New York is $300. Can the airline profit by offering a
-reduced fare of $200 to students who fly on a standby basis? The surprising answer is
-probably yes. The reason is that most of the costs of the flight must be paid whether the
-plane carries 20 passengers or 120 passengers.
-Costs such as maintenance, landing rights, and ground crews are irrelevant to the decision
-of whether to carry additional standby passengers at reduced rates. The only costs
-that are relevant are the extra costs of writing and processing additional tickets, the food
+one passenger from Los Angeles to New York is $300. Can the airline profit by offering a reduced fare of $200 to students who fly on a standby basis? The surprising answer is
+probably yes. The reason is that most of the costs of the flight must be paid whether the plane carries 20 passengers or 120 passengers.
+Costs such as maintenance, landing rights, and ground crews are irrelevant to the decision of whether to carry additional standby passengers at reduced rates. The only costs that are relevant are the extra costs of writing and processing additional tickets, the food
 and beverages consumed by these passengers, the additional fuel required, and so on.
 These so-called marginal costs are probably quite small in this example. A passenger who
 pays the airline any amount more than it costs the airline to give her a seat that would
 otherwise be unused (its marginal cost of flying her) adds something to the company’s
 profit. So it probably is more profitable to let students ride at low fares than to leave the
 seats empty.
+
 In many real cases, a failure to understand marginal analysis leads decision makers to
 reject advantageous possibilities, like the reduced fare in our example. These people are
 misled by using average rather than marginal cost figures in their calculations—an error
@@ -205,13 +212,16 @@ Markets are adept at producing the goods that consumers want and in just the qua
 they desire. They do so by rewarding those who respond to what consumers want and
 who produce these commodities economically. This all works out well as long as each
 exchange involves only the buyer and the seller—and no one else. However, some transactions
-affect third parties who were not involved in the decision. Examples abound: Electric
+affect third parties who were not involved in the decision. 
+
+Examples abound: Electric
 utilities that generate power for midwestern states also produce pollution that kills
 freshwater fish in upstate New York. A farmer sprays crops with toxic pesticides, but the
 poison seeps into the groundwater and affects the health of neighboring communities.
 Such social costs are called externalities because they affect parties external to the economic
-transactions that cause them. Externalities escape the control of the market mechanism
-because no financial incentive motivates polluters to minimize the damage they
+transactions that cause them. 
+
+Externalities escape the control of the market mechanism because no financial incentive motivates polluters to minimize the damage they
 do—as we will learn in Chapters 15 and 17. So business firms make their products as
 cheaply as possible, disregarding any environmental harm they may cause.
 Yet Chapters 15 and 17 will point out a way for the government to use the market
@@ -234,9 +244,10 @@ claims of greater economic efficiency (more output and jobs) versus greater equa
 Roughly speaking, the American solution is to let markets work to promote efficiency—
 something they are very good at doing—with only minimal government interferences to
 reduce economic inequalities. (Some of these interferences are studied in Chapter 21.)
-However, much of continental Europe takes a different view. They find it scandalous that
-many Americans work for less than $6 per hour, with virtually no fringe benefits and no
-job security. European laws mandate not only relatively high minimum wages but also
+
+However, much of continental Europe takes a different view. They find it scandalous that many Americans work for less than $6 per hour, with virtually no fringe benefits and no job security. 
+
+European laws mandate not only relatively high minimum wages but also
 substantial fringe benefits and employment protections; of course, European taxes must be
 much higher to pay for these programs.
 As economists see it, each system’s virtue is also its vice. There is an agonizing trade-off
@@ -244,28 +255,42 @@ between the size of a nation’s output and the degree of equality with which th
 distributed. European-style policies designed to divide the proverbial economic pie more
 equally inadvertently can cause the size of the pie to shrink. American-style arrangements
 that promote maximal efficiency and output may permit or even breed huge inequalities
-and poverty. Which system is better? There is no clear answer, but we will examine the
-issue in detail in Chapter 21.
+and poverty. Which system is better? There is no clear answer, but we will examine the issue in detail in Chapter 21.
 
 
 Idea 8: Government Policies Can Limit Economic
-Fluctuations—But Don’t Always Succeed
+Fluctuations — But Don’t Always Succeed.
+
 One of the most persistent problems of market economies has been their tendency to go
-through cycles of boom and bust. The booms, as we shall see, often bring inflation, and
-the busts always raise unemployment. Years ago, economists, businesspeople, and politicians
-viewed these fluctuations as inevitable: there was nothing the government could or
-should do about them.
-That view is now considered obsolete. As we will learn in Part 6, and especially Part 7,
-modern governments have an arsenal of weapons that they can and do deploy to try to
-mitigate fluctuations in their national economies—to limit both inflation and unemployment.
-Some of these weapons constitute what is called fiscal policy: control over taxes and
-government spending. Others come from monetary policy: control over money and interest
-rates.
-Trying to tame the business cycle is not the same as succeeding. Economic fluctuations
-remain with us, and one reason is that the government’s fiscal and monetary policies
-sometimes fail—for both political and economic reasons. As we will see in Part 7, policy
-makers do not always make the right decisions. And even when they do, the economy
-does not always react as expected. Furthermore, for reasons we will explain later, the
+through cycles of boom and bust. 
+---examples---
+
+The booms, as we shall see, often bring inflation, and
+the busts always raise unemployment. 
+---examples---
+
+Years ago, economists, businesspeople, and politicians
+viewed these fluctuations as inevitable: there was nothing the government could or should do about them.
+---examples---
+
+That view is now considered obsolete. 
+As we will learn in Part 6, and especially Part 7,
+modern governments have an arsenal of weapons that they can and do deploy to try to mitigate fluctuations in their national economies — to limit both inflation and unemployment.
+---examples---
+
+
+Some of these weapons constitute what is called fiscal policy: control over taxes and government spending. 
+Others come from monetary policy: control over money and interest rates.
+---examples---
+
+Trying to tame the business cycle is not the same as succeeding.
+
+Economic fluctuations remain with us, and one reason is that the government’s fiscal and monetary policies
+sometimes fail—for both political and economic reasons. '
+
+As we will see in Part 7, policy makers do not always make the right decisions. And even when they do, the economy does not always react as expected. 
+
+Furthermore, for reasons we will explain later, the
 “right” decision is not always clear.
 
 

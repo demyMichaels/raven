@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equilibrium Lab - Physics Simulation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121a2a;
+            --bg-card: #1a2438;
+            --accent-stable: #00d4aa;
+            --accent-unstable: #ff6b6b;
+            --accent-neutral: #ffd93d;
+            --text-primary: #e8edf5;
+            --text-secondary: #8892a6;
+            --ball-gradient-1: #4a5568;
+            --ball-gradient-2: #2d3748;
+            --ball-shine: rgba(255,255,255,0.4);
+            --surface-color: #2d3a52;
+            --glow-stable: rgba(0, 212, 170, 0.3);
+            --glow-unstable: rgba(255, 107, 107, 0.3);
+            --glow-neutral: rgba(255, 217, 61, 0.3);
+        }
+
+        .dark {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #121a2a;
+            --bg-card: #1a2438;
+            --text-primary: #e8edf5;
+            --text-secondary: #8892a6;
+        }
+
+        html:not(.dark) {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #e2e8f0;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --surface-color: #cbd5e0;
+            --ball-gradient-1: #718096;
+            --ball-gradient-2: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Sora', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-stable), var(--accent-unstable), var(--accent-neutral));
+            border-radius: 2px;
+        }
+
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(1.8rem, 5vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-stable));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Space Mono', monospace;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-stable), #00a88a);
+            color: #fff;
+            box-shadow: 0 4px 15px var(--glow-stable);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--glow-stable);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 2px solid var(--surface-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-stable);
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.stable { background: var(--accent-stable); }
+        .legend-dot.unstable { background: var(--accent-unstable); }
+        .legend-dot.neutral { background: var(--accent-neutral); }
+
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .sim-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .sim-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .sim-card.stable {
+            border: 2px solid var(--accent-stable);
+            box-shadow: 0 8px 30px var(--glow-stable);
+        }
+
+        .sim-card.unstable {
+            border: 2px solid var(--accent-unstable);
+            box-shadow: 0 8px 30px var(--glow-unstable);
+        }
+
+        .sim-card.neutral {
+            border: 2px solid var(--accent-neutral);
+            box-shadow: 0 8px 30px var(--glow-neutral);
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .sim-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .sim-type {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stable .sim-type {
+            background: rgba(0, 212, 170, 0.2);
+            color: var(--accent-stable);
+        }
+
+        .unstable .sim-type {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--accent-unstable);
+        }
+
+        .neutral .sim-type {
+            background: rgba(255, 217, 61, 0.2);
+            color: var(--accent-neutral);
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .sim-description {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .tap-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 4px 8px;
+            border-radius: 4px;
+            opacity: 0.8;
+        }
+
+        .info-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .info-panel h2 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--accent-stable);
+        }
+
+        .info-panel p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .physics-equations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .equation-card {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .equation {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--accent-stable);
+            margin-bottom: 8px;
+        }
+
+        .equation-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .recording-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent-unstable);
+            font-size: 0.85rem;
+        }
+
+        .recording-indicator.active {
+            display: flex;
+            animation: pulse 1s infinite;
+        }
+
+        .recording-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-unstable);
+            border-radius: 50%;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            header {
+                padding: 20px 15px;
+            }
+
+            .simulation-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .legend {
+                gap: 12px;
+            }
+
+            .legend-item {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚖️ Equilibrium Lab</h1>
+            <p class="subtitle">Interactive Physics Simulation — Tap or drag the bearings to observe equilibrium states</p>
+        </header>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="resetBtn">
+                <span>↻</span> Reset All
+            </button>
+            <button class="btn btn-secondary" id="pauseBtn">
+                <span>⏸</span> Pause
+            </button>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot stable"></div>
+                <span>Stable Equilibrium</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot unstable"></div>
+                <span>Unstable Equilibrium</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot neutral"></div>
+                <span>Neutral Equilibrium</span>
+            </div>
+        </div>
+
+        <div class="simulation-grid">
+            <div class="sim-card unstable" id="card-a">
+                <div class="sim-header">
+                    <span class="sim-label">A. Hill Top</span>
+                    <span class="sim-type">Unstable</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canvas-a"></canvas>
+                    <span class="tap-hint">Tap to disturb</span>
+                </div>
+                <p class="sim-description">Ball on convex surface. Any displacement causes it to roll away from equilibrium.</p>
+            </div>
+
+            <div class="sim-card stable" id="card-b">
+                <div class="sim-header">
+                    <span class="sim-label">B. Deep Bowl</span>
+                    <span class="sim-type">Stable</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canvas-b"></canvas>
+                    <span class="tap-hint">Tap to disturb</span>
+                </div>
+                <p class="sim-description">Ball in concave bowl. When displaced, restoring force returns it to center.</p>
+            </div>
+
+            <div class="sim-card stable" id="card-c">
+                <div class="sim-header">
+                    <span class="sim-label">C. Shallow Bowl</span>
+                    <span class="sim-type">Stable</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canvas-c"></canvas>
+                    <span class="tap-hint">Tap to disturb</span>
+                </div>
+                <p class="sim-description">Shallower curve means weaker restoring force and longer oscillation period.</p>
+            </div>
+
+            <div class="sim-card neutral" id="card-d">
+                <div class="sim-header">
+                    <span class="sim-label">D. Flat Surface</span>
+                    <span class="sim-type">Neutral</span>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canvas-d"></canvas>
+                    <span class="tap-hint">Tap to disturb</span>
+                </div>
+                <p class="sim-description">Ball on flat surface. Displaced ball remains in new position — no restoring force.</p>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h2>📚 Understanding Equilibrium</h2>
+            <p>
+                An object is in <strong>equilibrium</strong> when the net force acting on it is zero.
+                The <em>type</em> of equilibrium depends on what happens when the object is slightly displaced:
+            </p>
+            <div class="physics-equations">
+                <div class="equation-card">
+                    <div class="equation">ΣF = 0</div>
+                    <div class="equation-label">Equilibrium Condition</div>
+                </div>
+                <div class="equation-card">
+                    <div class="equation">F = -kx</div>
+                    <div class="equation-label">Restoring Force (Stable)</div>
+                </div>
+                <div class="equation-card">
+                    <div class="equation">PE = mgh</div>
+                    <div class="equation-label">Potential Energy</div>
+                </div>
+                <div class="equation-card">
+                    <div class="equation">T = 2π√(m/k)</div>
+                    <div class="equation-label">Oscillation Period</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Physics simulation class
+        class BallSimulation {
+            constructor(canvasId, type, curvature = 0.01) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.type = type; // 'unstable', 'stable-deep', 'stable-shallow', 'neutral'
+                this.curvature = curvature;
+
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+
+                this.reset();
+                this.setupInteraction();
+            }
+
+            resize() {
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                this.canvas.width = rect.width * dpr;
+                this.canvas.height = rect.height * dpr;
+                this.ctx.scale(dpr, dpr);
+                this.width = rect.width;
+                this.height = rect.height;
+                this.centerX = this.width / 2;
+                this.centerY = this.height * 0.65;
+                this.ballRadius = Math.min(this.width, this.height) * 0.1;
+            }
+
+            reset() {
+                this.ballX = this.centerX;
+                this.velocity = 0;
+                this.isDragging = false;
+                this.updateBallY();
+            }
+
+            getSurfaceY(x) {
+                const dx = x - this.centerX;
+                switch(this.type) {
+                    case 'unstable':
+                        return this.centerY - this.curvature * dx * dx;
+                    case 'stable-deep':
+                        return this.centerY + this.curvature * 1.5 * dx * dx;
+                    case 'stable-shallow':
+                        return this.centerY + this.curvature * 0.5 * dx * dx;
+                    case 'neutral':
+                        return this.centerY;
+                    default:
+                        return this.centerY;
+                }
+            }
+
+            getSurfaceSlope(x) {
+                const dx = x - this.centerX;
+                switch(this.type) {
+                    case 'unstable':
+                        return -2 * this.curvature * dx;
+                    case 'stable-deep':
+                        return 2 * this.curvature * 1.5 * dx;
+                    case 'stable-shallow':
+                        return 2 * this.curvature * 0.5 * dx;
+                    case 'neutral':
+                        return 0;
+                    default:
+                        return 0;
+                }
+            }
+
+            updateBallY() {
+                this.ballY = this.getSurfaceY(this.ballX) - this.ballRadius;
+            }
+
+            setupInteraction() {
+                const container = this.canvas.parentElement;
+
+                const getPosition = (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    return clientX - rect.left;
+                };
+
+                container.addEventListener('mousedown', (e) => this.startDrag(getPosition(e)));
+                container.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.startDrag(getPosition(e));
+                }, { passive: false });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) this.drag(getPosition(e));
+                });
+                window.addEventListener('touchmove', (e) => {
+                    if (this.isDragging) this.drag(getPosition(e));
+                }, { passive: false });
+
+                window.addEventListener('mouseup', () => this.endDrag());
+                window.addEventListener('touchend', () => this.endDrag());
+
+                container.addEventListener('click', (e) => {
+                    if (!this.wasDragged) {
+                        this.applyImpulse(getPosition(e));
+                    }
+                    this.wasDragged = false;
+                });
+            }
+
+            startDrag(x) {
+                const dist = Math.abs(x - this.ballX);
+                if (dist < this.ballRadius * 2) {
+                    this.isDragging = true;
+                    this.dragStartX = x;
+                    this.wasDragged = false;
+                }
+            }
+
+            drag(x) {
+                if (this.isDragging) {
+                    const minX = this.ballRadius + 10;
+                    const maxX = this.width - this.ballRadius - 10;
+                    this.ballX = Math.max(minX, Math.min(maxX, x));
+                    this.updateBallY();
+                    this.velocity = 0;
+                    if (Math.abs(x - this.dragStartX) > 5) {
+                        this.wasDragged = true;
+                    }
+                }
+            }
+
+            endDrag() {
+                this.isDragging = false;
+            }
+
+            applyImpulse(clickX) {
+                const direction = clickX > this.ballX ? 1 : -1;
+                this.velocity += direction * 3;
+            }
+
+            update(dt, paused) {
+                if (paused || this.isDragging) return;
+
+                const gravity = 0.5;
+                const friction = 0.995;
+                const damping = 0.98;
+
+                // Calculate acceleration based on slope
+                const slope = this.getSurfaceSlope(this.ballX);
+                const acceleration = gravity * slope;
+
+                this.velocity += acceleration;
+                this.velocity *= friction;
+
+                // Apply damping for stable equilibrium
+                if (this.type.startsWith('stable')) {
+                    this.velocity *= damping;
+                }
+
+                this.ballX += this.velocity;
+
+                // Boundary checks
+                const minX = this.ballRadius + 10;
+                const maxX = this.width - this.ballRadius - 10;
+
+                if (this.ballX < minX) {
+                    this.ballX = minX;
+                    this.velocity *= -0.5;
+                } else if (this.ballX > maxX) {
+                    this.ballX = maxX;
+                    this.velocity *= -0.5;
+                }
+
+                this.updateBallY();
+            }
+
+            draw() {
+                const ctx = this.ctx;
+                const isDark = document.documentElement.classList.contains('dark');
+
+                // Clear
+                ctx.clearRect(0, 0, this.width, this.height);
+
+                // Draw surface
+                ctx.beginPath();
+                ctx.moveTo(0, this.height);
+
+                for (let x = 0; x <= this.width; x += 2) {
+                    const y = this.getSurfaceY(x);
+                    if (x === 0) {
+                        ctx.lineTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+
+                ctx.lineTo(this.width, this.height);
+                ctx.closePath();
+
+                const surfaceGradient = ctx.createLinearGradient(0, this.centerY - 50, 0, this.height);
+                if (isDark) {
+                    surfaceGradient.addColorStop(0, '#2d3a52');
+                    surfaceGradient.addColorStop(1, '#1a2438');
+                } else {
+                    surfaceGradient.addColorStop(0, '#cbd5e0');
+                    surfaceGradient.addColorStop(1, '#a0aec0');
+                }
+                ctx.fillStyle = surfaceGradient;
+                ctx.fill();
+
+                // Surface edge highlight
+                ctx.beginPath();
+                for (let x = 0; x <= this.width; x += 2) {
+                    const y = this.getSurfaceY(x);
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw ball shadow
+                ctx.beginPath();
+                ctx.ellipse(
+                    this.ballX,
+                    this.getSurfaceY(this.ballX) + 5,
+                    this.ballRadius * 0.9,
+                    this.ballRadius * 0.3,
+                    0, 0, Math.PI * 2
+                );
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fill();
+
+                // Draw ball with metallic gradient
+                const ballGradient = ctx.createRadialGradient(
+                    this.ballX - this.ballRadius * 0.3,
+                    this.ballY - this.ballRadius * 0.3,
+                    0,
+                    this.ballX,
+                    this.ballY,
+                    this.ballRadius
+                );
+                ballGradient.addColorStop(0, '#8892a6');
+                ballGradient.addColorStop(0.3, '#5a6478');
+                ballGradient.addColorStop(0.7, '#3d4554');
+                ballGradient.addColorStop(1, '#2d3544');
+
+                ctx.beginPath();
+                ctx.arc(this.ballX, this.ballY, this.ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = ballGradient;
+                ctx.fill();
+
+                // Ball highlight
+                ctx.beginPath();
+                ctx.arc(
+                    this.ballX - this.ballRadius * 0.3,
+                    this.ballY - this.ballRadius * 0.3,
+                    this.ballRadius * 0.25,
+                    0, Math.PI * 2
+                );
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.fill();
+
+                // Secondary highlight
+                ctx.beginPath();
+                ctx.arc(
+                    this.ballX - this.ballRadius * 0.15,
+                    this.ballY - this.ballRadius * 0.15,
+                    this.ballRadius * 0.5,
+                    0, Math.PI * 2
+                );
+                const shineGradient = ctx.createRadialGradient(
+                    this.ballX - this.ballRadius * 0.3,
+                    this.ballY - this.ballRadius * 0.3,
+                    0,
+                    this.ballX,
+                    this.ballY,
+                    this.ballRadius * 0.6
+                );
+                shineGradient.addColorStop(0, 'rgba(255,255,255,0.2)');
+                shineGradient.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = shineGradient;
+                ctx.fill();
+
+                // Draw equilibrium indicator line
+                ctx.beginPath();
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(this.centerX, this.centerY - 40);
+                ctx.lineTo(this.centerX, this.centerY + 20);
+                ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // Initialize simulations
+        const simulations = [
+            new BallSimulation('canvas-a', 'unstable', 0.008),
+            new BallSimulation('canvas-b', 'stable-deep', 0.012),
+            new BallSimulation('canvas-c', 'stable-shallow', 0.012),
+            new BallSimulation('canvas-d', 'neutral', 0)
+        ];
+
+        let paused = false;
+        let lastTime = performance.now();
+
+        // Animation loop
+        function animate(currentTime) {
+            const dt = (currentTime - lastTime) / 16.67;
+            lastTime = currentTime;
+
+            simulations.forEach(sim => {
+                sim.update(dt, paused);
+                sim.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate(performance.now());
+
+        // Controls
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            simulations.forEach(sim => sim.reset());
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', function() {
+            paused = !paused;
+            this.innerHTML = paused ? '<span>▶</span> Play' : '<span>⏸</span> Pause';
+        });
+    </script>
+</body>
+</html>
+
