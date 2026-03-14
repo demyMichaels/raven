@@ -295,6 +295,7 @@
             color: var(--text-secondary);
             line-height: 1.8;
             font-size: 0.95rem;
+            margin-bottom: 15px;
         }
 
         .physics-equations {
@@ -321,6 +322,34 @@
         .equation-label {
             font-size: 0.8rem;
             color: var(--text-secondary);
+        }
+
+        .highlight {
+            background: rgba(0,212,170,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-stable);
+            margin: 15px 0;
+        }
+
+        .highlight p {
+            margin-bottom: 0;
+        }
+
+        .simple-list {
+            list-style: none;
+            padding: 0;
+        }
+        .simple-list li {
+            margin-bottom: 12px;
+            padding-left: 24px;
+            position: relative;
+        }
+        .simple-list li::before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: var(--accent-stable);
         }
 
         @keyframes pulse {
@@ -453,27 +482,36 @@
         </div>
 
         <div class="info-panel">
-            <h2>📚 Understanding Equilibrium</h2>
+            <h2>📚 Understanding Equilibrium – High School Edition</h2>
             <p>
-                An object is in <strong>equilibrium</strong> when the net force acting on it is zero.
-                The <em>type</em> of equilibrium depends on what happens when the object is slightly displaced:
+                <strong>Equilibrium</strong> just means “no net force” – the object could be sitting still. But what happens if you give it a tiny nudge? That’s what tells us what kind of equilibrium it is.
             </p>
+            <div class="highlight">
+                <p><strong>🔍 Why is potential energy lowest in stable equilibrium?</strong><br>
+                Think of a ball in a bowl. The bottom of the bowl is the lowest point – that’s where the ball has the <strong>least potential energy</strong> (PE = mgh, so lower height = less PE). If you push the ball up the side, you give it more PE. Gravity wants to bring it back down to the lowest spot – that’s the <strong>restoring force</strong>. Nature always tries to go to the lowest energy state, like water flowing downhill.</p>
+            </div>
+            <ul class="simple-list">
+                <li><strong>Stable (bowl):</strong> bottom = minimum PE. Push it, it rolls back.</li>
+                <li><strong>Unstable (hill):</strong> top = maximum PE. Even a tiny push makes it roll all the way down (away!).</li>
+                <li><strong>Neutral (flat):</strong> PE is the same everywhere. Push it – it stays where you put it.</li>
+            </ul>
+            <p>In the simulations above, watch the coloured energy bar: green (stable) shows low PE at the centre, red (unstable) shows high PE at the centre, yellow (neutral) stays in the middle because height doesn’t change.</p>
             <div class="physics-equations">
-                <div class="equation-card">
-                    <div class="equation">ΣF = 0</div>
-                    <div class="equation-label">Equilibrium Condition</div>
-                </div>
-                <div class="equation-card">
-                    <div class="equation">F = -kx</div>
-                    <div class="equation-label">Restoring Force (Stable)</div>
-                </div>
                 <div class="equation-card">
                     <div class="equation">PE = mgh</div>
                     <div class="equation-label">Potential Energy</div>
                 </div>
                 <div class="equation-card">
-                    <div class="equation">T = 2π√(m/k)</div>
-                    <div class="equation-label">Oscillation Period</div>
+                    <div class="equation">F ~ – slope</div>
+                    <div class="equation-label">Force points downhill</div>
+                </div>
+                <div class="equation-card">
+                    <div class="equation">↓ PE = stable</div>
+                    <div class="equation-label">Lowest energy = stable</div>
+                </div>
+                <div class="equation-card">
+                    <div class="equation">↑ PE = unstable</div>
+                    <div class="equation-label">Highest energy = unstable</div>
                 </div>
             </div>
         </div>
@@ -530,12 +568,12 @@
             getSurfaceY(x) {
                 const dx = x - this.centerX;
                 switch(this.type) {
-                    case 'unstable':
-                        return this.centerY - this.curvature * dx * dx;
-                    case 'stable-deep':
-                        return this.centerY + this.curvature * 1.5 * dx * dx;
-                    case 'stable-shallow':
-                        return this.centerY + this.curvature * 0.5 * dx * dx;
+                    case 'unstable':        // Hill top: high in middle (smaller y because y=0 at top)
+                        return this.centerY + this.curvature * dx * dx;
+                    case 'stable-deep':      // Deep bowl: low in middle (larger y)
+                        return this.centerY - this.curvature * 1.5 * dx * dx;
+                    case 'stable-shallow':    // Shallow bowl
+                        return this.centerY - this.curvature * 0.5 * dx * dx;
                     case 'neutral':
                         return this.centerY;
                     default:
@@ -547,11 +585,11 @@
                 const dx = x - this.centerX;
                 switch(this.type) {
                     case 'unstable':
-                        return -2 * this.curvature * dx;
+                        return 2 * this.curvature * dx;          // positive for x>0
                     case 'stable-deep':
-                        return 2 * this.curvature * 1.5 * dx;
+                        return -2 * this.curvature * 1.5 * dx;   // negative for x>0
                     case 'stable-shallow':
-                        return 2 * this.curvature * 0.5 * dx;
+                        return -2 * this.curvature * 0.5 * dx;   // negative for x>0
                     case 'neutral':
                         return 0;
                     default:
@@ -634,14 +672,14 @@
                 const friction = 0.995;
                 const damping = 0.98;
 
-                // Calculate acceleration based on slope
+                // Acceleration = +gravity * slope (downhill corresponds to decreasing y)
                 const slope = this.getSurfaceSlope(this.ballX);
-                const acceleration = gravity * slope;
+                const acceleration = gravity * slope;   // positive sign
 
                 this.velocity += acceleration;
                 this.velocity *= friction;
 
-                // Apply damping for stable equilibrium
+                // Extra damping for stable equilibria
                 if (this.type.startsWith('stable')) {
                     this.velocity *= damping;
                 }
@@ -786,12 +824,12 @@
             }
         }
 
-        // Initialize simulations
+        // Initialize simulations with visually correct shapes
         const simulations = [
-            new BallSimulation('canvas-a', 'unstable', 0.008),
-            new BallSimulation('canvas-b', 'stable-deep', 0.012),
-            new BallSimulation('canvas-c', 'stable-shallow', 0.012),
-            new BallSimulation('canvas-d', 'neutral', 0)
+            new BallSimulation('canvas-a', 'unstable', 0.008),        // Hill top (peak)
+            new BallSimulation('canvas-b', 'stable-deep', 0.012),    // Deep bowl (dip)
+            new BallSimulation('canvas-c', 'stable-shallow', 0.012), // Shallow bowl
+            new BallSimulation('canvas-d', 'neutral', 0)             // Flat surface
         ];
 
         let paused = false;
@@ -824,4 +862,3 @@
     </script>
 </body>
 </html>
-
