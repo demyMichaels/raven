@@ -1,74 +1,111 @@
 National Income: Where It Comes
 From and Where It Goes
 
+
 A large income is the best recipe for happiness I ever heard of.
 — Jane Austen
 
 
 The most important macroeconomic variable is gross domestic product (GDP).
-As we have seen, GDP measures both a nation’s total output of goods and services
-and its total income.To appreciate the significance of GDP, one need only
-take a quick look at international data: compared with their poorer counterparts,
-nations with a high level of GDP per person have everything from better childhood
-nutrition to more televisions per household.A large GDP does not ensure
-that all of a nation’s citizens are happy, but it may be the best recipe for happiness
-that macroeconomists have to offer.
+
+As we have seen, GDP measures both a nation’s total output of goods and services and its total income.
+
+To appreciate the significance of GDP, one need only take a quick look at international data: 
+compared with their poorer counterparts,
+nations with a high level of GDP per person have everything from better childhood nutrition to more televisions per household.
+
+A large GDP does not ensure
+that all of a nation’s citizens are happy, but it may be the best recipe for happiness that macroeconomists have to offer.
+
 This chapter addresses four groups of questions about the sources and uses of
 a nation’s GDP:
-. How much do the firms in the economy produce? What determines a nation’s
-total income?
-. Who gets the income from production? How much goes to compensate
-workers, and how much goes to compensate owners of capital?
-. Who buys the output of the economy? How much do households purchase
-for consumption, how much do households and firms purchase
+
+How much do the firms in the economy produce? 
+
+What determines a nation’s total income?
+
+Who gets the income from production? 
+
+How much goes to compensate workers, and 
+
+how much goes to compensate owners of capital?
+
+Who buys the output of the economy? 
+
+How much do households purchase for consumption, 
+
+how much do households and firms purchase
 for investment, and how much does the government buy for public
 purposes?
-. What equilibrates the demand for and supply of goods and services? What
-ensures that desired spending on consumption, investment, and government
-purchases equals the level of production?
-To answer these questions, we must examine how the various parts of the economy
-interact.
+
+. What equilibrates the demand for and supply of goods and services? 
+
+What ensures that desired spending on consumption, 
+investment, and 
+government purchases equals the level of production?
+
+To answer these questions, we must examine how the various parts of the economy interact.
+
 A good place to start is the circular flow diagram. In Chapter 2 we traced the
-circular flow of dollars in a hypothetical economy that produced one product,
-bread, from labor services. Figure 3-1 more accurately reflects how real economies
+circular flow of dollars in a hypothetical economy that produced one product, bread, from labor services. 
+
+Figure 3-1 more accurately reflects how real economies
 function. It shows the linkages among the economic actors—households, firms, and the government—and how dollars flow among them through the various
 markets in the economy.
 Let’s look at the flow of dollars from the viewpoints of these economic actors.
+
 Households receive income and use it to pay taxes to the government,
 to consume goods and services, and to save through the financial markets.
+
 Firms receive revenue from the sale of goods and services and use it to pay
-for the factors of production. Both households and firms borrow in financial
-markets to buy investment goods, such as houses and factories. The government
-receives revenue from taxes and uses it to pay for government purchases.
-Any excess of tax revenue over government spending is called public
+for the factors of production. 
+Both households and firms borrow in financial markets to buy investment goods, such as houses and factories. The government receives revenue from taxes and uses it to pay for government purchases.
+
+Any excess of TAX REVENUE over GOVERNEMENT SPENDING is called public
 saving, which can be either positive (a budget surplus) or negative (a budget
 deficit).
+
 In this chapter we develop a basic classical model to explain the economic
 interactions depicted in Figure 3-1.We begin with firms and look at what determines their level of production (and, thus, the level of national income).
+
 Then we examine how the markets for the factors of production distribute
-this income to households. Next, we consider how much of this income
-households consume and how much they save. In addition to discussing the
+this income to households. 
+
+Next, we consider 
+how much of this income households consume and 
+how much they save. 
+
+In addition to discussing the
 demand for goods and services arising from the consumption of households,
 we discuss the demand arising from investment and government purchases.
+
 Finally, we come full circle and examine how the demand for goods and services
 (the sum of consumption, investment, and government purchases) and
 the supply of goods and services (the level of production) are brought into
 balance.
 
 
-3-1 What Determines the Total Production of
-Goods and Services?
-An economy’s output of goods and services—its GDP—depends on (1) its quantity
-of inputs, called the factors of production, and (2) its ability to turn inputs
-into output, as represented by the production function.We discuss each of these
-in turn.
+
+3-1 What Determines the Total Production of Goods and Services?
+An economy’s output of goods and services—its GDP—depends on 
+(1) its quantity of inputs, called the FACTORS OF PRODUCTIONO, and 
+(2) its ability to turn inputs
+into output, as represented by the production function.
+
+We discuss each of these in turn.
+
 The Factors of Production
-Factors of production are the inputs used to produce goods and services.The
-two most important factors of production are capital and labor. Capital is the set
-of tools that workers use: the construction worker’s crane, the accountant’s calculator,
-and this author’s personal computer. Labor is the time people spend working.
+Factors of production are the inputs used to produce goods and services.
+The two most important factors of production are capital and labor. 
+
+Capital is the set of tools that workers use: the construction worker’s crane, the accountant’s calculator,
+and this author’s personal computer. 
+
+Labor is the time people spend working.
+
 We use the symbol K to denote the amount of capital and the symbol L to
 denote the amount of labor.
+
 In this chapter we take the economy’s factors of production as given. In other
 words, we assume that the economy has a fixed amount of capital and a fixed
 amount of labor.We write K = K
@@ -82,46 +119,59 @@ what happens when the factors of production change over time, as they
 do in the real world. For now, to keep our analysis simple, we assume fixed
 amounts of capital and labor.
 We also assume here that the factors of production are fully utilized—that
-is, that no resources are wasted.Again, in the real world, part of the labor force
-is unemployed, and some capital lies idle. In Chapter 6 we examine the reasons
+is, that no resources are wasted.Again, in the real world, part of the labor force is unemployed, and some capital lies idle. 
+
+In Chapter 6 we examine the reasons
 for unemployment, but for now we assume that capital and labor are fully
 employed.
 
+
 The Production Function
 The available production technology determines how much output is produced
-from given amounts of capital and labor. Economists express the available technology
-using a production function. Letting Y denote the amount of output,
+from given amounts of capital and labor. 
+
+Economists express the available technology using a production function. 
+
+Letting Y denote the amount of output,
 we write the production function as
 Y = F(K, L).
-This equation states that output is a function of the amount of capital and the
-amount of labor.
+
+This equation states that output is a function of the amount of capital and the amount of labor.
+
 The production function reflects the available technology for turning capital
-and labor into output. If someone invents a better way to produce a good, the result
-is more output from the same amounts of capital and labor.Thus, technological
+and labor into output. 
+
+If someone invents a better way to produce a good, the result is more output from the same amounts of capital and labor.Thus, technological
 change alters the production function.
+
 Many production functions have a property called constant returns to
-scale. A production function has constant returns to scale if an increase of an
-equal percentage in all factors of production causes an increase in output of the
-same percentage. If the production function has constant returns to scale, then
+scale. A production function has constant returns to scale if an increase of an equal percentage in all factors of production causes an increase in output of the
+same percentage.
+
+If the production function has constant returns to scale, then
 we get 10 percent more output when we increase both capital and labor by 10
 percent. Mathematically, a production function has constant returns to scale if
 zY = F(zK, zL)
 for any positive number z.This equation says that if we multiply both the amount
 of capital and the amount of labor by some number z, output is also multiplied by
-z. In the next section we see that the assumption of constant returns to scale has
-an important implication for how the income from production is distributed.
+z. 
+
+In the next section we see that the assumption of constant returns to scale has an important implication for how the income from production is distributed.
+
 As an example of a production function, consider production at a bakery.The
-kitchen and its equipment are the bakery’s capital, the workers hired to make the
-bread are its labor, and the loaves of bread are its output.The bakery’s production
+kitchen and its equipment are the bakery’s capital, the workers hired to make the bread are its labor, and the loaves of bread are its output.
+
+The bakery’s production
 function shows that the number of loaves produced depends on the amount of
 equipment and the number of workers. If the production function has constant
 returns to scale, then doubling the amount of equipment and the number of
 workers doubles the amount of bread produced.
 
+
 The Supply of Goods and Services
-We can now see that the factors of production and the production function together
-determine the quantity of goods and services supplied, which in turn
-equals the economy’s output.To express this mathematically,we write
+We can now see that the factors of production and the production function together determine the quantity of goods and services supplied, which in turn equals the economy’s output.
+
+To express this mathematically,we write
 Y = F(K
 _
 , L
@@ -130,63 +180,83 @@ _
 = Y
 _
 .
-In this chapter, because we assume that the supplies of capital and labor and the
-technology are fixed, output is also fixed (at a level denoted here as Y–).When we discuss economic growth in Chapters 7 and 8,we will examine how increases in
-capital and labor and improvements in the production technology lead to growth
-in the economy’s output.
 
-3-2 How Is National Income Distributed to the
-Factors of Production?
+In this chapter, because we assume that the supplies of capital and labor and the technology are fixed, output is also fixed (at a level denoted here as Y–).
+
+When we discuss economic growth in Chapters 7 and 8,we will examine how increases in capital and labor and improvements in the production technology lead to growth in the economy’s output.
+
+
+3-2 How Is National Income Distributed to the Factors of Production?
+
 As we discussed in Chapter 2, the total output of an economy equals its total income.
 Because the factors of production and the production function together
 determine the total output of goods and services, they also determine national
-income. The circular flow diagram in Figure 3-1 shows that this national income
+income. 
+
+The circular flow diagram in Figure 3-1 shows that this national income
 flows from firms to households through the markets for the factors of
 production.
+
 In this section we continue developing our model of the economy by discussing
-how these factor markets work. Economists have long studied factor
+how these factor markets work. 
+
+Economists have long studied factor
 markets to understand the distribution of income. (For example, Karl Marx, the
 noted nineteenth-century economist, spent much time trying to explain the incomes
-of capital and labor. The political philosophy of communism was in part
+of capital and labor. 
+
+The political philosophy of communism was in part
 based on Marx’s now-discredited theory.) Here we examine the modern theory
 of how national income is divided among the factors of production.This theory,
 called the neoclassical theory of distribution, is accepted by most economists today.
+
 Factor Prices
 The distribution of national income is determined by factor prices. Factor
-prices are the amounts paid to the factors of production—the wage workers
-earn and the rent the owners of capital collect. As Figure 3-2 illustrates, the price
-each factor of production receives for its services is in turn determined by the
-supply and demand for that factor. Because we have assumed that the economy’s
+prices are the amounts paid to the factors of production—
+the wage workers earn and 
+the rent the owners of capital collect. 
+
+As Figure 3-2 illustrates, the price
+each factor of production receives for its services is in turn determined by the supply and demand for that factor. 
+
+Because we have assumed that the economy’s
 factors of production are fixed, the factor supply curve in Figure 3-2 is vertical.
 The intersection of the downward-sloping factor demand curve and the vertical
 supply curve determines the equilibrium factor price.
+
 To understand factor prices and the distribution of income,we must examine
 the demand for the factors of production. Because factor demand arises from the
 thousands of firms that use capital and labor,we now look at the decisions faced
 by a typical firm about how much of these factors to employ.
+
 The Decisions Facing the Competitive Firm
 The simplest assumption to make about a typical firm is that it is competitive.
-A competitive firm is small relative to the markets in which it trades, so it has
-little influence on market prices. For example, our firm produces a good and sells
+A competitive firm is small relative to the markets in which it trades, so it has little influence on market prices. For example, our firm produces a good and sells
 it at the market price. Because many firms produce this good, our firm can sell as much as it wants without causing the price of the good to fall, or it can stop selling
 altogether without causing the price of the good to rise. Similarly, our firm
 cannot influence the wages of the workers it employs because many other local
 firms also employ workers.The firm has no reason to pay more than the market
-wage, and if it tried to pay less, its workers would take jobs elsewhere.Therefore,
-the competitive firm takes the prices of its output and its inputs as given.
+wage, and if it tried to pay less, its workers would take jobs elsewhere.Therefore, the competitive firm takes the prices of its output and its inputs as given.
+
 To make its product, the firm needs two factors of production, capital and
-labor. As we did for the aggregate economy, we represent the firm’s production
+labor. 
+
+As we did for the aggregate economy, we represent the firm’s production
 technology by the production function
 Y = F(K, L),
 where Y is the number of units produced (the firm’s output), K the number of
 machines used (the amount of capital), and L the number of hours worked by
-the firm’s employees (the amount of labor).The firm produces more output if it
-has more machines or if its employees work more hours.
-The firm sells its output at a price P, hires workers at a wage W, and rents capital
-at a rate R. Notice that when we speak of firms renting capital,we are assuming
+the firm’s employees (the amount of labor).
+
+The firm produces more output if it has more machines or if its employees work more hours.
+
+The firm sells its output at a price P, hires workers at a wage W, and rents capital at a rate R. 
+
+Notice that when we speak of firms renting capital,we are assuming
 that households own the economy’s stock of capital. In this analysis,
-households rent out their capital, just as they sell their labor. The firm obtains
-both factors of production from the households that own them.1
+households rent out their capital, just as they sell their labor. 
+
+The firm obtains both factors of production from the households that own them.1
 The goal of the firm is to maximize profit. Profit is revenue minus costs—it is
 what the owners of the firm keep after paying for the costs of production. Revenue
 equals P × Y, the selling price of the good P multiplied by the amount of
