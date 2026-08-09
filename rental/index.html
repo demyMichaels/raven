@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🏠 Rental Property Math Master</title>
+    <style>
+        /* ─── Reset & base ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #0b1a2e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: radial-gradient(ellipse at 20% 50%, #12324b 0%, #0b1a2e 70%);
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+
+        /* ─── Card ─── */
+        .game-card {
+            background: #f0f4fa;
+            border-radius: 40px;
+            padding: 32px 36px 40px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #f6b83e, #e89b2a, #f6b83e);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%,
+            100% {
+                background-position: 0% 0%;
+            }
+            50% {
+                background-position: 100% 0%;
+            }
+        }
+
+        /* ─── Header ─── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .title-group .icon {
+            font-size: 30px;
+        }
+
+        .title-group h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0b1a2e;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .title-group h1 span {
+            color: #b87a1a;
+        }
+
+        .score-box {
+            background: #0b1a2e;
+            color: #f6b83e;
+            padding: 8px 20px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            letter-spacing: 0.3px;
+        }
+
+        .score-box .score-num {
+            color: #fff;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        /* ─── Progress ─── */
+        .progress-area {
+            margin-bottom: 26px;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #d0dbe8;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f6b83e, #d4922a);
+            border-radius: 20px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c4058;
+            letter-spacing: 0.2px;
+        }
+
+        .progress-labels .q-counter {
+            background: #dfe8f2;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+        }
+
+        /* ─── Question ─── */
+        .question-area {
+            margin-bottom: 28px;
+        }
+
+        .question-badge {
+            display: inline-block;
+            background: #0b1a2e;
+            color: #f6b83e;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 16px;
+            border-radius: 40px;
+            margin-bottom: 14px;
+        }
+
+        .question-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #0b1a2e;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+
+        .question-context {
+            font-size: 15px;
+            color: #3d5670;
+            font-weight: 400;
+            background: #e4ebf5;
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin-top: 8px;
+            border-left: 4px solid #f6b83e;
+            line-height: 1.5;
+        }
+
+        .question-context strong {
+            color: #0b1a2e;
+        }
+
+        /* ─── Options ─── */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #d0dbe8;
+            border-radius: 16px;
+            padding: 16px 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #0b1a2e;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            font-family: inherit;
+            line-height: 1.3;
+        }
+
+        .option-btn .letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e4ebf5;
+            color: #2c4058;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+            transition: all 0.18s ease;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            border-color: #b87a1a;
+            background: #fdf8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .option-btn:hover:not(.disabled) .letter {
+            background: #f6b83e;
+            color: #fff;
+        }
+
+        .option-btn:active:not(.disabled) {
+            transform: scale(0.97);
+        }
+
+        .option-btn.correct {
+            border-color: #1f9d5a;
+            background: #e3f5ec;
+            cursor: default;
+        }
+
+        .option-btn.correct .letter {
+            background: #1f9d5a;
+            color: #fff;
+        }
+
+        .option-btn.wrong {
+            border-color: #d14c4c;
+            background: #fde8e8;
+            cursor: default;
+        }
+
+        .option-btn.wrong .letter {
+            background: #d14c4c;
+            color: #fff;
+        }
+
+        .option-btn.reveal-correct {
+            border-color: #1f9d5a;
+            background: #e3f5ec;
+            cursor: default;
+        }
+
+        .option-btn.reveal-correct .letter {
+            background: #1f9d5a;
+            color: #fff;
+        }
+
+        .option-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .option-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #d0dbe8;
+        }
+
+        /* ─── Feedback ─── */
+        .feedback-area {
+            background: #fff;
+            border-radius: 18px;
+            padding: 18px 22px;
+            margin-bottom: 22px;
+            min-height: 70px;
+            border-left: 6px solid #d0dbe8;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .feedback-area.feedback-correct {
+            border-left-color: #1f9d5a;
+            background: #f3faf6;
+        }
+
+        .feedback-area.feedback-wrong {
+            border-left-color: #d14c4c;
+            background: #fdf3f3;
+        }
+
+        .feedback-area .fb-title {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        .feedback-area .fb-title .fb-icon {
+            font-size: 22px;
+        }
+
+        .feedback-area .fb-detail {
+            font-size: 15px;
+            color: #1e334a;
+            line-height: 1.5;
+        }
+
+        .feedback-area .fb-detail strong {
+            color: #0b1a2e;
+        }
+
+        .feedback-area .fb-detail .highlight {
+            background: #f6b83e30;
+            padding: 1px 6px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        /* ─── Next button ─── */
+        .next-btn {
+            background: #0b1a2e;
+            color: #fff;
+            border: none;
+            padding: 14px 34px;
+            border-radius: 60px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(11, 26, 46, 0.3);
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            background: #162f4a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(11, 26, 46, 0.4);
+        }
+
+        .next-btn:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        .next-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* ─── Results screen ─── */
+        .results-screen {
+            text-align: center;
+            padding: 20px 0 8px;
+        }
+
+        .results-screen .big-icon {
+            font-size: 72px;
+            margin-bottom: 10px;
+        }
+
+        .results-screen .result-title {
+            font-size: 34px;
+            font-weight: 800;
+            color: #0b1a2e;
+            margin-bottom: 4px;
+        }
+
+        .results-screen .result-sub {
+            font-size: 18px;
+            color: #2c4058;
+            margin-bottom: 20px;
+        }
+
+        .results-screen .result-grade {
+            display: inline-block;
+            background: #0b1a2e;
+            color: #f6b83e;
+            font-size: 64px;
+            font-weight: 800;
+            width: 100px;
+            height: 100px;
+            line-height: 100px;
+            border-radius: 50%;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .results-screen .result-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 16px 0 28px;
+            flex-wrap: wrap;
+        }
+
+        .results-screen .stat-item {
+            text-align: center;
+        }
+
+        .results-screen .stat-item .stat-num {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0b1a2e;
+        }
+
+        .results-screen .stat-item .stat-label {
+            font-size: 14px;
+            color: #3d5670;
+            font-weight: 500;
+        }
+
+        .results-screen .result-message {
+            font-size: 16px;
+            color: #1e334a;
+            max-width: 440px;
+            margin: 0 auto 24px;
+            line-height: 1.6;
+            background: #e4ebf5;
+            padding: 16px 24px;
+            border-radius: 16px;
+        }
+
+        .results-screen .result-message strong {
+            color: #0b1a2e;
+        }
+
+        .restart-btn {
+            background: #f6b83e;
+            color: #0b1a2e;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 60px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 20px rgba(246, 184, 62, 0.35);
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+
+        .restart-btn:hover {
+            background: #e8a82a;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(246, 184, 62, 0.4);
+        }
+
+        .restart-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 640px) {
+            .game-card {
+                padding: 22px 18px 28px;
+                border-radius: 28px;
+            }
+
+            .title-group h1 {
+                font-size: 18px;
+            }
+
+            .title-group .icon {
+                font-size: 24px;
+            }
+
+            .score-box {
+                font-size: 15px;
+                padding: 6px 14px;
+            }
+
+            .question-text {
+                font-size: 18px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .option-btn {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+
+            .feedback-area {
+                padding: 14px 16px;
+                min-height: 60px;
+            }
+
+            .results-screen .result-title {
+                font-size: 26px;
+            }
+
+            .results-screen .result-grade {
+                font-size: 48px;
+                width: 80px;
+                height: 80px;
+                line-height: 80px;
+            }
+
+            .results-screen .result-stats {
+                gap: 24px;
+            }
+
+            .next-btn {
+                padding: 12px 26px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .game-card {
+                padding: 16px 12px 20px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .score-box {
+                justify-content: center;
+            }
+
+            .question-text {
+                font-size: 16px;
+            }
+
+            .option-btn {
+                font-size: 14px;
+                padding: 12px 14px;
+            }
+        }
+
+        /* ─── Utility ─── */
+        .hidden {
+            display: none !important;
+        }
+
+        .mt-2 {
+            margin-top: 8px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-wrapper">
+        <div class="game-card" id="app">
+
+            <!-- ─── HEADER ─── -->
+            <div class="header">
+                <div class="title-group">
+                    <span class="icon">🏠</span>
+                    <h1>Rental <span>Math</span> Master</h1>
+                </div>
+                <div class="score-box">
+                    🏆 <span class="score-num" id="scoreDisplay">0</span>
+                </div>
+            </div>
+
+            <!-- ─── PROGRESS ─── -->
+            <div class="progress-area">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-labels">
+                    <span>📊 Progress</span>
+                    <span class="q-counter" id="questionCounter">1 / 12</span>
+                </div>
+            </div>
+
+            <!-- ─── MAIN GAME ─── -->
+            <div id="gameContent">
+
+                <!-- Question area -->
+                <div class="question-area">
+                    <div class="question-badge" id="questionBadge">📐 CALCULATE</div>
+                    <div class="question-text" id="questionText">Loading question…</div>
+                    <div class="question-context hidden" id="questionContext"></div>
+                </div>
+
+                <!-- Options -->
+                <div class="options-grid" id="optionsContainer">
+                    <!-- rendered by JS -->
+                </div>
+
+                <!-- Feedback -->
+                <div class="feedback-area" id="feedbackArea">
+                    <div class="fb-title">
+                        <span class="fb-icon">💡</span>
+                        <span id="feedbackTitle">Ready to learn!</span>
+                    </div>
+                    <div class="fb-detail" id="feedbackDetail">Select an answer above to see feedback.</div>
+                </div>
+
+                <!-- Next button -->
+                <div class="btn-row">
+                    <button class="next-btn" id="nextBtn" disabled>
+                        Next <span>→</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─── RESULTS SCREEN ─── -->
+            <div id="resultsScreen" class="results-screen hidden">
+                <div class="big-icon">🎉</div>
+                <div class="result-title">You're a Math Master!</div>
+                <div class="result-sub" id="resultSub">Here's how you did:</div>
+                <div class="result-grade" id="resultGrade">A</div>
+                <div class="result-stats">
+                    <div class="stat-item">
+                        <div class="stat-num" id="resultCorrect">0</div>
+                        <div class="stat-label">✅ Correct</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num" id="resultWrong">0</div>
+                        <div class="stat-label">❌ Wrong</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-num" id="resultScore">0%</div>
+                        <div class="stat-label">📊 Score</div>
+                    </div>
+                </div>
+                <div class="result-message" id="resultMessage">
+                    <strong>Great work!</strong> You've mastered the math behind rental property investing. Keep learning and happy investing!
+                </div>
+                <button class="restart-btn" id="restartBtn">🔄 Play Again</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  DATA
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        const QUESTIONS = [{
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A rental property generates $2,750 per month in rent. What is the annual gross rental income?',
+            context: 'Annual gross income = monthly rent × 12 months.',
+            options: ['$30,000', '$33,000', '$27,500', '$36,000'],
+            correct: 1,
+            explanation: '$2,750 × 12 = <strong>$33,000</strong> per year. This is the gross income before any expenses.'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A property has annual gross income of $48,000 and total operating expenses of $18,000. What is the Net Operating Income (NOI)?',
+            context: 'NOI = Gross Income − Operating Expenses.',
+            options: ['$30,000', '$28,000', '$32,000', '$26,000'],
+            correct: 0,
+            explanation: '$48,000 − $18,000 = <strong>$30,000</strong> NOI. This is the profit before debt service and taxes.'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A property is purchased for $320,000 and generates an NOI of $28,800. What is the cap rate?',
+            context: 'Cap Rate = NOI ÷ Property Value × 100%.',
+            options: ['8%', '9%', '10%', '7%'],
+            correct: 1,
+            explanation: '$28,800 ÷ $320,000 = 0.09 = <strong>9%</strong> cap rate. A solid return for many markets!'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A property has monthly rent of $2,200, monthly operating expenses of $850, and monthly mortgage payment of $980. What is the monthly cash flow?',
+            context: 'Monthly Cash Flow = Rent − Expenses − Mortgage.',
+            options: ['$370', '$450', '$320', '$410'],
+            correct: 0,
+            explanation: '$2,200 − $850 − $980 = <strong>$370</strong> per month in positive cash flow. 🎉'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'An investor puts 25% down on a $280,000 property. The annual cash flow is $7,000. What is the cash-on-cash return?',
+            context: 'Cash-on-Cash = Annual Cash Flow ÷ Total Down Payment × 100%.',
+            options: ['8%', '9%', '10%', '12%'],
+            correct: 2,
+            explanation: 'Down payment = 25% × $280,000 = $70,000. $7,000 ÷ $70,000 = <strong>10%</strong> cash-on-cash return.'
+        }, {
+            type: 'spot',
+            badge: '🔍 SPOT THE BAD MATH',
+            text: 'An investor says: "My property rents for $1,800/month. With 10% vacancy, my annual effective gross income is $19,440." Is this math correct?',
+            context: 'Annual effective gross income = (Monthly Rent × 12) × (1 − Vacancy Rate).',
+            options: [
+                '✅ Yes, correct',
+                '❌ No, should be $21,600',
+                '❌ No, should be $20,520',
+                '❌ No, should be $18,000'
+            ],
+            correct: 0,
+            explanation: '$1,800 × 12 = $21,600. $21,600 × 0.90 = <strong>$19,440</strong>. ✅ The math is spot on!'
+        }, {
+            type: 'spot',
+            badge: '🔍 SPOT THE BAD MATH',
+            text: 'An investor claims: "My NOI is $22,000 and my property value is $275,000, so my cap rate is 8.5%." Is this correct?',
+            context: 'Cap Rate = NOI ÷ Property Value.',
+            options: [
+                '✅ Yes, correct',
+                '❌ No, should be 8%',
+                '❌ No, should be 9%',
+                '❌ No, should be 7.5%'
+            ],
+            correct: 1,
+            explanation: '$22,000 ÷ $275,000 = 0.08 = <strong>8%</strong>, not 8.5%. The investor overestimated by 0.5% — a common mistake!'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A property has 4 units, each renting for $1,200/month. The property has a 5% vacancy rate. What is the annual effective gross income?',
+            context: 'Total annual rent = Units × Monthly Rent × 12. Then subtract vacancy.',
+            options: ['$57,600', '$54,720', '$50,400', '$52,800'],
+            correct: 1,
+            explanation: '4 × $1,200 × 12 = $57,600 gross. $57,600 × 0.95 = <strong>$54,720</strong> effective gross income.'
+        }, {
+            type: 'spot',
+            badge: '🔍 SPOT THE BAD MATH',
+            text: 'An investor says: "I bought a property for $450,000 with 30% down. My annual cash flow is $9,000, so my cash-on-cash return is 6.7%." Is this correct?',
+            context: 'Cash-on-Cash = Annual Cash Flow ÷ Down Payment.',
+            options: [
+                '✅ Yes, correct',
+                '❌ No, should be 5%',
+                '❌ No, should be 7.5%',
+                '❌ No, should be 8%'
+            ],
+            correct: 0,
+            explanation: 'Down payment = 30% × $450,000 = $135,000. $9,000 ÷ $135,000 = 0.0667 ≈ <strong>6.7%</strong>. ✅ Correct!'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'A property has annual gross income of $62,000 and operating expenses of $24,800. What is the NOI?',
+            context: 'NOI = Gross Income − Operating Expenses.',
+            options: ['$37,200', '$38,400', '$36,000', '$35,600'],
+            correct: 0,
+            explanation: '$62,000 − $24,800 = <strong>$37,200</strong> NOI. Keep this number high for better valuations!'
+        }, {
+            type: 'spot',
+            badge: '🔍 SPOT THE BAD MATH',
+            text: 'An investor claims: "My monthly rent is $3,200, monthly expenses are $1,200, and monthly mortgage is $1,500. My monthly cash flow is $500." Is this correct?',
+            context: 'Cash Flow = Rent − Expenses − Mortgage.',
+            options: [
+                '✅ Yes, correct',
+                '❌ No, should be $400',
+                '❌ No, should be $600',
+                '❌ No, should be $700'
+            ],
+            correct: 0,
+            explanation: '$3,200 − $1,200 − $1,500 = <strong>$500</strong>. ✅ The math is correct!'
+        }, {
+            type: 'calculate',
+            badge: '📐 CALCULATE',
+            text: 'An investor puts 20% down on a $500,000 property. The annual cash flow is $10,000. What is the cash-on-cash return?',
+            context: 'Cash-on-Cash = Annual Cash Flow ÷ Down Payment.',
+            options: ['8%', '10%', '12%', '15%'],
+            correct: 1,
+            explanation: 'Down payment = 20% × $500,000 = $100,000. $10,000 ÷ $100,000 = <strong>10%</strong> cash-on-cash return.'
+        }];
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  STATE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        let currentQ = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let answered = false;
+        let totalQuestions = QUESTIONS.length;
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  DOM REFS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        const questionText = document.getElementById('questionText');
+        const questionContext = document.getElementById('questionContext');
+        const questionBadge = document.getElementById('questionBadge');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const feedbackTitle = document.getElementById('feedbackTitle');
+        const feedbackDetail = document.getElementById('feedbackDetail');
+        const nextBtn = document.getElementById('nextBtn');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const progressFill = document.getElementById('progressFill');
+        const questionCounter = document.getElementById('questionCounter');
+        const gameContent = document.getElementById('gameContent');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // result elements
+        const resultCorrect = document.getElementById('resultCorrect');
+        const resultWrong = document.getElementById('resultWrong');
+        const resultScore = document.getElementById('resultScore');
+        const resultGrade = document.getElementById('resultGrade');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultSub = document.getElementById('resultSub');
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  RENDER
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        const LETTERS = ['A', 'B', 'C', 'D'];
+
+        function renderQuestion() {
+            const q = QUESTIONS[currentQ];
+            answered = false;
+            nextBtn.disabled = true;
+
+            // Badge
+            questionBadge.textContent = q.badge;
+
+            // Text
+            questionText.textContent = q.text;
+
+            // Context
+            if (q.context) {
+                questionContext.classList.remove('hidden');
+                questionContext.innerHTML = q.context;
+            } else {
+                questionContext.classList.add('hidden');
+            }
+
+            // Options
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="letter">${LETTERS[idx]}</span> ${opt}`;
+                btn.dataset.idx = idx;
+                btn.addEventListener('click', () => handleOptionClick(idx));
+                optionsContainer.appendChild(btn);
+            });
+
+            // Reset feedback
+            feedbackArea.className = 'feedback-area';
+            feedbackTitle.innerHTML = '💡 Select an answer';
+            feedbackDetail.textContent = 'Choose an option above to see if your math is solid.';
+
+            // Update progress
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const pct = ((currentQ) / totalQuestions) * 100;
+            progressFill.style.width = pct + '%';
+            questionCounter.textContent = `${currentQ + 1} / ${totalQuestions}`;
+            scoreDisplay.textContent = score;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  HANDLE ANSWER
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        function handleOptionClick(idx) {
+            if (answered) return;
+            const q = QUESTIONS[currentQ];
+            const isCorrect = (idx === q.correct);
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+
+            // Disable all buttons
+            buttons.forEach(btn => btn.classList.add('disabled'));
+
+            // Mark correct / wrong
+            buttons.forEach((btn, i) => {
+                if (i === q.correct) {
+                    btn.classList.add('correct');
+                } else if (i === idx && !isCorrect) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            // If wrong, also reveal the correct one
+            if (!isCorrect) {
+                // The correct one is already marked, but we want to make sure it's visible
+                buttons.forEach((btn, i) => {
+                    if (i === q.correct) {
+                        btn.classList.add('reveal-correct');
+                    }
+                });
+            }
+
+            // Update state
+            answered = true;
+            if (isCorrect) {
+                score += 10;
+                correctCount++;
+            } else {
+                wrongCount++;
+            }
+            scoreDisplay.textContent = score;
+
+            // Feedback
+            feedbackArea.className = 'feedback-area ' + (isCorrect ? 'feedback-correct' : 'feedback-wrong');
+            const icon = isCorrect ? '✅' : '❌';
+            const title = isCorrect ? 'Correct! Great math!' : 'Oops! That\'s bad math.';
+            feedbackTitle.innerHTML = `${icon} ${title}`;
+            feedbackDetail.innerHTML = q.explanation;
+
+            // Enable next
+            nextBtn.disabled = false;
+
+            // Update progress bar (visual)
+            const pct = ((currentQ + 1) / totalQuestions) * 100;
+            progressFill.style.width = pct + '%';
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  NEXT / RESTART
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        function goToNext() {
+            if (nextBtn.disabled) return;
+            if (currentQ + 1 < totalQuestions) {
+                currentQ++;
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            gameContent.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+
+            const total = correctCount + wrongCount;
+            const pct = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+            resultCorrect.textContent = correctCount;
+            resultWrong.textContent = wrongCount;
+            resultScore.textContent = pct + '%';
+
+            let grade, emoji, msg;
+            if (pct >= 90) {
+                grade = 'A+';
+                emoji = '🏆';
+                msg = 'Outstanding! You have a rock-solid grasp of rental property math. Lenders will love you!';
+            } else if (pct >= 80) {
+                grade = 'A';
+                emoji = '🌟';
+                msg = 'Excellent work! You\'re well on your way to analyzing deals like a pro. Keep sharpening those skills!';
+            } else if (pct >= 70) {
+                grade = 'B';
+                emoji = '💪';
+                msg = 'Good job! You have a strong foundation. Review the ones you missed to level up.';
+            } else if (pct >= 60) {
+                grade = 'C';
+                emoji = '📚';
+                msg = 'Not bad! But there\'s room to grow. Focus on understanding the key formulas and ratios.';
+            } else if (pct >= 50) {
+                grade = 'D';
+                emoji = '🔍';
+                msg = 'You\'re getting there! Take time to study NOI, cap rate, and cash-on-cash return. Practice makes perfect!';
+            } else {
+                grade = 'F';
+                emoji = '📖';
+                msg = 'Don\'t get discouraged! Rental math takes practice. Review the basics and try again — you\'ve got this!';
+            }
+
+            resultGrade.textContent = grade;
+            resultSub.textContent = `${emoji} ${grade} — ${pct}% correct`;
+            resultMessage.innerHTML = `<strong>${msg}</strong>`;
+
+            // reset progress bar for results
+            progressFill.style.width = '100%';
+            questionCounter.textContent = `${totalQuestions} / ${totalQuestions}`;
+        }
+
+        function restartGame() {
+            currentQ = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            answered = false;
+
+            resultsScreen.classList.add('hidden');
+            gameContent.classList.remove('hidden');
+
+            renderQuestion();
+            scoreDisplay.textContent = '0';
+            progressFill.style.width = '0%';
+            questionCounter.textContent = `1 / ${totalQuestions}`;
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  EVENTS
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        nextBtn.addEventListener('click', goToNext);
+        restartBtn.addEventListener('click', restartGame);
+
+        // Keyboard support: Enter to go next
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !nextBtn.disabled) {
+                goToNext();
+            }
+        });
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        renderQuestion();
+
+        console.log('🏠 Rental Property Math Master loaded!');
+        console.log(`📚 ${totalQuestions} questions ready. Good luck!`);
+    </script>
+
+</body>
+</html>
