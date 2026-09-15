@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaijaEd · DigitalOcean vs AWS for BirdBrain-Style Adaptive Learning</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0a2e4b; --ink-soft:#1c3a53; --muted:#6c8aa5; --muted-2:#50728c;
+    --line:#eaf0f6; --line-dash:#dbe4ed; --bg:#f7f9fc;
+    --green:#10b981; --green-d:#065f46; --red:#ef4444; --amber:#f59e0b;
+    --purple:#8b5cf6; --blue:#3b82f6; --pink:#ec4899; --navy:#0b2b40;
+    --do-blue:#0069ff; --aws-orange:#ff9900;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+       padding:2rem 1.5rem;color:var(--ink);line-height:1.5;}
+  .container{max-width:1400px;margin:0 auto;}
+
+  /* header */
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+         margin-bottom:1.5rem;gap:1rem;}
+  .brand{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+  .brand h1{font-size:1.9rem;font-weight:600;letter-spacing:-.02em;color:var(--ink);}
+  .brand span{background:#1e7e5c;color:#fff;font-size:.8rem;font-weight:600;
+              padding:.2rem .8rem;border-radius:40px;}
+  .header-badges{display:flex;gap:.8rem;flex-wrap:wrap;}
+  .badge{background:var(--navy);color:#fff;padding:.55rem 1.2rem;border-radius:60px;
+         font-weight:500;display:flex;align-items:center;gap:.5rem;font-size:.9rem;}
+  .badge strong{color:#9ae6b4;font-weight:700;}
+  .badge.do{background:var(--do-blue);}
+  .badge.aws{background:var(--aws-orange);}
+  .badge.aws strong{color:#fff;}
+
+  /* ribbons */
+  .ribbon{border-radius:22px;padding:1.2rem 1.6rem;margin-bottom:1.2rem;
+          display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+          gap:1.2rem;color:#fff;}
+  .ribbon.fx{background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);
+             box-shadow:0 10px 26px rgba(6,95,70,.18);}
+  .ribbon.arch{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4338ca 100%);
+               box-shadow:0 10px 26px rgba(49,46,129,.2);}
+  .ribbon-left{display:flex;align-items:center;gap:1rem;flex:1;min-width:260px;}
+  .ribbon-icon{font-size:2rem;background:rgba(255,255,255,.12);width:56px;height:56px;
+               border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ribbon h2{font-size:1.08rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.2rem;}
+  .ribbon p{font-size:.82rem;opacity:.92;line-height:1.45;max-width:660px;}
+  .ribbon-stats{display:flex;gap:1.5rem;flex-wrap:wrap;}
+  .ribbon-stat{text-align:right;}
+  .ribbon-stat .num{font-size:1.6rem;font-weight:700;line-height:1;color:#6ee7b7;}
+  .ribbon.arch .ribbon-stat .num{color:#c7d2fe;}
+  .ribbon-stat .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+                    opacity:.8;margin-top:.35rem;}
+
+  /* stat cards */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+              gap:1rem;margin-bottom:2.5rem;}
+  .stat-card{background:#fff;padding:1.3rem 1.2rem;border-radius:24px;
+             box-shadow:0 6px 18px rgba(0,20,30,.04);border:1px solid rgba(0,0,0,.02);
+             position:relative;overflow:hidden;}
+  .stat-card.fx-safe::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
+  .stat-card.gap::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--amber);}
+  .stat-card.do-line::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--do-blue);}
+  .stat-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+              color:var(--muted-2);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;}
+  .stat-value{font-size:1.65rem;font-weight:700;color:var(--ink);line-height:1.2;}
+  .stat-sub{font-size:.78rem;color:var(--muted-2);margin-top:.3rem;}
+  .stat-sub a{color:var(--do-blue);text-decoration:none;font-weight:600;border-bottom:1px dotted var(--do-blue);}
+  .stat-sub a:hover{color:var(--navy);}
+
+  /* source links */
+  .src-link{display:inline-block;font-size:.68rem;font-weight:600;color:var(--do-blue);
+            text-decoration:none;border-bottom:1px dotted var(--do-blue);margin-left:.3rem;
+            transition:color .15s;}
+  .src-link:hover{color:var(--navy);border-bottom-style:solid;}
+  .src-link.aws{color:var(--aws-orange);border-bottom-color:var(--aws-orange);}
+  .src-link.aws:hover{color:#b35c00;}
+  .src-link.third{color:var(--purple);border-bottom-color:var(--purple);}
+  .src-link.third:hover{color:#5b21b6;}
+
+  /* section headers */
+  .section-head{display:flex;align-items:center;gap:.9rem;margin:2.6rem 0 1.2rem;flex-wrap:wrap;}
+  .section-num{background:var(--navy);color:#6ee7b7;font-weight:700;font-size:.85rem;
+               padding:.35rem .85rem;border-radius:10px;letter-spacing:.04em;white-space:nowrap;}
+  .section-head h2{font-size:1.32rem;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
+  .section-head p{font-size:.82rem;color:#5b7b96;margin-left:auto;max-width:600px;text-align:right;}
+
+  /* panels */
+  .panel{background:#fff;border-radius:28px;padding:1.7rem 1.7rem 1.2rem;
+         box-shadow:0 12px 30px rgba(0,20,40,.06);border:1px solid var(--line);
+         margin-bottom:1.5rem;}
+  .panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+              margin-bottom:1.4rem;gap:.8rem;}
+  .panel-head h3{font-weight:600;font-size:1.25rem;color:var(--ink);display:flex;
+                 align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .panel-head h3 small{font-weight:400;font-size:.88rem;color:#5b7b96;}
+  .chart-container{position:relative;height:300px;width:100%;}
+  .chart-caption{font-size:.78rem;color:var(--muted-2);margin-top:1rem;
+                 border-top:1px solid var(--line);padding-top:.9rem;line-height:1.5;}
+
+  /* comparison table */
+  .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line);}
+  table.cmp{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1100px;}
+  table.cmp thead th{background:#f1f6fb;color:#1f4a6e;font-weight:600;text-align:left;
+    padding:.75rem .7rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
+    border-bottom:1px solid #dbe4ed;white-space:nowrap;}
+  table.cmp thead th.do-col{background:#e8f1ff;color:#0047b3;}
+  table.cmp thead th.aws-col{background:#fff4e6;color:#b35c00;}
+  table.cmp tbody td{padding:.75rem .7rem;border-bottom:1px solid #eef3f8;vertical-align:top;}
+  table.cmp tbody tr:hover{background:#fafcfe;}
+  table.cmp tbody tr:last-child td{border-bottom:none;}
+  .cap-name{font-weight:600;color:var(--ink-soft);}
+  .cap-name small{display:block;font-weight:400;color:var(--muted);font-size:.7rem;margin-top:.15rem;}
+  .status{display:inline-block;font-size:.66rem;font-weight:700;padding:.16rem .55rem;
+          border-radius:30px;white-space:nowrap;}
+  .status.covered{background:#d1fae5;color:#065f46;}
+  .status.partial{background:#fef3c7;color:#92400e;}
+  .status.gap{background:#fee2e2;color:#991b1b;}
+  .status.local{background:#ede9fe;color:#5b21b6;}
+
+  /* gap cards */
+  .gap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.2rem;}
+  .gap-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.4rem;
+            border-left:5px solid;position:relative;}
+  .gap-card.g1{border-left-color:var(--amber);}
+  .gap-card.g2{border-left-color:var(--purple);}
+  .gap-card.g3{border-left-color:var(--red);}
+  .gap-card h4{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;
+               display:flex;align-items:center;gap:.45rem;}
+  .gap-card p{font-size:.82rem;color:var(--muted-2);line-height:1.55;margin-bottom:.6rem;}
+  .gap-card .fix{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;
+                 padding:.7rem .9rem;font-size:.78rem;color:#14532d;line-height:1.5;}
+  .gap-card .fix strong{color:#065f46;}
+
+  /* local provider cards */
+  .local-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.1rem;}
+  .local-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.3rem;}
+  .local-card h4{font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.4rem;
+                 display:flex;align-items:center;gap:.45rem;}
+  .local-card p{font-size:.78rem;color:var(--muted-2);line-height:1.55;}
+  .local-card .tag{display:inline-block;font-size:.62rem;font-weight:700;padding:.14rem .5rem;
+    border-radius:30px;background:#eef3f8;color:#1f4a6e;margin-bottom:.5rem;letter-spacing:.03em;}
+  .local-card .fx-tag{display:inline-block;font-size:.62rem;font-weight:700;padding:.14rem .5rem;
+    border-radius:30px;background:#d1fae5;color:#065f46;margin-left:.3rem;letter-spacing:.03em;}
+
+  /* cost grid */
+  .cost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+             gap:1.5rem;margin-top:1.5rem;}
+  .cost-category{background:#fff;border-radius:24px;padding:1.5rem 1.4rem;
+                 box-shadow:0 6px 16px rgba(0,20,30,.02);border:1px solid var(--line);}
+  .cost-category h3{font-size:1.05rem;font-weight:600;margin-bottom:1.2rem;display:flex;
+                    justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .fx-mix-tag{font-size:.68rem;font-weight:600;padding:.18rem .6rem;border-radius:30px;
+              background:#d1fae5;color:#065f46;letter-spacing:.2px;}
+  .fx-mix-tag.mixed-tag{background:#fef3c7;color:#92400e;}
+  .fx-mix-tag.risk-tag{background:#e0e7ff;color:#3730a3;}
+  .cost-list{display:flex;flex-direction:column;gap:.9rem;}
+  .cost-item{display:flex;justify-content:space-between;align-items:flex-start;
+             font-size:.95rem;padding-bottom:.7rem;border-bottom:1px dashed var(--line-dash);gap:.8rem;}
+  .cost-item:last-child{border-bottom:none;padding-bottom:0;}
+  .cost-name{color:var(--ink-soft);font-weight:500;flex:1;}
+  .cost-name small{display:block;font-weight:400;font-size:.72rem;color:var(--muted);
+                   margin-top:.15rem;line-height:1.4;}
+  .cost-amount{font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;font-size:.9rem;}
+  .cost-amount small{display:block;font-weight:400;font-size:.68rem;color:#8aa1b5;margin-top:.15rem;}
+  .section-note{font-size:.75rem;color:var(--muted);margin-top:.9rem;line-height:1.5;}
+
+  .local-badge,.fx-badge{display:inline-block;font-size:.65rem;font-weight:600;
+    padding:.15rem .5rem;border-radius:30px;margin-left:.4rem;vertical-align:middle;}
+  .local-badge{background:#dcfce7;color:#166534;}
+  .fx-badge{background:#fee2e2;color:#991b1b;}
+  .fx-badge.do{background:#dbeafe;color:#1e40af;}
+
+  /* pricing sources footer */
+  .sources{background:#f1f6fb;border:1px solid #dbe4ed;border-radius:22px;
+           padding:1.5rem 1.8rem;margin-top:2.5rem;}
+  .sources h3{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:1rem;
+              display:flex;align-items:center;gap:.5rem;}
+  .sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;}
+  .source-col h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+                 color:var(--muted-2);margin-bottom:.6rem;padding-bottom:.4rem;
+                 border-bottom:1px solid #dbe4ed;}
+  .source-col ul{list-style:none;}
+  .source-col li{font-size:.78rem;margin-bottom:.45rem;line-height:1.45;}
+  .source-col li a{color:var(--do-blue);text-decoration:none;border-bottom:1px dotted var(--do-blue);
+                   transition:color .15s;}
+  .source-col li a:hover{color:var(--navy);border-bottom-style:solid;}
+  .source-col.aws-col li a{color:var(--aws-orange);border-bottom-color:var(--aws-orange);}
+  .source-col.aws-col li a:hover{color:#b35c00;}
+  .source-col.third-col li a{color:var(--purple);border-bottom-color:var(--purple);}
+  .source-col.third-col li a:hover{color:#5b21b6;}
+  .source-col li span{color:var(--muted);font-size:.7rem;display:block;margin-top:.1rem;}
+
+  /* footer */
+  .footer-note{margin-top:2.5rem;background:#e7f0f8;border-radius:20px;padding:1.5rem 2rem;
+    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+    color:#1d4a6e;font-size:.95rem;border:1px solid #cbdde9;gap:1rem;}
+  .footer-note strong{font-weight:700;color:#0b3a5a;}
+
+  @media(max-width:600px){
+    body{padding:1.2rem;}
+    .brand h1{font-size:1.4rem;}
+    .stat-value{font-size:1.3rem;}
+    .ribbon-stat .num{font-size:1.3rem;}
+    .section-head p{text-align:left;margin-left:0;}
+    .footer-note{flex-direction:column;gap:.8rem;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <h1>NaijaEd</h1>
+      <span>🇳🇬 BirdBrain‑style adaptive · DO vs AWS</span>
+    </div>
+    <div class="header-badges">
+      <div class="badge do">💧 DigitalOcean <strong>GPU + Gradient AI</strong></div>
+      <div class="badge aws">☁️ AWS <strong>SageMaker + Transcribe + Chime</strong></div>
+    </div>
+  </header>
+
+  <!-- STRATEGY RIBBONS -->
+  <div class="ribbon fx">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🛡️</div>
+      <div>
+        <h2>Local‑first sourcing · minimal FX drag</h2>
+        <p>DigitalOcean for GPU inference, storage and databases. Nigerian providers for speech (Intron),
+           GPU training (HOSTAFRICA / UduTech), data residency (Kasi Cloud). Foreign only when no cheaper
+           or better local alternative exists.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num" id="fxSafePct">—</div><div class="lbl">Naira‑hedged</div></div>
+      <div class="ribbon-stat"><div class="num" id="fxExposedPct">—</div><div class="lbl">USD‑exposed</div></div>
+      <div class="ribbon-stat"><div class="num" id="fxExposedNaira">—</div><div class="lbl">USD cost / mo</div></div>
+    </div>
+  </div>
+
+  <div class="ribbon arch">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🧠</div>
+      <div>
+        <h2>BirdBrain‑style AI stack on DigitalOcean</h2>
+        <p>GPU Droplets for training (H100/H200/L40S), Gradient AI Serverless Inference for session generation
+           (per‑token from $0.10/M), Spaces for the interaction data lake, Managed PostgreSQL for learner profiles.
+           Three AWS‑only services have Nigerian replacements.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num" id="doCoverage">9/12</div><div class="lbl">Capabilities covered</div></div>
+      <div class="ribbon-stat"><div class="num">3</div><div class="lbl">Gaps filled locally</div></div>
+      <div class="ribbon-stat"><div class="num" id="doInferCost">—</div><div class="lbl">Inference $/1M tokens</div></div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS with source links -->
+  <div class="stats-grid">
+    <div class="stat-card do-line">
+      <div class="stat-label">DO GPU on‑demand <span class="local-badge" style="background:#dbeafe;color:#1e40af">USD</span></div>
+      <div class="stat-value">$1.57/hr</div>
+      <div class="stat-sub">L40S 48GB · 8 vCPU · 64 GiB RAM
+        <a class="src-link" href="https://www.digitalocean.com/pricing/gpu-droplets" target="_blank">DigitalOcean GPU Droplets</a>
+      </div>
+    </div>
+    <div class="stat-card do-line">
+      <div class="stat-label">DO serverless inference</div>
+      <div class="stat-value">$0.10/M</div>
+      <div class="stat-sub">input tokens · GPT‑oss‑120b
+        <a class="src-link" href="https://docs.digitalocean.com/products/gradient-ai-platform/details/pricing/" target="_blank">Gradient AI Pricing</a>
+      </div>
+    </div>
+    <div class="stat-card do-line">
+      <div class="stat-label">DO Spaces + CDN</div>
+      <div class="stat-value">$5/mo</div>
+      <div class="stat-sub">250 GiB + 1 TiB egress · no request fees
+        <a class="src-link" href="https://docs.digitalocean.com/products/spaces/details/pricing/" target="_blank">Spaces Pricing</a>
+      </div>
+    </div>
+    <div class="stat-card gap">
+      <div class="stat-label">DO managed DB</div>
+      <div class="stat-value">$15/mo</div>
+      <div class="stat-sub">PostgreSQL · automated backups
+        <a class="src-link" href="https://www.digitalocean.com/pricing/managed-databases" target="_blank">Managed DB Pricing</a>
+      </div>
+    </div>
+    <div class="stat-card gap">
+      <div class="stat-label">STT gap → Intron (₦)</div>
+      <div class="stat-value">₦0.25–1.20</div>
+      <div class="stat-sub">per minute · local accent tuned
+        <a class="src-link third" href="https://www.intron.io" target="_blank">Intron Sahara</a>
+      </div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">FX exposure / month</div>
+      <div class="stat-value" id="fxExposureDisplay">—</div>
+      <div class="stat-sub" id="fxExposureSub">—</div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE with source links -->
+  <div class="section-head">
+    <span class="section-num">COMPARISON</span>
+    <h2>DigitalOcean vs AWS — capability by capability</h2>
+    <p>What your BirdBrain‑style adaptive engine actually needs, and where DO covers it.</p>
+  </div>
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="cmp">
+        <thead>
+          <tr>
+            <th>Capability needed</th>
+            <th class="aws-col">AWS equivalent</th>
+            <th class="do-col">DigitalOcean equivalent</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="cap-name">GPU training & fine‑tuning<small>BirdBrain model retraining</small></div></td>
+            <td>EC2 P4d/P5 (A100, H100)
+              <a class="src-link aws" href="https://aws.amazon.com/ec2/pricing/on-demand/" target="_blank">AWS EC2 GPU Pricing</a>
+            </td>
+            <td><strong>GPU Droplets</strong> — H100 $4.41/hr, H200 $4.47/hr, L40S $1.57/hr, RTX 4000 Ada $0.76/hr, AMD MI300X $2.59/hr, MI325X $3.80/hr
+              <a class="src-link" href="https://www.digitalocean.com/pricing/gpu-droplets" target="_blank">DO GPU Pricing</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Real‑time inference<small>Session generation per user interaction</small></div></td>
+            <td>SageMaker endpoints, Bedrock
+              <a class="src-link aws" href="https://aws.amazon.com/sagemaker/pricing/" target="_blank">SageMaker Pricing</a>
+            </td>
+            <td><strong>Gradient AI Serverless Inference</strong> — per‑token from $0.10/M input, OpenAI‑compatible API; <strong>Dedicated Inference</strong> on GPU Droplets
+              <a class="src-link" href="https://docs.digitalocean.com/products/gradient-ai-platform/details/pricing/" target="_blank">Gradient AI Pricing</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Batch inference<small>Nightly retraining / data enrichment</small></div></td>
+            <td>Bedrock Batch
+              <a class="src-link aws" href="https://aws.amazon.com/bedrock/pricing/" target="_blank">Bedrock Pricing</a>
+            </td>
+            <td><strong>DigitalOcean Batch Inference</strong> — 50% off serverless rates, 24‑hour window, pay only for successful requests
+              <a class="src-link" href="https://www.digitalocean.com/community/conceptual-articles/cheapest-batch-inference-for-low-cost-ai-inference" target="_blank">Batch Inference Guide</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Object storage / data lake<small>Interaction logs, audio, model artefacts</small></div></td>
+            <td>S3
+              <a class="src-link aws" href="https://aws.amazon.com/s3/pricing/" target="_blank">S3 Pricing</a>
+            </td>
+            <td><strong>Spaces</strong> — S3‑compatible, $5/mo for 250 GiB + 1 TiB egress, built‑in CDN, no per‑request fees
+              <a class="src-link" href="https://docs.digitalocean.com/products/spaces/details/pricing/" target="_blank">Spaces Pricing</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Managed database<small>Learner profiles, interaction history</small></div></td>
+            <td>DynamoDB, RDS
+              <a class="src-link aws" href="https://aws.amazon.com/dynamodb/pricing/" target="_blank">DynamoDB Pricing</a>
+            </td>
+            <td><strong>Managed PostgreSQL/MySQL/MongoDB/Valkey/Kafka</strong> from $15/mo, automated backups, standby nodes
+              <a class="src-link" href="https://www.digitalocean.com/pricing/managed-databases" target="_blank">Managed DB Pricing</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Kubernetes orchestration<small>ML services, session generator, LiveKit</small></div></td>
+            <td>EKS
+              <a class="src-link aws" href="https://aws.amazon.com/eks/pricing/" target="_blank">EKS Pricing</a>
+            </td>
+            <td><strong>DOKS</strong> — GPU worker nodes, vLLM/TensorRT‑LLM integration, Helm chart for LiveKit
+              <a class="src-link" href="https://www.digitalocean.com/pricing/kubernetes" target="_blank">DOKS Pricing</a>
+            </td>
+            <td><span class="status covered">✅ Covered</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Speech‑to‑text<small>Live conversation, pronunciation scoring</small></div></td>
+            <td>Amazon Transcribe ($0.024/min, 100+ languages)
+              <a class="src-link aws" href="https://aws.amazon.com/transcribe/pricing/" target="_blank">Transcribe Pricing</a>
+            </td>
+            <td><strong>No native STT.</strong> Self‑host Whisper on GPU Droplet, or use <strong>Intron Sahara v2.5</strong> (Lagos, 200+ African accents, ₦‑denominated)
+              <a class="src-link third" href="https://www.intron.io" target="_blank">Intron Sahara</a>
+            </td>
+            <td><span class="status partial">⚠️ Gap → local fix</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Real‑time audio/video<small>Live conversation feature</small></div></td>
+            <td>Chime SDK, IVS (per‑attendee‑minute)
+              <a class="src-link aws" href="https://aws.amazon.com/chime/chime-sdk/pricing/" target="_blank">Chime SDK Pricing</a>
+            </td>
+            <td><strong>No native service.</strong> Self‑host <strong>LiveKit</strong> on DO Droplet/DOKS — documented cloud‑init deployment, no per‑minute fees
+              <a class="src-link" href="https://www.digitalocean.com/community/tutorials/how-to-build-a-real-time-ai-chatbot-with-vision-and-voice-capabilities-using-openai-livekit-and-deepgram-on-gpu-droplets" target="_blank">DO LiveKit Tutorial</a>
+            </td>
+            <td><span class="status partial">⚠️ Gap → open source</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Managed ML pipeline<small>Training orchestration, model registry, feature store</small></div></td>
+            <td>SageMaker (end‑to‑end)
+              <a class="src-link aws" href="https://aws.amazon.com/sagemaker/pricing/" target="_blank">SageMaker Pricing</a>
+            </td>
+            <td><strong>No SageMaker equivalent.</strong> Build MLOps on DOKS + GPU Droplets + Batch Inference
+            </td>
+            <td><span class="status gap">🔴 Gap → you own MLOps</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Text‑to‑speech<small>Role‑play voice responses</small></div></td>
+            <td>Amazon Polly
+              <a class="src-link aws" href="https://aws.amazon.com/polly/pricing/" target="_blank">Polly Pricing</a>
+            </td>
+            <td><strong>No native TTS.</strong> Run open‑source TTS on GPU, or use Intron Sahara TTS (80+ voices, 40+ accents)
+              <a class="src-link third" href="https://www.intron.io" target="_blank">Intron Sahara TTS</a>
+            </td>
+            <td><span class="status partial">⚠️ Gap → local fix</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Nigerian language support<small>Yoruba, Hausa, Igbo, Pidgin</small></div></td>
+            <td>Limited (Transcribe has limited African language coverage)
+              <a class="src-link aws" href="https://aws.amazon.com/transcribe/pricing/" target="_blank">Transcribe Pricing</a>
+            </td>
+            <td><strong>Intron</strong> (200+ African accents, mixed‑language switching), <strong>NaijaVox‑V1</strong> (open‑weight, Whisper‑v3 fine‑tuned for Yoruba/Hausa/Igbo/Pidgin)
+              <a class="src-link third" href="https://huggingface.co/naijavox" target="_blank">NaijaVox on Hugging Face</a>
+            </td>
+            <td><span class="status local">🇳🇬 Local advantage</span></td>
+          </tr>
+          <tr>
+            <td><div class="cap-name">Data residency / NDPC compliance<small>Children's data must stay in Nigeria</small></div></td>
+            <td>Requires Lagos region (limited services) or local zones
+              <a class="src-link aws" href="https://aws.amazon.com/about-aws/global-infrastructure/regions_az/" target="_blank">AWS Regions</a>
+            </td>
+            <td><strong>Kasi Cloud LOS1</strong> (Lagos, 100MW AI campus, sub‑50ms in‑country latency) for co‑location; DO has no Nigerian region
+              <a class="src-link third" href="https://www.kasicloud.com" target="_blank">Kasi Cloud</a>
+            </td>
+            <td><span class="status local">🇳🇬 Local advantage</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="section-note">
+      <strong>Verdict:</strong> DigitalOcean covers 9 of 12 capabilities natively. The three gaps (STT, real‑time comms, managed ML pipeline)
+      all have Nigerian or open‑source solutions that keep costs predictable and reduce USD dependence.
+    </p>
+  </div>
+
+  <!-- GAP ANALYSIS -->
+  <div class="section-head">
+    <span class="section-num">GAPS</span>
+    <h2>Three gaps — and how we fill them locally</h2>
+    <p>DigitalOcean does not offer everything AWS offers, but for our use case the gaps are manageable.</p>
+  </div>
+  <div class="gap-grid">
+    <div class="gap-card g1">
+      <h4>🎤 Speech‑to‑Text gap</h4>
+      <p>Amazon Transcribe charges $0.024/min and has limited African accent coverage. DigitalOcean has no native STT.
+        <a class="src-link aws" href="https://aws.amazon.com/transcribe/pricing/" target="_blank">Transcribe Pricing</a>
+      </p>
+      <div class="fix">
+        <strong>Fix:</strong> Use <strong>Intron Sahara v2.5</strong> (Lagos) — 200+ African accents, mixed English/Yoruba/Hausa/Igbo/Pidgin switching, ₦‑denominated, outperforms Whisper on Nigerian accents. Or self‑host <strong>NaijaVox‑V1</strong> (open‑weight Whisper‑v3 fine‑tune) on an L40S GPU Droplet for high‑volume batches.
+        <a class="src-link third" href="https://www.intron.io" target="_blank">Intron</a>
+        <a class="src-link third" href="https://huggingface.co/naijavox" target="_blank">NaijaVox</a>
+      </div>
+    </div>
+    <div class="gap-card g2">
+      <h4>📹 Real‑time audio/video gap</h4>
+      <p>AWS Chime SDK charges per attendee‑minute. DigitalOcean has no managed real‑time communication service.
+        <a class="src-link aws" href="https://aws.amazon.com/chime/chime-sdk/pricing/" target="_blank">Chime SDK Pricing</a>
+      </p>
+      <div class="fix">
+        <strong>Fix:</strong> Self‑host <strong>LiveKit</strong> on a DO Droplet or DOKS. LiveKit has official cloud‑init scripts for DigitalOcean and a Helm chart for DOKS. No per‑minute fees — flat Droplet cost only. Pair with Whisper (STT) and a TTS model on the same GPU Droplet.
+        <a class="src-link" href="https://www.digitalocean.com/community/tutorials/how-to-build-a-real-time-ai-chatbot-with-vision-and-voice-capabilities-using-openai-livekit-and-deepgram-on-gpu-droplets" target="_blank">DO LiveKit Tutorial</a>
+      </div>
+    </div>
+    <div class="gap-card g3">
+      <h4>🔧 Managed ML pipeline gap</h4>
+      <p>SageMaker provides end‑to‑end ML orchestration (training, registry, feature store). DigitalOcean has no equivalent.
+        <a class="src-link aws" href="https://aws.amazon.com/sagemaker/pricing/" target="_blank">SageMaker Pricing</a>
+      </p>
+      <div class="fix">
+        <strong>Fix:</strong> Build your own MLOps on DOKS: PostgreSQL for feature storage, GPU Droplets for training, Gradient AI for serving, Batch Inference for nightly retraining. AI‑native startups on DO report 50% faster training cycles and 40% lower latency vs hyperscalers, with 25% cost savings.
+        <a class="src-link" href="https://www.digitalocean.com/products/gradient" target="_blank">Gradient AI</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCAL PROVIDERS -->
+  <div class="section-head">
+    <span class="section-num">LOCAL‑FIRST</span>
+    <h2>Nigerian alternatives that reduce FX drag</h2>
+    <p>Every service you route locally is a Naira‑denominated hedge against devaluation.</p>
+  </div>
+  <div class="panel">
+    <div class="local-grid">
+      <div class="local-card">
+        <span class="tag">SPEECH AI</span><span class="fx-tag">100% ₦</span>
+        <h4>🇳🇬 Intron (Lagos)</h4>
+        <p>Lagos‑based voice AI company. <strong>Sahara v2.5</strong> provides streaming speech recognition and TTS APIs for 200+ African accents, handling English/French/Yoruba/Hausa/Igbo/Pidgin switching. 92% accuracy on African accents. Used by Ogun State Judiciary, University College Hospital Ibadan.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS Transcribe + Polly</p>
+        <a class="src-link third" href="https://www.intron.io" target="_blank">intron.io</a>
+      </div>
+      <div class="local-card">
+        <span class="tag">GPU CLOUD</span><span class="fx-tag">Naira billing</span>
+        <h4>🇳🇬 HOSTAFRICA</h4>
+        <p>Dedicated NVIDIA RTX PRO 6000 Blackwell GPU servers. <strong>₦1,062,500/mo</strong> (96GB VRAM per GPU). Unlimited traffic. Nigeria billing. Fully localised GPU‑as‑a‑Service. Ideal for training cycles and burst compute.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS EC2 GPU burst</p>
+        <a class="src-link third" href="https://www.hostafrica.ng/servers/gpu-servers/" target="_blank">hostafrica.ng</a>
+      </div>
+      <div class="local-card">
+        <span class="tag">GPU CLOUD</span><span class="fx-tag">Naira billing</span>
+        <h4>🇳🇬 UduTech (Lagos)</h4>
+        <p>Nigerian GPU cloud platform operating the <strong>Africa GPU Hub</strong>. GPUs for rent at <strong>less than $1/hour</strong>, optimised for African markets. Partnered with South Korean BARO AI to expand GPU supply. Deployments in Nigeria and the US.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS GPU training</p>
+        <a class="src-link third" href="https://udutech.co/" target="_blank">udutech.co</a>
+      </div>
+      <div class="local-card">
+        <span class="tag">DATA CENTRE</span><span class="fx-tag">Naira potential</span>
+        <h4>🇳🇬 Kasi Cloud (Lagos)</h4>
+        <p>Nigeria's first hyperscale AI‑ready data centre. <strong>LOS1</strong> — 100MW campus in Lekki, sub‑50ms in‑country latency, 10–100kW rack density. Built to retain the $850M Nigeria spends annually on foreign cloud. NDPC‑aligned for children's data residency.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS Lagos local zone</p>
+        <a class="src-link third" href="https://www.kasicloud.com" target="_blank">kasicloud.com</a>
+      </div>
+      <div class="local-card">
+        <span class="tag">GPU CLOUD</span><span class="fx-tag">Naira potential</span>
+        <h4>🇿🇦 Cassava Technologies</h4>
+        <p>Africa's first <strong>NVIDIA Cloud Partner</strong>. GPU‑as‑a‑Service (GPUaaS) and AIaaS across Nigeria, South Africa, Kenya, Egypt, Morocco. Deploying AI Factories with NVIDIA. 12,000 NVIDIA GPUs purchased. <strong>CAIMEx</strong> platform for model fine‑tuning and deployment.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS SageMaker + Bedrock</p>
+        <a class="src-link third" href="https://www.cassavatechnologies.com" target="_blank">cassavatechnologies.com</a>
+      </div>
+      <div class="local-card">
+        <span class="tag">OPEN‑WEIGHT ASR</span><span class="fx-tag">Free (self‑host)</span>
+        <h4>🇳🇬 NaijaVox‑V1 / V2</h4>
+        <p>First open‑weight ASR model fine‑tuned specifically for Nigerian languages — Yoruba (with diacritics), Hausa, Igbo, Pidgin, Nigerian English. Built on Whisper‑large‑v3. V2 has 19.1% better average WER. Self‑host on a DO GPU Droplet for near‑zero per‑minute cost at scale.</p>
+        <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Replaces: AWS Transcribe at high volume</p>
+        <a class="src-link third" href="https://huggingface.co/naijavox" target="_blank">Hugging Face</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPDATED COST MODEL with source links -->
+  <div class="section-head">
+    <span class="section-num">COST IMPACT</span>
+    <h2>BirdBrain AI stack — updated cost lines</h2>
+    <p>New infrastructure lines for the adaptive engine, with local‑first routing to keep FX within tolerance.</p>
+  </div>
+  <div class="cost-grid">
+
+    <div class="cost-category">
+      <h3>💧 DigitalOcean AI stack <span class="fx-mix-tag mixed-tag">USD‑billed</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">GPU Droplet (L40S) <span class="fx-badge">USD</span>
+            <small>48GB VRAM · inference + LiveKit + Whisper</small></div>
+          <div class="cost-amount">₦171,000/mo<small>$0.76/hr × 300h
+            <a class="src-link" href="https://www.digitalocean.com/pricing/gpu-droplets" target="_blank">DO GPU</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Gradient AI Serverless <span class="fx-badge">USD</span>
+            <small>Session generation · GPT‑oss‑120b</small></div>
+          <div class="cost-amount">₦0.15/M tokens<small>$0.10/M input
+            <a class="src-link" href="https://docs.digitalocean.com/products/gradient-ai-platform/details/pricing/" target="_blank">Gradient AI</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Batch Inference <span class="fx-badge">USD</span>
+            <small>50% off · nightly retraining</small></div>
+          <div class="cost-amount">₦0.075/M tokens<small>$0.05/M input
+            <a class="src-link" href="https://www.digitalocean.com/community/conceptual-articles/cheapest-batch-inference-for-low-cost-ai-inference" target="_blank">Batch Guide</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Spaces + CDN <span class="fx-badge">USD</span>
+            <small>250 GiB + 1 TiB egress</small></div>
+          <div class="cost-amount">₦7,500/mo<small>$5/mo
+            <a class="src-link" href="https://docs.digitalocean.com/products/spaces/details/pricing/" target="_blank">Spaces</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Managed PostgreSQL <span class="fx-badge">USD</span>
+            <small>learner profiles + interactions</small></div>
+          <div class="cost-amount">₦22,500/mo<small>$15/mo
+            <a class="src-link" href="https://www.digitalocean.com/pricing/managed-databases" target="_blank">Managed DB</a></small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>DO subtotal (fixed)</span><span>₦201,000</span>
+        </div>
+      </div>
+      <p class="section-note">USD‑billed but predictable. GPU Droplet scales with hours; serverless scales with tokens.</p>
+    </div>
+
+    <div class="cost-category">
+      <h3>🇳🇬 Local AI services <span class="fx-mix-tag">100% Naira</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Intron STT API <span class="local-badge">₦</span>
+            <small>streaming speech recognition</small></div>
+          <div class="cost-amount">₦250,000/mo<small>~50k min @ ₦5/min
+            <a class="src-link third" href="https://www.intron.io" target="_blank">Intron</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Intron TTS API <span class="local-badge">₦</span>
+            <small>role‑play voice responses</small></div>
+          <div class="cost-amount">₦120,000/mo<small>~40k responses
+            <a class="src-link third" href="https://www.intron.io" target="_blank">Intron</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">HOSTAFRICA GPU burst <span class="local-badge">₦</span>
+            <small>monthly training cycles</small></div>
+          <div class="cost-amount">₦1,062,500/mo<small>RTX PRO 6000 · 96GB
+            <a class="src-link third" href="https://www.hostafrica.ng/servers/gpu-servers/" target="_blank">HOSTAFRICA</a></small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Kasi Cloud data residency <span class="local-badge">₦</span>
+            <small>NDPC‑aligned co‑location</small></div>
+          <div class="cost-amount">₦350,000/mo<small>estimated
+            <a class="src-link third" href="https://www.kasicloud.com" target="_blank">Kasi Cloud</a></small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Local subtotal</span><span>₦1,782,500</span>
+        </div>
+      </div>
+      <p class="section-note">100% Naira‑denominated. Zero forex exposure. Local accents and data sovereignty.</p>
+    </div>
+
+    <div class="cost-category">
+      <h3>💰 FX impact <span class="fx-mix-tag risk-tag">within tolerance</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Previous FX exposure
+            <small>before AI stack</small></div>
+          <div class="cost-amount">₦1,138,200<small>5.8% of burn</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">New FX exposure
+            <small>+ GPU Droplet + Gradient AI</small></div>
+          <div class="cost-amount">₦1,339,200<small>~10.5% of risk‑adj burn</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Local routing saves
+            <small>vs all‑USD stack (Deepgram + Chime + SageMaker)</small></div>
+          <div class="cost-amount">₦1,782,500/mo<small>kept in Naira</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">FX tolerance
+            <small>stated appetite</small></div>
+          <div class="cost-amount">15%<small>we are at ~10.5%</small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Status</span><span style="color:#065f46;">✅ Within tolerance</span>
+        </div>
+      </div>
+      <p class="section-note">Adding the BirdBrain AI stack raises FX exposure from 5.8% to ~10.5% — still inside the 15% appetite. Local routing is what keeps it there.</p>
+    </div>
+  </div>
+
+  <!-- PRICING SOURCES FOOTER -->
+  <div class="sources">
+    <h3>🔗 Pricing sources — click any link to verify</h3>
+    <div class="sources-grid">
+      <div class="source-col">
+        <h4>💧 DigitalOcean</h4>
+        <ul>
+          <li><a href="https://www.digitalocean.com/pricing/gpu-droplets" target="_blank">GPU Droplets Pricing</a>
+            <span>H100 $4.41/hr · H200 $4.47/hr · L40S $1.57/hr · RTX 4000 Ada $0.76/hr · MI300X $2.59/hr · MI325X $3.80/hr</span></li>
+          <li><a href="https://docs.digitalocean.com/products/gradient-ai-platform/details/pricing/" target="_blank">Gradient AI Platform Pricing</a>
+            <span>Serverless inference per‑token rates · GPT‑oss‑120b $0.10/M input</span></li>
+          <li><a href="https://www.digitalocean.com/community/conceptual-articles/cheapest-batch-inference-for-low-cost-ai-inference" target="_blank">Batch Inference Guide</a>
+            <span>50% off serverless · 24‑hour guaranteed window</span></li>
+          <li><a href="https://docs.digitalocean.com/products/spaces/details/pricing/" target="_blank">Spaces Object Storage Pricing</a>
+            <span>$5/mo · 250 GiB storage + 1 TiB egress · no per‑request fees</span></li>
+          <li><a href="https://www.digitalocean.com/pricing/managed-databases" target="_blank">Managed Databases Pricing</a>
+            <span>PostgreSQL from $15/mo · automated backups · standby nodes</span></li>
+          <li><a href="https://www.digitalocean.com/pricing/kubernetes" target="_blank">Kubernetes (DOKS) Pricing</a>
+            <span>Basic $12/mo/node · H100 GPU $3.39/hr/node · free control plane</span></li>
+          <li><a href="https://www.digitalocean.com/solutions/ai-gpu-hosting" target="_blank">AI GPU Hosting Overview</a>
+            <span>Up to 75% cheaper than AWS for on‑demand H100s/H200s</span></li>
+        </ul>
+      </div>
+      <div class="source-col aws-col">
+        <h4>☁️ AWS</h4>
+        <ul>
+          <li><a href="https://aws.amazon.com/ec2/pricing/on-demand/" target="_blank">EC2 On‑Demand Pricing</a>
+            <span>P5 H100 $98.32/hr (8 GPU) · P4d A100 $32.77/hr (8 GPU)</span></li>
+          <li><a href="https://aws.amazon.com/sagemaker/pricing/" target="_blank">SageMaker Pricing</a>
+            <span>ml.g5.xlarge $1.01/hr · ml.p3.2xlarge $3.825/hr</span></li>
+          <li><a href="https://aws.amazon.com/bedrock/pricing/" target="_blank">Bedrock Pricing</a>
+            <span>Batch inference 50% off on‑demand</span></li>
+          <li><a href="https://aws.amazon.com/s3/pricing/" target="_blank">S3 Pricing</a>
+            <span>$0.023/GB‑month (first 50 TB) · egress and request fees separate</span></li>
+          <li><a href="https://aws.amazon.com/dynamodb/pricing/" target="_blank">DynamoDB Pricing</a>
+            <span>On‑demand $1.25/M writes · $0.25/M reads · storage $0.25/GB</span></li>
+          <li><a href="https://aws.amazon.com/eks/pricing/" target="_blank">EKS Pricing</a>
+            <span>$0.10/cluster‑hour (standard) · ~$73/month</span></li>
+          <li><a href="https://aws.amazon.com/transcribe/pricing/" target="_blank">Transcribe Pricing</a>
+            <span>$0.024/min (Tier 1) · $0.015/min (Tier 2)</span></li>
+          <li><a href="https://aws.amazon.com/chime/chime-sdk/pricing/" target="_blank">Chime SDK Pricing</a>
+            <span>~$0.0017/attendee‑minute for video</span></li>
+          <li><a href="https://aws.amazon.com/polly/pricing/" target="_blank">Polly Pricing</a>
+            <span>Standard $4/M chars · Neural $16/M chars</span></li>
+        </ul>
+      </div>
+      <div class="source-col third-col">
+        <h4>🇳🇬 Third‑party / Nigerian</h4>
+        <ul>
+          <li><a href="https://www.intron.io" target="_blank">Intron (Lagos)</a>
+            <span>Sahara v2.5 · 200+ African accents · STT + TTS · ₦‑denominated</span></li>
+          <li><a href="https://www.hostafrica.ng/servers/gpu-servers/" target="_blank">HOSTAFRICA GPU Servers</a>
+            <span>NVIDIA RTX PRO 6000 · ₦1,062,500/mo · Nigeria billing</span></li>
+          <li><a href="https://udutech.co/" target="_blank">UduTech Africa GPU Hub</a>
+            <span>Lagos GPU cloud · less than $1/hour · optimised for African markets</span></li>
+          <li><a href="https://www.kasicloud.com" target="_blank">Kasi Cloud (Lagos)</a>
+            <span>100MW AI‑ready data centre · LOS1 Lekki · NDPC‑aligned data residency</span></li>
+          <li><a href="https://www.cassavatechnologies.com" target="_blank">Cassava Technologies</a>
+            <span>First NVIDIA Cloud Partner in Africa · GPUaaS across Nigeria, SA, Kenya, Egypt, Morocco · 12,000 GPUs</span></li>
+          <li><a href="https://huggingface.co/naijavox" target="_blank">NaijaVox on Hugging Face</a>
+            <span>Open‑weight ASR · Yoruba, Hausa, Igbo, Pidgin · Whisper‑large‑v3 fine‑tune</span></li>
+          <li><a href="https://livekit.io" target="_blank">LiveKit</a>
+            <span>Open‑source real‑time audio/video · self‑host on DO Droplet/DOKS</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note">
+    <div>🧠 <strong>DigitalOcean covers 9 of 12 capabilities</strong> — STT, real‑time comms and managed ML pipelines have Nigerian or open‑source replacements.</div>
+    <div id="footerSummary">📉 Loading summary…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const FX = 1500;
+  const fmtN = n => '₦' + Math.round(n).toLocaleString('en-NG');
+  const fmtK = n => n >= 1e6 ? '₦'+(n/1e6).toFixed(2)+'M' : '₦'+Math.round(n/1000)+'k';
+  const pct = n => n.toFixed(1) + '%';
+
+  // ---- FX exposure calculation ----
+  const usdFixed = 126000;
+  const usdPerUser = 180 + 30;
+  const currentUsers = 4820;
+  const prevFx = usdFixed + usdPerUser * currentUsers;
+  const newDoFixed = 171000 + 7500 + 22500;
+  const newFx = prevFx + newDoFixed;
+  const localNaira = 250000 + 120000 + 1062500 + 350000;
+
+  const totalBase = 5862000;
+  const totalVarPerUser = 885;
+  const riskBase = 1180000;
+  const riskVarPerUser = 18;
+  const burn = totalBase + totalVarPerUser * currentUsers;
+  const riskAdjBurn = burn + riskBase + riskVarPerUser * currentUsers;
+
+  const aiVarPerUser = 50;
+  const newBurn = riskAdjBurn + newDoFixed + localNaira + aiVarPerUser * currentUsers;
+  const fxPct = newFx / newBurn * 100;
+  const nairaHedged = 100 - fxPct;
+
+  document.getElementById('fxSafePct').textContent = pct(nairaHedged);
+  document.getElementById('fxExposedPct').textContent = pct(fxPct);
+  document.getElementById('fxExposedNaira').textContent = fmtK(newFx);
+
+  document.getElementById('fxExposureDisplay').textContent = fmtN(newFx);
+  document.getElementById('fxExposureSub').textContent = pct(fxPct) + ' of risk‑adj burn · within 15% tolerance';
+
+  document.getElementById('doInferCost').textContent = '$0.10';
+
+  document.getElementById('footerSummary').innerHTML =
+    `📉 At ${currentUsers.toLocaleString()} users: new burn ≈ <strong>${fmtN(newBurn)}</strong> · FX exposure <strong>${pct(fxPct)}</strong> · ${fmtN(localNaira)}/mo kept in Naira`;
+
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+</body>
+</html>

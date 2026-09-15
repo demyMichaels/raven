@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NaijaEd · Cost Behavior Simulator (₦ Naira · Minimal FX Drag)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f7f9fc;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      padding: 2rem 1.5rem;
+      color: #0a1c2f;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
+
+    .brand { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+
+    .brand h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #0a2e4b;
+    }
+
+    .brand span {
+      background: #1e7e5c;
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.8rem;
+      border-radius: 40px;
+      letter-spacing: 0.3px;
+    }
+
+    .runway-badge {
+      background: #0b2b40;
+      color: white;
+      padding: 0.6rem 1.4rem;
+      border-radius: 60px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .runway-badge strong {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #9ae6b4;
+      margin-right: 0.2rem;
+    }
+
+    /* FX strategy ribbon */
+    .fx-ribbon {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%);
+      color: white;
+      border-radius: 22px;
+      padding: 1.2rem 1.6rem;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      box-shadow: 0 10px 26px rgba(6,95,70,0.18);
+    }
+
+    .fx-ribbon-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .fx-icon {
+      font-size: 2rem;
+      background: rgba(255,255,255,0.12);
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .fx-ribbon h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.2rem;
+    }
+
+    .fx-ribbon p {
+      font-size: 0.82rem;
+      opacity: 0.92;
+      line-height: 1.45;
+      max-width: 620px;
+    }
+
+    .fx-ribbon-stats {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .fx-stat {
+      text-align: right;
+    }
+
+    .fx-stat .num {
+      font-size: 1.7rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #6ee7b7;
+    }
+
+    .fx-stat .lbl {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.8;
+      margin-top: 0.35rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.3rem 1.2rem;
+      border-radius: 24px;
+      box-shadow: 0 6px 18px rgba(0,20,30,0.04);
+      border: 1px solid rgba(0,0,0,0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card.fx-safe::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 4px; height: 100%;
+      background: #10b981;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #50728c;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .stat-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #0a2e4b;
+      line-height: 1.2;
+    }
+
+    .stat-sub {
+      font-size: 0.78rem;
+      color: #50728c;
+      margin-top: 0.3rem;
+    }
+
+    .chart-panel {
+      background: white;
+      border-radius: 32px;
+      padding: 1.8rem 1.8rem 1.2rem;
+      box-shadow: 0 12px 30px rgba(0,20,40,0.06);
+      margin-bottom: 2.5rem;
+      border: 1px solid #eef3f8;
+    }
+
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 0.8rem;
+    }
+
+    .chart-header h2 {
+      font-weight: 600;
+      font-size: 1.4rem;
+      color: #0a2e4b;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chart-header h2 small {
+      font-weight: 400;
+      font-size: 0.9rem;
+      color: #5b7b96;
+      margin-left: 0.5rem;
+    }
+
+    .legend-note {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.8rem;
+      color: #3e5e78;
+      flex-wrap: wrap;
+    }
+
+    .legend-note span::before {
+      content: "●";
+      margin-right: 0.3rem;
+      font-size: 1.1rem;
+      vertical-align: middle;
+    }
+
+    .legend-note .fixed::before { color: #2b6f9e; }
+    .legend-note .variable::before { color: #d97706; }
+    .legend-note .mixed::before { color: #8b5cf6; }
+    .legend-note .ngn::before { color: #10b981; }
+    .legend-note .usd::before { color: #ef4444; }
+
+    .chart-container { position: relative; height: 320px; width: 100%; }
+    .chart-container.split { height: 280px; }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .charts-row { grid-template-columns: 1fr; }
+    }
+
+    .cost-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .cost-category {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 1.5rem 1.4rem;
+      box-shadow: 0 6px 16px rgba(0,20,30,0.02);
+      border: 1px solid #eaf0f6;
+    }
+
+    .cost-category h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: -0.01em;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .cost-category h3 span.count {
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: #eef3f8;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      color: #1f4a6e;
+    }
+
+    .fx-mix-tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 0.18rem 0.6rem;
+      border-radius: 30px;
+      background: #d1fae5;
+      color: #065f46;
+      letter-spacing: 0.2px;
+    }
+
+    .fx-mix-tag.mixed-tag {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .cost-list { display: flex; flex-direction: column; gap: 0.9rem; }
+
+    .cost-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 0.95rem;
+      padding-bottom: 0.7rem;
+      border-bottom: 1px dashed #dbe4ed;
+      gap: 0.8rem;
+    }
+
+    .cost-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .cost-name {
+      color: #1c3a53;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .cost-name small {
+      display: block;
+      font-weight: 400;
+      font-size: 0.72rem;
+      color: #6c8aa5;
+      margin-top: 0.15rem;
+      line-height: 1.4;
+    }
+
+    .cost-amount {
+      font-weight: 600;
+      color: #0a2e4b;
+      text-align: right;
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    .cost-amount small {
+      display: block;
+      font-weight: 400;
+      font-size: 0.68rem;
+      color: #8aa1b5;
+      margin-top: 0.15rem;
+    }
+
+    .footer-note {
+      margin-top: 2.5rem;
+      background: #e7f0f8;
+      border-radius: 20px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      color: #1d4a6e;
+      font-size: 0.95rem;
+      border: 1px solid #cbdde9;
+      gap: 1rem;
+    }
+
+    .footer-note strong { font-weight: 700; color: #0b3a5a; }
+
+    .local-badge {
+      display: inline-block;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 30px;
+      margin-left: 0.4rem;
+      letter-spacing: 0.2px;
+      vertical-align: middle;
+    }
+
+    .fx-badge {
+      display: inline-block;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 30px;
+      margin-left: 0.4rem;
+      letter-spacing: 0.2px;
+      vertical-align: middle;
+    }
+
+    .fx-badge.neutral {
+      background: #e0f2fe;
+      color: #075985;
+    }
+
+    .section-note {
+      font-size: 0.75rem;
+      color: #6c8aa5;
+      margin-top: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .chart-caption {
+      font-size: 0.78rem;
+      color: #50728c;
+      margin-top: 1rem;
+      border-top: 1px solid #eaf0f6;
+      padding-top: 0.9rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1.2rem; }
+      .brand h1 { font-size: 1.4rem; }
+      .runway-badge { font-size: 0.85rem; padding: 0.4rem 1rem; }
+      .stat-value { font-size: 1.35rem; }
+      .footer-note { flex-direction: column; gap: 0.8rem; align-items: flex-start; }
+      .fx-stat .num { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <h1>NaijaEd</h1>
+      <span>🇳🇬 Naira-denominated · local-first</span>
+    </div>
+    <div class="runway-badge">
+      ⛽ Runway: <strong>₦150M</strong> protected
+    </div>
+  </header>
+
+  <!-- FX STRATEGY RIBBON (new prominent element) -->
+  <div class="fx-ribbon">
+    <div class="fx-ribbon-left">
+      <div class="fx-icon">🛡️</div>
+      <div>
+        <h2>Minimal FX Drag — the core of our cost strategy</h2>
+        <p>Local sourcing first. Foreign sourcing only when no cheaper or better Nigerian alternative exists. Result: <strong>~96% of our recurring cost base is Naira-denominated</strong>, naturally hedged against naira devaluation.</p>
+      </div>
+    </div>
+    <div class="fx-ribbon-stats">
+      <div class="fx-stat">
+        <div class="num" id="fxSafePct">—</div>
+        <div class="lbl">Naira-hedged</div>
+      </div>
+      <div class="fx-stat">
+        <div class="num" id="fxExposedPct">—</div>
+        <div class="lbl">USD-exposed</div>
+      </div>
+      <div class="fx-stat">
+        <div class="num" id="fxExposedNaira">—</div>
+        <div class="lbl">USD cost / month</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Premium users (target)</div>
+      <div class="stat-value">15,000</div>
+      <div class="stat-sub">currently 4,820</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">Fixed cost / month <span class="local-badge">100% ₦</span></div>
+      <div class="stat-value" id="fixedCostDisplay">—</div>
+      <div class="stat-sub" id="fixedSub">—</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">Variable cost / user <span class="local-badge">minimal FX</span></div>
+      <div class="stat-value" id="variableCostDisplay">—</div>
+      <div class="stat-sub" id="varSub">—</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">Monthly burn (current)</div>
+      <div class="stat-value" id="burnDisplay">—</div>
+      <div class="stat-sub" id="burnSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">FX exposure / month</div>
+      <div class="stat-value" id="fxExposureDisplay">—</div>
+      <div class="stat-sub" id="fxExposureSub">—</div>
+    </div>
+  </div>
+
+  <!-- Side-by-side charts: cost behaviour + FX currency split -->
+  <div class="charts-row">
+    <!-- Main chart -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <h2>📊 12 cost behaviours <small>₦ per month at 10,000 users</small></h2>
+        <div class="legend-note">
+          <span class="fixed">Purely fixed</span>
+          <span class="variable">Purely variable</span>
+          <span class="mixed">Semi‑variable</span>
+        </div>
+      </div>
+      <div class="chart-container split">
+        <canvas id="costBehaviourChart"></canvas>
+      </div>
+      <p class="chart-caption">
+        ⚡ Real local rates: Paystack 3.2% (avg ₦5,000 txn = ₦160) · local SMS gateway · NDPC compliance · DigitalOcean the only significant USD line.
+      </p>
+    </div>
+
+    <!-- FX split chart -->
+    <div class="chart-panel">
+      <div class="chart-header">
+        <h2>💱 Currency exposure <small>₦ vs USD</small></h2>
+      </div>
+      <div class="chart-container split">
+        <canvas id="fxSplitChart"></canvas>
+      </div>
+      <p class="chart-caption">
+        🛡️ Naira-denominated costs are naturally hedged. Only DigitalOcean hosting carries real FX risk.
+      </p>
+    </div>
+  </div>
+
+  <!-- Detailed cost items -->
+  <div class="cost-grid">
+
+    <!-- Purely fixed -->
+    <div class="cost-category">
+      <h3>
+        🔵 Purely fixed
+        <span class="fx-mix-tag">100% Naira</span>
+      </h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Founder stipends <span class="local-badge">₦</span>
+            <small>₦1.2M × 2 founders / month</small>
+          </div>
+          <div class="cost-amount">₦2,400,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Legal retainers <span class="local-badge">₦</span>
+            <small>local firm · CAC, NDPC, contracts</small>
+          </div>
+          <div class="cost-amount">₦840,000</div>
+        </div>
+        <div class="cost-item" style="border-bottom:none; padding-top:0.4rem; font-weight:500; color:#1f4a6e;">
+          <span>Total purely fixed</span>
+          <span id="pureFixedTotal">—</span>
+        </div>
+      </div>
+      <p class="section-note">Constant for 12 months. 100% Naira-denominated — zero forex exposure.</p>
+    </div>
+
+    <!-- Purely variable -->
+    <div class="cost-category">
+      <h3>
+        🟠 Purely variable
+        <span class="fx-mix-tag">~60% Naira</span>
+      </h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Payment gateway <span class="local-badge">Paystack ₦</span>
+            <small>3.2% local card · avg ₦5,000 txn</small>
+          </div>
+          <div class="cost-amount">₦165<small>per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Cloud egress / CDN <span class="fx-badge">USD</span>
+            <small>DigitalOcean bandwidth overage</small>
+          </div>
+          <div class="cost-amount">₦180<small>per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">SMS / email OTP <span class="local-badge">Termii ₦</span>
+            <small>₦4/SMS · ~22 SMS/user/mo</small>
+          </div>
+          <div class="cost-amount">₦90<small>per user</small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none; padding-top:0.4rem; font-weight:500; color:#1f4a6e;">
+          <span>Total per premium user</span>
+          <span id="pureVarPerUser">—</span>
+        </div>
+      </div>
+      <p class="section-note">2 of 3 lines are Naira-denominated. Only cloud bandwidth carries FX risk.</p>
+    </div>
+
+    <!-- Semi-variable / mixed -->
+    <div class="cost-category">
+      <h3>
+        🟣 Semi‑variable / mix
+        <span class="fx-mix-tag mixed-tag">~95% Naira</span>
+      </h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">DigitalOcean hosting <span class="fx-badge">USD</span>
+            <small>8GB/4vCPU droplet + overage</small>
+          </div>
+          <div class="cost-amount">₦126,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Customer support <span class="local-badge">local team ₦</span>
+            <small>2 part-time + surge capacity</small>
+          </div>
+          <div class="cost-amount">₦1,020,000 + ₦75<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Analytics & monitoring <span class="local-badge">₦</span>
+            <small>base + event overage</small>
+          </div>
+          <div class="cost-amount">₦225,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Content licensing <span class="local-badge">NG partners ₦</span>
+            <small>curriculum rights + royalties</small>
+          </div>
+          <div class="cost-amount">₦450,000 + ₦45<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Marketing (performance) <span class="local-badge">₦</span>
+            <small>base + CAC per user</small>
+          </div>
+          <div class="cost-amount">₦600,000 + ₦225<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Admin & tools <span class="local-badge">local reseller ₦</span>
+            <small>Google Workspace 3 seats + misc</small>
+          </div>
+          <div class="cost-amount">₦66,000 + ₦15<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Compliance & KYC <span class="local-badge">NDPC ₦</span>
+            <small>registration + annual audit</small>
+          </div>
+          <div class="cost-amount">₦135,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none; padding-top:0.4rem; font-weight:500; color:#1f4a6e;">
+          <span>Mixed base total</span>
+          <span id="mixedBaseTotal">—</span>
+        </div>
+      </div>
+      <p class="section-note">Only DigitalOcean is USD-billed. 6 of 7 lines are 100% Naira-denominated.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-note">
+    <div>🛡️ <strong>10 of 12 cost behaviours are Naira-denominated</strong> — a deliberate hedge against FX volatility.</div>
+    <div id="footerProjection">📉 At 15k premium users, total monthly cost ≈ <strong>—</strong></div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // FX assumption
+    const FX = 1500; // ₦1,500 = $1
+
+    // ============================================================
+    // COST DATA with real local rates (₦)
+    // ============================================================
+    const costData = [
+      // Purely fixed (2) — 100% Naira
+      { name: 'Founder stipends', category: 'Purely fixed', monthly: 2400000, variableComponent: 0, currency: 'NGN' },
+      { name: 'Legal retainers', category: 'Purely fixed', monthly: 840000, variableComponent: 0, currency: 'NGN' },
+
+      // Purely variable (3) — mixed currency
+      { name: 'Payment gateway fees', category: 'Purely variable', monthly: 0, variableComponent: 165, currency: 'NGN' },
+      { name: 'Cloud egress / CDN', category: 'Purely variable', monthly: 0, variableComponent: 180, currency: 'USD' },
+      { name: 'SMS / email OTP', category: 'Purely variable', monthly: 0, variableComponent: 90, currency: 'NGN' },
+
+      // Semi-variable / mix (7)
+      { name: 'DigitalOcean hosting', category: 'Semi‑variable / mix', monthly: 126000, variableComponent: 30, currency: 'USD' },
+      { name: 'Customer support', category: 'Semi‑variable / mix', monthly: 1020000, variableComponent: 75, currency: 'NGN' },
+      { name: 'Analytics & monitoring', category: 'Semi‑variable / mix', monthly: 225000, variableComponent: 30, currency: 'NGN' },
+      { name: 'Content licensing', category: 'Semi‑variable / mix', monthly: 450000, variableComponent: 45, currency: 'NGN' },
+      { name: 'Marketing (performance)', category: 'Semi‑variable / mix', monthly: 600000, variableComponent: 225, currency: 'NGN' },
+      { name: 'Admin & tools', category: 'Semi‑variable / mix', monthly: 66000, variableComponent: 15, currency: 'NGN' },
+      { name: 'Compliance & KYC', category: 'Semi‑variable / mix', monthly: 135000, variableComponent: 30, currency: 'NGN' }
+    ];
+
+    const USER_COUNT_CHART = 10000;
+    const labels = costData.map(c => c.name);
+    const monthlyAmounts = costData.map(c => (c.monthly || 0) + (c.variableComponent || 0) * USER_COUNT_CHART);
+
+    const fmtN = (n) => '₦' + Math.round(n).toLocaleString('en-NG');
+    const fmtCompactN = (n) => {
+      if (n >= 1000000) return '₦' + (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return '₦' + (n / 1000).toFixed(0) + 'k';
+      return '₦' + n;
+    };
+
+    // ---- Chart 1: cost behaviour ----
+    const backgroundColors = costData.map(c => {
+      if (c.category === 'Purely fixed') return '#2b6f9e';
+      if (c.category === 'Purely variable') return '#d97706';
+      return '#8b5cf6';
+    });
+    const borderColors = costData.map(c => {
+      if (c.category === 'Purely fixed') return '#1f4f75';
+      if (c.category === 'Purely variable') return '#b85e04';
+      return '#6d3bc0';
+    });
+
+    const ctx1 = document.getElementById('costBehaviourChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: `Monthly cost at ${USER_COUNT_CHART.toLocaleString()} users (₦)`,
+          data: monthlyAmounts,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 1.5,
+          borderRadius: 6,
+          barPercentage: 0.75,
+          categoryPercentage: 0.85,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const item = costData[context.dataIndex];
+                const base = item.monthly || 0;
+                const variable = item.variableComponent || 0;
+                let detail = `Total: ${fmtN(context.raw)}`;
+                if (base > 0 && variable > 0) detail += ` (base ${fmtN(base)} + ${fmtN(variable)}/user)`;
+                else if (base > 0) detail += ` (fixed)`;
+                else if (variable > 0) detail += ` (${fmtN(variable)}/user)`;
+                detail += ` · ${item.currency}`;
+                return detail;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#e9eef3' },
+            ticks: {
+              callback: (val) => fmtCompactN(val),
+              font: { size: 10 }
+            }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { maxRotation: 40, minRotation: 40, font: { size: 9 }, color: '#1f3e57' }
+          }
+        }
+      }
+    });
+
+    // ---- Chart 2: FX currency split (doughnut) ----
+    // Compute total at 10k users split by currency
+    let nairaTotal = 0;
+    let usdTotalInNaira = 0;
+    costData.forEach(c => {
+      const total = (c.monthly || 0) + (c.variableComponent || 0) * USER_COUNT_CHART;
+      if (c.currency === 'USD') usdTotalInNaira += total;
+      else nairaTotal += total;
+    });
+
+    const ctx2 = document.getElementById('fxSplitChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: ['Naira-denominated (hedged)', 'USD-denominated (FX risk)'],
+        datasets: [{
+          data: [nairaTotal, usdTotalInNaira],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderColor: ['#059669', '#b91c1c'],
+          borderWidth: 2,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { size: 11, weight: '500' },
+              color: '#1f3e57',
+              padding: 12,
+              boxWidth: 12,
+              boxHeight: 12
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const value = context.raw;
+                const total = context.dataset.data.reduce((a,b) => a+b, 0);
+                const pct = ((value / total) * 100).toFixed(1);
+                return `${context.label}: ${fmtN(value)} (${pct}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // ============================================================
+    // ACCURATE TOTALS in ₦
+    // ============================================================
+    const pureFixed = 2400000 + 840000;                          // ₦3,240,000
+    const pureVarPerUser = 165 + 180 + 90;                       // ₦435
+    const mixedBase = 126000 + 1020000 + 225000 + 450000 + 600000 + 66000 + 135000; // ₦2,622,000
+    const mixedVarPerUser = 30 + 75 + 30 + 45 + 225 + 15 + 30;   // ₦450
+
+    const totalFixedBase = pureFixed + mixedBase;                // ₦5,862,000
+    const totalVarPerUser = pureVarPerUser + mixedVarPerUser;    // ₦885
+
+    const currentUsers = 4820;
+    const currentBurn = totalFixedBase + totalVarPerUser * currentUsers;
+
+    // ---- FX exposure calculation ----
+    // USD-flagged lines only:
+    //   Cloud egress: ₦180/user (variable)
+    //   DigitalOcean: ₦126,000 base + ₦30/user
+    const usdFixed = 126000;
+    const usdPerUser = 180 + 30; // 210/user
+    const fxExposureCurrent = usdFixed + usdPerUser * currentUsers;
+    const fxExposurePctCurrent = (fxExposureCurrent / currentBurn) * 100;
+
+    const targetUsers = 15000;
+    const totalAt15k = totalFixedBase + totalVarPerUser * targetUsers;
+    const fxExposureAt15k = usdFixed + usdPerUser * targetUsers;
+    const fxExposurePctAt15k = (fxExposureAt15k / totalAt15k) * 100;
+
+    const nairaHedgedPct = (100 - fxExposurePctCurrent).toFixed(1);
+
+    // ---- Update DOM ----
+    // Ribbon stats (use current burn basis for honesty)
+    document.getElementById('fxSafePct').innerText = nairaHedgedPct + '%';
+    document.getElementById('fxExposedPct').innerText = fxExposurePctCurrent.toFixed(1) + '%';
+    document.getElementById('fxExposedNaira').innerText = fmtCompactN(fxExposureCurrent);
+
+    // Stat cards
+    document.getElementById('fixedCostDisplay').innerText = fmtN(totalFixedBase);
+    document.getElementById('fixedSub').innerText = `≈ $${Math.round(totalFixedBase / FX).toLocaleString()} · 100% Naira-denominated`;
+
+    document.getElementById('variableCostDisplay').innerText = fmtN(totalVarPerUser);
+    document.getElementById('varSub').innerText = `≈ $${(totalVarPerUser / FX).toFixed(2)}/user · only cloud egress is USD`;
+
+    document.getElementById('burnDisplay').innerText = fmtN(currentBurn);
+    document.getElementById('burnSub').innerText = `at ${currentUsers.toLocaleString()} premium · ≈ $${Math.round(currentBurn / FX).toLocaleString()}`;
+
+    document.getElementById('fxExposureDisplay').innerText = fmtN(fxExposureCurrent);
+    document.getElementById('fxExposureSub').innerText = `${fxExposurePctCurrent.toFixed(1)}% of burn · DigitalOcean only`;
+
+    // Card subtotals
+    document.getElementById('pureFixedTotal').innerText = fmtN(pureFixed);
+    document.getElementById('pureVarPerUser').innerText = fmtN(pureVarPerUser) + '/user';
+    document.getElementById('mixedBaseTotal').innerText = fmtN(mixedBase) + ' + ' + fmtN(mixedVarPerUser) + '/user';
+
+    // Footer projection
+    document.getElementById('footerProjection').innerHTML =
+      `📉 At 15k premium users, monthly cost ≈ <strong>${fmtN(totalAt15k)}</strong> (≈ $${Math.round(totalAt15k / FX).toLocaleString()}) · FX exposure just <strong>${fxExposurePctAt15k.toFixed(1)}%</strong>`;
+  })();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+</body>
+</html>

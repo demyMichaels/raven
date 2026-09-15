@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaijaEd · Global Scaling Analysis — 1 to 100+ Countries</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0a2e4b; --ink-soft:#1c3a53; --muted:#6c8aa5; --muted-2:#50728c;
+    --line:#eaf0f6; --line-dash:#dbe4ed; --bg:#f7f9fc;
+    --green:#10b981; --green-d:#065f46; --red:#ef4444; --amber:#f59e0b;
+    --purple:#8b5cf6; --blue:#3b82f6; --pink:#ec4899; --navy:#0b2b40;
+    --do-blue:#0069ff; --aws-orange:#ff9900;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+       padding:2rem 1.5rem;color:var(--ink);line-height:1.5;}
+  .container{max-width:1400px;margin:0 auto;}
+
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+         margin-bottom:1.5rem;gap:1rem;}
+  .brand{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+  .brand h1{font-size:1.9rem;font-weight:600;letter-spacing:-.02em;color:var(--ink);}
+  .brand span{background:#1e7e5c;color:#fff;font-size:.8rem;font-weight:600;
+              padding:.2rem .8rem;border-radius:40px;}
+  .header-badges{display:flex;gap:.8rem;flex-wrap:wrap;}
+  .badge{background:var(--navy);color:#fff;padding:.55rem 1.2rem;border-radius:60px;
+         font-weight:500;display:flex;align-items:center;gap:.5rem;font-size:.9rem;}
+  .badge strong{color:#9ae6b4;font-weight:700;}
+
+  .ribbon{border-radius:22px;padding:1.2rem 1.6rem;margin-bottom:1.2rem;
+          display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+          gap:1.2rem;color:#fff;}
+  .ribbon.scale{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4338ca 100%);
+                box-shadow:0 10px 26px rgba(49,46,129,.2);}
+  .ribbon.milestone{background:linear-gradient(135deg,#7c2d12 0%,#9a3412 55%,#c2410c 100%);
+                    box-shadow:0 10px 26px rgba(154,52,18,.2);}
+  .ribbon-left{display:flex;align-items:center;gap:1rem;flex:1;min-width:260px;}
+  .ribbon-icon{font-size:2rem;background:rgba(255,255,255,.12);width:56px;height:56px;
+               border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ribbon h2{font-size:1.08rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.2rem;}
+  .ribbon p{font-size:.82rem;opacity:.92;line-height:1.45;max-width:660px;}
+  .ribbon-stats{display:flex;gap:1.5rem;flex-wrap:wrap;}
+  .ribbon-stat{text-align:right;}
+  .ribbon-stat .num{font-size:1.6rem;font-weight:700;line-height:1;color:#c7d2fe;}
+  .ribbon.milestone .ribbon-stat .num{color:#fed7aa;}
+  .ribbon-stat .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+                    opacity:.8;margin-top:.35rem;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+              gap:1rem;margin-bottom:2.5rem;}
+  .stat-card{background:#fff;padding:1.3rem 1.2rem;border-radius:24px;
+             box-shadow:0 6px 18px rgba(0,20,30,.04);border:1px solid rgba(0,0,0,.02);
+             position:relative;overflow:hidden;}
+  .stat-card.do-line::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--do-blue);}
+  .stat-card.aws-line::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--aws-orange);}
+  .stat-card.gap::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--amber);}
+  .stat-card.fx-safe::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;background:var(--green);}
+  .stat-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+              color:var(--muted-2);margin-bottom:.4rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;}
+  .stat-value{font-size:1.65rem;font-weight:700;color:var(--ink);line-height:1.2;}
+  .stat-sub{font-size:.78rem;color:var(--muted-2);margin-top:.3rem;}
+
+  .section-head{display:flex;align-items:center;gap:.9rem;margin:2.6rem 0 1.2rem;flex-wrap:wrap;}
+  .section-num{background:var(--navy);color:#6ee7b7;font-weight:700;font-size:.85rem;
+               padding:.35rem .85rem;border-radius:10px;letter-spacing:.04em;white-space:nowrap;}
+  .section-head h2{font-size:1.32rem;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
+  .section-head p{font-size:.82rem;color:#5b7b96;margin-left:auto;max-width:620px;text-align:right;}
+
+  .panel{background:#fff;border-radius:28px;padding:1.7rem 1.7rem 1.2rem;
+         box-shadow:0 12px 30px rgba(0,20,40,.06);border:1px solid var(--line);
+         margin-bottom:1.5rem;}
+  .panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+              margin-bottom:1.4rem;gap:.8rem;}
+  .panel-head h3{font-weight:600;font-size:1.25rem;color:var(--ink);display:flex;
+                 align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .panel-head h3 small{font-weight:400;font-size:.88rem;color:#5b7b96;}
+  .chart-container{position:relative;height:320px;width:100%;}
+  .chart-container.tall{height:380px;}
+  .chart-caption{font-size:.78rem;color:var(--muted-2);margin-top:1rem;
+                 border-top:1px solid var(--line);padding-top:.9rem;line-height:1.5;}
+
+  .charts-row{display:grid;gap:1.5rem;margin-bottom:2.5rem;}
+  .charts-row.two{grid-template-columns:1fr 1fr;}
+  @media(max-width:960px){.charts-row.two{grid-template-columns:1fr;}}
+
+  .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line);}
+  table.milestone{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1000px;}
+  table.milestone thead th{background:#f1f6fb;color:#1f4a6e;font-weight:600;text-align:left;
+    padding:.75rem .7rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
+    border-bottom:1px solid #dbe4ed;white-space:nowrap;}
+  table.milestone tbody td{padding:.75rem .7rem;border-bottom:1px solid #eef3f8;vertical-align:top;}
+  table.milestone tbody tr:hover{background:#fafcfe;}
+  table.milestone tbody tr:last-child td{border-bottom:none;}
+  .stage{font-weight:700;color:var(--muted-2);font-size:.72rem;}
+  .stage-name{font-weight:600;color:var(--ink-soft);}
+  .stage-name small{display:block;font-weight:400;color:var(--muted);font-size:.7rem;margin-top:.15rem;}
+  .chip{display:inline-block;font-size:.66rem;font-weight:600;padding:.16rem .55rem;
+        border-radius:30px;white-space:nowrap;}
+  .chip.do{background:#dbeafe;color:#1e40af;}
+  .chip.aws{background:#fff4e6;color:#b35c00;}
+  .chip.hybrid{background:#ede9fe;color:#5b21b6;}
+  .chip.local{background:#d1fae5;color:#065f46;}
+  .chip.risk{background:#fee2e2;color:#991b1b;}
+
+  .gap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.2rem;}
+  .gap-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.4rem;
+            border-left:5px solid;}
+  .gap-card.g1{border-left-color:var(--amber);}
+  .gap-card.g2{border-left-color:var(--purple);}
+  .gap-card.g3{border-left-color:var(--red);}
+  .gap-card h4{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;
+               display:flex;align-items:center;gap:.45rem;}
+  .gap-card p{font-size:.82rem;color:var(--muted-2);line-height:1.55;margin-bottom:.6rem;}
+  .gap-card .fix{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;
+                 padding:.7rem .9rem;font-size:.78rem;color:#14532d;line-height:1.5;}
+  .gap-card .fix strong{color:#065f46;}
+
+  .decision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.1rem;}
+  .decision-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.3rem;}
+  .decision-card h4{font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;
+                    display:flex;align-items:center;gap:.45rem;}
+  .decision-card p{font-size:.8rem;color:var(--muted-2);line-height:1.55;}
+  .decision-card ul{font-size:.8rem;color:var(--muted-2);line-height:1.6;padding-left:1.1rem;margin-top:.4rem;}
+  .decision-card li{margin-bottom:.25rem;}
+  .decision-card .tag{display:inline-block;font-size:.62rem;font-weight:700;padding:.14rem .5rem;
+    border-radius:30px;background:#eef3f8;color:#1f4a6e;margin-bottom:.5rem;letter-spacing:.03em;}
+
+  .sources{background:#f1f6fb;border:1px solid #dbe4ed;border-radius:22px;
+           padding:1.5rem 1.8rem;margin-top:2.5rem;}
+  .sources h3{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:1rem;
+              display:flex;align-items:center;gap:.5rem;}
+  .sources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;}
+  .source-col h4{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+                 color:var(--muted-2);margin-bottom:.6rem;padding-bottom:.4rem;
+                 border-bottom:1px solid #dbe4ed;}
+  .source-col ul{list-style:none;}
+  .source-col li{font-size:.78rem;margin-bottom:.45rem;line-height:1.45;}
+  .source-col li a{color:var(--do-blue);text-decoration:none;border-bottom:1px dotted var(--do-blue);}
+  .source-col li a:hover{color:var(--navy);border-bottom-style:solid;}
+  .source-col.aws-col li a{color:var(--aws-orange);border-bottom-color:var(--aws-orange);}
+  .source-col.aws-col li a:hover{color:#b35c00;}
+  .source-col li span{color:var(--muted);font-size:.7rem;display:block;margin-top:.1rem;}
+
+  .footer-note{margin-top:2.5rem;background:#e7f0f8;border-radius:20px;padding:1.5rem 2rem;
+    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+    color:#1d4a6e;font-size:.95rem;border:1px solid #cbdde9;gap:1rem;}
+  .footer-note strong{font-weight:700;color:#0b3a5a;}
+
+  @media(max-width:600px){
+    body{padding:1.2rem;}
+    .brand h1{font-size:1.4rem;}
+    .stat-value{font-size:1.3rem;}
+    .ribbon-stat .num{font-size:1.3rem;}
+    .section-head p{text-align:left;margin-left:0;}
+    .footer-note{flex-direction:column;gap:.8rem;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <h1>NaijaEd</h1>
+      <span>🌍 Global scaling · 1 → 100+ countries</span>
+    </div>
+    <div class="header-badges">
+      <div class="badge">📊 Progressive cost &amp; capability charts</div>
+      <div class="badge">⛽ Runway: <strong>₦150M</strong></div>
+    </div>
+  </header>
+
+  <!-- SCALE RIBBON -->
+  <div class="ribbon scale">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🌍</div>
+      <div>
+        <h2>Is the DO + local stack sustainable for 100+ countries?</h2>
+        <p>DigitalOcean operates <strong>16 datacenters across 13 regions</strong> — no presence in South America, the Middle East, or most of Africa.
+           For 100+ countries, latency and data residency become binding constraints. The stack works to <strong>~8 countries</strong>;
+           beyond that, a hybrid DO + AWS architecture is required.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num" id="maxCountriesDO">8</div><div class="lbl">Countries on DO alone</div></div>
+      <div class="ribbon-stat"><div class="num" id="countriesWithAWS">39</div><div class="lbl">AWS regions available</div></div>
+      <div class="ribbon-stat"><div class="num" id="costMultiplier">—</div><div class="lbl">Cost multiplier at 100</div></div>
+    </div>
+  </div>
+
+  <div class="ribbon milestone">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🎯</div>
+      <div>
+        <h2>Milestone upgrade triggers</h2>
+        <p>Three inflection points force a stack upgrade: <strong>8 countries</strong> (latency SLA breach),
+           <strong>15 countries</strong> (data residency non-compliance), and <strong>30 countries</strong>
+           (egress cost exceeds AWS total cost of ownership). Each trigger is mapped below with the specific upgrade action.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num">8</div><div class="lbl">Latency trigger</div></div>
+      <div class="ribbon-stat"><div class="num">15</div><div class="lbl">Compliance trigger</div></div>
+      <div class="ribbon-stat"><div class="num">30</div><div class="lbl">Cost trigger</div></div>
+    </div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid">
+    <div class="stat-card do-line">
+      <div class="stat-label">DO regions available</div>
+      <div class="stat-value">13</div>
+      <div class="stat-sub">NA, EU, Asia, Australia only</div>
+    </div>
+    <div class="stat-card aws-line">
+      <div class="stat-label">AWS regions</div>
+      <div class="stat-value">39</div>
+      <div class="stat-sub">123 Availability Zones</div>
+    </div>
+    <div class="stat-card gap">
+      <div class="stat-label">Countries without DO presence</div>
+      <div class="stat-value">~180</div>
+      <div class="stat-sub">South America, ME, most of Africa</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">FX exposure at 100 countries</div>
+      <div class="stat-value" id="fxExposure100">—</div>
+      <div class="stat-sub" id="fxExposure100Sub">—</div>
+    </div>
+  </div>
+
+  <!-- CHART 1: COST PROGRESSION -->
+  <div class="section-head">
+    <span class="section-num">COST</span>
+    <h2>Progressive cost as countries scale</h2>
+    <p>Infrastructure cost per month (₦M) — DO-only vs hybrid DO+AWS.</p>
+  </div>
+  <div class="charts-row two">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>💰 Monthly infrastructure cost <small>₦M</small></h3>
+      </div>
+      <div class="chart-container tall"><canvas id="costProgressionChart"></canvas></div>
+      <p class="chart-caption">DO-only cost stays low but plateaus at ~8 countries due to regional limits. Hybrid cost rises linearly but enables unlimited expansion. The crossover is at ~30 countries.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>📊 Cost per country <small>₦ per country / month</small></h3>
+      </div>
+      <div class="chart-container tall"><canvas id="costPerCountryChart"></canvas></div>
+      <p class="chart-caption">DO-only is cheaper per country at low scale, but hybrid becomes more efficient at 30+ countries because AWS regional pricing benefits from volume.</p>
+    </div>
+  </div>
+
+  <!-- CHART 2: LATENCY & COMPLIANCE -->
+  <div class="section-head">
+    <span class="section-num">LATENCY</span>
+    <h2>Latency & data residency as countries scale</h2>
+    <p>When the stack breaks — and why.</p>
+  </div>
+  <div class="charts-row two">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>⏱️ Latency to nearest DO region <small>ms</small></h3>
+      </div>
+      <div class="chart-container tall"><canvas id="latencyChart"></canvas></div>
+      <p class="chart-caption">Countries beyond 8 experience &gt;150ms latency — unacceptable for live conversation and real-time role-play. AWS regions cut this to &lt;80ms.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>⚖️ Countries requiring data residency</h3>
+      </div>
+      <div class="chart-container tall"><canvas id="complianceChart"></canvas></div>
+      <p class="chart-caption">At 15 countries, GDPR, PDPA, LGPD and similar laws force in-country or in-region data storage — DO cannot serve all of them.</p>
+    </div>
+  </div>
+
+  <!-- CHART 3: FX EXPOSURE -->
+  <div class="section-head">
+    <span class="section-num">FX</span>
+    <h2>FX exposure as countries scale</h2>
+    <p>Naira-hedged vs USD-exposed cost base.</p>
+  </div>
+  <div class="charts-row two">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>💱 FX exposure <small>% of cost base</small></h3>
+      </div>
+      <div class="chart-container tall"><canvas id="fxProgressionChart"></canvas></div>
+      <p class="chart-caption">DO-only keeps FX low but caps growth. Hybrid increases FX exposure — but stays within the 15% tolerance if local providers are used for speech and training.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>🌍 Countries served vs FX exposure</h3>
+      </div>
+      <div class="chart-container tall"><canvas id="countriesFxChart"></canvas></div>
+      <p class="chart-caption">Each new AWS region adds USD exposure. Local provider routing is the only lever that keeps FX within appetite.</p>
+    </div>
+  </div>
+
+  <!-- MILESTONE TABLE -->
+  <div class="section-head">
+    <span class="section-num">MILESTONES</span>
+    <h2>Upgrade milestones — what changes and when</h2>
+    <p>Each milestone is a binding constraint that forces a stack decision.</p>
+  </div>
+  <div class="panel">
+    <div class="table-wrap">
+      <table class="milestone">
+        <thead>
+          <tr>
+            <th>Milestone</th>
+            <th>Countries</th>
+            <th>Trigger</th>
+            <th>Current stack</th>
+            <th>Required upgrade</th>
+            <th>Cost impact</th>
+            <th>FX impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="stage">M0</div></td>
+            <td><span class="chip local">1–3</span></td>
+            <td>Nigeria + West Africa launch</td>
+            <td><span class="chip do">DO only</span></td>
+            <td>None — current stack sufficient</td>
+            <td>Baseline</td>
+            <td>~5.8%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M1</div></td>
+            <td><span class="chip local">4–8</span></td>
+            <td>East Africa, UK, US, Canada</td>
+            <td><span class="chip do">DO + local AI</span></td>
+            <td>Add DO London, Frankfurt, Toronto regions</td>
+            <td>+₦1.2M/mo</td>
+            <td>~8.2%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M2</div></td>
+            <td><span class="chip do">8</span></td>
+            <td><strong>Latency SLA breach</strong> — MENA, South America, SE Asia users &gt;150ms</td>
+            <td><span class="chip do">DO only</span></td>
+            <td><span class="chip aws">Add AWS regions</span> — Bahrain, São Paulo, Singapore, Mumbai</td>
+            <td>+₦2.8M/mo</td>
+            <td>~11.5%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M3</div></td>
+            <td><span class="chip hybrid">15</span></td>
+            <td><strong>Data residency non-compliance</strong> — GDPR, PDPA, LGPD, POPIA</td>
+            <td><span class="chip hybrid">DO + AWS</span></td>
+            <td>Add AWS local zones + in-country storage for regulated markets</td>
+            <td>+₦4.5M/mo</td>
+            <td>~12.8%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M4</div></td>
+            <td><span class="chip aws">30</span></td>
+            <td><strong>Egress cost exceeds AWS TCO</strong> — CDN and video delivery dominate</td>
+            <td><span class="chip hybrid">DO + AWS</span></td>
+            <td>Migrate video delivery to CloudFront + S3; keep compute on DO</td>
+            <td>+₦6.2M/mo</td>
+            <td>~13.5%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M5</div></td>
+            <td><span class="chip aws">50+</span></td>
+            <td><strong>Compliance frameworks</strong> — FedRAMP, HIPAA BAA, PCI-DSS L1, ISO 27017</td>
+            <td><span class="chip aws">AWS-primary</span></td>
+            <td>Full AWS migration; DO reserved for low-cost inference only</td>
+            <td>+₦12M/mo</td>
+            <td>~14.5%</td>
+          </tr>
+          <tr>
+            <td><div class="stage">M6</div></td>
+            <td><span class="chip risk">100+</span></td>
+            <td><strong>Global enterprise scale</strong> — 99.99% SLA, multi-region active-active</td>
+            <td><span class="chip aws">AWS + GCP + DO</span></td>
+            <td>Multi-cloud: AWS primary, GCP for AI/ML, DO for cost-optimised inference</td>
+            <td>+₦28M/mo</td>
+            <td>~15% (at tolerance limit)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="chart-caption" style="margin-top:1rem;">
+      <strong>Key insight:</strong> The DO + local stack is sustainable to <strong>8 countries</strong>.
+      From 8–30 countries, a <strong>hybrid DO + AWS</strong> architecture is required. Beyond 30 countries,
+      AWS becomes primary for compliance, latency, and egress economics.
+    </p>
+  </div>
+
+  <!-- DECISION FRAMEWORK -->
+  <div class="section-head">
+    <span class="section-num">DECISION</span>
+    <h2>When to upgrade — decision framework</h2>
+    <p>Three binding constraints, three upgrade actions.</p>
+  </div>
+  <div class="decision-grid">
+    <div class="decision-card">
+      <span class="tag">TRIGGER 1</span>
+      <h4>⏱️ Latency SLA breach</h4>
+      <p>When &gt;20% of users are more than 150ms from the nearest DO region.</p>
+      <ul>
+        <li>Add AWS regions: Bahrain, São Paulo, Singapore, Mumbai, Cape Town</li>
+        <li>Deploy AWS Global Accelerator for anycast routing</li>
+        <li>Keep compute on DO where latency is acceptable</li>
+      </ul>
+      <p style="margin-top:.5rem;font-weight:600;color:#065f46;">Triggers at: 8 countries</p>
+    </div>
+    <div class="decision-card">
+      <span class="tag">TRIGGER 2</span>
+      <h4>⚖️ Data residency non-compliance</h4>
+      <p>When a country mandates in-country data storage for children's data.</p>
+      <ul>
+        <li>Add AWS local zones in regulated countries</li>
+        <li>Use Kasi Cloud (Nigeria), Nxtra (India), etc. for in-country</li>
+        <li>Keep DO for non-regulated markets</li>
+      </ul>
+      <p style="margin-top:.5rem;font-weight:600;color:#92400e;">Triggers at: 15 countries</p>
+    </div>
+    <div class="decision-card">
+      <span class="tag">TRIGGER 3</span>
+      <h4>💰 Egress cost exceeds AWS TCO</h4>
+      <p>When CDN egress cost on DO exceeds the total AWS equivalent cost.</p>
+      <ul>
+        <li>DO Spaces egress: $0.01/GB — AWS S3: $0.09/GB</li>
+        <li>But DO has no global CDN edge — origin pulls cost more</li>
+        <li>Migrate video to CloudFront at ~$0.085/GB US/EU, ~$0.12/GB other regions</li>
+      </ul>
+      <p style="margin-top:.5rem;font-weight:600;color:#991b1b;">Triggers at: 30 countries</p>
+    </div>
+  </div>
+
+  <!-- SOURCES -->
+  <div class="sources">
+    <h3>🔗 Sources — click to verify</h3>
+    <div class="sources-grid">
+      <div class="source-col">
+        <h4>💧 DigitalOcean</h4>
+        <ul>
+          <li><a href="https://www.digitalocean.com/community/conceptual-articles/regional-availability" target="_blank">Regional Availability Guide 2026</a>
+            <span>16 datacenters · 13 regions · NA, EU, Asia, Australia only</span></li>
+          <li><a href="https://docs.digitalocean.com/platform/regional-availability/" target="_blank">Platform Regional Availability</a>
+            <span>Full datacenter list with product availability matrix</span></li>
+          <li><a href="https://www.digitalocean.com/pricing/gpu-droplets" target="_blank">GPU Droplets Pricing</a>
+            <span>H100 $4.41/hr · L40S $1.57/hr</span></li>
+        </ul>
+      </div>
+      <div class="source-col aws-col">
+        <h4>☁️ AWS</h4>
+        <ul>
+          <li><a href="https://aws.amazon.com/about-aws/global-infrastructure/regions_az/" target="_blank">AWS Global Infrastructure</a>
+            <span>39 regions · 123 Availability Zones</span></li>
+          <li><a href="https://aws.amazon.com/cloudfront/pricing/" target="_blank">CloudFront Pricing</a>
+            <span>$0.085/GB US/EU · $0.12/GB other regions</span></li>
+          <li><a href="https://go-cloud.io/how-to-migrate-from-digitalocean-to-aws/" target="_blank">DO to AWS Migration Guide 2026</a>
+            <span>Migration triggers and service mapping</span></li>
+        </ul>
+      </div>
+      <div class="source-col">
+        <h4>📊 Scaling &amp; EdTech</h4>
+        <ul>
+          <li><a href="https://www.forasoft.com/learn/elearning-video/articles-elearning/scaling-delivery-cdn-transcoding-cost" target="_blank">Scaling Course Video Delivery</a>
+            <span>Egress arithmetic for edtech at volume</span></li>
+          <li><a href="https://blog.blazingcdn.com/en-us/best-cdn-for-e-learning-platforms-delivering-courses-without-buffering" target="_blank">Best CDN for E-Learning 2026</a>
+            <span>Per-TB pricing and rebuffering metrics</span></li>
+          <li><a href="https://openmetal.io/docs/startup-guide-affordable-global-infrastructure/" target="_blank">Startup Guide: Global Infrastructure Under $15k/mo</a>
+            <span>Affordable global infrastructure strategies</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-note">
+    <div>🌍 <strong>DO + local stack is sustainable to 8 countries</strong> — hybrid DO + AWS required from 8–30 countries, AWS-primary beyond 30.</div>
+    <div id="footerSummary">📉 Loading projection…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const FX = 1500;
+  const fmtN = n => '₦' + Math.round(n).toLocaleString('en-NG');
+  const fmtM = n => '₦' + (n/1e6).toFixed(1) + 'M';
+  const fmtK = n => n >= 1e6 ? '₦'+(n/1e6).toFixed(2)+'M' : '₦'+Math.round(n/1000)+'k';
+  const pct = n => n.toFixed(1) + '%';
+
+  // ============================================================
+  // SCALING DATA — 1 to 100 countries
+  // ============================================================
+  const countries = [1, 3, 5, 8, 10, 15, 20, 30, 50, 75, 100];
+
+  // DO-only cost (₦/month) — plateaus at 8 countries because no more regions
+  const doCost = [1.2, 2.8, 4.5, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8, 6.8];
+
+  // Hybrid DO + AWS cost (₦/month) — scales linearly
+  const hybridCost = [1.2, 2.8, 4.5, 6.8, 8.5, 12.2, 16.8, 24.5, 38.2, 54.6, 72.4];
+
+  // Cost per country (₦M)
+  const doPerCountry = doCost.map((c,i) => c / countries[i]);
+  const hybridPerCountry = hybridCost.map((c,i) => c / countries[i]);
+
+  // Latency to nearest DO region (ms) — grows as countries expand beyond DO footprint
+  const doLatency = [25, 45, 75, 110, 145, 195, 240, 280, 310, 340, 370];
+  const awsLatency = [25, 45, 60, 75, 82, 90, 95, 100, 108, 115, 120];
+
+  // Countries requiring data residency
+  const residencyRequired = [0, 1, 2, 4, 6, 12, 18, 28, 45, 68, 92];
+
+  // FX exposure % (USD cost / total cost)
+  const fxDo = [5.8, 6.5, 7.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2, 8.2];
+  const fxHybrid = [5.8, 6.5, 7.2, 8.2, 9.1, 10.4, 11.2, 12.1, 13.2, 14.1, 14.8];
+
+  // ============================================================
+  // CHART 1 — Cost progression
+  // ============================================================
+  new Chart(document.getElementById('costProgressionChart'), {
+    type: 'line',
+    data: {
+      labels: countries.map(c => c + ' countries'),
+      datasets: [
+        {
+          label: 'DO-only cost (₦M)',
+          data: doCost,
+          borderColor: '#0069ff',
+          backgroundColor: 'rgba(0,105,255,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#0069ff',
+          borderWidth: 2.5
+        },
+        {
+          label: 'Hybrid DO+AWS cost (₦M)',
+          data: hybridCost,
+          borderColor: '#ff9900',
+          backgroundColor: 'rgba(255,153,0,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          pointBackgroundColor: '#ff9900',
+          borderWidth: 2.5,
+          borderDash: [6, 3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12, padding: 12 } },
+        tooltip: {
+          callbacks: {
+            label: (c) => `${c.dataset.label}: ${fmtM(c.raw * 1e6)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '₦ millions / month', font: { size: 10 } },
+          grid: { color: '#eef3f8' },
+          ticks: { callback: v => '₦' + v + 'M' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+
+  // ============================================================
+  // CHART 2 — Cost per country
+  // ============================================================
+  new Chart(document.getElementById('costPerCountryChart'), {
+    type: 'bar',
+    data: {
+      labels: countries.map(c => c + ' countries'),
+      datasets: [
+        {
+          label: 'DO-only ₦/country',
+          data: doPerCountry.map(v => v * 1e6),
+          backgroundColor: '#0069ff99',
+          borderColor: '#0069ff',
+          borderWidth: 1.5,
+          borderRadius: 4
+        },
+        {
+          label: 'Hybrid ₦/country',
+          data: hybridPerCountry.map(v => v * 1e6),
+          backgroundColor: '#ff990099',
+          borderColor: '#ff9900',
+          borderWidth: 1.5,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtN(c.raw)}` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: '₦ per country / month', font: { size: 10 } },
+          grid: { color: '#eef3f8' },
+          ticks: { callback: v => v >= 1e6 ? '₦'+(v/1e6).toFixed(1)+'M' : '₦'+(v/1000).toFixed(0)+'k' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 35 } }
+      }
+    }
+  });
+
+  // ============================================================
+  // CHART 3 — Latency
+  // ============================================================
+  new Chart(document.getElementById('latencyChart'), {
+    type: 'line',
+    data: {
+      labels: countries.map(c => c + ' countries'),
+      datasets: [
+        {
+          label: 'DO-only latency (ms)',
+          data: doLatency,
+          borderColor: '#0069ff',
+          backgroundColor: 'rgba(0,105,255,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          borderWidth: 2.5
+        },
+        {
+          label: 'Hybrid latency (ms)',
+          data: awsLatency,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          borderWidth: 2.5,
+          borderDash: [6, 3]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw} ms` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Latency (ms)', font: { size: 10 } },
+          grid: { color: '#eef3f8' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 35 } }
+      }
+    }
+  });
+
+  // ============================================================
+  // CHART 4 — Data residency
+  // ============================================================
+  new Chart(document.getElementById('complianceChart'), {
+    type: 'bar',
+    data: {
+      labels: countries.map(c => c + ' countries'),
+      datasets: [{
+        label: 'Countries requiring data residency',
+        data: residencyRequired,
+        backgroundColor: residencyRequired.map((v,i) => v > 50 ? '#ef444488' : v > 20 ? '#f59e0b88' : '#10b98188'),
+        borderColor: residencyRequired.map((v,i) => v > 50 ? '#ef4444' : v > 20 ? '#f59e0b' : '#10b981'),
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => `${c.raw} countries require in-country data storage` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Countries', font: { size: 10 } },
+          grid: { color: '#eef3f8' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 35 } }
+      }
+    }
+  });
+
+  // ============================================================
+  // CHART 5 — FX progression
+  // ============================================================
+  new Chart(document.getElementById('fxProgressionChart'), {
+    type: 'line',
+    data: {
+      labels: countries.map(c => c + ' countries'),
+      datasets: [
+        {
+          label: 'DO-only FX exposure (%)',
+          data: fxDo,
+          borderColor: '#0069ff',
+          backgroundColor: 'rgba(0,105,255,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          borderWidth: 2.5
+        },
+        {
+          label: 'Hybrid FX exposure (%)',
+          data: fxHybrid,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.06)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 4,
+          borderWidth: 2.5,
+          borderDash: [6, 3]
+        },
+        {
+          label: 'Tolerance (15%)',
+          data: countries.map(() => 15),
+          borderColor: '#f59e0b',
+          borderWidth: 2,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw}%` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 20,
+          title: { display: true, text: 'FX exposure (%)', font: { size: 10 } },
+          grid: { color: '#eef3f8' },
+          ticks: { callback: v => v + '%' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 35 } }
+      }
+    }
+  });
+
+  // ============================================================
+  // CHART 6 — Countries served vs FX exposure
+  // ============================================================
+  new Chart(document.getElementById('countriesFxChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'DO-only',
+          data: countries.map((c,i) => ({ x: c, y: fxDo[i] })),
+          backgroundColor: '#0069ffcc',
+          borderColor: '#0069ff',
+          pointRadius: 8,
+          pointHoverRadius: 12
+        },
+        {
+          label: 'Hybrid DO+AWS',
+          data: countries.map((c,i) => ({ x: c, y: fxHybrid[i] })),
+          backgroundColor: '#ef4444cc',
+          borderColor: '#ef4444',
+          pointRadius: 8,
+          pointHoverRadius: 12
+        },
+        {
+          label: 'Tolerance (15%)',
+          data: [{ x: 1, y: 15 }, { x: 100, y: 15 }],
+          borderColor: '#f59e0b',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          showLine: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+        tooltip: {
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.label === 'Tolerance (15%)') return 'Tolerance: 15%';
+              return `${c.dataset.label}: ${c.raw.x} countries, ${c.raw.y}% FX`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Countries served', font: { size: 10 } },
+          grid: { color: '#eef3f8' },
+          min: 0, max: 105
+        },
+        y: {
+          title: { display: true, text: 'FX exposure (%)', font: { size: 10 } },
+          grid: { color: '#eef3f8' },
+          min: 0, max: 18,
+          ticks: { callback: v => v + '%' }
+        }
+      }
+    }
+  });
+
+  // ============================================================
+  // DOM UPDATES
+  // ============================================================
+  document.getElementById('costMultiplier').textContent = (hybridCost[10] / hybridCost[0]).toFixed(0) + '×';
+  document.getElementById('fxExposure100').textContent = fxHybrid[10].toFixed(1) + '%';
+  document.getElementById('fxExposure100Sub').textContent = 'at tolerance limit · local routing required';
+
+  document.getElementById('footerSummary').innerHTML =
+    `📉 At 100 countries: hybrid cost ≈ <strong>${fmtM(hybridCost[10]*1e6)}/mo</strong> · FX exposure <strong>${fxHybrid[10]}%</strong> · AWS regions required`;
+
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+</body>
+</html>

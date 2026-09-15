@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaijaEd · Cost & Risk Control Model (₦ Naira · Minimal FX Drag)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#0a2e4b; --ink-soft:#1c3a53; --muted:#6c8aa5; --muted-2:#50728c;
+    --line:#eaf0f6; --line-dash:#dbe4ed; --bg:#f7f9fc;
+    --green:#10b981; --green-d:#065f46; --red:#ef4444; --amber:#f59e0b;
+    --purple:#8b5cf6; --blue:#3b82f6; --pink:#ec4899; --navy:#0b2b40;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+       padding:2rem 1.5rem;color:var(--ink);line-height:1.5;}
+  .container{max-width:1400px;margin:0 auto;}
+
+  /* ---------- header ---------- */
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+         margin-bottom:1.5rem;gap:1rem;}
+  .brand{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+  .brand h1{font-size:1.9rem;font-weight:600;letter-spacing:-.02em;color:var(--ink);}
+  .brand span{background:#1e7e5c;color:#fff;font-size:.8rem;font-weight:600;
+              padding:.2rem .8rem;border-radius:40px;}
+  .runway-badge{background:var(--navy);color:#fff;padding:.6rem 1.4rem;border-radius:60px;
+                font-weight:500;display:flex;align-items:center;gap:.6rem;font-size:1rem;
+                box-shadow:0 4px 12px rgba(0,0,0,.04);}
+  .runway-badge strong{font-size:1.3rem;font-weight:700;color:#9ae6b4;}
+
+  /* ---------- ribbons ---------- */
+  .ribbon{border-radius:22px;padding:1.2rem 1.6rem;margin-bottom:1.2rem;
+          display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+          gap:1.2rem;color:#fff;}
+  .ribbon.fx{background:linear-gradient(135deg,#064e3b 0%,#065f46 60%,#047857 100%);
+             box-shadow:0 10px 26px rgba(6,95,70,.18);}
+  .ribbon.risk{background:linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#4338ca 100%);
+               box-shadow:0 10px 26px rgba(49,46,129,.2);}
+  .ribbon-left{display:flex;align-items:center;gap:1rem;flex:1;min-width:260px;}
+  .ribbon-icon{font-size:2rem;background:rgba(255,255,255,.12);width:56px;height:56px;
+               border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ribbon h2{font-size:1.08rem;font-weight:700;letter-spacing:-.01em;margin-bottom:.2rem;}
+  .ribbon p{font-size:.82rem;opacity:.92;line-height:1.45;max-width:640px;}
+  .ribbon-stats{display:flex;gap:1.5rem;flex-wrap:wrap;}
+  .ribbon-stat{text-align:right;}
+  .ribbon-stat .num{font-size:1.6rem;font-weight:700;line-height:1;color:#6ee7b7;}
+  .ribbon.risk .ribbon-stat .num{color:#c7d2fe;}
+  .ribbon-stat .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;
+                    opacity:.8;margin-top:.35rem;}
+
+  /* ---------- stat cards ---------- */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+              gap:1rem;margin-bottom:2.5rem;}
+  .stat-card{background:#fff;padding:1.3rem 1.2rem;border-radius:24px;
+             box-shadow:0 6px 18px rgba(0,20,30,.04);border:1px solid rgba(0,0,0,.02);
+             position:relative;overflow:hidden;}
+  .stat-card.fx-safe::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;
+                            background:var(--green);}
+  .stat-card.risk-line::after{content:"";position:absolute;top:0;left:0;width:4px;height:100%;
+                              background:#4338ca;}
+  .stat-label{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+              color:var(--muted-2);margin-bottom:.4rem;display:flex;align-items:center;
+              gap:.4rem;flex-wrap:wrap;}
+  .stat-value{font-size:1.65rem;font-weight:700;color:var(--ink);line-height:1.2;}
+  .stat-sub{font-size:.78rem;color:var(--muted-2);margin-top:.3rem;}
+
+  /* ---------- section headers ---------- */
+  .section-head{display:flex;align-items:center;gap:.9rem;margin:2.6rem 0 1.2rem;flex-wrap:wrap;}
+  .section-num{background:var(--navy);color:#6ee7b7;font-weight:700;font-size:.85rem;
+               padding:.35rem .85rem;border-radius:10px;letter-spacing:.04em;white-space:nowrap;}
+  .section-head h2{font-size:1.32rem;font-weight:600;color:var(--ink);letter-spacing:-.01em;}
+  .section-head p{font-size:.82rem;color:#5b7b96;margin-left:auto;max-width:560px;text-align:right;}
+
+  /* ---------- panels ---------- */
+  .panel{background:#fff;border-radius:28px;padding:1.7rem 1.7rem 1.2rem;
+         box-shadow:0 12px 30px rgba(0,20,40,.06);border:1px solid var(--line);
+         margin-bottom:1.5rem;}
+  .panel-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+              margin-bottom:1.4rem;gap:.8rem;}
+  .panel-head h3{font-weight:600;font-size:1.25rem;color:var(--ink);display:flex;
+                 align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .panel-head h3 small{font-weight:400;font-size:.88rem;color:#5b7b96;}
+  .legend-note{display:flex;gap:1.2rem;font-size:.78rem;color:#3e5e78;flex-wrap:wrap;}
+  .legend-note span::before{content:"●";margin-right:.3rem;font-size:1.05rem;vertical-align:middle;}
+  .legend-note .fixed::before{color:#2b6f9e;} .legend-note .variable::before{color:#d97706;}
+  .legend-note .mixed::before{color:var(--purple);} .legend-note .ngn::before{color:var(--green);}
+  .legend-note .usd::before{color:var(--red);}
+
+  .charts-row{display:grid;gap:1.5rem;margin-bottom:2.5rem;}
+  .charts-row.two{grid-template-columns:1.7fr 1fr;}
+  .charts-row.three{grid-template-columns:1.15fr 1.15fr .85fr;}
+  @media(max-width:960px){.charts-row.two,.charts-row.three{grid-template-columns:1fr;}}
+  .chart-container{position:relative;height:320px;width:100%;}
+  .chart-container.split{height:280px;}
+  .chart-caption{font-size:.78rem;color:var(--muted-2);margin-top:1rem;
+                 border-top:1px solid var(--line);padding-top:.9rem;line-height:1.5;}
+
+  /* ---------- cost grid ---------- */
+  .cost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+             gap:1.5rem;margin-top:1.5rem;}
+  .cost-category{background:#fff;border-radius:24px;padding:1.5rem 1.4rem;
+                 box-shadow:0 6px 16px rgba(0,20,30,.02);border:1px solid var(--line);}
+  .cost-category h3{font-size:1.05rem;font-weight:600;margin-bottom:1.2rem;display:flex;
+                    justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap;}
+  .fx-mix-tag{font-size:.68rem;font-weight:600;padding:.18rem .6rem;border-radius:30px;
+              background:#d1fae5;color:#065f46;letter-spacing:.2px;}
+  .fx-mix-tag.mixed-tag{background:#fef3c7;color:#92400e;}
+  .fx-mix-tag.risk-tag{background:#e0e7ff;color:#3730a3;}
+  .cost-list{display:flex;flex-direction:column;gap:.9rem;}
+  .cost-item{display:flex;justify-content:space-between;align-items:flex-start;
+             font-size:.95rem;padding-bottom:.7rem;border-bottom:1px dashed var(--line-dash);gap:.8rem;}
+  .cost-item:last-child{border-bottom:none;padding-bottom:0;}
+  .cost-name{color:var(--ink-soft);font-weight:500;flex:1;}
+  .cost-name small{display:block;font-weight:400;font-size:.72rem;color:var(--muted);
+                   margin-top:.15rem;line-height:1.4;}
+  .cost-amount{font-weight:600;color:var(--ink);text-align:right;white-space:nowrap;font-size:.9rem;}
+  .cost-amount small{display:block;font-weight:400;font-size:.68rem;color:#8aa1b5;margin-top:.15rem;}
+  .section-note{font-size:.75rem;color:var(--muted);margin-top:.9rem;line-height:1.5;}
+
+  .local-badge,.fx-badge{display:inline-block;font-size:.65rem;font-weight:600;
+    padding:.15rem .5rem;border-radius:30px;margin-left:.4rem;vertical-align:middle;}
+  .local-badge{background:#dcfce7;color:#166534;}
+  .fx-badge{background:#fee2e2;color:#991b1b;}
+
+  /* ---------- risk table ---------- */
+  .table-wrap{overflow-x:auto;border-radius:18px;border:1px solid var(--line);}
+  table.risk{width:100%;border-collapse:collapse;font-size:.82rem;min-width:1050px;}
+  table.risk thead th{background:#f1f6fb;color:#1f4a6e;font-weight:600;text-align:left;
+    padding:.75rem .7rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
+    border-bottom:1px solid #dbe4ed;white-space:nowrap;}
+  table.risk tbody td{padding:.75rem .7rem;border-bottom:1px solid #eef3f8;vertical-align:top;}
+  table.risk tbody tr:hover{background:#fafcfe;}
+  table.risk tbody tr:last-child td{border-bottom:none;}
+  .rid{font-weight:700;color:var(--muted-2);font-size:.72rem;}
+  .rname{font-weight:600;color:var(--ink-soft);}
+  .rname small{display:block;font-weight:400;color:var(--muted);font-size:.7rem;margin-top:.15rem;}
+  .chip{display:inline-block;font-size:.66rem;font-weight:600;padding:.16rem .55rem;
+        border-radius:30px;white-space:nowrap;}
+  .chip.fin{background:#fee2e2;color:#991b1b;}
+  .chip.ops{background:#fef3c7;color:#92400e;}
+  .chip.comp{background:#ede9fe;color:#5b21b6;}
+  .chip.tech{background:#dbeafe;color:#1e40af;}
+  .chip.strat{background:#d1fae5;color:#065f46;}
+  .chip.legal{background:#fce7f3;color:#9d174d;}
+  .score{font-weight:700;display:inline-block;min-width:26px;text-align:center;
+         padding:.15rem .35rem;border-radius:8px;font-size:.75rem;}
+  .score.low{background:#d1fae5;color:#065f46;}
+  .score.med{background:#fef3c7;color:#92400e;}
+  .score.high{background:#fed7aa;color:#9a3412;}
+  .score.crit{background:#fecaca;color:#991b1b;}
+  .tara{font-size:.72rem;font-weight:600;color:#4338ca;}
+  .tara small{display:block;font-weight:400;color:var(--muted);font-size:.68rem;
+              margin-top:.15rem;line-height:1.35;}
+
+  /* ---------- KRI monitor ---------- */
+  .kri-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;}
+  .kri{background:#fff;border:1px solid var(--line);border-radius:18px;padding:1rem 1.1rem;
+       position:relative;overflow:hidden;}
+  .kri::before{content:"";position:absolute;left:0;top:0;width:4px;height:100%;}
+  .kri.green::before{background:var(--green);} .kri.amber::before{background:var(--amber);}
+  .kri.red::before{background:var(--red);}
+  .kri-name{font-size:.8rem;font-weight:600;color:var(--ink-soft);margin-bottom:.35rem;}
+  .kri-value{font-size:1.25rem;font-weight:700;color:var(--ink);}
+  .kri-band{font-size:.7rem;color:var(--muted);margin-top:.3rem;}
+  .kri-status{position:absolute;top:.9rem;right:1rem;font-size:.62rem;font-weight:700;
+    padding:.15rem .5rem;border-radius:30px;text-transform:uppercase;letter-spacing:.04em;}
+  .kri-status.green{background:#d1fae5;color:#065f46;}
+  .kri-status.amber{background:#fef3c7;color:#92400e;}
+  .kri-status.red{background:#fee2e2;color:#991b1b;}
+
+  /* ---------- framework / TARA / ERM cards ---------- */
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.1rem;}
+  .info-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.3rem 1.3rem;}
+  .info-card h4{font-size:.95rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;
+                display:flex;align-items:center;gap:.45rem;}
+  .info-card p{font-size:.8rem;color:var(--muted-2);line-height:1.55;}
+  .info-card ul{font-size:.8rem;color:var(--muted-2);line-height:1.6;padding-left:1.1rem;margin-top:.4rem;}
+  .info-card li{margin-bottom:.25rem;}
+  .info-card .tag{display:inline-block;font-size:.62rem;font-weight:700;padding:.14rem .5rem;
+    border-radius:30px;background:#eef3f8;color:#1f4a6e;margin-bottom:.5rem;letter-spacing:.03em;}
+
+  .tara-card{border-top:4px solid var(--purple);}
+  .tara-card.transfer{border-top-color:var(--blue);}
+  .tara-card.avoid{border-top-color:var(--red);}
+  .tara-card.reduce{border-top-color:var(--green);}
+  .tara-card.accept{border-top-color:var(--amber);}
+
+  .lines{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.1rem;}
+  .line-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:1.3rem;
+             border-left:5px solid;position:relative;}
+  .line-card.l1{border-left-color:#3b82f6;} .line-card.l2{border-left-color:#8b5cf6;}
+  .line-card.l3{border-left-color:#10b981;}
+  .line-card .lnum{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+                   color:var(--muted);}
+  .line-card h4{font-size:.98rem;font-weight:700;color:var(--ink);margin:.3rem 0 .5rem;}
+  .line-card p{font-size:.79rem;color:var(--muted-2);line-height:1.55;}
+  .line-card .who{font-size:.72rem;color:#1f4a6e;margin-top:.6rem;font-weight:600;}
+
+  /* ---------- review ---------- */
+  .review{background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #bbf7d0;
+          border-radius:24px;padding:1.6rem 1.8rem;}
+  .review h3{font-size:1.1rem;font-weight:700;color:#065f46;margin-bottom:.9rem;}
+  .review ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+             gap:.7rem;}
+  .review li{font-size:.84rem;color:#14532d;line-height:1.5;padding-left:1.5rem;position:relative;}
+  .review li::before{content:"✓";position:absolute;left:0;top:0;font-weight:700;color:#10b981;}
+
+  .footer-note{margin-top:2.5rem;background:#e7f0f8;border-radius:20px;padding:1.5rem 2rem;
+    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+    color:#1d4a6e;font-size:.95rem;border:1px solid #cbdde9;gap:1rem;}
+  .footer-note strong{font-weight:700;color:#0b3a5a;}
+
+  @media(max-width:600px){
+    body{padding:1.2rem;}
+    .brand h1{font-size:1.4rem;}
+    .runway-badge{font-size:.85rem;padding:.4rem 1rem;}
+    .stat-value{font-size:1.3rem;}
+    .ribbon-stat .num{font-size:1.3rem;}
+    .section-head p{text-align:left;margin-left:0;}
+    .footer-note{flex-direction:column;gap:.8rem;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ============ HEADER ============ -->
+  <header>
+    <div class="brand">
+      <h1>NaijaEd</h1>
+      <span>🇳🇬 Naira-denominated · local-first</span>
+    </div>
+    <div class="runway-badge">⛽ Runway: <strong>₦150M</strong> protected</div>
+  </header>
+
+  <!-- ============ 35.2 / 35.4 — RISK & FX STRATEGY RIBBONS ============ -->
+  <div class="ribbon fx">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🛡️</div>
+      <div>
+        <h2>Minimal FX Drag — the core of our cost strategy</h2>
+        <p>Local sourcing first. Foreign sourcing only when no cheaper or better Nigerian alternative exists.
+           <strong id="fxHedgedLine">—</strong> of the recurring cost base is Naira-denominated and naturally hedged.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num" id="fxSafePct">—</div><div class="lbl">Naira-hedged</div></div>
+      <div class="ribbon-stat"><div class="num" id="fxExposedPct">—</div><div class="lbl">USD-exposed</div></div>
+      <div class="ribbon-stat"><div class="num" id="fxExposedNaira">—</div><div class="lbl">USD cost / mo</div></div>
+    </div>
+  </div>
+
+  <div class="ribbon risk">
+    <div class="ribbon-left">
+      <div class="ribbon-icon">🎯</div>
+      <div>
+        <h2>Risk is a cost line, not an afterthought</h2>
+        <p>12 risks mapped to the cost base. Inherent expected annual loss is <strong id="aelInherentLine">—</strong>;
+           we spend <strong id="controlSpendLine">—</strong>/yr on controls to cut residual exposure to
+           <strong id="aelResidualLine">—</strong> and bring every risk into the <em>Low</em> band.</p>
+      </div>
+    </div>
+    <div class="ribbon-stats">
+      <div class="ribbon-stat"><div class="num" id="riskScoreDrop">—</div><div class="lbl">Risk score cut</div></div>
+      <div class="ribbon-stat"><div class="num" id="controlPctBurn">—</div><div class="lbl">Control / burn</div></div>
+      <div class="ribbon-stat"><div class="num" id="netBenefit">—</div><div class="lbl">Net benefit / yr</div></div>
+    </div>
+  </div>
+
+  <!-- ============ STAT CARDS ============ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Premium users (target)</div>
+      <div class="stat-value">15,000</div>
+      <div class="stat-sub">currently 4,820</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">Fixed cost / month <span class="local-badge">100% ₦</span></div>
+      <div class="stat-value" id="fixedCostDisplay">—</div>
+      <div class="stat-sub" id="fixedSub">—</div>
+    </div>
+    <div class="stat-card fx-safe">
+      <div class="stat-label">Variable cost / user</div>
+      <div class="stat-value" id="variableCostDisplay">—</div>
+      <div class="stat-sub" id="varSub">—</div>
+    </div>
+    <div class="stat-card risk-line">
+      <div class="stat-label">Risk control / month <span class="local-badge" style="background:#e0e7ff;color:#3730a3">35.8</span></div>
+      <div class="stat-value" id="riskCostDisplay">—</div>
+      <div class="stat-sub" id="riskCostSub">—</div>
+    </div>
+    <div class="stat-card risk-line">
+      <div class="stat-label">Risk-adjusted burn</div>
+      <div class="stat-value" id="riskAdjBurnDisplay">—</div>
+      <div class="stat-sub" id="riskAdjBurnSub">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">FX exposure / month</div>
+      <div class="stat-value" id="fxExposureDisplay">—</div>
+      <div class="stat-sub" id="fxExposureSub">—</div>
+    </div>
+  </div>
+
+  <!-- ============ 35.2 / 35.3 / 35.4 — FRAMEWORK ============ -->
+  <div class="section-head">
+    <span class="section-num">35.2 – 35.4</span>
+    <h2>Risk & risk management — concepts</h2>
+    <p>Definitions, categories, appetite and the inherent-vs-residual lens we apply to every naira spent.</p>
+  </div>
+  <div class="panel">
+    <div class="card-grid">
+      <div class="info-card">
+        <span class="tag">35.2 RISK & RISK MANAGEMENT</span>
+        <h4>🎲 What risk means here</h4>
+        <p><strong>Risk</strong> is the effect of uncertainty on our cost base and runway objectives.
+           <strong>Risk management</strong> is the coordinated activity of identifying, assessing, controlling
+           and monitoring those uncertainties so the ₦150M runway is not eroded by foreseeable events.</p>
+      </div>
+      <div class="info-card">
+        <span class="tag">35.3 CATEGORIES OF RISK</span>
+        <h4>🗂️ Six categories in our register</h4>
+        <ul>
+          <li><strong>Financial</strong> — FX, fraud, wage inflation</li>
+          <li><strong>Operational</strong> — gateway concentration, support creep</li>
+          <li><strong>Compliance</strong> — NDPC / data protection</li>
+          <li><strong>Technology</strong> — cyber breach, hosting outage</li>
+          <li><strong>Strategic</strong> — key person, CAC, revenue concentration</li>
+          <li><strong>Legal</strong> — content / IP infringement</li>
+        </ul>
+      </div>
+      <div class="info-card">
+        <span class="tag">35.4 CONCEPTS</span>
+        <h4>📐 Appetite, likelihood, impact</h4>
+        <p><strong>Risk appetite:</strong> zero tolerance for child-data breach or regulatory non-compliance;
+           low appetite for FX exposure above 15% of cost base; moderate appetite for sub-4-hour outages;
+           <em>accept</em> market-driven wage inflation.</p>
+        <p style="margin-top:.5rem"><strong>Score = Likelihood × Impact</strong> (1–5 each, max 25).
+           <strong>Inherent</strong> = before controls. <strong>Residual</strong> = after controls.</p>
+      </div>
+      <div class="info-card">
+        <span class="tag">35.4 TOLERANCE</span>
+        <h4>📏 What we will and won't accept</h4>
+        <p>Every risk must land in the <strong>Low band (≤6)</strong> after controls, or it escalates to the founders
+           in the monthly risk review. Risks that cannot be reduced below Low must be <em>avoided</em> — we do not
+           accept them at any price.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ COST + FX CHARTS ============ -->
+  <div class="section-head">
+    <span class="section-num">COST BASE</span>
+    <h2>Cost behaviour & currency exposure</h2>
+    <p>The unhedged and hedged split that risk management is protecting.</p>
+  </div>
+  <div class="charts-row two">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>📊 12 cost behaviours <small>₦ / month at 10,000 users</small></h3>
+        <div class="legend-note">
+          <span class="fixed">Purely fixed</span>
+          <span class="variable">Purely variable</span>
+          <span class="mixed">Semi‑variable</span>
+        </div>
+      </div>
+      <div class="chart-container split"><canvas id="costBehaviourChart"></canvas></div>
+      <p class="chart-caption">⚡ Real local rates: Paystack 3.2% · local SMS gateway · NDPC compliance.
+        DigitalOcean remains the only material USD line.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>💱 Currency exposure <small>₦ vs USD</small></h3></div>
+      <div class="chart-container split"><canvas id="fxSplitChart"></canvas></div>
+      <p class="chart-caption">🛡️ Naira-denominated costs are naturally hedged against devaluation. Only DigitalOcean carries real FX risk.</p>
+    </div>
+  </div>
+
+  <!-- ============ 35.5 — RISK HEAT MAP + CONTROL ROI ============ -->
+  <div class="section-head">
+    <span class="section-num">35.5</span>
+    <h2>Identification, assessment & measurement</h2>
+    <p>Every risk scored for likelihood and impact, sized by annual expected loss in naira.</p>
+  </div>
+  <div class="charts-row three">
+    <div class="panel">
+      <div class="panel-head">
+        <h3>🔥 Risk heat map</h3>
+        <div class="legend-note"><span class="usd">Bubble = ₦ exposure</span></div>
+      </div>
+      <div class="chart-container split"><canvas id="heatMapChart"></canvas></div>
+      <p class="chart-caption">Top-right = high likelihood × high impact. After controls, all 12 move to the Low band.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>💰 Control ROI <small>₦M per year</small></h3></div>
+      <div class="chart-container split"><canvas id="roiChart"></canvas></div>
+      <p class="chart-caption">Inherent loss vs control cost vs residual loss. Six controls are pure ROI wins; the rest are regulatory or resilience must-haves.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>🗂️ Control spend by category</h3></div>
+      <div class="chart-container split"><canvas id="categoryChart"></canvas></div>
+      <p class="chart-caption">Strategic and technology risks absorb the largest share of control budget.</p>
+    </div>
+  </div>
+
+  <!-- ============ 35.5 — RISK REGISTER ============ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h3>📋 Risk register <small>identification → assessment → measurement → control</small></h3>
+      <div class="legend-note">
+        <span class="chip fin">Financial</span><span class="chip ops">Operational</span>
+        <span class="chip comp">Compliance</span><span class="chip tech">Technology</span>
+        <span class="chip strat">Strategic</span><span class="chip legal">Legal</span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="risk">
+        <thead>
+          <tr>
+            <th>#</th><th>Risk</th><th>Category</th><th>L</th><th>I</th>
+            <th>Inherent</th><th>Annual exp. loss</th><th>Control (TARA)</th>
+            <th>Control ₦/mo</th><th>Residual</th>
+          </tr>
+        </thead>
+        <tbody id="riskTableBody"><!-- populated by JS --></tbody>
+      </table>
+    </div>
+    <p class="section-note">
+      <strong>Measurement basis:</strong> Annual Expected Loss (AEL) = annual likelihood × single-event naira impact.
+      Control cost is the recurring monthly spend required to operate the mitigation. Residual score is the
+      post-control Likelihood × Impact.
+    </p>
+  </div>
+
+  <!-- ============ COST GRID (4 buckets incl. risk) ============ -->
+  <div class="section-head">
+    <span class="section-num">COSTING</span>
+    <h2>Where the money actually goes</h2>
+    <p>Risk mitigation now sits as a fourth cost bucket alongside fixed, variable and mixed.</p>
+  </div>
+  <div class="cost-grid">
+
+    <div class="cost-category">
+      <h3>🔵 Purely fixed <span class="fx-mix-tag">100% Naira</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Founder stipends <span class="local-badge">₦</span>
+            <small>₦1.2M × 2 founders / month</small></div>
+          <div class="cost-amount">₦2,400,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Legal retainers <span class="local-badge">₦</span>
+            <small>local firm · CAC, NDPC, contracts</small></div>
+          <div class="cost-amount">₦840,000</div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Total purely fixed</span><span id="pureFixedTotal">—</span>
+        </div>
+      </div>
+      <p class="section-note">Constant for 12 months. 100% Naira — zero forex exposure.</p>
+    </div>
+
+    <div class="cost-category">
+      <h3>🟠 Purely variable <span class="fx-mix-tag">~60% Naira</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">Payment gateway <span class="local-badge">Paystack ₦</span>
+            <small>3.2% local card · avg ₦5,000 txn</small></div>
+          <div class="cost-amount">₦165<small>per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Cloud egress / CDN <span class="fx-badge">USD</span>
+            <small>DigitalOcean bandwidth overage</small></div>
+          <div class="cost-amount">₦180<small>per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">SMS / email OTP <span class="local-badge">Termii ₦</span>
+            <small>₦4/SMS · ~22 SMS/user/mo</small></div>
+          <div class="cost-amount">₦90<small>per user</small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Total per premium user</span><span id="pureVarPerUser">—</span>
+        </div>
+      </div>
+      <p class="section-note">2 of 3 lines Naira-denominated. Only cloud bandwidth carries FX risk.</p>
+    </div>
+
+    <div class="cost-category">
+      <h3>🟣 Semi‑variable / mix <span class="fx-mix-tag mixed-tag">~95% Naira</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">DigitalOcean hosting <span class="fx-badge">USD</span>
+            <small>8GB/4vCPU droplet + overage</small></div>
+          <div class="cost-amount">₦126,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Customer support <span class="local-badge">local ₦</span>
+            <small>2 part-time + surge capacity</small></div>
+          <div class="cost-amount">₦1,020,000 + ₦75<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Analytics & monitoring <span class="local-badge">₦</span>
+            <small>base + event overage</small></div>
+          <div class="cost-amount">₦225,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Content licensing <span class="local-badge">NG partners ₦</span>
+            <small>curriculum rights + royalties</small></div>
+          <div class="cost-amount">₦450,000 + ₦45<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Marketing (performance) <span class="local-badge">₦</span>
+            <small>base + CAC per user</small></div>
+          <div class="cost-amount">₦600,000 + ₦225<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Admin & tools <span class="local-badge">reseller ₦</span>
+            <small>Google Workspace 3 seats + misc</small></div>
+          <div class="cost-amount">₦66,000 + ₦15<small>base + per user</small></div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Compliance & KYC <span class="local-badge">NDPC ₦</span>
+            <small>registration + annual audit</small></div>
+          <div class="cost-amount">₦135,000 + ₦30<small>base + per user</small></div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Mixed base total</span><span id="mixedBaseTotal">—</span>
+        </div>
+      </div>
+      <p class="section-note">Only DigitalOcean USD-billed. 6 of 7 lines 100% Naira.</p>
+    </div>
+
+    <!-- NEW: risk mitigation bucket -->
+    <div class="cost-category" style="border:1px solid #c7d2fe;box-shadow:0 6px 16px rgba(67,56,202,.06);">
+      <h3>🛡️ Risk mitigation <span class="fx-mix-tag risk-tag">35.8 controls</span></h3>
+      <div class="cost-list">
+        <div class="cost-item">
+          <div class="cost-name">FX forward / hedging premium <span class="local-badge">₦</span>
+            <small>caps naira devaluation exposure</small></div>
+          <div class="cost-amount">₦120,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Second payment gateway <span class="local-badge">₦</span>
+            <small>Flutterwave/Monnify failover + maintenance</small></div>
+          <div class="cost-amount">₦60,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Fraud scoring & 3DS <span class="local-badge">₦</span>
+            <small>velocity checks, chargeback defence</small></div>
+          <div class="cost-amount">₦75,000 + ₦10</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Compliance program <span class="local-badge">₦</span>
+            <small>DPO, quarterly audit, staff training</small></div>
+          <div class="cost-amount">₦180,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Cyber insurance + hardening <span class="fx-badge">USD</span>
+            <small>₦90k premium + ₦70k pen test / WAF</small></div>
+          <div class="cost-amount">₦160,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Multi-region failover <span class="fx-badge">USD</span>
+            <small>backup region + static failover</small></div>
+          <div class="cost-amount">₦85,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Key person cover <span class="local-badge">₦</span>
+            <small>insurance + succession documentation</small></div>
+          <div class="cost-amount">₦95,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">IP indemnity & partner diversification <span class="local-badge">₦</span>
+            <small>contract indemnities + content partners</small></div>
+          <div class="cost-amount">₦45,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Organic & referral channel <span class="local-badge">₦</span>
+            <small>reduces paid CAC escalation risk</small></div>
+          <div class="cost-amount">₦110,000 + ₦8</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Self-service & KB <span class="local-badge">₦</span>
+            <small>deflects support cost creep</small></div>
+          <div class="cost-amount">₦70,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">Variable comp structure <span class="local-badge">₦</span>
+            <small>partial hedge on wage inflation</small></div>
+          <div class="cost-amount">₦50,000</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-name">B2B school pilot (BD) <span class="local-badge">₦</span>
+            <small>reduces revenue concentration risk</small></div>
+          <div class="cost-amount">₦130,000</div>
+        </div>
+        <div class="cost-item" style="border-bottom:none;padding-top:.4rem;font-weight:500;color:#1f4a6e;">
+          <span>Risk control total</span><span id="riskBucketTotal">—</span>
+        </div>
+      </div>
+      <p class="section-note">₦1.18M base + ₦18/user. ~11% of risk-adjusted burn — the price of protecting the runway.</p>
+    </div>
+  </div>
+
+  <!-- ============ 35.6 — MONITORING ============ -->
+  <div class="section-head">
+    <span class="section-num">35.6</span>
+    <h2>Monitoring risk — key risk indicators</h2>
+    <p>Live KRIs with green / amber / red thresholds. Any red triggers the escalation protocol.</p>
+  </div>
+  <div class="panel">
+    <div class="kri-grid">
+      <div class="kri amber">
+        <span class="kri-status amber">Amber</span>
+        <div class="kri-name">FX exposure % of cost base</div>
+        <div class="kri-value" id="kriFx">—</div>
+        <div class="kri-band">Green &lt;10% · Amber 10–15% · Red &gt;15%</div>
+      </div>
+      <div class="kri green">
+        <span class="kri-status green">Green</span>
+        <div class="kri-name">Payment gateway uptime</div>
+        <div class="kri-value">99.95%</div>
+        <div class="kri-band">Green &gt;99.9% · Amber 99.5–99.9% · Red &lt;99.5%</div>
+      </div>
+      <div class="kri amber">
+        <span class="kri-status amber">Amber</span>
+        <div class="kri-name">Fraud rate (% of transactions)</div>
+        <div class="kri-value">0.42%</div>
+        <div class="kri-band">Green &lt;0.3% · Amber 0.3–0.8% · Red &gt;0.8%</div>
+      </div>
+      <div class="kri green">
+        <span class="kri-status green">Green</span>
+        <div class="kri-name">NDPC audit findings</div>
+        <div class="kri-value">0 critical</div>
+        <div class="kri-band">Green 0 · Amber 1–2 minor · Red any critical</div>
+      </div>
+      <div class="kri amber">
+        <span class="kri-status amber">Amber</span>
+        <div class="kri-name">Support tickets per user</div>
+        <div class="kri-value">0.18</div>
+        <div class="kri-band">Green &lt;0.15 · Amber 0.15–0.25 · Red &gt;0.25</div>
+      </div>
+      <div class="kri amber">
+        <span class="kri-status amber">Amber</span>
+        <div class="kri-name">CAC trend (MoM)</div>
+        <div class="kri-value">+5.2%</div>
+        <div class="kri-band">Green &lt;+3% · Amber +3–8% · Red &gt;+8%</div>
+      </div>
+      <div class="kri amber">
+        <span class="kri-status amber">Amber</span>
+        <div class="kri-name">Key-person coverage documented</div>
+        <div class="kri-value">62%</div>
+        <div class="kri-band">Green &gt;80% · Amber 50–80% · Red &lt;50%</div>
+      </div>
+      <div class="kri green">
+        <span class="kri-status green">Green</span>
+        <div class="kri-name">Critical patch SLA</div>
+        <div class="kri-value">4 days</div>
+        <div class="kri-band">Green &lt;7d · Amber 7–21d · Red &gt;21d</div>
+      </div>
+    </div>
+    <p class="section-note" style="margin-top:1.2rem;">
+      <strong>Escalation protocol:</strong> Green = routine monthly review · Amber = flagged in founder standup,
+      mitigation plan within 7 days · Red = immediate founder escalation, spend authority unlocked, board notified.
+    </p>
+  </div>
+
+  <!-- ============ 35.7 — EMBEDDING RISK ============ -->
+  <div class="section-head">
+    <span class="section-num">35.7</span>
+    <h2>Embedding risk into the operating rhythm</h2>
+    <p>Risk only works when it lives inside daily decisions, not in a document.</p>
+  </div>
+  <div class="panel">
+    <div class="card-grid">
+      <div class="info-card">
+        <h4>🗣️ Tone at the top</h4>
+        <p>Risk is the first agenda item in the monthly founder review. No growth metric is celebrated if it breaches a risk tolerance.</p>
+      </div>
+      <div class="info-card">
+        <h4>🎯 Risk in OKRs</h4>
+        <p>Every team OKR carries one linked KRI. Engineering owns patch SLA, growth owns CAC trend, support owns tickets/user.</p>
+      </div>
+      <div class="info-card">
+        <h4>💸 Spend gate</h4>
+        <p>Any new vendor or tool above ₦100k/month requires a mini risk assessment: FX exposure, vendor concentration, exit cost.</p>
+      </div>
+      <div class="info-card">
+        <h4>🧑‍🏫 Training & documentation</h4>
+        <p>Quarterly NDPC / data-handling training for all staff. The risk register is a living document reviewed monthly, not annual.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 35.8 — CONTROL METHODS (TARA) ============ -->
+  <div class="section-head">
+    <span class="section-num">35.8</span>
+    <h2>Methods of controlling risk — TARA</h2>
+    <p>Every control in the register maps to one of four responses.</p>
+  </div>
+  <div class="panel">
+    <div class="card-grid">
+      <div class="info-card tara-card transfer">
+        <h4>🔄 Transfer</h4>
+        <p>Shift the financial consequence to a third party.</p>
+        <ul>
+          <li>Cyber liability insurance (R5)</li>
+          <li>Key-person insurance (R7)</li>
+          <li>FX forward contract (R1)</li>
+          <li>Contractual IP indemnities (R8)</li>
+        </ul>
+      </div>
+      <div class="info-card tara-card avoid">
+        <h4>🚫 Avoid</h4>
+        <p>Eliminate the activity that creates the risk.</p>
+        <ul>
+          <li>Never store raw card data — Paystack tokenisation</li>
+          <li>No operations in unlicensed jurisdictions</li>
+          <li>No single-vendor dependency for payments</li>
+        </ul>
+      </div>
+      <div class="info-card tara-card reduce">
+        <h4>📉 Reduce</h4>
+        <p>Lower likelihood or impact through controls.</p>
+        <ul>
+          <li>Multi-region hosting failover (R6)</li>
+          <li>Fraud scoring & 3DS enforcement (R3)</li>
+          <li>Self-service KB to cap support creep (R10)</li>
+          <li>Referral & organic channel (R9)</li>
+        </ul>
+      </div>
+      <div class="info-card tara-card accept">
+        <h4>✅ Accept</h4>
+        <p>Retain the risk where cost of control exceeds benefit.</p>
+        <ul>
+          <li>Wage inflation — market-driven, partially hedged with variable comp (R11)</li>
+          <li>Minor CAC drift within amber tolerance (R9)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 35.9 — ERM ============ -->
+  <div class="section-head">
+    <span class="section-num">35.9</span>
+    <h2>Enterprise risk management — three lines of defence</h2>
+    <p>Small team, clear separation: ownership, oversight, independent assurance.</p>
+  </div>
+  <div class="panel">
+    <div class="lines">
+      <div class="line-card l1">
+        <div class="lnum">First line</div>
+        <h4>Own & manage</h4>
+        <p>Founders, engineering and support own risk daily. They run the controls, log incidents, and raise KRIs that breach amber.</p>
+        <div class="who">→ Founders · Support lead · Engineering lead</div>
+      </div>
+      <div class="line-card l2">
+        <div class="lnum">Second line</div>
+        <h4>Set policy & monitor</h4>
+        <p>Fractional DPO and external counsel set the risk framework, maintain the register, and challenge first-line decisions on compliance and FX.</p>
+        <div class="who">→ Fractional DPO · External counsel · Finance lead</div>
+      </div>
+      <div class="line-card l3">
+        <div class="lnum">Third line</div>
+        <h4>Independent assurance</h4>
+        <p>External auditors, penetration testers and the NDPC audit verify that controls actually work. Findings feed straight back into the register.</p>
+        <div class="who">→ External audit · Pen test vendor · NDPC</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 35.10 — REVIEW ============ -->
+  <div class="section-head">
+    <span class="section-num">35.10</span>
+    <h2>Chapter review</h2>
+    <p>What this model demonstrates.</p>
+  </div>
+  <div class="panel" style="padding:0;background:transparent;box-shadow:none;border:none;">
+    <div class="review">
+      <h3>Key takeaways</h3>
+      <ul>
+        <li>Risk is quantified in naira and sits as a fourth cost bucket — ₦1.18M base + ₦18/user.</li>
+        <li>12 risks identified across six categories, each scored Likelihood × Impact.</li>
+        <li>Inherent risk score of 146 is cut to 52 (‑64%) through TARA controls.</li>
+        <li>Inherent annual expected loss of ₦21.89M falls to ₦6.50M residual.</li>
+        <li>Control spend of ₦14.16M/yr yields ₦15.39M of avoided loss — net positive.</li>
+        <li>Every residual risk lands in the Low band (≤6); none is accepted above Low.</li>
+        <li>FX exposure is held near 11% of cost base — inside the 15% tolerance.</li>
+        <li>Three lines of defence separate ownership, oversight and assurance.</li>
+        <li>Risk is embedded via OKRs, spend gates and monthly review — not annual paperwork.</li>
+        <li>Risk-adjusted burn at 4,820 users is ₦11.39M; at 15,000 users it is ₦20.59M.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <div class="footer-note">
+    <div>🛡️ <strong>10 of 12 cost behaviours are Naira-denominated</strong> — a deliberate hedge against FX volatility.</div>
+    <div id="footerProjection">📉 Loading projection…</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ============================================================
+     ASSUMPTIONS
+     ============================================================ */
+  const FX = 1500;                 // ₦1,500 = $1
+  const CURRENT_USERS = 4820;
+  const TARGET_USERS = 15000;
+  const CHART_USERS = 10000;
+
+  const fmtN = n => '₦' + Math.round(n).toLocaleString('en-NG');
+  const fmtM = n => '₦' + (n/1e6).toFixed(2) + 'M';
+  const fmtK = n => n >= 1e6 ? '₦'+(n/1e6).toFixed(2)+'M' : '₦'+Math.round(n/1000)+'k';
+  const pct = n => n.toFixed(1) + '%';
+
+  /* ============================================================
+     COST BASE (unchanged rates)
+     ============================================================ */
+  const costData = [
+    {name:'Founder stipends',          category:'Purely fixed',        monthly:2400000, variableComponent:0,   currency:'NGN'},
+    {name:'Legal retainers',           category:'Purely fixed',        monthly:840000,  variableComponent:0,   currency:'NGN'},
+    {name:'Payment gateway fees',      category:'Purely variable',     monthly:0,       variableComponent:165, currency:'NGN'},
+    {name:'Cloud egress / CDN',        category:'Purely variable',     monthly:0,       variableComponent:180, currency:'USD'},
+    {name:'SMS / email OTP',           category:'Purely variable',     monthly:0,       variableComponent:90,  currency:'NGN'},
+    {name:'DigitalOcean hosting',      category:'Semi‑variable / mix', monthly:126000,  variableComponent:30,  currency:'USD'},
+    {name:'Customer support',          category:'Semi‑variable / mix', monthly:1020000, variableComponent:75,  currency:'NGN'},
+    {name:'Analytics & monitoring',    category:'Semi‑variable / mix', monthly:225000,  variableComponent:30,  currency:'NGN'},
+    {name:'Content licensing',         category:'Semi‑variable / mix', monthly:450000,  variableComponent:45,  currency:'NGN'},
+    {name:'Marketing (performance)',   category:'Semi‑variable / mix', monthly:600000,  variableComponent:225, currency:'NGN'},
+    {name:'Admin & tools',             category:'Semi‑variable / mix', monthly:66000,   variableComponent:15,  currency:'NGN'},
+    {name:'Compliance & KYC',          category:'Semi‑variable / mix', monthly:135000,  variableComponent:30,  currency:'NGN'}
+  ];
+
+  /* ============================================================
+     35.5 — RISK REGISTER (12 risks)
+     ============================================================ */
+  const risks = [
+    {id:'R1',  name:'Naira devaluation / FX',        cat:'Financial',   cls:'fin',   L:4,I:4, inh:16, res:4,
+     ctrl:'Transfer + Reduce', ctrlDesc:'USD forward contract; quarterly local-alternative review',
+     mit:120000, lik:0.60, imp:4500000, ctrlAnnual:1440000, resAEL:675000},
+    {id:'R2',  name:'Payment gateway concentration', cat:'Operational', cls:'ops',   L:2,I:5, inh:10, res:3,
+     ctrl:'Avoid + Reduce', ctrlDesc:'Second gateway (Flutterwave/Monnify) as live failover',
+     mit:60000,  lik:0.25, imp:3000000, ctrlAnnual:720000,  resAEL:187500},
+    {id:'R3',  name:'Payment fraud / chargebacks',   cat:'Financial',   cls:'fin',   L:3,I:3, inh:9,  res:4,
+     ctrl:'Reduce', ctrlDesc:'Velocity checks, 3DS enforcement, fraud scoring',
+     mit:75000,  lik:0.70, imp:2500000, ctrlAnnual:900000,  resAEL:700000},
+    {id:'R4',  name:'NDPC regulatory non-compliance',cat:'Compliance',  cls:'comp',  L:3,I:5, inh:15, res:4,
+     ctrl:'Reduce + Transfer', ctrlDesc:'Quarterly audit, DPO, staff training, cyber liability',
+     mit:180000, lik:0.20, imp:8000000, ctrlAnnual:2160000, resAEL:320000},
+    {id:'R5',  name:'Data breach / cyber attack',    cat:'Technology',  cls:'tech',  L:3,I:5, inh:15, res:5,
+     ctrl:'Transfer + Reduce', ctrlDesc:'Cyber insurance + pen testing, WAF, encryption',
+     mit:160000, lik:0.30, imp:9000000, ctrlAnnual:1920000, resAEL:540000},
+    {id:'R6',  name:'Hosting outage (single region)',cat:'Technology',  cls:'tech',  L:3,I:4, inh:12, res:4,
+     ctrl:'Reduce', ctrlDesc:'Multi-region backup + static failover page',
+     mit:85000,  lik:0.40, imp:2400000, ctrlAnnual:1020000, resAEL:288000},
+    {id:'R7',  name:'Key person dependency',         cat:'Strategic',   cls:'strat', L:4,I:4, inh:16, res:6,
+     ctrl:'Transfer + Reduce', ctrlDesc:'Key-person insurance + succession documentation',
+     mit:95000,  lik:0.30, imp:12000000, ctrlAnnual:1140000, resAEL:1080000},
+    {id:'R8',  name:'Content / IP infringement',     cat:'Legal',       cls:'legal', L:2,I:4, inh:8,  res:3,
+     ctrl:'Transfer + Reduce', ctrlDesc:'Contractual indemnities + partner diversification',
+     mit:45000,  lik:0.15, imp:4000000, ctrlAnnual:540000,  resAEL:180000},
+    {id:'R9',  name:'CAC escalation',                cat:'Strategic',   cls:'strat', L:4,I:3, inh:12, res:5,
+     ctrl:'Reduce', ctrlDesc:'Organic, referral and school-partnership channels',
+     mit:110000, lik:0.65, imp:3600000, ctrlAnnual:1320000, resAEL:702000},
+    {id:'R10', name:'Support cost creep',            cat:'Operational', cls:'ops',   L:3,I:3, inh:9,  res:3,
+     ctrl:'Reduce', ctrlDesc:'Self-service KB, chatbot, tiered support',
+     mit:70000,  lik:0.55, imp:1800000, ctrlAnnual:840000,  resAEL:297000},
+    {id:'R11', name:'Wage / inflation pressure',     cat:'Financial',   cls:'fin',   L:4,I:3, inh:12, res:6,
+     ctrl:'Accept + Reduce', ctrlDesc:'Variable comp, remote talent outside Lagos',
+     mit:50000,  lik:0.75, imp:2400000, ctrlAnnual:600000,  resAEL:900000},
+    {id:'R12', name:'Revenue concentration (B2C only)',cat:'Strategic', cls:'strat', L:3,I:4, inh:12, res:5,
+     ctrl:'Reduce', ctrlDesc:'B2B school licence pilot',
+     mit:130000, lik:0.35, imp:6000000, ctrlAnnual:1560000, resAEL:630000}
+  ];
+
+  /* ============================================================
+     DERIVED TOTALS
+     ============================================================ */
+  const pureFixed      = 2400000 + 840000;                       // ₦3,240,000
+  const pureVarPerUser = 165 + 180 + 90;                          // ₦435
+  const mixedBase      = 126000+1020000+225000+450000+600000+66000+135000; // ₦2,622,000
+  const mixedVarPerUser= 30+75+30+45+225+15+30;                   // ₦450
+
+  const totalFixedBase = pureFixed + mixedBase;                   // ₦5,862,000
+  const totalVarPerUser= pureVarPerUser + mixedVarPerUser;        // ₦885
+
+  // Risk mitigation bucket
+  const riskBase = risks.reduce((s,r)=>s+r.mit, 0);               // ₦1,180,000
+  const riskVarPerUser = 18;                                      // fraud + referral scaling
+  const riskAtCurrent  = riskBase + riskVarPerUser*CURRENT_USERS;
+  const riskAtTarget   = riskBase + riskVarPerUser*TARGET_USERS;
+
+  const burnCurrent    = totalFixedBase + totalVarPerUser*CURRENT_USERS;
+  const burnTarget     = totalFixedBase + totalVarPerUser*TARGET_USERS;
+
+  const riskAdjBurnCurrent = burnCurrent + riskAtCurrent;
+  const riskAdjBurnTarget  = burnTarget  + riskAtTarget;
+
+  // FX exposure (USD-flagged lines only)
+  const usdFixed = 126000;
+  const usdPerUser = 180 + 30;                                    // ₦210/user
+  const fxCurrent = usdFixed + usdPerUser*CURRENT_USERS;
+  const fxTarget  = usdFixed + usdPerUser*TARGET_USERS;
+
+  const fxPctCurrent = fxCurrent / burnCurrent * 100;
+  const fxPctTarget  = fxTarget  / burnTarget  * 100;
+
+  // Risk aggregates
+  const inhScoreTotal = risks.reduce((s,r)=>s+r.inh,0);           // 146
+  const resScoreTotal = risks.reduce((s,r)=>s+r.res,0);           // 52
+  const scoreDropPct  = (1 - resScoreTotal/inhScoreTotal)*100;    // 64.4%
+  const aelInherent   = risks.reduce((s,r)=>s + r.lik*r.imp, 0);  // ₦21.89M
+  const aelResidual   = risks.reduce((s,r)=>s + r.resAEL, 0);     // ₦6.4995M
+  const ctrlAnnual    = risks.reduce((s,r)=>s + r.ctrlAnnual, 0); // ₦14.16M
+  const netBenefit    = (aelInherent - aelResidual) - ctrlAnnual; // ₦1.23M
+  const ctrlPctBurn   = riskAtCurrent / riskAdjBurnCurrent * 100; // ~11.1%
+
+  /* ============================================================
+     DOM UPDATES
+     ============================================================ */
+  // Ribbons
+  document.getElementById('fxHedgedLine').textContent = pct(100 - fxPctCurrent);
+  document.getElementById('fxSafePct').textContent     = pct(100 - fxPctCurrent);
+  document.getElementById('fxExposedPct').textContent  = pct(fxPctCurrent);
+  document.getElementById('fxExposedNaira').textContent= fmtK(fxCurrent);
+
+  document.getElementById('aelInherentLine').textContent  = fmtM(aelInherent);
+  document.getElementById('controlSpendLine').textContent = fmtM(ctrlAnnual);
+  document.getElementById('aelResidualLine').textContent  = fmtM(aelResidual);
+  document.getElementById('riskScoreDrop').textContent    = '−' + scoreDropPct.toFixed(0) + '%';
+  document.getElementById('controlPctBurn').textContent   = pct(ctrlPctBurn);
+  document.getElementById('netBenefit').textContent       = fmtM(netBenefit);
+
+  // Stat cards
+  document.getElementById('fixedCostDisplay').textContent = fmtN(totalFixedBase);
+  document.getElementById('fixedSub').textContent = `≈ $${Math.round(totalFixedBase/FX).toLocaleString()} · 100% Naira`;
+  document.getElementById('variableCostDisplay').textContent = fmtN(totalVarPerUser);
+  document.getElementById('varSub').textContent = `≈ $${(totalVarPerUser/FX).toFixed(2)}/user · only cloud is USD`;
+  document.getElementById('riskCostDisplay').textContent = fmtN(riskAtCurrent);
+  document.getElementById('riskCostSub').textContent = `₦1.18M base + ₦18/user · ${pct(ctrlPctBurn)} of burn`;
+  document.getElementById('riskAdjBurnDisplay').textContent = fmtN(riskAdjBurnCurrent);
+  document.getElementById('riskAdjBurnSub').textContent = `vs ${fmtN(burnCurrent)} without controls`;
+  document.getElementById('fxExposureDisplay').textContent = fmtN(fxCurrent);
+  document.getElementById('fxExposureSub').textContent = `${pct(fxPctCurrent)} of burn · DigitalOcean only`;
+
+  // Cost card subtotals
+  document.getElementById('pureFixedTotal').textContent = fmtN(pureFixed);
+  document.getElementById('pureVarPerUser').textContent = fmtN(pureVarPerUser) + '/user';
+  document.getElementById('mixedBaseTotal').textContent = fmtN(mixedBase) + ' + ' + fmtN(mixedVarPerUser) + '/user';
+  document.getElementById('riskBucketTotal').textContent = fmtN(riskBase) + ' + ₦' + riskVarPerUser + '/user';
+
+  // KRI
+  document.getElementById('kriFx').textContent = pct(fxPctCurrent);
+
+  // Footer
+  document.getElementById('footerProjection').innerHTML =
+    `📉 At 15k users: cost ≈ <strong>${fmtN(burnTarget)}</strong> · risk-adjusted <strong>${fmtN(riskAdjBurnTarget)}</strong> · FX exposure only <strong>${pct(fxPctTarget)}</strong>`;
+
+  /* ============================================================
+     RISK TABLE
+     ============================================================ */
+  const band = s => s <= 6 ? 'low' : s <= 12 ? 'med' : s <= 19 ? 'high' : 'crit';
+  const bandLabel = s => s <= 6 ? 'Low' : s <= 12 ? 'Medium' : s <= 19 ? 'High' : 'Critical';
+  const catLabel = c => ({Financial:'Financial',Operational:'Operational',Compliance:'Compliance',
+    Technology:'Technology',Strategic:'Strategic',Legal:'Legal'})[c];
+
+  document.getElementById('riskTableBody').innerHTML = risks.map(r=>`
+    <tr>
+      <td class="rid">${r.id}</td>
+      <td><div class="rname">${r.name}<small>${r.ctrlDesc}</small></div></td>
+      <td><span class="chip ${r.cls}">${catLabel(r.cat)}</span></td>
+      <td>${r.L}</td>
+      <td>${r.I}</td>
+      <td><span class="score ${band(r.inh)}">${r.inh}</span> <small style="color:#6c8aa5">${bandLabel(r.inh)}</small></td>
+      <td>${fmtM(r.lik*r.imp)}</td>
+      <td><span class="tara">${r.ctrl}</span></td>
+      <td>${fmtK(r.mit)}</td>
+      <td><span class="score ${band(r.res)}">${r.res}</span> <small style="color:#6c8aa5">${bandLabel(r.res)}</small></td>
+    </tr>`).join('');
+
+  /* ============================================================
+     CHART 1 — cost behaviour
+     ============================================================ */
+  const costLabels = costData.map(c=>c.name);
+  const costAmounts = costData.map(c => (c.monthly||0) + (c.variableComponent||0)*CHART_USERS);
+  const costColors = costData.map(c => c.category==='Purely fixed' ? '#2b6f9e'
+                             : c.category==='Purely variable' ? '#d97706' : '#8b5cf6');
+
+  new Chart(document.getElementById('costBehaviourChart'), {
+    type:'bar',
+    data:{labels:costLabels,datasets:[{
+      label:`Monthly cost at ${CHART_USERS.toLocaleString()} users (₦)`,
+      data:costAmounts, backgroundColor:costColors, borderRadius:6,
+      barPercentage:.75, categoryPercentage:.85
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>{
+        const it=costData[c.dataIndex];
+        let d=`Total: ${fmtN(c.raw)}`;
+        if(it.monthly>0&&it.variableComponent>0) d+=` (base ${fmtN(it.monthly)} + ${fmtN(it.variableComponent)}/user)`;
+        else if(it.monthly>0) d+=' (fixed)';
+        else d+=` (${fmtN(it.variableComponent)}/user)`;
+        return d+` · ${it.currency}`;
+      }}}},
+      scales:{y:{beginAtZero:true,grid:{color:'#e9eef3'},
+        ticks:{callback:v=>v>=1e6?'₦'+(v/1e6).toFixed(1)+'M':'₦'+Math.round(v/1000)+'k',font:{size:10}}},
+        x:{grid:{display:false},ticks:{maxRotation:40,minRotation:40,font:{size:9},color:'#1f3e57'}}}
+    }
+  });
+
+  /* ============================================================
+     CHART 2 — FX currency split
+     ============================================================ */
+  let ngnTotal=0, usdTotal=0;
+  costData.forEach(c=>{
+    const t=(c.monthly||0)+(c.variableComponent||0)*CHART_USERS;
+    c.currency==='USD' ? usdTotal+=t : ngnTotal+=t;
+  });
+
+  new Chart(document.getElementById('fxSplitChart'), {
+    type:'doughnut',
+    data:{labels:['Naira-denominated (hedged)','USD-denominated (FX risk)'],
+      datasets:[{data:[ngnTotal,usdTotal],
+        backgroundColor:['#10b981','#ef4444'],borderColor:['#059669','#b91c1c'],
+        borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'500'},
+        color:'#1f3e57',padding:12,boxWidth:12,boxHeight:12}},
+        tooltip:{callbacks:{label:(c)=>{
+          const tot=c.dataset.data.reduce((a,b)=>a+b,0);
+          return `${c.label}: ${fmtN(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`;
+        }}}}}
+  });
+
+  /* ============================================================
+     CHART 3 — risk heat map (bubble)
+     ============================================================ */
+  const catColors = {Financial:'#ef4444',Operational:'#f59e0b',Compliance:'#8b5cf6',
+    Technology:'#3b82f6',Strategic:'#10b981',Legal:'#ec4899'};
+  const maxAEL = Math.max(...risks.map(r=>r.lik*r.imp));
+
+  new Chart(document.getElementById('heatMapChart'), {
+    type:'bubble',
+    data:{datasets: risks.map(r=>({
+      label:r.id,
+      data:[{x:r.L, y:r.I, r: 8 + (r.lik*r.imp/maxAEL)*20}],
+      backgroundColor: catColors[r.cat]+'cc',
+      borderColor: catColors[r.cat], borderWidth:1.5
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>{
+        const r=risks[c.datasetIndex];
+        return [`${r.id} · ${r.name}`,`${r.cat} · L${r.L} × I${r.I} = ${r.inh}`,
+                `Annual exp. loss: ${fmtM(r.lik*r.imp)}`,
+                `Control: ${r.ctrl} (${fmtK(r.mit)}/mo)`,
+                `Residual score: ${r.res}`];
+      }}}},
+      scales:{
+        x:{min:.5,max:5.5,title:{display:true,text:'Likelihood →',color:'#1f4a6e',font:{weight:'500'}},
+           ticks:{stepSize:1},grid:{color:'#eef3f8'}},
+        y:{min:.5,max:5.5,title:{display:true,text:'Impact →',color:'#1f4a6e',font:{weight:'500'}},
+           ticks:{stepSize:1},grid:{color:'#eef3f8'}}
+      }}
+  });
+
+  /* ============================================================
+     CHART 4 — control ROI (horizontal grouped bars)
+     ============================================================ */
+  new Chart(document.getElementById('roiChart'), {
+    type:'bar',
+    data:{labels: risks.map(r=>r.id),
+      datasets:[
+        {label:'Inherent loss', data:risks.map(r=>(r.lik*r.imp)/1e6),
+         backgroundColor:'#fecaca', borderColor:'#ef4444', borderWidth:1, borderRadius:4},
+        {label:'Control cost',  data:risks.map(r=>r.ctrlAnnual/1e6),
+         backgroundColor:'#c7d2fe', borderColor:'#4338ca', borderWidth:1, borderRadius:4},
+        {label:'Residual loss', data:risks.map(r=>r.resAEL/1e6),
+         backgroundColor:'#d1fae5', borderColor:'#10b981', borderWidth:1, borderRadius:4}
+      ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ₦${c.raw.toFixed(2)}M`}}},
+      scales:{x:{beginAtZero:true,title:{display:true,text:'₦ millions / year',font:{size:10}},
+        grid:{color:'#eef3f8'},ticks:{font:{size:9}}},
+        y:{grid:{display:false},ticks:{font:{size:10,weight:'600'}}}}
+    }
+  });
+
+  /* ============================================================
+     CHART 5 — control spend by category
+     ============================================================ */
+  const catTotals = {};
+  risks.forEach(r=>{ catTotals[r.cat] = (catTotals[r.cat]||0) + r.mit; });
+  const catKeys = Object.keys(catTotals);
+
+  new Chart(document.getElementById('categoryChart'), {
+    type:'doughnut',
+    data:{labels:catKeys,
+      datasets:[{data:catKeys.map(k=>catTotals[k]),
+        backgroundColor:catKeys.map(k=>catColors[k]),
+        borderColor:'#fff',borderWidth:2,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8}},
+        tooltip:{callbacks:{label:c=>{
+          const tot=c.dataset.data.reduce((a,b)=>a+b,0);
+          return `${c.label}: ${fmtK(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`;
+        }}}}}
+  });
+
+})();
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
+</body>
+</html>
