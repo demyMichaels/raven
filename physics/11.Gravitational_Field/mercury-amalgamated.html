@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Simple Cell — Mercury-Amalgamated Zinc (Rive-style Runtime)</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #131a2e;
+    --ink: #e6ecff;
+    --muted: #8b95b8;
+    --accent: #4fd1ff;
+    --zinc: #b9c2d1;
+    --mercury: #e8f0ff;
+    --copper: #d98b5a;
+    --electrolyte: #1e2f4a;
+  }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(circle at 20% 10%, #1a2340, var(--bg) 60%);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    height: 100vh;
+  }
+  .stage {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  svg { width: 100%; height: 100%; display: block; }
+
+  /* ---------- Side panel (Rive-style View Model inspector) ---------- */
+  .panel {
+    background: var(--panel);
+    border-left: 1px solid #1f2942;
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  .panel h2 {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 14px;
+  }
+  .panel h3 {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin: 18px 0 8px;
+    border-top: 1px solid #1f2942; padding-top: 12px;
+  }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin: 8px 0;
+  }
+  .row label { color: var(--muted); }
+  .val { font-variant-numeric: tabular-nums; color: var(--ink); }
+
+  input[type="range"] { width: 130px; accent-color: var(--accent); }
+  input[type="checkbox"] { accent-color: var(--accent); transform: scale(1.15); }
+  button {
+    background: #1c2540; color: var(--ink); border: 1px solid #2a3557;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  button:hover { background: #253055; }
+
+  /* ---------- SVG element styling ---------- */
+  .wire { fill: none; stroke: #7a86a8; stroke-width: 3; stroke-linecap: round; }
+  .glass { fill: rgba(120,180,255,0.06); stroke: #4a6a9a; stroke-width: 2; }
+  .electrolyte { fill: url(#electroGrad); }
+  .zinc-body { fill: url(#zincGrad); }
+  .mercury-coat {
+    fill: url(#mercuryGrad);
+    filter: url(#mercurySheen);
+  }
+  .copper-body { fill: url(#copperGrad); }
+  .label {
+    fill: var(--muted);
+    font-size: 11px;
+    font-family: ui-monospace, Menlo, monospace;
+    letter-spacing: .05em;
+  }
+  .label-strong { fill: var(--ink); font-size: 12px; }
+  .equation {
+    fill: var(--accent);
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12px;
+  }
+  .electron {
+    fill: #ffe066;
+    filter: url(#glow);
+  }
+  .ion {
+    fill: #7ee0ff;
+    stroke: #b0f0ff; stroke-width: 1;
+  }
+  .bubble {
+    fill: rgba(220, 240, 255, 0.65);
+    stroke: rgba(255,255,255,0.9); stroke-width: 0.8;
+  }
+  .bulb-glass { fill: rgba(255,240,180,0.15); stroke: #d8c47a; stroke-width: 2; }
+  .bulb-filament { fill: none; stroke: #ffd54a; stroke-width: 2; stroke-linecap: round; }
+  .needle { stroke: #ff6b6b; stroke-width: 2.5; stroke-linecap: round; }
+  .gauge-face { fill: #0f1730; stroke: #2a3557; stroke-width: 2; }
+  .gauge-tick { stroke: #5a6890; stroke-width: 1; }
+  .state-badge {
+    fill: #0f1730; stroke: #2a3557; stroke-width: 1;
+  }
+  .state-text { fill: var(--accent); font-size: 10px; font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <svg viewBox="0 0 800 600" id="scene">
+      <!-- ============ DEFS: gradients, filters, paths ============ -->
+      <defs>
+        <linearGradient id="zincGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#7c8699"/>
+          <stop offset="0.5" stop-color="#c7d1e0"/>
+          <stop offset="1" stop-color="#7c8699"/>
+        </linearGradient>
+        <linearGradient id="mercuryGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#cfdaf0"/>
+          <stop offset="0.45" stop-color="#ffffff"/>
+          <stop offset="0.55" stop-color="#eef4ff"/>
+          <stop offset="1" stop-color="#b8c6e0"/>
+        </linearGradient>
+        <linearGradient id="copperGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8a4a26"/>
+          <stop offset="0.5" stop-color="#e39a63"/>
+          <stop offset="1" stop-color="#8a4a26"/>
+        </linearGradient>
+        <linearGradient id="electroGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2a4066"/>
+          <stop offset="1" stop-color="#16233d"/>
+        </linearGradient>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="mercurySheen" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur"/>
+          <feSpecularLighting in="blur" surfaceScale="3" specularConstant="0.9"
+                              specularExponent="25" result="spec">
+            <fePointLight x="380" y="200" z="180"/>
+          </feSpecularLighting>
+          <feComposite in="spec" in2="SourceAlpha" operator="in" result="specClip"/>
+          <feComposite in="SourceGraphic" in2="specClip" operator="arithmetic"
+                       k1="0" k2="1" k3="0.6" k4="0"/>
+        </filter>
+
+        <!-- Constraints: paths electrons & ions must follow -->
+        <path id="wirePath"
+              d="M 240 200 L 240 120 Q 240 100 260 100 L 540 100 Q 560 100 560 120 L 560 200" />
+        <path id="ionDriftPath" d="M 275 300 Q 400 380 525 300" />
+      </defs>
+
+      <!-- ============ BACKGROUND GRID ============ -->
+      <g opacity="0.12">
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#4a6a9a" stroke-width="0.6"/>
+        </pattern>
+        <rect x="0" y="0" width="800" height="600" fill="url(#grid)"/>
+      </g>
+
+      <!-- ============ EXTERNAL CIRCUIT ============ -->
+      <path class="wire" d="M 240 200 L 240 120 Q 240 100 260 100 L 540 100 Q 560 100 560 120 L 560 200" />
+      <path class="wire" d="M 240 200 L 240 200" />
+
+      <!-- ============ THE CELL ============ -->
+      <!-- Glass beaker -->
+      <path class="glass"
+            d="M 200 260 L 200 520 Q 200 545 225 545 L 575 545 Q 600 545 600 520 L 600 260" />
+      <!-- Electrolyte -->
+      <path class="electrolyte"
+            d="M 205 320 L 205 515 Q 205 535 225 535 L 575 535 Q 595 535 595 515 L 595 320 Z" />
+
+      <!-- Zinc electrode (with mercury amalgam coating) -->
+      <g id="zincElectrode">
+        <rect class="zinc-body" x="230" y="200" width="20" height="320" rx="3"/>
+        <!-- Mercury coating: two thin shiny layers on the sides -->
+        <rect id="mercuryCoat" class="mercury-coat" x="228" y="200" width="24" height="320" rx="4" opacity="0.95"/>
+        <!-- Subtle highlight line -->
+        <rect x="236" y="205" width="2" height="310" fill="rgba(255,255,255,0.55)"/>
+      </g>
+
+      <!-- Copper electrode -->
+      <g id="copperElectrode">
+        <rect class="copper-body" x="550" y="200" width="20" height="320" rx="3"/>
+        <rect x="556" y="205" width="2" height="310" fill="rgba(255,255,255,0.35)"/>
+      </g>
+
+      <!-- ============ BULB (load) ============ -->
+      <g id="bulb" transform="translate(400,100)">
+        <circle class="bulb-glass" cx="0" cy="-14" r="22"/>
+        <path class="bulb-filament" d="M -8 -14 L -3 -22 L 0 -14 L 3 -22 L 8 -14"/>
+        <circle id="bulbGlow" cx="0" cy="-14" r="26" fill="rgba(255,213,74,0)" />
+        <rect x="-6" y="6" width="12" height="10" fill="#5a6890" rx="1"/>
+      </g>
+
+      <!-- ============ VOLTMETER GAUGE ============ -->
+      <g id="gauge" transform="translate(400,50)">
+        <circle class="gauge-face" cx="0" cy="0" r="30"/>
+        <line class="gauge-tick" x1="-22" y1="0" x2="-18" y2="0" transform="rotate(-60)"/>
+        <line class="gauge-tick" x1="-22" y1="0" x2="-18" y2="0" transform="rotate(-30)"/>
+        <line class="gauge-tick" x1="-22" y1="0" x2="-18" y2="0" transform="rotate(0)"/>
+        <line class="gauge-tick" x1="-22" y1="0" x2="-18" y2="0" transform="rotate(30)"/>
+        <line class="gauge-tick" x1="-22" y1="0" x2="-18" y2="0" transform="rotate(60)"/>
+        <line id="needle" class="needle" x1="0" y1="0" x2="-18" y2="0" transform="rotate(-60)"/>
+        <circle cx="0" cy="0" r="3" fill="#ff6b6b"/>
+      </g>
+
+      <!-- ============ STATE MACHINE BADGE ============ -->
+      <g id="stateBadge" transform="translate(40,40)">
+        <rect class="state-badge" x="0" y="0" width="180" height="26" rx="6"/>
+        <text id="stateText" class="state-text" x="12" y="17">STATE: IDLE</text>
+      </g>
+
+      <!-- ============ DYNAMIC LAYERS (populated by runtime) ============ -->
+      <g id="electronLayer"></g>
+      <g id="ionLayer"></g>
+      <g id="bubbleLayer"></g>
+
+      <!-- ============ LABELS ============ -->
+      <text class="label label-strong" x="130" y="205">Zn(Hg)</text>
+      <text class="label" x="130" y="220">amalgamated</text>
+      <text class="label label-strong" x="580" y="205">Cu</text>
+      <text class="label" x="580" y="220">cathode</text>
+      <text class="label" x="330" y="560">dilute H₂SO₄ / ZnSO₄ electrolyte</text>
+      <text id="eqText" class="equation" x="200" y="580">
+        Zn → Zn²⁺ + 2e⁻    (no direct H₂ on Zn)
+      </text>
+    </svg>
+  </div>
+
+  <!-- ============ VIEW MODEL PANEL ============ -->
+  <div class="panel">
+    <h2>View Model · Cell</h2>
+
+    <h3>Circuit</h3>
+    <div class="row">
+      <label>isCircuitClosed</label>
+      <input type="checkbox" id="vm-circuit" checked />
+    </div>
+    <div class="row">
+      <label>cellVoltage</label>
+      <input type="range" id="vm-voltage" min="0" max="1.5" step="0.01" value="1.1" />
+      <span class="val" id="val-voltage">1.10 V</span>
+    </div>
+
+    <h3>Electrodes</h3>
+    <div class="row">
+      <label>isAmalgamated</label>
+      <input type="checkbox" id="vm-amalgamated" checked />
+    </div>
+    <div class="row">
+      <label>zincDissolutionRate</label>
+      <input type="range" id="vm-rate" min="0" max="2" step="0.01" value="0.8" />
+      <span class="val" id="val-rate">0.80</span>
+    </div>
+
+    <h3>Solution</h3>
+    <div class="row">
+      <label>znIonCount</label>
+      <span class="val" id="val-ions">0</span>
+    </div>
+    <div class="row">
+      <label>h2BubbleCount</label>
+      <span class="val" id="val-bubbles">0</span>
+    </div>
+
+    <h3>State Machine</h3>
+    <div class="row">
+      <label>currentState</label>
+      <span class="val" id="val-state">ACTIVE</span>
+    </div>
+    <div class="row">
+      <button id="btn-reset">Reset Simulation</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   RIVE-STYLE RUNTIME
+   ---------------------------------------------------------------------
+   This mimics Rive's architecture in vanilla JS:
+     • ViewModel        → `vm` object with bound properties
+     • Data Binding     → render functions read from `vm`
+     • State Machine    → `machine` object with states + transitions
+     • Constraints      → path-following via getPointAtLength()
+     • Converters       → formulas that transform VM inputs to outputs
+   ===================================================================== */
+
+/* ---------- 1. VIEW MODEL (data binding source of truth) ---------- */
+const vm = {
+  // inputs (bound to UI)
+  isCircuitClosed: true,
+  cellVoltage: 1.10,
+  isAmalgamated: true,
+  zincDissolutionRate: 0.80,
+
+  // derived / observed (updated by converters)
+  znIonCount: 0,
+  h2BubbleCount: 0,
+  currentState: 'ACTIVE'
+};
+
+/* ---------- 2. CONVERTERS (formulas between properties) ---------- */
+// Analogous to Rive's "Formula" / "Converter" nodes.
+const Converters = {
+  // znIonCount grows at a rate proportional to dissolution × voltage
+  ionGrowth: (dt, vm) =>
+    vm.isCircuitClosed ? vm.zincDissolutionRate * vm.cellVoltage * dt * 2.2 : 0,
+
+  // If amalgamated → no H2 bubbles on Zn side. Only on Cu if applicable.
+  // (We keep this at 0 to reinforce the pedagogical point.)
+  bubbleGrowth: (dt, vm) => {
+    if (!vm.isCircuitClosed) return 0;
+    // Non-amalgamated zinc would produce bubbles directly:
+    if (!vm.isAmalgamated) return dt * vm.zincDissolutionRate * 3;
+    return 0;
+  },
+
+  // Needle angle: map voltage 0..1.5V → -60°..+60°
+  voltageToAngle: v => -60 + (v / 1.5) * 120
+};
+
+/* ---------- 3. STATE MACHINE ---------- */
+// States: IDLE (open circuit) ⇄ ACTIVE (closed circuit)
+const machine = {
+  states: {
+    IDLE:   { enter: () => { vm.currentState = 'IDLE'; updateStateBadge(); } },
+    ACTIVE: { enter: () => { vm.currentState = 'ACTIVE'; updateStateBadge(); } }
+  },
+  transition(next) {
+    if (this.states[next]) this.states[next].enter();
+  }
+};
+
+/* ---------- 4. CONSTRAINTS (path-locked particles) ---------- */
+// Uses SVGPathElement.getPointAtLength() — the exact SVG equivalent of
+// Rive's "Follow Path" constraint.
+
+function constrainToPath(pathEl, t) {
+  const len = pathEl.getTotalLength();
+  const p = pathEl.getPointAtLength(((t % 1) + 1) % 1 * len);
+  return p; // {x, y}
+}
+
+/* ---------- 5. RENDER: DOM references ---------- */
+const svgNS = 'http://www.w3.org/2000/svg';
+const electronLayer = document.getElementById('electronLayer');
+const ionLayer      = document.getElementById('ionLayer');
+const bubbleLayer   = document.getElementById('bubbleLayer');
+const wirePath      = document.getElementById('wirePath');
+const ionDriftPath  = document.getElementById('ionDriftPath');
+const needle        = document.getElementById('needle');
+const bulbGlow      = document.getElementById('bulbGlow');
+const mercuryCoat   = document.getElementById('mercuryCoat');
+const stateText     = document.getElementById('stateText');
+const eqText        = document.getElementById('eqText');
+
+/* ---------- 6. PARTICLE POOLS ---------- */
+const electrons = [];   // { el, t, speed }
+const ions      = [];   // { el, t, speed }
+const bubbles   = [];   // { el, x, y, vy }
+
+function spawnElectron() {
+  const el = document.createElementNS(svgNS, 'circle');
+  el.setAttribute('r', 3.2);
+  el.setAttribute('class', 'electron');
+  electronLayer.appendChild(el);
+  electrons.push({
+    el,
+    t: Math.random(),
+    speed: 0.0016 + Math.random() * 0.0006
+  });
+}
+
+function spawnIon() {
+  const el = document.createElementNS(svgNS, 'circle');
+  el.setAttribute('r', 4);
+  el.setAttribute('class', 'ion');
+  ionLayer.appendChild(el);
+  ions.push({
+    el,
+    t: 0,
+    // slight vertical jitter so ions don't overlap perfectly
+    offset: (Math.random() - 0.5) * 14,
+    speed: 0.0012 + Math.random() * 0.0008
+  });
+}
+
+function spawnBubble() {
+  const el = document.createElementNS(svgNS, 'circle');
+  el.setAttribute('r', 2 + Math.random() * 2);
+  el.setAttribute('class', 'bubble');
+  bubbleLayer.appendChild(el);
+  bubbles.push({
+    el,
+    x: 260 + Math.random() * 20,
+    y: 320 + Math.random() * 40,
+    vy: -0.3 - Math.random() * 0.4
+  });
+}
+
+/* Pre-warm the electron pool (constraint-driven flow) */
+for (let i = 0; i < 14; i++) spawnElectron();
+
+/* ---------- 7. UI BINDING (two-way) ---------- */
+const ui = {
+  circuit:      document.getElementById('vm-circuit'),
+  voltage:      document.getElementById('vm-voltage'),
+  amalgamated:  document.getElementById('vm-amalgamated'),
+  rate:         document.getElementById('vm-rate'),
+  valVoltage:   document.getElementById('val-voltage'),
+  valRate:      document.getElementById('val-rate'),
+  valIons:      document.getElementById('val-ions'),
+  valBubbles:   document.getElementById('val-bubbles'),
+  valState:     document.getElementById('val-state'),
+  btnReset:     document.getElementById('btn-reset')
+};
+
+function bindUI() {
+  ui.circuit.addEventListener('change', e => {
+    vm.isCircuitClosed = e.target.checked;
+    machine.transition(vm.isCircuitClosed ? 'ACTIVE' : 'IDLE');
+  });
+  ui.voltage.addEventListener('input', e => {
+    vm.cellVoltage = parseFloat(e.target.value);
+    ui.valVoltage.textContent = vm.cellVoltage.toFixed(2) + ' V';
+  });
+  ui.amalgamated.addEventListener('change', e => {
+    vm.isAmalgamated = e.target.checked;
+    eqText.textContent = vm.isAmalgamated
+      ? 'Zn → Zn²⁺ + 2e⁻    (no direct H₂ on Zn)'
+      : 'Zn → Zn²⁺ + 2e⁻    ⚠ H₂ bubbles on bare Zn';
+  });
+  ui.rate.addEventListener('input', e => {
+    vm.zincDissolutionRate = parseFloat(e.target.value);
+    ui.valRate.textContent = vm.zincDissolutionRate.toFixed(2);
+  });
+  ui.btnReset.addEventListener('click', () => {
+    vm.znIonCount = 0;
+    vm.h2BubbleCount = 0;
+    ions.forEach(i => i.el.remove());
+    ions.length = 0;
+    bubbles.forEach(b => b.el.remove());
+    bubbles.length = 0;
+    ui.valIons.textContent = '0';
+    ui.valBubbles.textContent = '0';
+  });
+}
+bindUI();
+
+function updateStateBadge() {
+  stateText.textContent = 'STATE: ' + vm.currentState;
+  ui.valState.textContent = vm.currentState;
+}
+
+/* ---------- 8. MAIN LOOP (the "runtime") ---------- */
+let last = performance.now();
+
+function tick(now) {
+  const dt = Math.min((now - last) / 16.667, 3); // normalized frames
+  last = now;
+
+  /* --- Converter: ion growth from dissolution × voltage --- */
+  vm.znIonCount += Converters.ionGrowth(dt / 60, vm);
+  vm.h2BubbleCount += Converters.bubbleGrowth(dt / 60, vm);
+  ui.valIons.textContent = Math.floor(vm.znIonCount);
+  ui.valBubbles.textContent = Math.floor(vm.h2BubbleCount);
+
+  /* --- Constraint: electrons follow wire path --- */
+  if (vm.isCircuitClosed) {
+    electrons.forEach(e => {
+      e.t += e.speed * dt * (0.5 + vm.cellVoltage);
+      const p = constrainToPath(wirePath, e.t);
+      e.el.setAttribute('cx', p.x);
+      e.el.setAttribute('cy', p.y);
+      e.el.setAttribute('opacity', 1);
+    });
+  } else {
+    electrons.forEach(e => e.el.setAttribute('opacity', 0));
+  }
+
+  /* --- Ions in solution (drift away from Zn surface) --- */
+  // Spawn new ions as the counter crosses integer thresholds
+  if (Math.floor(vm.znIonCount) > ions.length && vm.isCircuitClosed) {
+    spawnIon();
+  }
+  ions.forEach(ion => {
+    ion.t += ion.speed * dt;
+    if (ion.t > 1) {
+      // recycle: send back to zinc surface (diffusion loop illusion)
+      ion.t = 0;
+    }
+    const p = constrainToPath(ionDriftPath, ion.t);
+    ion.el.setAttribute('cx', p.x);
+    ion.el.setAttribute('cy', p.y + ion.offset);
+    ion.el.setAttribute('opacity', vm.isCircuitClosed ? 0.9 : 0.15);
+  });
+
+  /* --- Bubbles (only if NOT amalgamated) --- */
+  if (!vm.isAmalgamated && vm.isCircuitClosed) {
+    if (Math.random() < 0.4 * vm.zincDissolutionRate) spawnBubble();
+  }
+  bubbles.forEach((b, i) => {
+    b.y += b.vy * dt;
+    b.x += Math.sin(b.y * 0.05) * 0.15;
+    b.el.setAttribute('cx', b.x);
+    b.el.setAttribute('cy', b.y);
+    b.el.setAttribute('opacity', Math.max(0, 1 - (b.y - 300) / 200));
+  });
+  // cull finished bubbles
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    if (bubbles[i].y < 300) {
+      bubbles[i].el.remove();
+      bubbles.splice(i, 1);
+    }
+  }
+
+  /* --- Voltmeter needle (driven by cellVoltage) --- */
+  const angle = Converters.voltageToAngle(vm.cellVoltage);
+  needle.setAttribute('transform', `rotate(${angle})`);
+
+  /* --- Bulb glow intensity --- */
+  const glowOpacity = vm.isCircuitClosed
+    ? Math.min(1, vm.cellVoltage / 1.5) * 0.7
+    : 0;
+  bulbGlow.setAttribute('fill', `rgba(255,213,74,${glowOpacity})`);
+
+  /* --- Mercury sheen pulse (subtle "alive" feel) --- */
+  const sheen = 0.85 + Math.sin(now / 900) * 0.08;
+  mercuryCoat.setAttribute('opacity', vm.isAmalgamated ? sheen : 0);
+
+  requestAnimationFrame(tick);
+}
+
+/* ---------- 9. INIT ---------- */
+machine.transition('ACTIVE');
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
