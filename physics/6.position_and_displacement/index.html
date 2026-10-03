@@ -69,13 +69,13 @@
   .lab-header .dot{
     width:8px; height:8px; border-radius:50%;
     background:var(--green); box-shadow:0 0 8px var(--green);
-    animation:pulse 1.5s infinite;
+    animation:pulse 1.5s infinite; flex:0 0 auto;
   }
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  .lab-header .title{flex:1}
+  .lab-header .title{flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .lab-header .readout{
     font-family:'SF Mono',ui-monospace,monospace;
-    color:var(--blue); font-size:12px;
+    color:var(--blue); font-size:12px; flex:0 0 auto;
   }
 
   .lab-body{display:flex; padding:14px 16px; gap:12px; align-items:stretch;}
@@ -229,6 +229,76 @@
   .cta:hover:not(:disabled){filter:brightness(1.05);}
   .cta:active:not(:disabled){transform:translateY(2px); border-bottom-width:2px;}
   .cta:disabled{background:var(--line); border-color:var(--line); color:#AFAFAF; cursor:not-allowed;}
+
+  /* ============ MOBILE LAYOUT ============ */
+  @media (max-width: 520px){
+    .lab-body{
+      flex-direction: column;
+      padding: 12px;
+      gap: 10px;
+    }
+    .beaker-wrap{
+      flex: 0 0 auto;
+      min-height: 0;
+      height: 240px;
+      width: 100%;
+    }
+    .side-panel{
+      flex: 0 0 auto;
+      flex-direction: row;
+      gap: 8px;
+    }
+    .mini-readout{
+      flex: 1;
+      padding: 8px 10px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .mini-readout .label{
+      font-size: 8px;
+      letter-spacing: .6px;
+      margin-bottom: 3px;
+    }
+    .mini-readout .value{
+      font-size: 12px;
+    }
+    .compare-box{
+      flex: 1.3;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      padding: 8px 10px;
+      text-align: left;
+      min-width: 0;
+    }
+    .compare-box .emoji{
+      font-size: 20px;
+      margin-bottom: 0;
+      flex: 0 0 auto;
+    }
+    .compare-box .icon-svg{ display: none; }
+    .compare-box .text{
+      font-size: 9px;
+      letter-spacing: .3px;
+      line-height: 1.2;
+    }
+    .lab-header{ padding: 10px 12px; gap: 8px; }
+    .lab-header .title{ font-size: 10px; letter-spacing: .8px; }
+    .lab-header .readout{ font-size: 11px; }
+    .controls{ padding: 12px 12px 14px; }
+    .slider-row{ margin-bottom: 8px; }
+    .preset{ padding: 6px 2px 5px; }
+    .preset .emo{ font-size: 13px; }
+    .preset .num{ font-size: 8px; }
+  }
+
+  @media (max-width: 360px){
+    .beaker-wrap{ height: 200px; }
+    .compare-box .emoji{ font-size: 18px; }
+    .compare-box .text{ font-size: 8px; }
+    .mini-readout .value{ font-size: 11px; }
+  }
 </style>
 </head>
 <body>
@@ -747,7 +817,6 @@ function formatCharge(c){
   return (c/1000).toFixed(0) + 'k C';
 }
 
-// Vector icons — resolved per tier
 const cmpIcons = {
   nothing: `<circle cx="16" cy="16" r="3" fill="#5a6a76" opacity="0.5"/>`,
   bacteria: `<ellipse cx="16" cy="16" rx="8" ry="4" fill="#7CFF6B" transform="rotate(-25 16 16)"/>
@@ -778,13 +847,6 @@ const cmpIcons = {
           <rect x="19" y="18" width="9" height="2.4" fill="#C8D7E1" stroke="#8a99a4" stroke-width="0.8" transform="rotate(45 19 18)"/>`
 };
 
-// ============ COMPARISON TIERS ============
-// Verified against Z = 1.3e-7 kg/C:
-//   1 C     → 1.3e-7 kg  → half a grain of salt
-//   100 C   → 1.3e-5 kg  → a pinch of salt
-//   1k C    → 1.3e-4 kg  → a grain of rice
-//   10k C   → 1.3e-3 kg  → one paperclip
-//   20k C   → 2.6e-3 kg  → two paperclips
 function getComparison(kg){
   if (kg === 0)             return { key:'nothing',   emoji:'💧', icon:'nothing',   text:'Nothing<br>yet' };
   if (kg < 3e-8)            return { key:'bacteria',  emoji:'🦠', icon:'bacteria',  text:'Less than<br>a bacterium' };
@@ -816,7 +878,6 @@ function applyCharge(c){
   cmpIcon.innerHTML = cmpIcons[cmp.icon];
   cmpText.innerHTML = cmp.text;
 
-  // little pop when the tier changes
   if (state.lastTierKey !== cmp.key){
     state.lastTierKey = cmp.key;
     cmpEmoji.classList.remove('pop');
