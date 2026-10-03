@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Mirror Lab · Duolingo Physics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+    <script src="https://unpkg.com/@rive-app/canvas@latest">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #e5e7eb;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            margin: 0;
+        }
+
+        .app-container {
+            max-width: 420px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid transparent;
+        }
+        .app-container.correct {
+            border-color: #58cc02;
+            box-shadow: 0 0 0 4px rgba(88, 204, 2, 0.12), 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+        .app-container.incorrect {
+            border-color: #ff4b4b;
+            box-shadow: 0 0 0 4px rgba(255, 75, 75, 0.12), 0 8px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .xp-badge {
+            background: #f0f2f5;
+            padding: 4px 12px 4px 8px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #3c3c3c;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid #e0e4e8;
+        }
+        .xp-badge .xp-icon {
+            font-size: 16px;
+        }
+        .level-badge {
+            background: #ffd700;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #1a1a1a;
+            border: 1px solid #e0a800;
+        }
+        .hearts {
+            display: flex;
+            gap: 2px;
+            font-size: 22px;
+            user-select: none;
+        }
+        .heart-item {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: inline-block;
+        }
+        .heart-item.breaking {
+            animation: heartBreak 0.6s ease forwards;
+        }
+        @keyframes heartBreak {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            30% {
+                transform: scale(1.4) rotate(15deg);
+            }
+            60% {
+                transform: scale(0.6) rotate(-20deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0) rotate(40deg);
+                opacity: 0;
+            }
+        }
+        .streak-badge {
+            background: #f0f2f5;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #3c3c3c;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid #e0e4e8;
+        }
+        .streak-badge .fire {
+            color: #ff6b6b;
+            font-size: 14px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 40px;
+            overflow: hidden;
+            margin: 2px 0 6px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #58cc02, #1cb0f6);
+            border-radius: 40px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .chart-section {
+            background: #fafbfc;
+            border-radius: 20px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+        .chart-section .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 240px;
+            position: relative;
+            background: #ffffff;
+            border-radius: 14px;
+        }
+        #mirrorCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 14px;
+            background: #ffffff;
+            touch-action: none;
+        }
+
+        .wave-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 4px 10px;
+            border: 1px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+        .wave-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+        .wave-btn:hover {
+            background: #e9ecef;
+        }
+        .wave-btn:active {
+            transform: scale(0.94);
+        }
+        .wave-btn.active {
+            background: #1cb0f6;
+            border-color: #1cb0f6;
+            color: #ffffff;
+        }
+        .wave-info {
+            font-size: 11px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        .wave-info strong {
+            color: #ff6b6b;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            pointer-events: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 10;
+            font-family: 'Inter', sans-serif;
+        }
+        .chart-tooltip.visible {
+            opacity: 1;
+        }
+
+        .rive-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            border-radius: 20px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rive-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .rive-overlay canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+        .rive-fallback {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 16px;
+        }
+        .rive-fallback .big-emoji {
+            font-size: 56px;
+            margin-bottom: 6px;
+            animation: dance 0.8s infinite alternate ease-in-out;
+        }
+        .rive-fallback h2 {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .rive-fallback p {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        @keyframes dance {
+            0% {
+                transform: rotate(-8deg) scale(1);
+            }
+            100% {
+                transform: rotate(8deg) scale(1.08);
+            }
+        }
+
+        .question-area {
+            padding: 2px 0;
+        }
+        .question-text {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+        .question-text .hint {
+            font-weight: 400;
+            color: #888;
+            font-size: 13px;
+        }
+        .question-text .formula {
+            background: #f0f2f5;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 8px 14px;
+            border: 2px solid #dee2e6;
+            transition: border-color 0.2s;
+            min-height: 54px;
+        }
+        .input-row.focused {
+            border-color: #1cb0f6;
+            background: #f0f7ff;
+        }
+        .input-row .input-display {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            letter-spacing: 2px;
+            min-width: 60px;
+            text-align: center;
+            padding: 4px 8px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-row .input-display .cursor-blink {
+            display: inline-block;
+            width: 2px;
+            height: 28px;
+            background: #1cb0f6;
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+        .input-row .input-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .numeric-keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .key {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            padding: 14px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .key:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        .key:active {
+            transform: scale(0.92);
+        }
+        .key.key-clear {
+            background: #fde8e8;
+            border-color: #ffb3b3;
+            color: #cc3333;
+        }
+        .key.key-clear:hover {
+            background: #fcd5d5;
+        }
+        .key.key-submit {
+            background: #1cb0f6;
+            border-color: #1cb0f6;
+            color: #ffffff;
+        }
+        .key.key-submit:hover {
+            background: #28b9ff;
+        }
+        .key.key-submit:active {
+            transform: scale(0.92);
+        }
+        .key.key-backspace {
+            background: #f0f2f5;
+            border-color: #d0d4da;
+        }
+        .key.key-backspace:hover {
+            background: #e4e7ec;
+        }
+        .key.key-neg {
+            background: #f0f2f5;
+            border-color: #d0d4da;
+        }
+        .key.key-neg:hover {
+            background: #e4e7ec;
+        }
+        .key.key-dot {
+            background: #f0f2f5;
+            border-color: #d0d4da;
+        }
+        .key.key-dot:hover {
+            background: #e4e7ec;
+        }
+        .key.key-zero {
+            grid-column: span 1;
+        }
+        .key.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .feedback-area {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 6px 12px;
+            transition: all 0.2s;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .feedback-area.correct {
+            color: #58cc02;
+            background: #f0fae8;
+        }
+        .feedback-area.incorrect {
+            color: #ff4b4b;
+            background: #fde8e8;
+        }
+        .feedback-area .highlight-answer {
+            background: #e6f5db;
+            padding: 2px 10px;
+            border-radius: 40px;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+        .feedback-area .explanation {
+            font-weight: 400;
+            color: #555;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .confidence-section {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .confidence-section.visible {
+            display: flex;
+        }
+        .confidence-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            text-align: center;
+        }
+        .confidence-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .conf-btn {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 40px;
+            padding: 6px 18px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+        }
+        .conf-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        .conf-btn:active {
+            transform: scale(0.94);
+        }
+        .conf-btn.easy {
+            border-color: #58cc02;
+            color: #58cc02;
+        }
+        .conf-btn.easy:hover {
+            background: #f0fae8;
+        }
+        .conf-btn.hard {
+            border-color: #ffb347;
+            color: #ffb347;
+        }
+        .conf-btn.hard:hover {
+            background: #fff4e8;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: #1cb0f6;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 0 #0f8bc9;
+            touch-action: manipulation;
+        }
+        .action-btn:hover:not(:disabled) {
+            background: #28b9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #0f8bc9;
+        }
+        .action-btn:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #0f8bc9;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #0f8bc9;
+        }
+        .action-btn.continue-btn {
+            background: #58cc02;
+            box-shadow: 0 4px 0 #3b8b00;
+        }
+        .action-btn.continue-btn:hover:not(:disabled) {
+            background: #62d80a;
+            box-shadow: 0 6px 0 #3b8b00;
+        }
+
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            15% {
+                transform: translateX(-10px);
+            }
+            30% {
+                transform: translateX(8px);
+            }
+            45% {
+                transform: translateX(-6px);
+            }
+            60% {
+                transform: translateX(4px);
+            }
+            80% {
+                transform: translateX(-2px);
+            }
+        }
+        .shake {
+            animation: shake 0.4s ease;
+        }
+        @keyframes pop {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.06);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .app-container {
+                padding: 12px;
+                border-radius: 20px;
+            }
+            .chart-section {
+                padding: 6px;
+            }
+            .chart-section .canvas-wrapper {
+                min-height: 180px;
+            }
+            .action-btn {
+                font-size: 14px;
+                padding: 12px;
+            }
+            .question-text {
+                font-size: 15px;
+            }
+            .hearts {
+                font-size: 18px;
+            }
+            .xp-badge {
+                font-size: 11px;
+                padding: 2px 10px 2px 6px;
+            }
+            .streak-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+            }
+            .wave-btn {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+            .wave-info {
+                font-size: 10px;
+            }
+            .key {
+                font-size: 17px;
+                padding: 11px 0;
+            }
+            .input-row .input-display {
+                font-size: 24px;
+                min-width: 50px;
+                min-height: 38px;
+            }
+            .numeric-keypad {
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+
+        <!-- TOP BAR -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <div class="xp-badge">
+                    <span class="xp-icon">⭐</span>
+                    <span id="xpDisplay">0</span> XP
+                </div>
+                <div class="level-badge" id="levelDisplay">Lv.1</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="streak-badge">
+                    <span class="fire">🔥</span>
+                    <span id="streakCount">0</span>
+                </div>
+                <div class="hearts" id="heartsContainer">
+                    <span class="heart-item" data-index="0">❤️</span>
+                    <span class="heart-item" data-index="1">❤️</span>
+                    <span class="heart-item" data-index="2">❤️</span>
+                    <span class="heart-item" data-index="3">❤️</span>
+                    <span class="heart-item" data-index="4">❤️</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+        </div>
+
+        <!-- MIRROR DIAGRAM -->
+        <div class="chart-section" id="chartSection">
+            <div class="canvas-wrapper">
+                <canvas id="mirrorCanvas"></canvas>
+                <div class="chart-tooltip" id="chartTooltip">f = 15 cm · u = 30 cm</div>
+            </div>
+            <div class="wave-controls">
+                <button class="wave-btn active" id="playBtn">⏸</button>
+                <button class="wave-btn" id="resetBtn">⟲</button>
+                <span class="wave-info">
+                    f = <strong>15</strong> cm · u = <strong>30</strong> cm
+                </span>
+            </div>
+            <div class="rive-overlay" id="riveOverlay">
+                <canvas id="riveCanvas"></canvas>
+                <div class="rive-fallback" id="riveFallback">
+                    <div class="big-emoji">🌟</div>
+                    <h2>Level Up!</h2>
+                    <p>+10 XP · Keep going!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUESTION -->
+        <div class="question-area">
+            <div class="question-text">
+                <span style="display:block;margin-bottom:4px;">🔬 An object is 30 cm from a concave mirror</span>
+                <span style="display:block;font-weight:600;color:#1cb0f6;">f = 15 cm</span>
+                <span style="display:block;margin-top:6px;">
+                    Magnification <span class="formula">m = ?</span>
+                    <span class="hint"> (enter numeric value)</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- INPUT ROW -->
+        <div class="input-row" id="inputRow">
+            <span class="input-label">m =</span>
+            <div class="input-display" id="inputDisplay">
+                <span id="inputValue"></span><span class="cursor-blink"></span>
+            </div>
+        </div>
+
+        <!-- NUMERIC KEYPAD -->
+        <div class="numeric-keypad" id="keypad">
+            <div class="key" data-value="7">7</div>
+            <div class="key" data-value="8">8</div>
+            <div class="key" data-value="9">9</div>
+            <div class="key key-backspace" data-value="backspace">⌫</div>
+
+            <div class="key" data-value="4">4</div>
+            <div class="key" data-value="5">5</div>
+            <div class="key" data-value="6">6</div>
+            <div class="key key-clear" data-value="clear">C</div>
+
+            <div class="key" data-value="1">1</div>
+            <div class="key" data-value="2">2</div>
+            <div class="key" data-value="3">3</div>
+            <div class="key key-neg" data-value="neg">±</div>
+
+            <div class="key key-dot" data-value=".">.</div>
+            <div class="key key-zero" data-value="0">0</div>
+            <div class="key key-submit" data-value="submit">✓</div>
+            <div class="key" style="background:transparent;border-color:transparent;pointer-events:none;"></div>
+        </div>
+
+        <!-- FEEDBACK -->
+        <div class="feedback-area" id="feedbackArea">Enter the magnification using the keypad, then press ✓.</div>
+
+        <!-- CONFIDENCE -->
+        <div class="confidence-section" id="confidenceSection">
+            <div class="confidence-label">How confident are you?</div>
+            <div class="confidence-buttons">
+                <button class="conf-btn easy" id="confEasy">😊 Easy</button>
+                <button class="conf-btn hard" id="confHard">🤔 Hard</button>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTON -->
+        <button class="action-btn" id="actionBtn">Check</button>
+
+    </div>
+
+    <script>
+        (function() {
+            // ─── CONFIG ───
+            const CORRECT_ANSWER = '-1';
+            const RIVE_URL = 'https://editor.rive.app/file/22243-46463-level-up/0';
+
+            // ─── DOM REFS ───
+            const container = document.getElementById('appContainer');
+            const canvas = document.getElementById('mirrorCanvas');
+            const ctx = canvas.getContext('2d');
+            const chartSection = document.getElementById('chartSection');
+            const tooltip = document.getElementById('chartTooltip');
+
+            const inputDisplay = document.getElementById('inputValue');
+            const feedback = document.getElementById('feedbackArea');
+            const actionBtn = document.getElementById('actionBtn');
+            const heartItems = document.querySelectorAll('.heart-item');
+            const streakSpan = document.getElementById('streakCount');
+            const xpSpan = document.getElementById('xpDisplay');
+            const levelSpan = document.getElementById('levelDisplay');
+            const progressFill = document.getElementById('progressFill');
+            const confidenceSection = document.getElementById('confidenceSection');
+            const confEasy = document.getElementById('confEasy');
+            const confHard = document.getElementById('confHard');
+
+            const playBtn = document.getElementById('playBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const inputRow = document.getElementById('inputRow');
+
+            const riveOverlay = document.getElementById('riveOverlay');
+            const riveCanvas = document.getElementById('riveCanvas');
+            const riveFallback = document.getElementById('riveFallback');
+
+            // ─── STATE ───
+            let inputValue = '';
+            let isAnswered = false;
+            let hearts = 5;
+            let streak = 0;
+            let xp = 0;
+            let level = 1;
+            let isConfidenceMode = false;
+            let isAnimatingRays = false;
+            let rayProgress = 0;
+
+            // Mirror constants (in cm, mapped to pixels)
+            const f = 15;
+            const u = 30;
+            const v = 30; // 1/f = 1/u + 1/v → v = 30cm
+            const m = -v / u; // -1
+
+            // Rive
+            let riveInstance = null;
+            let riveLoaded = false;
+
+            // ─── AUDIO ───
+            let audioCtx = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            function playSound(type) {
+                try {
+                    initAudio();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    if (type === 'correct') {
+                        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                        osc.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.08);
+                        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                        osc.start(audioCtx.currentTime);
+                        osc.stop(audioCtx.currentTime + 0.25);
+                    } else if (type === 'incorrect') {
+                        osc.frequency.setValueAtTime(330, audioCtx.currentTime);
+                        osc.frequency.setValueAtTime(280, audioCtx.currentTime + 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                        osc.start(audioCtx.currentTime);
+                        osc.stop(audioCtx.currentTime + 0.35);
+                    } else if (type === 'levelup') {
+                        const notes = [523, 659, 784, 1047];
+                        notes.forEach((freq, i) => {
+                            const o = audioCtx.createOscillator();
+                            const g = audioCtx.createGain();
+                            o.connect(g);
+                            g.connect(audioCtx.destination);
+                            o.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+                            g.gain.setValueAtTime(0.15, audioCtx.currentTime + i * 0.1);
+                            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.1 +
+                                0.2);
+                            o.start(audioCtx.currentTime + i * 0.1);
+                            o.stop(audioCtx.currentTime + i * 0.1 + 0.2);
+                        });
+                    } else if (type === 'heartbreak') {
+                        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.3);
+                        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                        osc.start(audioCtx.currentTime);
+                        osc.stop(audioCtx.currentTime + 0.3);
+                    }
+                } catch (e) { /* silent fallback */ }
+            }
+
+            // ─── CANVAS SETUP ───
+            let W, H, dpr;
+
+            function resizeCanvas() {
+                const rect = chartSection.querySelector('.canvas-wrapper').getBoundingClientRect();
+                dpr = window.devicePixelRatio || 1;
+                W = rect.width * dpr;
+                H = rect.height * dpr;
+                canvas.width = W;
+                canvas.height = H;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+                ctx.scale(dpr, dpr);
+                W = rect.width;
+                H = rect.height;
+            }
+            window.addEventListener('resize', resizeCanvas);
+
+            // ─── DRAW MIRROR DIAGRAM ───
+            function drawMirror(progress) {
+                const p = progress || 1;
+                ctx.clearRect(0, 0, W, H);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, W, H);
+
+                const margin = { top: 20, bottom: 20, left: 50, right: 20 };
+                const drawW = W - margin.left - margin.right;
+                const drawH = H - margin.top - margin.bottom;
+
+                // Scale: 1cm = 5px (so 30cm = 150px)
+                const scale = Math.min(drawW / 70, drawH / 40, 5.5);
+                const cx = margin.left + 20; // mirror at x=20px from left edge
+                const cy = margin.top + drawH / 2;
+
+                // Helper: cm → pixels (x: positive to the right)
+                const toX = (cm) => cx + cm * scale;
+                const toY = (cm) => cy - cm * scale;
+
+                // ── Draw grid / axis ──
+                ctx.save();
+                ctx.strokeStyle = '#e9ecef';
+                ctx.lineWidth = 0.5;
+                for (let d = -20; d <= 20; d += 5) {
+                    const x = toX(d);
+                    if (x > margin.left && x < W - margin.right) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, margin.top);
+                        ctx.lineTo(x, H - margin.bottom);
+                        ctx.stroke();
+                    }
+                }
+                for (let d = -15; d <= 15; d += 5) {
+                    const y = toY(d);
+                    if (y > margin.top && y < H - margin.bottom) {
+                        ctx.beginPath();
+                        ctx.moveTo(margin.left, y);
+                        ctx.lineTo(W - margin.right, y);
+                        ctx.stroke();
+                    }
+                }
+                ctx.restore();
+
+                // ── Principal axis ──
+                ctx.save();
+                ctx.strokeStyle = '#adb5bd';
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath();
+                ctx.moveTo(margin.left, cy);
+                ctx.lineTo(W - margin.right, cy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+
+                // ── Mirror (concave, left side) ──
+                ctx.save();
+                const mirrorRadius = 60 * scale;
+                const mirrorAngle = Math.PI * 0.45;
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 2.5;
+
+                // Draw concave mirror as an arc opening to the right
+                ctx.beginPath();
+                const startAngle = -Math.PI / 2 - mirrorAngle;
+                const endAngle = -Math.PI / 2 + mirrorAngle;
+                ctx.arc(cx - 15 * scale, cy, mirrorRadius, startAngle, endAngle);
+                ctx.stroke();
+
+                // Hatch marks on the back (convex side)
+                ctx.strokeStyle = '#8e9eab';
+                ctx.lineWidth = 1;
+                for (let a = -mirrorAngle * 0.7; a <= mirrorAngle * 0.7; a += 0.15) {
+                    const ang = -Math.PI / 2 + a;
+                    const r1 = mirrorRadius - 2;
+                    const r2 = mirrorRadius - 6;
+                    const x1 = cx - 15 * scale + r1 * Math.cos(ang);
+                    const y1 = cy + r1 * Math.sin(ang);
+                    const x2 = cx - 15 * scale + r2 * Math.cos(ang);
+                    const y2 = cy + r2 * Math.sin(ang);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // ── Labels: F, C ──
+                ctx.save();
+                ctx.font = 'bold 11px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+
+                // Focal point (15cm from mirror, to the right)
+                const fx = toX(f);
+                ctx.fillStyle = '#ff6b6b';
+                ctx.beginPath();
+                ctx.arc(fx, cy, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ff6b6b';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('F', fx, cy - 6);
+                ctx.textBaseline = 'top';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.fillStyle = '#868e96';
+                ctx.fillText('15 cm', fx, cy + 8);
+
+                // Center of curvature (30cm from mirror)
+                const cx2 = toX(30);
+                ctx.fillStyle = '#4dabf7';
+                ctx.beginPath();
+                ctx.arc(cx2, cy, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#4dabf7';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('C', cx2, cy - 6);
+                ctx.textBaseline = 'top';
+                ctx.font = '9px Inter, sans-serif';
+                ctx.fillStyle = '#868e96';
+                ctx.fillText('30 cm', cx2, cy + 8);
+                ctx.restore();
+
+                // ── Object (at u=30cm, height = 4cm) ──
+                const objX = toX(u);
+                const objH = 4 * scale;
+                ctx.save();
+                ctx.strokeStyle = '#1cb0f6';
+                ctx.lineWidth = 2.5;
+                ctx.fillStyle = '#1cb0f6';
+                // Arrow up
+                ctx.beginPath();
+                ctx.moveTo(objX, cy);
+                ctx.lineTo(objX, cy - objH);
+                ctx.stroke();
+                // Arrowhead
+                ctx.beginPath();
+                ctx.moveTo(objX - 4, cy - objH + 6);
+                ctx.lineTo(objX, cy - objH);
+                ctx.lineTo(objX + 4, cy - objH + 6);
+                ctx.stroke();
+                // Label
+                ctx.fillStyle = '#1cb0f6';
+                ctx.font = 'bold 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('Object', objX, cy - objH - 4);
+                ctx.font = '9px Inter, sans-serif';
+                ctx.fillStyle = '#868e96';
+                ctx.textBaseline = 'top';
+                ctx.fillText('u = 30 cm', objX, cy + 4);
+                ctx.restore();
+
+                // ── Image (at v=30cm, inverted, same size) ──
+                const imgX = toX(v);
+                const imgH = 4 * scale;
+                ctx.save();
+                ctx.strokeStyle = '#ff6b6b';
+                ctx.lineWidth = 2.5;
+                ctx.fillStyle = '#ff6b6b';
+                // Arrow down (inverted)
+                ctx.beginPath();
+                ctx.moveTo(imgX, cy);
+                ctx.lineTo(imgX, cy + imgH);
+                ctx.stroke();
+                // Arrowhead
+                ctx.beginPath();
+                ctx.moveTo(imgX - 4, cy + imgH - 6);
+                ctx.lineTo(imgX, cy + imgH);
+                ctx.lineTo(imgX + 4, cy + imgH - 6);
+                ctx.stroke();
+                ctx.fillStyle = '#ff6b6b';
+                ctx.font = 'bold 10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText('Image', imgX, cy + imgH + 4);
+                ctx.font = '9px Inter, sans-serif';
+                ctx.fillStyle = '#868e96';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText('v = 30 cm', imgX, cy - 4);
+                ctx.restore();
+
+                // ── Rays (3 rays from top of object to mirror to image) ──
+                const topObjX = objX;
+                const topObjY = cy - objH;
+                const topImgX = imgX;
+                const topImgY = cy + imgH;
+
+                // Ray 1: Parallel ray → reflects through F
+                // Ray 2: Focal ray → reflects parallel
+                // Ray 3: Center ray → reflects back
+
+                // Only draw if progress > 0
+                if (p > 0) {
+                    const rayLen = p;
+                    ctx.save();
+
+                    // ── Ray 1: Parallel to axis, reflects through F ──
+                    ctx.strokeStyle = '#f59f00';
+                    ctx.lineWidth = 1.8;
+                    ctx.globalAlpha = 0.7;
+
+                    // From object top to mirror (horizontal)
+                    const r1_endX = cx;
+                    const r1_endY = topObjY;
+                    const r1_midX = cx + (fx - cx) * 0.5 * rayLen;
+                    const r1_midY = topObjY + (cy - topObjY) * 0.3 * rayLen;
+
+                    ctx.beginPath();
+                    ctx.moveTo(topObjX, topObjY);
+                    ctx.lineTo(r1_endX, r1_endY);
+                    ctx.stroke();
+
+                    // From mirror through F to image
+                    const r1b_startX = cx;
+                    const r1b_startY = topObjY;
+                    // Reflect through F
+                    const r1b_endX = topImgX;
+                    const r1b_endY = topImgY;
+
+                    // Draw with progress
+                    const r1b_curX = cx + (r1b_endX - cx) * rayLen;
+                    const r1b_curY = topObjY + (r1b_endY - topObjY) * rayLen;
+
+                    ctx.strokeStyle = '#fab005';
+                    ctx.globalAlpha = 0.6;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, topObjY);
+                    // Curve through F
+                    const fX = fx;
+                    const fY = cy;
+                    const cp1x = cx + (fX - cx) * 0.4;
+                    const cp1y = topObjY + (fY - topObjY) * 0.2;
+                    const cp2x = fX + (r1b_endX - fX) * 0.3;
+                    const cp2y = fY + (r1b_endY - fY) * 0.2;
+                    ctx.quadraticCurveTo(cp1x, cp1y, fX, fY);
+                    ctx.quadraticCurveTo(cp2x, cp2y, r1b_curX, r1b_curY);
+                    ctx.stroke();
+
+                    // ── Ray 2: Through F, reflects parallel ──
+                    ctx.strokeStyle = '#20c997';
+                    ctx.globalAlpha = 0.7;
+                    ctx.lineWidth = 1.8;
+
+                    // From object top through F to mirror
+                    const r2_startX = topObjX;
+                    const r2_startY = topObjY;
+                    const r2_mirrorX = cx;
+                    // Line from object top through F to mirror
+                    const slope2 = (cy - topObjY) / (fx - topObjX);
+                    const r2_mirrorY = topObjY + slope2 * (cx - topObjX);
+
+                    ctx.globalAlpha = 0.5 * rayLen;
+                    ctx.beginPath();
+                    ctx.moveTo(r2_startX, r2_startY);
+                    const r2_midX2 = cx + (fx - cx) * 0.6 * rayLen;
+                    const r2_midY2 = topObjY + slope2 * (r2_midX2 - topObjX);
+                    ctx.lineTo(r2_midX2, r2_midY2);
+                    ctx.stroke();
+
+                    // Reflect parallel to axis
+                    ctx.strokeStyle = '#20c997';
+                    ctx.globalAlpha = 0.6;
+                    const r2b_endX = topImgX;
+                    const r2b_endY = topObjY + slope2 * (cx - topObjX); // same height as mirror hit
+
+                    ctx.globalAlpha = 0.5 * rayLen;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, r2_mirrorY);
+                    const r2b_curX2 = cx + (r2b_endX - cx) * rayLen;
+                    ctx.lineTo(r2b_curX2, r2_mirrorY);
+                    ctx.stroke();
+
+                    // ── Ray 3: Through C, reflects back ──
+                    ctx.strokeStyle = '#cc5de8';
+                    ctx.globalAlpha = 0.7;
+                    ctx.lineWidth = 1.8;
+
+                    // From object top through C to mirror
+                    const cX = toX(30);
+                    const cY = cy;
+                    const slope3 = (cY - topObjY) / (cX - topObjX);
+                    const r3_mirrorY = topObjY + slope3 * (cx - topObjX);
+
+                    ctx.globalAlpha = 0.4 * rayLen;
+                    ctx.beginPath();
+                    ctx.moveTo(topObjX, topObjY);
+                    const r3_midX3 = cx + (cX - cx) * 0.6 * rayLen;
+                    const r3_midY3 = topObjY + slope3 * (r3_midX3 - topObjX);
+                    ctx.lineTo(r3_midX3, r3_midY3);
+                    ctx.stroke();
+
+                    // Reflect back along same path
+                    ctx.strokeStyle = '#cc5de8';
+                    ctx.globalAlpha = 0.4 * rayLen;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, r3_mirrorY);
+                    const r3b_curX3 = cx + (topImgX - cx) * rayLen;
+                    const r3b_curY3 = r3_mirrorY + (topImgY - r3_mirrorY) * rayLen;
+                    ctx.lineTo(r3b_curX3, r3b_curY3);
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                    // ── Draw ray labels ──
+                    ctx.save();
+                    ctx.font = '8px Inter, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = '#f59f00';
+                    ctx.globalAlpha = 0.7;
+                    ctx.fillText('①', cx + 4, topObjY - 2);
+                    ctx.fillStyle = '#20c997';
+                    ctx.fillText('②', cx + 4, r2_mirrorY - 2);
+                    ctx.fillStyle = '#cc5de8';
+                    ctx.fillText('③', cx + 4, r3_mirrorY - 2);
+                    ctx.restore();
+                }
+
+                // ── Info box ──
+                ctx.save();
+                const boxX = W - margin.right - 100;
+                const boxY = margin.top + 4;
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.shadowColor = 'rgba(0,0,0,0.04)';
+                ctx.shadowBlur = 6;
+                ctx.roundRect(boxX, boxY, 94, 38, 6);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.font = '9px Inter, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#495057';
+                ctx.fillText('f = 15 cm', boxX + 6, boxY + 4);
+                ctx.fillText('u = 30 cm', boxX + 6, boxY + 18);
+                ctx.fillStyle = '#ff6b6b';
+                ctx.font = 'bold 9px Inter, sans-serif';
+                ctx.fillText('m = -1', boxX + 6, boxY + 32);
+                ctx.restore();
+
+                // ── Legend ──
+                ctx.save();
+                const legX = margin.left + 4;
+                const legY = margin.top + 4;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.shadowColor = 'rgba(0,0,0,0.04)';
+                ctx.shadowBlur = 4;
+                ctx.roundRect(legX - 2, legY - 2, 86, 44, 5);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.font = '8px Inter, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#1cb0f6';
+                ctx.fillRect(legX, legY + 4, 12, 2);
+                ctx.fillStyle = '#495057';
+                ctx.fillText('Object', legX + 16, legY + 1);
+                ctx.fillStyle = '#ff6b6b';
+                ctx.fillRect(legX, legY + 20, 12, 2);
+                ctx.fillStyle = '#495057';
+                ctx.fillText('Image (real)', legX + 16, legY + 17);
+                ctx.restore();
+            }
+
+            // ─── roundRect polyfill ───
+            if (!CanvasRenderingContext2D.prototype.roundRect) {
+                CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                    if (r > w / 2) r = w / 2;
+                    if (r > h / 2) r = h / 2;
+                    this.moveTo(x + r, y);
+                    this.lineTo(x + w - r, y);
+                    this.quadraticCurveTo(x + w, y, x + w, y + r);
+                    this.lineTo(x + w, y + h - r);
+                    this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                    this.lineTo(x + r, y + h);
+                    this.quadraticCurveTo(x, y + h, x, y + h - r);
+                    this.lineTo(x, y + r);
+                    this.quadraticCurveTo(x, y, x + r, y);
+                    return this;
+                };
+            }
+
+            // ─── ANIMATION LOOP ───
+            let animFrame = 0;
+
+            function animateDiagram() {
+                animFrame++;
+                const progress = isAnimatingRays ? Math.min(rayProgress + 0.008, 1) : 1;
+                if (isAnimatingRays && progress < 1) {
+                    rayProgress = progress;
+                } else if (isAnimatingRays && progress >= 1) {
+                    isAnimatingRays = false;
+                }
+                drawMirror(isAnimatingRays ? rayProgress : 1);
+                requestAnimationFrame(animateDiagram);
+            }
+
+            // ─── CONTROLS ───
+            let isPlaying = true;
+
+            playBtn.addEventListener('click', function() {
+                isPlaying = !isPlaying;
+                this.textContent = isPlaying ? '⏸' : '▶';
+                this.classList.toggle('active', isPlaying);
+                if (isPlaying) {
+                    // Resume animation effect
+                }
+            });
+
+            resetBtn.addEventListener('click', function() {
+                rayProgress = 0;
+                isAnimatingRays = true;
+            });
+
+            // ─── RIVE ───
+            function initRive() {
+                const rect = chartSection.getBoundingClientRect();
+                riveCanvas.width = rect.width;
+                riveCanvas.height = rect.height;
+                riveCanvas.style.width = rect.width + 'px';
+                riveCanvas.style.height = rect.height + 'px';
+                try {
+                    riveInstance = new rive.Rive({
+                        src: RIVE_URL,
+                        canvas: riveCanvas,
+                        autoplay: false,
+                        artboard: 'Level Up',
+                        onLoad: () => {
+                            riveLoaded = true;
+                            riveInstance.resizeDrawingSurfaceToCanvas();
+                            riveInstance.pause();
+                        },
+                        onError: () => {
+                            riveLoaded = false;
+                            riveFallback.style.display = 'flex';
+                        }
+                    });
+                } catch (e) {
+                    riveLoaded = false;
+                    riveFallback.style.display = 'flex';
+                }
+            }
+
+            function triggerCelebration() {
+                riveOverlay.classList.add('active');
+                if (riveLoaded && riveInstance) {
+                    riveInstance.play();
+                    setTimeout(() => {
+                        riveInstance.pause();
+                        riveOverlay.classList.remove('active');
+                    }, 3000);
+                } else {
+                    setTimeout(() => {
+                        riveOverlay.classList.remove('active');
+                    }, 2500);
+                }
+                playSound('levelup');
+            }
+
+            // ─── XP & PROGRESS ───
+            function addXP(amount) {
+                xp += amount;
+                xpSpan.textContent = xp;
+                const newLevel = Math.floor(xp / 100) + 1;
+                if (newLevel > level) {
+                    level = newLevel;
+                    levelSpan.textContent = 'Lv.' + level;
+                    triggerCelebration();
+                }
+                const progress = (xp % 100) / 100;
+                progressFill.style.width = (progress * 100) + '%';
+            }
+
+            // ─── HEARTS ───
+            function updateHearts() {
+                heartItems.forEach((el, i) => {
+                    if (i >= hearts) el.textContent = '🖤';
+                    else el.textContent = '❤️';
+                });
+            }
+
+            function loseHeart() {
+                if (hearts <= 0) return;
+                hearts--;
+                const el = heartItems[hearts];
+                if (el) {
+                    el.classList.add('breaking');
+                    playSound('heartbreak');
+                    setTimeout(() => {
+                        el.textContent = '🖤';
+                        el.classList.remove('breaking');
+                    }, 600);
+                }
+                updateHearts();
+                if (hearts === 0) {
+                    feedback.className = 'feedback-area incorrect';
+                    feedback.innerHTML = '💔 No hearts left! Tap Continue to try again.';
+                    actionBtn.textContent = 'Continue';
+                    actionBtn.className = 'action-btn continue-btn';
+                    actionBtn.disabled = false;
+                }
+            }
+
+            // ─── FEEDBACK ───
+            function showExplanation(isCorrect) {
+                if (isCorrect) {
+                    feedback.className = 'feedback-area correct';
+                    feedback.innerHTML = `
+                        ✅ Perfect! <span class="highlight-answer">m = -1</span>
+                        <span class="explanation">Image is real, inverted, and same size (v = u = 30 cm).</span>
+                    `;
+                } else {
+                    feedback.className = 'feedback-area incorrect';
+                    feedback.innerHTML = `
+                        ❌ Not quite. The magnification is <span class="highlight-answer">m = -1</span>
+                        <span class="explanation">v = 30 cm, u = 30 cm → m = -v/u = -1 (inverted, same size).</span>
+                    `;
+                }
+            }
+
+            // ─── RESET ───
+            function resetExercise() {
+                isAnswered = false;
+                isConfidenceMode = false;
+                inputValue = '';
+                inputDisplay.textContent = '';
+                feedback.className = 'feedback-area';
+                feedback.textContent = 'Enter the magnification using the keypad, then press ✓.';
+                actionBtn.textContent = 'Check';
+                actionBtn.className = 'action-btn';
+                actionBtn.disabled = false;
+                container.classList.remove('correct', 'incorrect', 'shake');
+                confidenceSection.classList.remove('visible');
+                if (riveInstance && riveLoaded) riveInstance.pause();
+                riveOverlay.classList.remove('active');
+                inputRow.classList.remove('focused');
+                document.querySelectorAll('.key').forEach(k => k.classList.remove('disabled'));
+                rayProgress = 0;
+                isAnimatingRays = true;
+                drawMirror(0);
+            }
+
+            // ─── NEXT QUESTION ───
+            function nextQuestion() {
+                resetExercise();
+                feedback.textContent = 'Try again! Enter the magnification for a concave mirror with f = 15 cm, u = 30 cm.';
+            }
+
+            // ─── HANDLE CHECK ───
+            function handleCheck() {
+                if (isConfidenceMode) {
+                    nextQuestion();
+                    return;
+                }
+
+                if (isAnswered) {
+                    nextQuestion();
+                    return;
+                }
+
+                if (inputValue === '' || inputValue === '-' || inputValue === '.') {
+                    feedback.className = 'feedback-area incorrect';
+                    feedback.textContent = '✋ Enter a value first!';
+                    container.classList.add('shake');
+                    setTimeout(() => container.classList.remove('shake'), 400);
+                    return;
+                }
+
+                const isCorrect = inputValue === CORRECT_ANSWER;
+
+                if (isCorrect) {
+                    isAnswered = true;
+                    streak++;
+                    streakSpan.textContent = streak;
+
+                    const bonus = Math.min(streak, 5);
+                    const earnedXP = 10 + bonus;
+                    addXP(earnedXP);
+
+                    showExplanation(true);
+                    container.classList.add('correct');
+                    playSound('correct');
+
+                    if (streak > 0 && streak % 3 === 0) {
+                        triggerCelebration();
+                    }
+
+                    actionBtn.textContent = 'Continue';
+                    actionBtn.className = 'action-btn continue-btn';
+                    document.querySelectorAll('.key').forEach(k => k.classList.add('disabled'));
+
+                } else {
+                    isAnswered = true;
+                    streak = 0;
+                    streakSpan.textContent = streak;
+
+                    showExplanation(false);
+                    container.classList.add('incorrect', 'shake');
+                    playSound('incorrect');
+                    setTimeout(() => container.classList.remove('shake'), 400);
+
+                    loseHeart();
+                    actionBtn.textContent = 'Continue';
+                    actionBtn.className = 'action-btn continue-btn';
+                    document.querySelectorAll('.key').forEach(k => k.classList.add('disabled'));
+                }
+
+                setTimeout(() => {
+                    confidenceSection.classList.add('visible');
+                    isConfidenceMode = true;
+                }, 600);
+            }
+
+            // ─── CONFIDENCE HANDLERS ───
+            confEasy.addEventListener('click', function() {
+                confidenceSection.classList.remove('visible');
+                isConfidenceMode = false;
+                feedback.className = 'feedback-area correct';
+                feedback.innerHTML = '😊 Great! You\'re building confidence. Keep it up!';
+                const wasCorrect = container.classList.contains('correct');
+                if (wasCorrect && hearts < 5) {
+                    hearts++;
+                    updateHearts();
+                    feedback.innerHTML += ' ❤️ Bonus heart!';
+                    playSound('correct');
+                }
+            });
+
+            confHard.addEventListener('click', function() {
+                confidenceSection.classList.remove('visible');
+                isConfidenceMode = false;
+                feedback.className = 'feedback-area';
+                feedback.innerHTML = '🤔 Thanks for the feedback! We\'ll make it clearer next time.';
+            });
+
+            // ─── KEYPAD ───
+            const keys = document.querySelectorAll('.key');
+            keys.forEach(key => {
+                key.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (isAnswered || isConfidenceMode) return;
+                    const val = this.dataset.value;
+
+                    if (val === 'submit') {
+                        handleCheck();
+                        return;
+                    }
+
+                    if (val === 'clear') {
+                        inputValue = '';
+                        inputDisplay.textContent = '';
+                        feedback.className = 'feedback-area';
+                        feedback.textContent = 'Enter the magnification using the keypad.';
+                        return;
+                    }
+
+                    if (val === 'backspace') {
+                        inputValue = inputValue.slice(0, -1);
+                        inputDisplay.textContent = inputValue;
+                        return;
+                    }
+
+                    if (val === 'neg') {
+                        if (inputValue.startsWith('-')) {
+                            inputValue = inputValue.slice(1);
+                        } else if (inputValue !== '' && inputValue !== '0') {
+                            inputValue = '-' + inputValue;
+                        } else if (inputValue === '') {
+                            inputValue = '-';
+                        }
+                        inputDisplay.textContent = inputValue;
+                        return;
+                    }
+
+                    // Number or dot
+                    if (val === '.') {
+                        if (inputValue.includes('.')) return;
+                        if (inputValue === '' || inputValue === '-') {
+                            inputValue = inputValue + '0.';
+                        } else {
+                            inputValue = inputValue + '.';
+                        }
+                    } else {
+                        // digit
+                        if (inputValue === '0' && val !== '.') {
+                            inputValue = val;
+                        } else {
+                            inputValue = inputValue + val;
+                        }
+                    }
+                    inputDisplay.textContent = inputValue;
+                    feedback.className = 'feedback-area';
+                    feedback.textContent = `m = ${inputValue || '?'}`;
+                });
+
+                key.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    this.click();
+                }, { passive: false });
+            });
+
+            // ─── ACTION BUTTON ───
+            actionBtn.addEventListener('click', handleCheck);
+
+            // ─── KEYBOARD ───
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    actionBtn.click();
+                }
+                if (e.key === 'Backspace' && !isAnswered && !isConfidenceMode) {
+                    inputValue = inputValue.slice(0, -1);
+                    inputDisplay.textContent = inputValue;
+                    e.preventDefault();
+                }
+                if (e.key >= '0' && e.key <= '9' && !isAnswered && !isConfidenceMode) {
+                    if (inputValue === '0') {
+                        inputValue = e.key;
+                    } else {
+                        inputValue = inputValue + e.key;
+                    }
+                    inputDisplay.textContent = inputValue;
+                    e.preventDefault();
+                }
+                if (e.key === '-' && !isAnswered && !isConfidenceMode) {
+                    if (inputValue.startsWith('-')) {
+                        inputValue = inputValue.slice(1);
+                    } else if (inputValue !== '' && inputValue !== '0') {
+                        inputValue = '-' + inputValue;
+                    } else if (inputValue === '') {
+                        inputValue = '-';
+                    }
+                    inputDisplay.textContent = inputValue;
+                    e.preventDefault();
+                }
+                if (e.key === '.' && !isAnswered && !isConfidenceMode) {
+                    if (!inputValue.includes('.')) {
+                        if (inputValue === '' || inputValue === '-') {
+                            inputValue = inputValue + '0.';
+                        } else {
+                            inputValue = inputValue + '.';
+                        }
+                        inputDisplay.textContent = inputValue;
+                    }
+                    e.preventDefault();
+                }
+            });
+
+            // ─── RESIZE ───
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    resizeCanvas();
+                    drawMirror(isAnimatingRays ? rayProgress : 1);
+                }, 100);
+            });
+
+            // ─── INIT ───
+            setTimeout(() => {
+                resizeCanvas();
+                initRive();
+                updateHearts();
+                addXP(0);
+                streakSpan.textContent = '0';
+                rayProgress = 0;
+                isAnimatingRays = true;
+                drawMirror(0);
+                animateDiagram();
+                document.addEventListener('click', initAudio, { once: true });
+                document.addEventListener('touchstart', initAudio, { once: true });
+
+                // Auto-start ray animation after 300ms
+                setTimeout(() => {
+                    rayProgress = 0;
+                    isAnimatingRays = true;
+                }, 400);
+            }, 100);
+
+            // ─── TOOLTIP ───
+            const canvasWrapper = chartSection.querySelector('.canvas-wrapper');
+            canvasWrapper.addEventListener('mouseenter', () => {
+                tooltip.classList.add('visible');
+            });
+            canvasWrapper.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+            canvasWrapper.addEventListener('mousemove', (e) => {
+                const rect = canvasWrapper.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                tooltip.style.left = (x + 10) + 'px';
+                tooltip.style.top = (y - 8) + 'px';
+                tooltip.textContent = 'Concave mirror · f = 15 cm, u = 30 cm';
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
