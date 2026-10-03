@@ -1,420 +1,850 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Propagation of Sound | The Nucleus</title>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frequency &amp; Period — Study Guide</title>
+<style>
+  :root{
+    --green:#58CC02; --green-dark:#58A700; --green-light:#D7FFB8;
+    --blue:#1CB0F6; --blue-dark:#1899D6; --blue-light:#DDF4FF;
+    --red:#FF4B4B; --red-dark:#EA2B2B; --red-light:#FFDFE0;
+    --yellow:#FFC800; --purple:#CE82FF;
+    --ink:#3C3C3C; --ink-soft:#777; --line:#E5E5E5; --bg:#FFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; justify-content:center; min-height:100vh;
+    font-weight:600;
+  }
+  .app{width:100%; max-width:560px; display:flex; flex-direction:column; min-height:100vh; position:relative;}
 
-    <style>
-        /* --- THEME VARIABLES (Scientific Blue & Teal) --- */
-        :root {
-            --bg-deep: #0B1A2F;
-            --bg-surface: #12263A;
-            --primary: #2A7F8F;
-            --accent: #4ECDC4;
-            --text-main: #FFFFFF;
-            --text-muted: #9FC7D4;
-            --border: rgba(42, 127, 143, 0.25);
-            --card-hover: rgba(42, 127, 143, 0.15);
-            --font: 'Plus Jakarta Sans', sans-serif;
-            --font-mono: 'Inter', monospace;
-        }
+  header{padding:16px 20px 8px; display:flex; align-items:center; gap:12px; position:sticky; top:0; background:var(--bg); z-index:20;}
+  .progress{flex:1; height:16px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .progress-fill{height:100%; width:0%; background:var(--green); border-radius:99px; transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .xp{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--yellow); font-size:15px;}
+  .xp span{color:var(--ink-soft); font-size:13px;}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font);
-            background-color: var(--bg-deep);
-            color: var(--text-main);
-            line-height: 1.6;
-            font-size: 16px;
-        }
-        a { text-decoration: none; color: inherit; }
+  main{flex:1; padding:8px 20px 140px;}
+  .screen{display:none; animation:slide .35s cubic-bezier(.4,0,.2,1);}
+  .screen.active{display:block;}
+  @keyframes slide{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:translateY(0)}}
 
-        /* Background */
-        .glow-orb {
-            position: fixed; 
-            width: min(400px, 80vw); 
-            height: min(400px, 80vw);
-            background: var(--primary); 
-            filter: blur(min(150px, 10vw)); 
-            opacity: 0.12;
-            border-radius: 50%; 
-            z-index: -1; 
-            pointer-events: none;
-        }
-        .glow-1 { top: -10vh; left: -10vw; }
-        .glow-2 { bottom: -10vh; right: -10vw; background: var(--accent); opacity: 0.1; }
+  h1{font-size:26px; font-weight:800; line-height:1.2; margin-bottom:12px;}
+  h2{font-size:20px; font-weight:800; line-height:1.3; margin-bottom:10px;}
+  p{font-size:16px; line-height:1.55; color:var(--ink-soft); margin-bottom:14px;}
+  p strong{color:var(--ink); font-weight:800;}
+  .eyebrow{font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--blue); margin-bottom:8px;}
 
-        .pattern-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                radial-gradient(circle at 30px 30px, var(--border) 1px, transparent 1px),
-                linear-gradient(var(--border) 0.5px, transparent 0.5px),
-                linear-gradient(90deg, var(--border) 0.5px, transparent 0.5px);
-            background-size: 60px 60px, 30px 30px, 30px 30px;
-            pointer-events: none;
-            z-index: -1;
-            opacity: 0.1;
-        }
+  .card{border:2px solid var(--line); border-radius:16px; padding:18px; margin-bottom:16px; background:#fff;}
+  .card.passage{border-color:var(--blue); background:var(--blue-light);}
+  .card.passage p{color:var(--ink); font-size:15px; margin:0; line-height:1.6;}
+  .card.answer{border-color:var(--green); background:var(--green-light); text-align:center;}
+  .card.answer .big{font-size:30px; font-weight:800; color:var(--green-dark); margin:6px 0;}
 
-        /* Header */
-        header {
-            padding: 0.8rem 1.5rem;
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            background: rgba(11, 26, 47, 0.95); 
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            position: sticky; 
-            top: 0; 
-            z-index: 50;
-        }
+  .tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
+    padding:4px 10px; border-radius:99px; margin-bottom:10px;}
+  .tag.green{background:var(--green); color:#fff;}
 
-        .brand { 
-            font-size: 1.2rem; 
-            font-weight: 800; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-        }
-        .brand span { color: var(--accent); }
-        .brand-icon { 
-            width: 28px; height: 28px; 
-            background: var(--accent); 
-            border-radius: 6px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1rem;
-            color: var(--bg-deep); 
-        }
+  .math{font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    font-size:15px; line-height:1.9; background:#F7F7F7;
+    border-radius:12px; padding:16px 18px; margin-bottom:14px;}
+  .math .row{display:flex; justify-content:space-between; gap:12px;}
+  .math .op{color:var(--ink-soft);}
+  .math .res{color:var(--green-dark); font-weight:800; border-top:2px solid var(--line); padding-top:8px; margin-top:8px;}
 
-        .back-button {
-            display: flex; 
-            align-items: center; 
-            gap: 6px;
-            background: rgba(255,255,255,0.05); 
-            padding: 6px 14px; 
-            border-radius: 50px; 
-            border: 1px solid var(--border);
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
-        .back-button:hover {
-            background: var(--accent);
-            color: var(--bg-deep);
-            border-color: var(--accent);
-        }
+  .anchor{display:flex; align-items:center; gap:20px; padding:20px; border:2px dashed var(--line); border-radius:16px; margin-bottom:16px;}
+  .fork-wrap{flex:0 0 60px; position:relative;}
+  .fork-wrap svg{display:block; width:60px; height:80px;}
+  .anchor-text{font-size:15px; line-height:1.55;}
+  .anchor-text b{font-weight:800;}
 
-        /* Main Content */
-        .container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
+  /* ---------- SOUND LAB ---------- */
+  .lab{border:2px solid var(--blue); border-radius:20px; padding:22px 18px; background:var(--blue-light); margin-bottom:18px;}
+  .lab-stage{display:flex; flex-direction:column; align-items:center; margin-bottom:18px;}
+  .play-btn{
+    position:relative; width:120px; height:120px; border-radius:50%;
+    background:var(--blue); border:none; cursor:pointer;
+    display:grid; place-items:center;
+    box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.5);
+    transition:transform .1s, box-shadow .1s;
+  }
+  .play-btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--blue-dark);}
+  .play-btn svg{width:48px; height:48px; fill:#fff;}
+  .play-btn .icon-stop{display:none;}
+  .play-btn.playing .icon-play{display:none;}
+  .play-btn.playing .icon-stop{display:block;}
+  .play-btn.playing{
+    box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.6);
+    animation:ripple 1.4s ease-out infinite;
+  }
+  @keyframes ripple{
+    0%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.55);}
+    100%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 34px rgba(28,176,246,0);}
+  }
+  .lab-readout{margin-top:14px; text-align:center;}
+  .lab-freq{font-size:26px; font-weight:800; color:var(--blue-dark); letter-spacing:-.5px;}
+  .lab-name{font-size:13px; color:var(--ink-soft); margin-top:2px;}
 
-        /* Typography */
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
+  /* ---------- OSCILLOSCOPE ---------- */
+  .scope-wrap{position:relative; background:#0F172A; border-radius:14px; overflow:hidden; padding:10px 0 8px; margin-bottom:14px; box-shadow: inset 0 0 0 1px rgba(125,211,252,.15);}
+  .scope{display:block; width:100%; height:130px;}
+  .scope-foot{display:flex; justify-content:space-between; padding:0 14px; font-size:10px; color:#7DD3FC; font-weight:800; text-transform:uppercase; letter-spacing:.8px; opacity:.75;}
+  .scope-foot .live-dot{display:inline-block; width:6px; height:6px; border-radius:50%; background:#58CC02; margin-right:5px; vertical-align:middle; animation:pulse 1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
 
-        h2 {
-            font-size: 1.6rem;
-            color: var(--accent);
-            margin: 2rem 0 1rem;
-            border-left: 4px solid var(--accent);
-            padding-left: 1rem;
-        }
+  .lab-desc{font-size:13px; color:var(--ink-soft); text-align:center; line-height:1.5; margin:14px 0 0;}
 
-        h3 {
-            font-size: 1.2rem;
-            color: var(--text-main);
-            margin: 1.5rem 0 0.8rem;
-            font-weight: 600;
-        }
+  .chips-label{font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin:6px 0 10px; text-align:center;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .chip{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:9px 13px; border-radius:12px; border:2px solid var(--line);
+    border-bottom-width:3px; background:#fff; cursor:pointer;
+    font-family:inherit; font-weight:800; font-size:13px; color:var(--ink);
+    transition:.12s;
+  }
+  .chip:hover{background:#F7F7F7;}
+  .chip:active{transform:translateY(2px); border-bottom-width:2px;}
+  .chip.active{background:var(--green-light); border-color:var(--green); color:var(--green-dark);}
+  .chip small{font-size:10px; font-weight:700; color:var(--ink-soft);}
+  .chip.active small{color:var(--green-dark);}
 
-        p, li {
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
+  /* ---------- FREQUENCY SCALE ---------- */
+  .freq-scale{border:2px solid var(--line); border-radius:16px; padding:6px 4px; margin:16px 0 8px; background:#fff;}
+  .freq-row{
+    display:grid; grid-template-columns: 110px 1fr 78px;
+    align-items:center; gap:10px;
+    padding:11px 12px; border-radius:12px;
+    cursor:pointer; transition:.12s;
+  }
+  .freq-row + .freq-row{border-top:1px solid var(--line); border-radius:0;}
+  .freq-row:first-child{border-radius:12px 12px 0 0;}
+  .freq-row:last-child{border-radius:0 0 12px 12px;}
+  .freq-row:hover{background:#F7F7F7;}
+  .freq-row.active{background:var(--green-light);}
+  .freq-row.active .freq-name,
+  .freq-row.active .freq-val{color:var(--green-dark);}
+  .freq-row.ours .freq-name,
+  .freq-row.ours .freq-val{color:var(--green-dark); font-weight:800;}
+  .freq-row.ours{background:var(--green-light);}
 
-        strong {
-            color: var(--text-main);
-            font-weight: 600;
-        }
+  .freq-name{font-size:13px; font-weight:700; color:var(--ink); line-height:1.25;}
+  .freq-name small{display:block; font-size:10px; font-weight:700; color:var(--ink-soft); margin-top:1px;}
+  .freq-row.active .freq-name small,
+  .freq-row.ours .freq-name small{color:var(--green-dark);}
 
-        ul, ol {
-            padding-left: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
+  .freq-bar-track{position:relative; height:14px; background:var(--line); border-radius:7px; overflow:hidden;}
+  .freq-bar-fill{height:100%; background:var(--blue); border-radius:7px;}
+  .freq-row.ours .freq-bar-fill{background:var(--green);}
+  .freq-row.active .freq-bar-fill{background:var(--green);}
 
-        li {
-            margin-bottom: 0.5rem;
-        }
+  .freq-val{font-size:12px; font-weight:800; color:var(--blue-dark); text-align:right; font-variant-numeric:tabular-nums;}
 
-        /* Cards */
-        .card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.2rem;
-            margin: 1.5rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+  .freq-scale-foot{display:flex; justify-content:space-between; padding:6px 12px 4px; font-size:10px; font-weight:800; color:var(--ink-soft);}
+  .freq-note{font-size:12px; color:var(--ink-soft); text-align:center; margin:8px 0 0; line-height:1.5;}
+  .freq-note b{color:var(--ink); font-weight:800;}
 
-        .definition {
-            background: rgba(78, 205, 196, 0.1);
-            border-left: 4px solid var(--accent);
-            padding: 1rem;
-            border-radius: 0 8px 8px 0;
-            margin: 1rem 0;
-        }
+  .options{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
+  .opt{display:flex; align-items:center; gap:14px; text-align:left;
+    padding:16px; background:#fff; border:2px solid var(--line); border-bottom-width:4px;
+    border-radius:16px; font-family:inherit; font-size:16px; font-weight:700;
+    color:var(--ink); cursor:pointer; transition:.12s; width:100%;}
+  .opt:hover:not(.locked){background:#F7F7F7;}
+  .opt:active:not(.locked){transform:translateY(2px); border-bottom-width:2px;}
+  .opt .num{flex:0 0 28px; height:28px; border-radius:8px; border:2px solid var(--line);
+    display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--ink-soft);}
+  .opt.correct{background:var(--green-light); border-color:var(--green); color:var(--green-dark);}
+  .opt.correct .num{border-color:var(--green); color:var(--green-dark);}
+  .opt.wrong{background:var(--red-light); border-color:var(--red); color:var(--red-dark);}
+  .opt.wrong .num{border-color:var(--red); color:var(--red-dark);}
+  .opt.locked{cursor:default;}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-        .objectives {
-            background: rgba(42, 127, 143, 0.2);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 2rem 0;
-        }
+  .keylist{list-style:none; display:flex; flex-direction:column; gap:12px; margin-top:4px;}
+  .keylist li{display:flex; gap:12px; font-size:15px; line-height:1.5; color:var(--ink);}
+  .keylist .dot{flex:0 0 22px; height:22px; border-radius:50%; background:var(--green-light);
+    color:var(--green-dark); display:grid; place-items:center; font-size:12px; font-weight:800;}
 
-        .objectives h3 {
-            margin-top: 0;
-            color: var(--accent);
-        }
+  footer{position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:2px solid var(--line); padding:14px 20px 20px;
+    max-width:560px; margin:0 auto; z-index:30;}
+  .feedback{display:none; margin-bottom:14px;}
+  .feedback.show{display:block; animation:slide .25s;}
+  .fb-head{display:flex; align-items:center; gap:8px; font-weight:800; font-size:17px; margin-bottom:4px;}
+  .fb-head.ok{color:var(--green-dark);}
+  .fb-head.no{color:var(--red-dark);}
+  .fb-body{font-size:14px; line-height:1.5; color:var(--ink-soft);}
+  .fb-body b{color:var(--ink); font-weight:800;}
 
-        .objectives ul {
-            columns: 2;
-            column-gap: 2rem;
-        }
-
-        @media (max-width: 600px) {
-            .objectives ul { columns: 1; }
-        }
-
-        .objectives li {
-            break-inside: avoid;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border);
-            margin-top: 3rem;
-        }
-
-        .diagram-placeholder {
-            background: var(--bg-surface);
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            color: var(--text-muted);
-            margin: 1.5rem 0;
-            font-style: italic;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1.5rem 0;
-        }
-        th, td {
-            border: 1px solid var(--border);
-            padding: 0.75rem;
-            text-align: left;
-            color: var(--text-muted);
-        }
-        th {
-            background: var(--bg-surface);
-            color: var(--accent);
-        }
-
-        hr {
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            margin: 2rem 0;
-        }
-    </style>
+  .cta{width:100%; padding:16px; border:none; border-radius:16px;
+    background:var(--green); border-bottom:4px solid var(--green-dark);
+    color:#fff; font-family:inherit; font-size:16px; font-weight:800;
+    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;}
+  .cta:hover:not(:disabled){filter:brightness(1.05);}
+  .cta:active:not(:disabled){transform:translateY(2px); border-bottom-width:2px;}
+  .cta:disabled{background:var(--line); border-color:var(--line); color:#AFAFAF; cursor:not-allowed;}
+  .cta.restart{background:var(--purple); border-color:#A560E8;}
+</style>
 </head>
 <body>
-    <!-- Background orbs -->
-    <div class="glow-orb glow-1"></div>
-    <div class="glow-orb glow-2"></div>
-    <div class="pattern-overlay"></div>
+<div class="app">
 
-    <!-- Header -->
-    <header>
-        <div class="brand">
-            <div class="brand-icon">⚛️</div>
-            <span>The</span> Nucleus
+  <header>
+    <div class="progress"><div class="progress-fill" id="fill"></div></div>
+    <div class="xp">⚡ <span id="xpVal">0</span> XP</div>
+  </header>
+
+  <main>
+
+    <section class="screen active" data-type="content">
+      <div class="eyebrow">Waves · Intuition First</div>
+      <h1>The Note You Can Hear</h1>
+      <p>A tuning fork hums. You can hear it — a clear, piercing note near the top of a soprano's range.</p>
+      <p>But what is actually happening? The prongs are vibrating back and forth <strong>1300 times every second</strong>. Each vibration is so fast you can't see it, but your ear can hear the result.</p>
+      <p>That number — 1300 per second — is what we're about to make sense of. And it has a surprise: the <em>time</em> for one vibration is a number you'd never guess.</p>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">The Passage</div>
+      <h2>Read it once. Don't solve it yet.</h2>
+      <div class="card passage">
+        <p>An oscillator vibrates with a frequency of <strong>1.30 × 10³ Hz</strong>. Calculate (i) the period of oscillation, (ii) the number of complete oscillations it makes in <strong>4.0 s</strong>.</p>
+      </div>
+      <p>Most students will reach for a calculator. Don't. First answer this:</p>
+      <p><strong>What does 1.30 × 10³ Hz actually sound like?</strong> If you can't place this number in the real world, the arithmetic won't teach you anything.</p>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Build the Anchor</div>
+      <h2>What is 1.30 × 10³ Hz?</h2>
+      <div class="anchor">
+        <div class="fork-wrap">
+          <svg viewBox="0 0 60 80">
+            <path d="M 18 10 L 18 42 Q 18 56, 30 56 Q 42 56, 42 42 L 42 10"
+                  stroke="#777" stroke-width="5" fill="none" stroke-linecap="round"/>
+            <line x1="30" y1="56" x2="30" y2="76" stroke="#777" stroke-width="5" stroke-linecap="round"/>
+          </svg>
         </div>
-        <a href="index.html" class="back-button">← Back to Course Map</a>
-    </header>
-
-    <main class="container">
-        <h1>Propagation of Sound</h1>
-        <p>Sound is a mechanical wave that requires a material medium for its propagation. This page covers the fundamental principles of sound propagation, speed in different media, reflection phenomena (echoes and reverberation), and their practical applications.</p>
-
-        <!-- Learning Objectives -->
-        <div class="objectives">
-            <h3>📌 Learning Objectives</h3>
-            <p><em>Candidates should be able to:</em></p>
-            <ul>
-                <li>determine the need for a material medium in the propagation of sound waves</li>
-                <li>compare the speed of sound in solids, liquids and air</li>
-                <li>relate the effects of temperature and pressure to the speed of sound in air</li>
-                <li>solve problems on echoes, reverberation and speed</li>
-                <li>compare the disadvantages and advantages of echoes</li>
-                <li>explain applications of echoes and reverberation</li>
-            </ul>
+        <div class="anchor-text">
+          <b>1300 vibrations every second.</b><br>
+          <span style="color:var(--ink-soft)">That's a high musical note — roughly E6, near the top of a soprano's range. About 3× higher than concert A (440 Hz).</span>
         </div>
+      </div>
+      <p>So read it out loud, slowly:</p>
+      <div class="card" style="border-color:var(--yellow); background:#FFF9E5;">
+        <p style="color:var(--ink); margin:0; font-size:15px;">
+          <strong>"One thousand three hundred wiggles per second."</strong>
+        </p>
+      </div>
+      <p>Now — how long does <em>one</em> wiggle take? On the next screen, you'll <strong>hear it and see it</strong>.</p>
+    </section>
 
-        <!-- i. Necessity for a material medium -->
-        <h2>i. Necessity for a Material Medium</h2>
-        <p>Sound is a mechanical wave, meaning it requires a material medium (solid, liquid, or gas) to travel. It cannot propagate through a vacuum because there are no particles to transmit the vibrations.</p>
-        <p><strong>Experiment:</strong> An electric bell is placed inside a glass jar and the air is gradually removed. As the air is pumped out, the sound becomes fainter until it is no longer heard, demonstrating that sound needs a medium.</p>
-        <div class="definition">
-            <strong>Key point:</strong> Sound travels through solids, liquids, and gases, but not through vacuum.
-        </div>
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Sound Lab · Press Play</div>
+      <h2>Hear 1300 Hz — and See the Wave</h2>
 
-        <!-- ii. Speed of sound in solids, liquids and air -->
-        <h2>ii. Speed of Sound in Solids, Liquids and Air</h2>
-        <p>The speed of sound depends on the elasticity and density of the medium. In general, sound travels fastest in solids, slower in liquids, and slowest in gases.</p>
-        <table>
-            <thead>
-                <tr><th>Medium</th><th>Typical Speed (m/s)</th><th>Reason</th></tr>
-            </thead>
-            <tbody>
-                <tr><td>Solids (e.g., steel)</td><td>~5000 – 6000</td><td>High elasticity; particles are closely packed.</td></tr>
-                <tr><td>Liquids (e.g., water)</td><td>~1500</td><td>Moderate elasticity; particles less tightly bound than solids.</td></tr>
-                <tr><td>Gases (e.g., air at 0°C)</td><td>~331</td><td>Low elasticity; particles far apart.</td></tr>
-            </tbody>
-        </table>
-        <p>Formula for speed in air: <strong>v = 331 + 0.6T</strong> (where T is temperature in °C). Speed increases with temperature.</p>
-        <p>Effect of pressure: At constant temperature, speed of sound in air is independent of pressure (because density changes proportionally with pressure).</p>
-
-        <!-- iii. Reflection of sound: echoes, reverberation and applications -->
-        <h2>iii. Reflection of Sound: Echoes, Reverberation and Applications</h2>
-        <p>Sound waves reflect off hard surfaces (e.g., walls, cliffs) just like light reflects off mirrors.</p>
-        <h3>Echo</h3>
-        <p>An echo is a distinct, reflected sound heard after the original sound. It occurs when the reflecting surface is far enough (typically >17 m) that the reflected sound arrives after the original sound has ceased (persistence of hearing ~0.1 s).</p>
-        <div class="card">
-            <p><strong>Distance calculation:</strong> If the speed of sound is v and the time between the original sound and echo is t, then the distance to the reflecting surface d is: <span class="formula">d = (v × t) / 2</span> (because sound travels to the surface and back).</p>
-        </div>
-
-        <h3>Reverberation</h3>
-        <p>Reverberation is the persistence of sound in an enclosed space due to multiple reflections. It is the "echo" effect you hear in a large hall or auditorium where sound lingers for a short time. Reverberation time is the time taken for the sound to decay by 60 dB.</p>
-        <p><strong>Applications of echoes and reverberation:</strong></p>
-        <ul>
-            <li><strong>Sonar (Sound Navigation and Ranging):</strong> Ships use echoes of ultrasonic waves to detect underwater objects and measure depth.</li>
-            <li><strong>Echo sounding / Depth finding:</strong> Determining ocean depth using reflected sound.</li>
-            <li><strong>Medical imaging (ultrasound):</strong> Echoes of high-frequency sound waves create images of internal organs.</li>
-            <li><strong>Architectural acoustics:</strong> Controlling reverberation in concert halls, auditoriums, and recording studios to enhance sound quality.</li>
-            <li><strong>Bats and dolphins:</strong> Use echolocation (echoes) to navigate and hunt.</li>
-        </ul>
-
-        <!-- iv. Advantages and disadvantages of echoes and reverberations -->
-        <h2>iv. Advantages and Disadvantages of Echoes and Reverberations</h2>
-        <table>
-            <thead>
-                <tr><th>Phenomenon</th><th>Advantages</th><th>Disadvantages</th></tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Echo</strong></td>
-                    <td>
-                        <ul style="margin:0; padding-left:1.2rem;">
-                            <li>Used in sonar, ultrasound, depth sounding.</li>
-                            <li>Used in navigation by bats/dolphins.</li>
-                            <li>Can be used to measure distance (e.g., cliff or wall).</li>
-                        </ul>
-                    </td>
-                    <td>
-                        <ul style="margin:0; padding-left:1.2rem;">
-                            <li>In telephone/radio communication, echoes cause distortion.</li>
-                            <li>Unwanted echoes in large empty halls can make speech unclear.</li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td><strong>Reverberation</strong></td>
-                    <td>
-                        <ul style="margin:0; padding-left:1.2rem;">
-                            <li>Adds richness to music (concerts, churches).</li>
-                            <li>Improves sound quality in auditoriums when controlled.</li>
-                            <li>Used in sound recording to create ambiance.</li>
-                        </ul>
-                    </td>
-                    <td>
-                        <ul style="margin:0; padding-left:1.2rem;">
-                            <li>Excessive reverberation causes speech to become indistinct (e.g., in large empty halls).</li>
-                            <li>Interferes with clarity in classrooms or conference rooms.</li>
-                            <li>In recording studios, unwanted reverberation can ruin a take.</li>
-                        </ul>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Solving problems on echoes -->
-        <h2>Numerical Problems on Echoes and Speed</h2>
-        <div class="card">
-            <p><strong>Example 1:</strong> A man stands between two cliffs and claps his hands. He hears the first echo after 2 seconds and the second echo after 3 seconds. If the speed of sound is 340 m/s, find the distance between the cliffs.</p>
-            <p><em>Solution:</em> Distance to first cliff d₁ = (v × t₁)/2 = (340 × 2)/2 = 340 m. Distance to second cliff d₂ = (340 × 3)/2 = 510 m. Distance between cliffs = d₁ + d₂ = 340 + 510 = 850 m.</p>
-            <hr>
-            <p><strong>Example 2:</strong> A ship sends out an ultrasound pulse and receives its echo from the seabed after 4 seconds. If the speed of sound in water is 1500 m/s, find the depth of the sea.</p>
-            <p><em>Solution:</em> Depth d = (v × t)/2 = (1500 × 4)/2 = 3000 m.</p>
-            <hr>
-            <p><strong>Example 3:</strong> What is the minimum distance to hear a distinct echo if the speed of sound is 340 m/s and the persistence of hearing is 0.1 s?</p>
-            <p><em>Solution:</em> For echo to be distinct, the reflected sound must arrive after 0.1 s. Distance = (v × t)/2 = (340 × 0.1)/2 = 17 m.</p>
+      <div class="lab">
+        <div class="lab-stage">
+          <button class="play-btn" id="playMain" aria-label="Play 1300 Hz tone">
+            <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-stop" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+          </button>
+          <div class="lab-readout">
+            <div class="lab-freq" id="readoutFreq">1.30 × 10³ Hz</div>
+            <div class="lab-name" id="readoutName">≈ E6 · near the top of a soprano's range</div>
+          </div>
         </div>
 
-        <!-- Effects of temperature and pressure -->
-        <h2>Effect of Temperature and Pressure on Speed of Sound in Air</h2>
-        <ul>
-            <li><strong>Temperature:</strong> Speed increases with temperature. v ∝ √T (in Kelvin). Approximate formula: v = 331 + 0.6T (T in °C).</li>
-            <li><strong>Pressure:</strong> At constant temperature, speed is independent of pressure. Reason: Increase in pressure increases density proportionally, so v = √(γP/ρ) remains constant.</li>
-        </ul>
-
-        <!-- Check Your Understanding -->
-        <h2>Check Your Understanding</h2>
-        <div class="card">
-            <p><strong>Q1:</strong> Why can sound not travel through a vacuum?</p>
-            <p><em>Answer:</em> Sound is a mechanical wave and requires particles to transmit vibrations; vacuum has no particles.</p>
-            <hr>
-            <p><strong>Q2:</strong> In which medium does sound travel fastest: air, water, or steel?</p>
-            <p><em>Answer:</em> Steel (solids).</p>
-            <hr>
-            <p><strong>Q3:</strong> How does an increase in temperature affect the speed of sound in air?</p>
-            <p><em>Answer:</em> Speed increases by approximately 0.6 m/s per °C.</p>
-            <hr>
-            <p><strong>Q4:</strong> A person shouts in a valley and hears an echo after 2.5 s. If the speed of sound is 340 m/s, how far away is the cliff?</p>
-            <p><em>Answer:</em> d = (340 × 2.5)/2 = 425 m.</p>
-            <hr>
-            <p><strong>Q5:</strong> Give one advantage and one disadvantage of reverberation.</p>
-            <p><em>Answer:</em> Advantage: enhances music in concert halls. Disadvantage: can make speech unclear if excessive.</p>
+        <div class="scope-wrap">
+          <canvas class="scope" id="scope"></canvas>
+          <div class="scope-foot">
+            <span id="scopeStatus"><span class="live-dot" style="display:none"></span>Paused</span>
+            <span id="scopeCycles">≈ 10 cycles shown</span>
+          </div>
         </div>
 
-        <hr>
-        <p>This guide covers the propagation of sound, including speed in different media, reflection phenomena, and practical applications. Use the back button to return to the course map.</p>
-    </main>
+        <p class="lab-desc">Higher frequency = more cycles squeezed into the same window. That's what your ear hears as a higher pitch.</p>
+      </div>
 
-    <footer>
-        <p>The Nucleus – Physics Education for JAMB/WAEC/NECO</p>
-    </footer>
+      <div class="chips-label">Compare with</div>
+      <div class="chips" id="chipRow">
+        <button class="chip" data-freq="1">1 Hz <small>clock tick</small></button>
+        <button class="chip" data-freq="50">50 Hz <small>hummingbird</small></button>
+        <button class="chip" data-freq="262">262 Hz <small>middle C</small></button>
+        <button class="chip" data-freq="440">440 Hz <small>concert A</small></button>
+        <button class="chip" data-freq="1300">1300 Hz <small>our tone</small></button>
+        <button class="chip" data-freq="4186">4186 Hz <small>top C8</small></button>
+        <button class="chip" data-freq="8000">8000 Hz <small>very high</small></button>
+      </div>
+    </section>
+
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 1 of 3</div>
+      <h2>The oscillator vibrates at 1.30 × 10³ Hz. How long does one vibration take?</h2>
+      <div class="options">
+        <button class="opt" data-correct="false"><span class="num">A</span> 1300 seconds</button>
+        <button class="opt" data-correct="true"><span class="num">B</span> About 0.77 milliseconds</button>
+        <button class="opt" data-correct="false"><span class="num">C</span> Exactly 1 second</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> About 7.7 seconds</button>
+      </div>
+    </section>
+
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 2 of 3</div>
+      <h2>Two oscillators: one at 100 Hz, one at 1300 Hz. Which has the longer period?</h2>
+      <div class="options">
+        <button class="opt" data-correct="false"><span class="num">A</span> The 1300 Hz one</button>
+        <button class="opt" data-correct="true"><span class="num">B</span> The 100 Hz one</button>
+        <button class="opt" data-correct="false"><span class="num">C</span> They have the same period</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> Depends on the amplitude</button>
+      </div>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">See the Sizes · Tap to Hear</div>
+      <h2>Where does 1300 Hz sit?</h2>
+      <p style="font-size:14px;">Each row is one sound. Bar length shows the frequency on a log scale — equal steps are <b>10×</b>, not 2×.</p>
+
+      <div class="freq-scale" id="freqScale">
+        <div class="freq-row playable" data-freq="1">
+          <div class="freq-name">Clock tick<small>once per second</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:0%"></div></div>
+          <div class="freq-val">1 Hz</div>
+        </div>
+        <div class="freq-row playable" data-freq="50">
+          <div class="freq-name">Hummingbird<small>wing beat</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:40%"></div></div>
+          <div class="freq-val">50 Hz</div>
+        </div>
+        <div class="freq-row playable" data-freq="262">
+          <div class="freq-name">Middle C<small>C4</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:56%"></div></div>
+          <div class="freq-val">262 Hz</div>
+        </div>
+        <div class="freq-row playable" data-freq="440">
+          <div class="freq-name">Concert A<small>orchestra tuning</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:61%"></div></div>
+          <div class="freq-val">440 Hz</div>
+        </div>
+        <div class="freq-row ours playable active" data-freq="1300">
+          <div class="freq-name">Our oscillator<small>the passage</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:72%"></div></div>
+          <div class="freq-val">1300 Hz</div>
+        </div>
+        <div class="freq-row playable" data-freq="4186">
+          <div class="freq-name">Top piano note<small>C8</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:84%"></div></div>
+          <div class="freq-val">4186 Hz</div>
+        </div>
+        <div class="freq-row playable" data-freq="12000">
+          <div class="freq-name">Hearing limit<small>young ears · scaled</small></div>
+          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:100%"></div></div>
+          <div class="freq-val">20 kHz</div>
+        </div>
+      </div>
+      <div class="freq-scale-foot">
+        <span>1 Hz</span><span>10²</span><span>10³</span><span>10⁴</span><span>10⁵ Hz</span>
+      </div>
+
+      <p class="freq-note">
+        1300 Hz sits in the sweet spot of human hearing — <b>near the top of music</b>, well below ultrasound. Tap any row to hear it.
+      </p>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Now Do the Maths</div>
+      <h2>T = 1/f and N = f × t</h2>
+      <p>Period is the <strong>inverse</strong> of frequency. Number of oscillations is frequency × time.</p>
+
+      <p style="font-weight:800; color:var(--ink); margin-bottom:8px;">(i) Period</p>
+      <div class="math">
+        <div class="row"><span>f</span><span>1.30 × 10³ Hz</span></div>
+        <div class="row op"><span>T = 1/f</span><span>1 / (1.30 × 10³)</span></div>
+        <div class="row op"><span></span><span>= (1/1.30) × 10⁻³</span></div>
+        <div class="row res"><span>T</span><span>7.7 × 10⁻⁴ s</span></div>
+      </div>
+
+      <p style="font-weight:800; color:var(--ink); margin-bottom:8px;">(ii) Number of oscillations in 4.0 s</p>
+      <div class="math">
+        <div class="row op"><span>N = f × t</span><span>1.30 × 10³ × 4.0</span></div>
+        <div class="row op"><span></span><span>= 5.2 × 10³</span></div>
+        <div class="row res"><span>N</span><span>5200 oscillations</span></div>
+      </div>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Answer</div>
+      <div class="card answer">
+        <div class="tag green">Correct Answer</div>
+        <div class="big">T = 7.7 × 10⁻⁴ s</div>
+        <div class="big" style="font-size:22px;">N = 5.2 × 10³ oscillations</div>
+        <p style="color:var(--green-dark); margin:0; font-weight:700;">One vibration ≈ 0.77 ms · 5200 vibrations in 4 seconds</p>
+      </div>
+      <p>Notice the pattern: <strong>high frequency means short period.</strong> The numbers move in opposite directions. That inverse relationship is the whole point — and it's why a 1300 Hz note feels "fast" to your ear: each cycle is over in under a millisecond.</p>
+    </section>
+
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 3 of 3</div>
+      <h2>Same oscillator. But now the frequency doubles to 2.60 × 10³ Hz. What happens to the period?</h2>
+      <div class="options">
+        <button class="opt" data-correct="false"><span class="num">A</span> It doubles to 1.5 × 10⁻³ s</button>
+        <button class="opt" data-correct="true"><span class="num">B</span> It halves to 3.8 × 10⁻⁴ s</button>
+        <button class="opt" data-correct="false"><span class="num">C</span> It stays the same</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> It quadruples to 3.1 × 10⁻³ s</button>
+      </div>
+    </section>
+
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Lock It In</div>
+      <h2>What you actually learned</h2>
+      <ul class="keylist">
+        <li><span class="dot">✓</span><span><b>Hz means "per second."</b> 1.30 × 10³ Hz = 1300 vibrations every second.</span></li>
+        <li><span class="dot">✓</span><span><b>Period is the inverse of frequency.</b> T = 1/f. High f → tiny T.</span></li>
+        <li><span class="dot">✓</span><span><b>0.77 ms is the anchor.</b> A camera flash. Something you can feel, not just compute.</span></li>
+        <li><span class="dot">✓</span><span><b>You heard it — and saw it.</b> Higher frequencies squeeze more cycles into the same window.</span></li>
+      </ul>
+      <div class="card" style="border-color:var(--purple); background:#FBF0FF; margin-top:20px;">
+        <p style="margin:0; color:var(--ink); font-size:15px;">
+          <strong>Next time you meet a frequency</strong>, don't jump to T = 1/f. First ask: <em>can I hear this? Is it fast or slow compared to my heartbeat?</em> Then the arithmetic has somewhere to land.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="feedback" id="fb"></div>
+    <button class="cta" id="cta" disabled>Continue</button>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   Web Audio module
+   ============================================================ */
+const Tone = {
+  ctx: null,
+  osc: null,
+  gain: null,
+  playing: null,
+
+  async ensure() {
+    if (this.ctx) {
+      if (this.ctx.state === 'running') return this.ctx;
+      try { await this.ctx.resume(); } catch (e) {}
+      if (this.ctx.state === 'running') return this.ctx;
+      try { this.ctx.close(); } catch (e) {}
+      this.ctx = null;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) throw new Error('Web Audio not supported');
+    const ctx = new AC();
+    if (ctx.state !== 'running') {
+      try { await ctx.resume(); } catch (e) {}
+    }
+    this.ctx = ctx;
+    return ctx;
+  },
+
+  async play(freq, duration) {
+    let ctx;
+    try {
+      ctx = await this.ensure();
+    } catch (e) {
+      console.warn('Audio unavailable:', e);
+      return;
+    }
+
+    if (this.osc) {
+      try { this.osc.onended = null; } catch (e) {}
+      try { this.osc.stop(); } catch (e) {}
+      try { this.osc.disconnect(); } catch (e) {}
+      this.osc = null;
+    }
+    if (this.gain) {
+      try { this.gain.disconnect(); } catch (e) {}
+      this.gain = null;
+    }
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const now = ctx.currentTime;
+    const dur = duration || 1.0;
+    const peak = 0.15;
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(peak, now + 0.02);
+    gain.gain.setValueAtTime(peak, now + dur - 0.06);
+    gain.gain.linearRampToValueAtTime(0, now + dur);
+
+    osc.start(now);
+    osc.stop(now + dur + 0.05);
+
+    this.osc = osc;
+    this.gain = gain;
+    this.playing = freq;
+
+    osc.onended = () => {
+      if (this.osc === osc) {
+        this.osc = null;
+        this.gain = null;
+        this.playing = null;
+        syncPlayUI();
+      }
+    };
+
+    syncPlayUI();
+  },
+
+  stop() {
+    if (this.osc) {
+      try { this.osc.onended = null; } catch (e) {}
+      try { this.osc.stop(); } catch (e) {}
+      try { this.osc.disconnect(); } catch (e) {}
+    }
+    if (this.gain) {
+      try { this.gain.disconnect(); } catch (e) {}
+    }
+    this.osc = null;
+    this.gain = null;
+    this.playing = null;
+    syncPlayUI();
+  },
+
+  toggle(freq, duration) {
+    if (this.playing === freq) {
+      this.stop();
+      return false;
+    }
+    this.play(freq, duration);
+    return true;
+  }
+};
+
+/* ============================================================
+   Oscilloscope
+   ============================================================ */
+class Scope {
+  constructor(canvas, statusEl, cyclesEl) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.statusEl = statusEl;
+    this.cyclesEl = cyclesEl;
+    this.freq = 1300;
+    this.playing = false;
+    this.phase = 0;
+    this.w = 0;
+    this.h = 0;
+    this.dpr = window.devicePixelRatio || 1;
+    this.resize();
+    this.loop = this.loop.bind(this);
+    requestAnimationFrame(this.loop);
+  }
+
+  resize() {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    this.w = rect.width;
+    this.h = rect.height;
+    this.canvas.width = rect.width * this.dpr;
+    this.canvas.height = rect.height * this.dpr;
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+  }
+
+  setFreq(f) {
+    this.freq = f;
+    this.updateLabels();
+  }
+
+  setPlaying(p) {
+    this.playing = p;
+    this.updateLabels();
+  }
+
+  updateLabels() {
+    if (this.cyclesEl) {
+      const cycles = 1 + Math.log10(this.freq + 1) * 3;
+      this.cyclesEl.textContent = '≈ ' + cycles.toFixed(1) + ' cycles shown';
+    }
+    if (this.statusEl) {
+      const dot = this.statusEl.querySelector('.live-dot');
+      if (this.playing) {
+        this.statusEl.innerHTML = '<span class="live-dot"></span>Live';
+      } else {
+        this.statusEl.innerHTML = '<span class="live-dot" style="display:none"></span>Paused';
+      }
+    }
+  }
+
+  loop() {
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width !== this.w || rect.height !== this.h) this.resize();
+    this.draw();
+    requestAnimationFrame(this.loop);
+  }
+
+  draw() {
+    if (this.w === 0 || this.h === 0) return;
+    const ctx = this.ctx;
+    const w = this.w, h = this.h;
+    ctx.clearRect(0, 0, w, h);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= w; x += w / 10) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 0; y <= h; y += h / 4) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    // Center line brighter
+    ctx.strokeStyle = 'rgba(125, 211, 252, 0.28)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
+
+    // Sine wave
+    const cycles = 1 + Math.log10(this.freq + 1) * 3;
+    const amplitude = h * 0.32;
+    const centerY = h / 2;
+
+    ctx.beginPath();
+    const steps = Math.max(200, Math.min(600, w));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = t * w;
+      const y = centerY + Math.sin(t * Math.PI * 2 * cycles + this.phase) * amplitude;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#7DD3FC';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    if (this.playing) {
+      // Scroll speed scales with frequency — faster tones look more energetic
+      this.phase -= 0.03 * (1 + Math.log10(this.freq + 1) * 1.5);
+    }
+  }
+}
+
+/* ============================================================
+   Element refs
+   ============================================================ */
+const playMain = document.getElementById('playMain');
+const chipRow = document.getElementById('chipRow');
+const readoutFreq = document.getElementById('readoutFreq');
+const readoutName = document.getElementById('readoutName');
+const scopeCanvas = document.getElementById('scope');
+const scopeStatus = document.getElementById('scopeStatus');
+const scopeCycles = document.getElementById('scopeCycles');
+
+let scope = null;
+
+/* ============================================================
+   UI sync
+   ============================================================ */
+function syncPlayUI() {
+  const isPlaying = Tone.playing != null;
+
+  playMain.classList.toggle('playing', isPlaying && Tone.playing === 1300);
+
+  chipRow.querySelectorAll('.chip').forEach(c => {
+    const f = parseFloat(c.dataset.freq);
+    c.classList.toggle('active', isPlaying && f === Tone.playing);
+  });
+
+  document.querySelectorAll('#freqScale .playable').forEach(r => {
+    const f = parseFloat(r.dataset.freq);
+    const match = isPlaying && f === Tone.playing;
+    r.classList.toggle('active', match || r.classList.contains('ours'));
+  });
+
+  if (scope) {
+    if (isPlaying) {
+      scope.setFreq(Tone.playing);
+      scope.setPlaying(true);
+      // Update readout to reflect the currently-playing tone
+      readoutFreq.textContent = formatFreq(Tone.playing);
+      readoutName.textContent = describeFreq(Tone.playing);
+    } else {
+      scope.setPlaying(false);
+    }
+  }
+}
+
+function formatFreq(f) {
+  if (f >= 1000) return (f / 1000).toFixed(2).replace(/\.?0+$/, '') + ' × 10³ Hz';
+  return f + ' Hz';
+}
+
+function describeFreq(f) {
+  const map = {
+    1: 'Clock tick — one per second',
+    50: 'Hummingbird wing beat',
+    262: 'Middle C (C4) — piano',
+    440: 'Concert A (A4) — orchestra tuning',
+    1300: '≈ E6 · near the top of a soprano\'s range',
+    4186: 'Top piano note (C8)',
+    8000: 'Very high — near hearing threshold for many adults',
+    12000: 'Scaled-down hearing limit'
+  };
+  return map[f] || '';
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
+scope = new Scope(scopeCanvas, scopeStatus, scopeCycles);
+scope.setFreq(1300);
+scope.setPlaying(false);
+
+playMain.addEventListener('click', () => {
+  Tone.toggle(1300, 1.6);
+});
+
+chipRow.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    Tone.toggle(parseFloat(chip.dataset.freq), 1.0);
+  });
+});
+
+document.querySelectorAll('#freqScale .playable').forEach(row => {
+  row.addEventListener('click', () => {
+    Tone.toggle(parseFloat(row.dataset.freq), 1.0);
+  });
+});
+
+/* ============================================================
+   App navigation
+   ============================================================ */
+const screens = [...document.querySelectorAll('.screen')];
+const fill = document.getElementById('fill');
+const cta = document.getElementById('cta');
+const fb = document.getElementById('fb');
+const xpVal = document.getElementById('xpVal');
+
+let idx = 0;
+let xp = 0;
+const answered = new Set();
+
+function show(i){
+  Tone.stop();
+
+  screens.forEach((s,n)=>s.classList.toggle('active', n===i));
+  idx = i;
+  const isQ = screens[i].dataset.type === 'question';
+  const isLast = i === screens.length - 1;
+
+  cta.disabled = isQ && !answered.has(i);
+  cta.textContent = isLast ? 'Restart Lesson' : 'Continue';
+  cta.classList.toggle('restart', isLast);
+
+  fb.classList.remove('show');
+  fb.innerHTML = '';
+  fill.style.width = (i/(screens.length-1))*100 + '%';
+
+  if (isQ && answered.has(i)) {
+    const opts = screens[i].querySelectorAll('.opt');
+    opts.forEach(o=>o.classList.add('locked'));
+    screens[i].querySelector('[data-correct="true"]').classList.add('correct');
+    renderFeedback(i, true);
+    cta.disabled = false;
+  }
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function restart() {
+  xp = 0;
+  xpVal.textContent = '0';
+  answered.clear();
+  screens.forEach(s => {
+    s.querySelectorAll('.opt').forEach(o => {
+      o.classList.remove('correct', 'wrong', 'locked');
+    });
+  });
+  show(0);
+}
+
+function renderFeedback(screenIdx, wasCorrect){
+  const map = {
+    4: {
+      ok: ['Spot on.', 'T = 1/f = 1/1300 ≈ 7.7 × 10⁻⁴ s = 0.77 ms. One vibration lasts less than a millisecond — about as long as a camera flash.'],
+      no: ['Think inverse.', 'Hz means "per second." 1300 vibrations fit into one second, so each one takes 1/1300 of a second ≈ 0.77 ms. Tiny, not huge.']
+    },
+    5: {
+      ok: ['Yes.', 'T = 1/f. Lower frequency → longer period. The 100 Hz oscillator takes 10 ms per cycle; the 1300 Hz one takes 0.77 ms.'],
+      no: ['Flip it.', 'Period is the inverse of frequency. A slower vibration (lower Hz) takes longer per cycle. So the 100 Hz one wins.']
+    },
+    9: {
+      ok: ['Sharp.', 'T = 1/f, so doubling f halves T. 1/(2.60 × 10³) = 3.8 × 10⁻⁴ s. Frequency and period always move in opposite directions.'],
+      no: ['Careful.', 'T and f are inversely related: T = 1/f. Double the frequency, halve the period. The new T is 3.8 × 10⁻⁴ s, not larger.']
+    }
+  };
+  const m = map[screenIdx];
+  if (!m) return;
+  const head = wasCorrect ? m.ok[0] : m.no[0];
+  const body = wasCorrect ? m.ok[1] : m.no[1];
+  fb.innerHTML = `<div class="fb-head ${wasCorrect?'ok':'no'}">${wasCorrect?'✓':'✕'} ${head}</div><div class="fb-body">${body}</div>`;
+  fb.classList.add('show');
+}
+
+screens.forEach((screen, sIdx)=>{
+  const opts = screen.querySelectorAll('.opt');
+  if (!opts.length) return;
+
+  opts.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if (answered.has(sIdx)) return;
+      answered.add(sIdx);
+      const isCorrect = btn.dataset.correct === 'true';
+
+      opts.forEach(o=>o.classList.add('locked'));
+      if (isCorrect){
+        btn.classList.add('correct');
+        xp += 10;
+      } else {
+        btn.classList.add('wrong','shake');
+        screen.querySelector('[data-correct="true"]').classList.add('correct');
+        setTimeout(()=>btn.classList.remove('shake'), 450);
+      }
+      xpVal.textContent = xp;
+      renderFeedback(sIdx, isCorrect);
+      cta.disabled = false;
+    });
+  });
+});
+
+cta.addEventListener('click', ()=>{
+  if (idx < screens.length - 1) {
+    show(idx + 1);
+  } else {
+    restart();
+  }
+});
+
+document.addEventListener('visibilitychange', ()=>{
+  if (document.hidden) Tone.stop();
+});
+
+show(0);
+</script>
 </body>
 </html>
