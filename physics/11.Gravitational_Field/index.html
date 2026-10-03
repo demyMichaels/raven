@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Earth's Magnetic Field — Horizontal Plane Patterns (Rive-style Runtime)</title>
+<style>
+  :root {
+    --bg: #05060d;
+    --panel: #0f1424;
+    --ink: #e6ecff;
+    --muted: #8b95b8;
+    --accent: #6ee7ff;
+    --north: #ff6b6b;
+    --south: #6b9bff;
+    --field: #6ee7ff;
+    --equator: #ffd166;
+  }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(circle at 50% 30%, #0e1430, var(--bg) 65%);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  .app { display: grid; grid-template-columns: 1fr 340px; height: 100vh; }
+  .stage { position: relative; display: flex; align-items: center; justify-content: center; }
+  svg { width: 100%; height: 100%; display: block; }
+
+  .panel {
+    background: var(--panel);
+    border-left: 1px solid #1c2440;
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 13px;
+  }
+  .panel h2 {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 14px;
+  }
+  .panel h3 {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin: 18px 0 8px;
+    border-top: 1px solid #1c2440; padding-top: 12px;
+  }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin: 8px 0;
+  }
+  .row label { color: var(--muted); font-size: 12px; }
+  .val { font-variant-numeric: tabular-nums; color: var(--ink); font-size: 12px; }
+  input[type="range"] { width: 130px; accent-color: var(--accent); }
+  input[type="checkbox"] { accent-color: var(--accent); transform: scale(1.15); }
+  select {
+    background: #1a2140; color: var(--ink); border: 1px solid #2a3557;
+    padding: 4px 6px; border-radius: 5px; font-size: 12px;
+  }
+  button {
+    background: #1c2540; color: var(--ink); border: 1px solid #2a3557;
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  }
+  button:hover { background: #253055; }
+
+  /* SVG styling */
+  .earth { fill: url(#earthGrad); stroke: #2a4a7a; stroke-width: 1.5; }
+  .earth-grid { fill: none; stroke: rgba(120,180,255,0.18); stroke-width: 0.7; }
+  .axis { stroke: #8b95b8; stroke-width: 1; stroke-dasharray: 3 4; }
+  .field-line { fill: none; stroke: var(--field); stroke-width: 1.4; opacity: 0.55; }
+  .field-line-strong { fill: none; stroke: var(--field); stroke-width: 2; opacity: 0.95; }
+  .horizontal-plane {
+    fill: none;
+    stroke: rgba(110,231,255,0.35);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+  }
+  .plane-fill { fill: rgba(110,231,255,0.045); }
+  .compass {
+    fill: #0f1730;
+    stroke: #2a3557;
+    stroke-width: 1;
+  }
+  .compass-needle-n { fill: var(--north); }
+  .compass-needle-s { fill: var(--south); }
+  .compass-label {
+    fill: var(--muted);
+    font-size: 9px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .label {
+    fill: var(--muted);
+    font-size: 11px;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .label-strong { fill: var(--ink); font-size: 12px; }
+  .pole-n { fill: var(--north); }
+  .pole-s { fill: var(--south); }
+  .pole-label {
+    fill: #fff; font-size: 10px; font-weight: 600;
+    font-family: ui-monospace, monospace;
+  }
+  .state-badge { fill: #0f1730; stroke: #2a3557; stroke-width: 1; }
+  .state-text { fill: var(--accent); font-size: 10px; font-family: ui-monospace, monospace; }
+  .declination-arc {
+    fill: none; stroke: var(--equator); stroke-width: 1.2;
+    stroke-dasharray: 2 2; opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <svg viewBox="0 0 900 700" id="scene">
+      <defs>
+        <radialGradient id="earthGrad" cx="0.4" cy="0.35">
+          <stop offset="0" stop-color="#5fa8e8"/>
+          <stop offset="0.55" stop-color="#2a6ab8"/>
+          <stop offset="1" stop-color="#0e1f3d"/>
+        </radialGradient>
+        <radialGradient id="glowGrad">
+          <stop offset="0" stop-color="rgba(110,231,255,0.35)"/>
+          <stop offset="1" stop-color="rgba(110,231,255,0)"/>
+        </radialGradient>
+        <filter id="fieldGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <marker id="arrowN" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M 0 0 L 6 3 L 0 6 z" fill="#ff6b6b"/>
+        </marker>
+        <marker id="arrowS" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M 0 0 L 6 3 L 0 6 z" fill="#6b9bff"/>
+        </marker>
+
+        <!--
+          CONSTRAINT PATHS: these are the "follow path" constraints
+          used to place compass needles and dipole field-line samples.
+        -->
+        <path id="equatorPath" d="M 150 350 Q 450 470 750 350" />
+      </defs>
+
+      <!-- ================= BACKGROUND GRID ================= -->
+      <g opacity="0.08">
+        <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+          <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#4a6a9a" stroke-width="0.5"/>
+        </pattern>
+        <rect width="900" height="700" fill="url(#grid)"/>
+      </g>
+
+      <!-- ================= EARTH GLOBE ================= -->
+      <g id="earthGroup" transform="translate(450,350)">
+        <!-- Soft outer glow (magnetosphere hint) -->
+        <circle r="150" fill="url(#glowGrad)"/>
+        <circle class="earth" r="90"/>
+        <!-- Latitude / longitude grid hint -->
+        <ellipse class="earth-grid" rx="90" ry="28"/>
+        <ellipse class="earth-grid" rx="90" ry="60"/>
+        <ellipse class="earth-grid" rx="28" ry="90"/>
+        <ellipse class="earth-grid" rx="60" ry="90"/>
+        <line class="axis" x1="0" y1="-135" x2="0" y2="135"/>
+      </g>
+
+      <!-- ================= GEOMAGNETIC POLES ================= -->
+      <!-- Earth's magnetic south pole is geographically near north (that's why N of compass points N) -->
+      <g id="poles">
+        <!-- Geographic North (near magnetic SOUTH pole) -->
+        <circle class="pole-s" cx="450" cy="205" r="9"/>
+        <text class="pole-label" x="450" y="190" text-anchor="middle">MAG S</text>
+        <!-- Geographic South (near magnetic NORTH pole) -->
+        <circle class="pole-n" cx="450" cy="495" r="9"/>
+        <text class="pole-label" x="450" y="520" text-anchor="middle">MAG N</text>
+      </g>
+
+      <!-- ================= DIPOLE FIELD LINES (2D side view) ================= -->
+      <g id="fieldLines" filter="url(#fieldGlow)">
+        <!-- Each path is a dipole field line, drawn as smooth bezier.
+             Hand-tuned to look like the classic bar-magnet geometry. -->
+        <path class="field-line" d="M 450 205 C 300 205, 220 300, 240 350 C 220 400, 300 495, 450 495"/>
+        <path class="field-line" d="M 450 205 C 250 215, 140 300, 180 350 C 140 400, 250 485, 450 495"/>
+        <path class="field-line" d="M 450 205 C 210 230, 80 310, 140 350 C 80 390, 210 470, 450 495"/>
+        <path class="field-line" d="M 450 205 C 180 245, 40 320, 110 350 C 40 380, 180 455, 450 495"/>
+        <!-- Inner strong lines -->
+        <path class="field-line-strong" d="M 450 205 C 340 215, 300 300, 310 350 C 300 400, 340 485, 450 495"/>
+        <path class="field-line-strong" d="M 450 205 C 380 215, 360 300, 365 350 C 360 400, 380 485, 450 495"/>
+      </g>
+
+      <!-- ================= HORIZONTAL PLANES ================= -->
+      <!-- These are the key visuals: cutting planes at specific latitudes. -->
+      <g id="planesGroup">
+        <!-- Plane 1: Equator (horizontal slice, seen as ellipse) -->
+        <g id="plane-equator" data-lat="0">
+          <ellipse class="plane-fill" cx="450" cy="350" rx="160" ry="42"/>
+          <ellipse class="horizontal-plane" cx="450" cy="350" rx="160" ry="42"/>
+        </g>
+        <!-- Plane 2: Mid-northern latitude -->
+        <g id="plane-north" data-lat="45">
+          <ellipse class="plane-fill" cx="450" cy="262" rx="110" ry="30"/>
+          <ellipse class="horizontal-plane" cx="450" cy="262" rx="110" ry="30"/>
+        </g>
+        <!-- Plane 3: Mid-southern latitude -->
+        <g id="plane-south" data-lat="-45">
+          <ellipse class="plane-fill" cx="450" cy="438" rx="110" ry="30"/>
+          <ellipse class="horizontal-plane" cx="450" cy="438" rx="110" ry="30"/>
+        </g>
+      </g>
+
+      <!-- ================= COMPASS ROSE LAYER (dynamic) ================= -->
+      <!-- Rive-style "List" of compasses, positioned by constraints on plane paths -->
+      <g id="compassLayer"></g>
+
+      <!-- ================= LABELS ================= -->
+      <text class="label label-strong" x="30" y="30">EARTH MAGNETIC FIELD</text>
+      <text class="label" x="30" y="48">horizontal-plane compass patterns</text>
+
+      <text class="label" x="620" y="355">equator (magnetic)</text>
+      <text class="label" x="565" y="266">+45° latitude</text>
+      <text class="label" x="565" y="442">−45° latitude</text>
+
+      <!-- ================= STATE BADGE ================= -->
+      <g transform="translate(30,620)">
+        <rect class="state-badge" x="0" y="0" width="220" height="26" rx="6"/>
+        <text id="stateText" class="state-text" x="12" y="17">STATE: DIPOLE · ACTIVE</text>
+      </g>
+
+      <!-- ================= INFO READOUT ================= -->
+      <g transform="translate(660,620)">
+        <text class="label" x="0" y="0">dip angle @ equator:</text>
+        <text id="readoutDip" class="label-strong" x="150" y="0">0.0°</text>
+        <text class="label" x="0" y="18">declination (local):</text>
+        <text id="readoutDecl" class="label-strong" x="150" y="18">0.0°</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= VIEW MODEL PANEL ================= -->
+  <div class="panel">
+    <h2>View Model · Geomagnetic</h2>
+
+    <h3>Field</h3>
+    <div class="row">
+      <label>fieldActive</label>
+      <input type="checkbox" id="vm-active" checked />
+    </div>
+    <div class="row">
+      <label>dipoleStrength</label>
+      <input type="range" id="vm-strength" min="0.2" max="1.6" step="0.01" value="1.0" />
+      <span class="val" id="val-strength">1.00</span>
+    </div>
+    <div class="row">
+      <label>showHorizontalPlanes</label>
+      <input type="checkbox" id="vm-planes" checked />
+    </div>
+
+    <h3>Observer</h3>
+    <div class="row">
+      <label>latitude (°)</label>
+      <input type="range" id="vm-lat" min="-80" max="80" step="1" value="0" />
+      <span class="val" id="val-lat">0°</span>
+    </div>
+    <div class="row">
+      <label>longitude (°)</label>
+      <input type="range" id="vm-lon" min="-180" max="180" step="1" value="0" />
+      <span class="val" id="val-lon">0°</span>
+    </div>
+    <div class="row">
+      <label>showCompassRose</label>
+      <input type="checkbox" id="vm-rose" checked />
+    </div>
+
+    <h3>Geometry</h3>
+    <div class="row">
+      <label>planeVisibility</label>
+      <select id="vm-planeMode">
+        <option value="all" selected>All planes</option>
+        <option value="equator">Equator only</option>
+        <option value="mid">Mid-latitudes only</option>
+      </select>
+    </div>
+
+    <h3>State Machine</h3>
+    <div class="row">
+      <label>currentState</label>
+      <span class="val" id="val-state">ACTIVE</span>
+    </div>
+    <div class="row">
+      <button id="btn-reset">Reset View</button>
+    </div>
+
+    <h3>Readouts (Converters)</h3>
+    <div class="row">
+      <label>dip angle</label>
+      <span class="val" id="val-dip">0.0°</span>
+    </div>
+    <div class="row">
+      <label>field magnitude</label>
+      <span class="val" id="val-mag">1.00</span>
+    </div>
+    <div class="row">
+      <label>needle inclination</label>
+      <span class="val" id="val-incl">0.0°</span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   RIVE-STYLE RUNTIME — EARTH MAGNETIC FIELD (horizontal plane patterns)
+   ---------------------------------------------------------------------
+   Architecture mirror:
+     ViewModel      → vm  (bound properties)
+     Data Binding   → render reads vm each frame
+     Converters     → Converters.{dip, magnitude, inclination, planeR}
+     State Machine  → machine.states { IDLE, ACTIVE }
+     Constraints    → constrainToPath() on SVG path elements (plane ellipses)
+   ===================================================================== */
+
+/* ---------- 1. VIEW MODEL ---------- */
+const vm = {
+  // inputs
+  fieldActive: true,
+  dipoleStrength: 1.0,
+  showHorizontalPlanes: true,
+  latitude: 0,
+  longitude: 0,
+  showCompassRose: true,
+  planeMode: 'all',
+
+  // derived (filled by converters)
+  dipAngle: 0,
+  fieldMagnitude: 1.0,
+  inclination: 0,
+  currentState: 'ACTIVE'
+};
+
+/* ---------- 2. CONVERTERS (formulas) ---------- */
+// Earth's magnetic dipole: dip angle φ relates to geomagnetic latitude λ by
+//   tan(φ) = 2 · tan(λ)
+// Field magnitude scales as (1 + 3sin²λ)^½ for a dipole.
+const Converters = {
+  dipAngle: (latDeg) => {
+    const lat = latDeg * Math.PI / 180;
+    return Math.atan(2 * Math.tan(lat)) * 180 / Math.PI;
+  },
+  magnitude: (latDeg, strength) => {
+    const lat = latDeg * Math.PI / 180;
+    return strength * Math.sqrt(1 + 3 * Math.sin(lat) ** 2);
+  },
+  inclination: (latDeg) => {
+    // Same as dip angle but conventionally positive when pointing down
+    const lat = latDeg * Math.PI / 180;
+    return Math.atan(2 * Math.tan(lat)) * 180 / Math.PI;
+  },
+  // Maps latitude → plane vertical offset (px per degree) for the 2D side view
+  latToY: (latDeg) => 350 - latDeg * 2.1,
+  // Radius of horizontal plane ellipse at a given latitude (px)
+  planeRadius: (latDeg) => {
+    const lat = Math.abs(latDeg) * Math.PI / 180;
+    return 160 * Math.cos(lat * 0.85);
+  }
+};
+
+/* ---------- 3. STATE MACHINE ---------- */
+const machine = {
+  states: {
+    IDLE:   { enter: () => { vm.currentState = 'IDLE';   updateState(); } },
+    ACTIVE: { enter: () => { vm.currentState = 'ACTIVE'; updateState(); } }
+  },
+  transition(next) { if (this.states[next]) this.states[next].enter(); }
+};
+
+/* ---------- 4. CONSTRAINTS ---------- */
+// SVG-native "follow path" — same API Rive exposes conceptually.
+function constrainToPath(pathEl, t) {
+  const len = pathEl.getTotalLength();
+  const p = pathEl.getPointAtLength(((t % 1) + 1) % 1 * len);
+  return p;
+}
+
+/* ---------- 5. DOM REFS ---------- */
+const svgNS = 'http://www.w3.org/2000/svg';
+const compassLayer = document.getElementById('compassLayer');
+const planesGroup  = document.getElementById('planesGroup');
+const planeEq      = document.getElementById('plane-equator');
+const planeN       = document.getElementById('plane-north');
+const planeS       = document.getElementById('plane-south');
+const fieldLines   = document.getElementById('fieldLines');
+const stateText    = document.getElementById('stateText');
+const readoutDip   = document.getElementById('readoutDip');
+const readoutDecl  = document.getElementById('readoutDecl');
+
+/* ---------- 6. COMPASS POOL (Rive-style List binding) ---------- */
+// Each compass is a small group; we position them along horizontal plane
+// ellipses using parametric placement (constraint-driven).
+const compasses = [];
+
+function makeCompass() {
+  const g = document.createElementNS(svgNS, 'g');
+  g.setAttribute('class', 'compass-group');
+
+  const body = document.createElementNS(svgNS, 'circle');
+  body.setAttribute('r', 11);
+  body.setAttribute('class', 'compass');
+  g.appendChild(body);
+
+  // N half (red)
+  const nHalf = document.createElementNS(svgNS, 'path');
+  nHalf.setAttribute('d', 'M 0 -9 L 3 0 L -3 0 Z');
+  nHalf.setAttribute('class', 'compass-needle-n');
+  g.appendChild(nHalf);
+
+  // S half (blue)
+  const sHalf = document.createElementNS(svgNS, 'path');
+  sHalf.setAttribute('d', 'M 0 9 L 3 0 L -3 0 Z');
+  sHalf.setAttribute('class', 'compass-needle-s');
+  g.appendChild(sHalf);
+
+  // Tiny label
+  const lbl = document.createElementNS(svgNS, 'text');
+  lbl.setAttribute('y', 22);
+  lbl.setAttribute('text-anchor', 'middle');
+  lbl.setAttribute('class', 'compass-label');
+  lbl.textContent = 'N';
+  g.appendChild(lbl);
+
+  compassLayer.appendChild(g);
+  return { g, nHalf, sHalf, lbl };
+}
+
+// Seed a compass rose: place compasses around each horizontal plane.
+// planeRefs = [{el, lat, cy, rx, ry}]
+function seedCompasses() {
+  compasses.length = 0;
+  compassLayer.innerHTML = '';
+
+  const planes = [
+    { lat: 0,   cy: 350, rx: 160, ry: 42 },
+    { lat: 45,  cy: 262, rx: 110, ry: 30 },
+    { lat: -45, cy: 438, rx: 110, ry: 30 }
+  ];
+
+  planes.forEach(pl => {
+    const count = pl.lat === 0 ? 8 : 6;
+    for (let i = 0; i < count; i++) {
+      const t = i / count;
+      const angle = t * Math.PI * 2;
+      const x = 450 + pl.rx * Math.cos(angle);
+      const y = pl.cy + pl.ry * Math.sin(angle);
+      const c = makeCompass();
+      c.g.setAttribute('transform', `translate(${x},${y})`);
+      c.baseX = x; c.baseY = y;
+      c.lat = pl.lat;
+      c.phase = t;
+      compasses.push(c);
+    }
+  });
+}
+seedCompasses();
+
+/* ---------- 7. UI BINDING ---------- */
+const ui = {
+  active:   document.getElementById('vm-active'),
+  strength: document.getElementById('vm-strength'),
+  planes:   document.getElementById('vm-planes'),
+  lat:      document.getElementById('vm-lat'),
+  lon:      document.getElementById('vm-lon'),
+  rose:     document.getElementById('vm-rose'),
+  planeMode:document.getElementById('vm-planeMode'),
+  btnReset: document.getElementById('btn-reset'),
+
+  valStrength: document.getElementById('val-strength'),
+  valLat:      document.getElementById('val-lat'),
+  valLon:      document.getElementById('val-lon'),
+  valState:    document.getElementById('val-state'),
+  valDip:      document.getElementById('val-dip'),
+  valMag:      document.getElementById('val-mag'),
+  valIncl:     document.getElementById('val-incl')
+};
+
+function bindUI() {
+  ui.active.addEventListener('change', e => {
+    vm.fieldActive = e.target.checked;
+    machine.transition(vm.fieldActive ? 'ACTIVE' : 'IDLE');
+  });
+  ui.strength.addEventListener('input', e => {
+    vm.dipoleStrength = parseFloat(e.target.value);
+    ui.valStrength.textContent = vm.dipoleStrength.toFixed(2);
+  });
+  ui.planes.addEventListener('change', e => {
+    vm.showHorizontalPlanes = e.target.checked;
+  });
+  ui.lat.addEventListener('input', e => {
+    vm.latitude = parseFloat(e.target.value);
+    ui.valLat.textContent = vm.latitude + '°';
+  });
+  ui.lon.addEventListener('input', e => {
+    vm.longitude = parseFloat(e.target.value);
+    ui.valLon.textContent = vm.longitude + '°';
+  });
+  ui.rose.addEventListener('change', e => {
+    vm.showCompassRose = e.target.checked;
+  });
+  ui.planeMode.addEventListener('change', e => {
+    vm.planeMode = e.target.value;
+    applyPlaneMode();
+  });
+  ui.btnReset.addEventListener('click', () => {
+    vm.latitude = 0; vm.longitude = 0; vm.dipoleStrength = 1.0;
+    ui.lat.value = 0; ui.lon.value = 0; ui.strength.value = 1.0;
+    ui.valLat.textContent = '0°'; ui.valLon.textContent = '0°';
+    ui.valStrength.textContent = '1.00';
+  });
+}
+bindUI();
+
+function applyPlaneMode() {
+  planeEq.style.display = (vm.planeMode === 'all' || vm.planeMode === 'equator') ? '' : 'none';
+  planeN.style.display  = (vm.planeMode === 'all' || vm.planeMode === 'mid') ? '' : 'none';
+  planeS.style.display  = (vm.planeMode === 'all' || vm.planeMode === 'mid') ? '' : 'none';
+}
+applyPlaneMode();
+
+function updateState() {
+  stateText.textContent = 'STATE: DIPOLE · ' + vm.currentState;
+  ui.valState.textContent = vm.currentState;
+}
+
+/* ---------- 8. MAIN LOOP ---------- */
+let last = performance.now();
+let t0 = 0;
+
+function tick(now) {
+  const dt = Math.min((now - last) / 16.667, 3);
+  last = now;
+  t0 += dt / 60;
+
+  /* ---- Converters: derive readouts from VM ---- */
+  vm.dipAngle      = Converters.dipAngle(vm.latitude);
+  vm.fieldMagnitude = Converters.magnitude(vm.latitude, vm.dipoleStrength);
+  vm.inclination   = Converters.inclination(vm.latitude);
+
+  ui.valDip.textContent  = vm.dipAngle.toFixed(1) + '°';
+  ui.valMag.textContent  = vm.fieldMagnitude.toFixed(2);
+  ui.valIncl.textContent = vm.inclination.toFixed(1) + '°';
+  readoutDip.textContent = vm.dipAngle.toFixed(1) + '°';
+  readoutDecl.textContent = (vm.longitude * 0.15).toFixed(1) + '°';
+
+  /* ---- Field line visibility follows state ---- */
+  const fOpacity = vm.fieldActive ? 1 : 0.05;
+  fieldLines.style.opacity = fOpacity;
+  fieldLines.style.transition = 'opacity 300ms ease';
+
+  /* ---- Horizontal planes visibility ---- */
+  planesGroup.style.opacity = vm.showHorizontalPlanes ? 1 : 0;
+
+  /* ---- Compass needles (constraint-based orientation) ---- */
+  // Each compass aligns with the local field direction:
+  //   - At equator: needle horizontal (dip = 0)
+  //   - At mid-latitudes: needle dips toward the pole
+  // We rotate around Z (visual) using a combination of dip and a subtle
+  // breathing oscillation so the scene feels alive.
+  compasses.forEach(c => {
+    const latFactor = c.lat / 90; // −0.5 .. 0.5
+    const dip = Converters.dipAngle(c.lat);
+    // Visual "dip" in the SVG plane: tilt needle by sin(dip) → left/right lean
+    // Plus a slow oscillation for liveliness.
+    const breathe = Math.sin(t0 * 0.9 + c.phase * Math.PI * 2) * 3;
+    const tilt = Math.sin(dip * Math.PI / 180) * 40 * vm.dipoleStrength;
+    const jitter = vm.fieldActive ? breathe : 0;
+    c.g.setAttribute(
+      'transform',
+      `translate(${c.baseX},${c.baseY}) rotate(${tilt + jitter})`
+    );
+    c.g.style.opacity = vm.showCompassRose
+      ? (vm.fieldActive ? 0.95 : 0.2)
+      : 0;
+  });
+
+  /* ---- Field line pulse (subtle glow following strength) ---- */
+  const pulse = 0.55 + Math.sin(t0 * 1.4) * 0.08 * vm.dipoleStrength;
+  fieldLines.querySelectorAll('.field-line').forEach(p => {
+    p.style.opacity = vm.fieldActive ? pulse : 0.05;
+  });
+
+  requestAnimationFrame(tick);
+}
+
+/* ---------- 9. INIT ---------- */
+machine.transition('ACTIVE');
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
