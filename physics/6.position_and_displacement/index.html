@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electrochemical Equivalent — Study Guide</title>
+<style>
+  :root{
+    --green:#58CC02; --green-dark:#58A700; --green-light:#D7FFB8;
+    --blue:#1CB0F6; --blue-dark:#1899D6; --blue-light:#DDF4FF;
+    --red:#FF4B4B; --red-dark:#EA2B2B; --red-light:#FFDFE0;
+    --yellow:#FFC800; --purple:#CE82FF;
+    --ink:#3C3C3C; --ink-soft:#777; --line:#E5E5E5; --bg:#FFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink);
+    display:flex; justify-content:center; min-height:100vh;
+    font-weight:600;
+  }
+  .app{width:100%; max-width:560px; display:flex; flex-direction:column; min-height:100vh; position:relative;}
+
+  /* ---------- HEADER ---------- */
+  header{padding:16px 20px 8px; display:flex; align-items:center; gap:12px; position:sticky; top:0; background:var(--bg); z-index:20;}
+  .progress{flex:1; height:16px; background:var(--line); border-radius:99px; overflow:hidden;}
+  .progress-fill{height:100%; width:0%; background:var(--green); border-radius:99px; transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .xp{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--yellow); font-size:15px;}
+  .xp span{color:var(--ink-soft); font-size:13px;}
+
+  /* ---------- STAGE ---------- */
+  main{flex:1; padding:8px 20px 140px;}
+  .screen{display:none; animation:slide .35s cubic-bezier(.4,0,.2,1);}
+  .screen.active{display:block;}
+  @keyframes slide{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:translateY(0)}}
+
+  h1{font-size:26px; font-weight:800; line-height:1.2; margin-bottom:12px;}
+  h2{font-size:20px; font-weight:800; line-height:1.3; margin-bottom:10px;}
+  p{font-size:16px; line-height:1.55; color:var(--ink-soft); margin-bottom:14px;}
+  p strong{color:var(--ink); font-weight:800;}
+  .eyebrow{font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--blue); margin-bottom:8px;}
+
+  /* ---------- CARDS ---------- */
+  .card{
+    border:2px solid var(--line); border-radius:16px; padding:18px;
+    margin-bottom:16px; background:#fff;
+  }
+  .card.passage{border-color:var(--blue); background:var(--blue-light);}
+  .card.passage p{color:var(--ink); font-size:15px; margin:0; line-height:1.6;}
+  .card.answer{border-color:var(--green); background:var(--green-light); text-align:center;}
+  .card.answer .big{font-size:32px; font-weight:800; color:var(--green-dark); margin:6px 0;}
+
+  .tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
+    padding:4px 10px; border-radius:99px; margin-bottom:10px;}
+  .tag.blue{background:var(--blue); color:#fff;}
+  .tag.green{background:var(--green); color:#fff;}
+
+  /* ---------- MATH ---------- */
+  .math{
+    font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    font-size:16px; line-height:1.9; background:#F7F7F7;
+    border-radius:12px; padding:16px 18px; margin-bottom:14px;
+  }
+  .math .row{display:flex; justify-content:space-between; gap:12px;}
+  .math .op{color:var(--ink-soft);}
+  .math .res{color:var(--green-dark); font-weight:800; border-top:2px solid var(--line); padding-top:8px; margin-top:8px;}
+
+  /* ---------- ANCHOR VISUAL ---------- */
+  .anchor{display:flex; align-items:center; gap:16px; padding:20px; border:2px dashed var(--line); border-radius:16px; margin-bottom:16px;}
+  .salt{
+    width:34px; height:34px; flex:0 0 34px; border-radius:6px;
+    background:linear-gradient(135deg,#fff,#e8e8e8);
+    border:1.5px solid #d0d0d0; box-shadow:0 2px 0 #dcdcdc, inset 0 -2px 4px rgba(0,0,0,.06);
+    transform:rotate(12deg);
+  }
+  .anchor-text{font-size:15px; line-height:1.5;}
+  .anchor-text b{font-weight:800;}
+
+  /* ---------- SIZE LADDER ---------- */
+  .ladder{margin:24px 0 8px; padding:0 6px;}
+  .track{position:relative; height:5px; background:var(--line); border-radius:99px;}
+  .marker{position:absolute; top:-7px; width:3px; height:19px; background:var(--blue); border-radius:2px; transform:translateX(-50%);}
+  .marker.hi{background:var(--green); height:25px; top:-10px;}
+  .marker-label{position:absolute; top:-34px; transform:translateX(-50%); white-space:nowrap;
+    font-size:11px; font-weight:800; color:var(--blue);}
+  .marker-label.hi{color:var(--green-dark);}
+  .decades{display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:var(--ink-soft); font-weight:700;}
+  .ladder-note{font-size:13px; color:var(--ink-soft); text-align:center; margin-top:26px; line-height:1.5;}
+
+  /* ---------- OPTIONS ---------- */
+  .options{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
+  .opt{
+    display:flex; align-items:center; gap:14px; text-align:left;
+    padding:16px; background:#fff; border:2px solid var(--line); border-bottom-width:4px;
+    border-radius:16px; font-family:inherit; font-size:16px; font-weight:700;
+    color:var(--ink); cursor:pointer; transition:.12s; width:100%;
+  }
+  .opt:hover:not(.locked){background:#F7F7F7;}
+  .opt:active:not(.locked){transform:translateY(2px); border-bottom-width:2px;}
+  .opt .num{
+    flex:0 0 28px; height:28px; border-radius:8px; border:2px solid var(--line);
+    display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--ink-soft);
+  }
+  .opt.correct{background:var(--green-light); border-color:var(--green); color:var(--green-dark);}
+  .opt.correct .num{border-color:var(--green); color:var(--green-dark);}
+  .opt.wrong{background:var(--red-light); border-color:var(--red); color:var(--red-dark);}
+  .opt.wrong .num{border-color:var(--red); color:var(--red-dark);}
+  .opt.locked{cursor:default;}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  /* ---------- SUMMARY LIST ---------- */
+  .keylist{list-style:none; display:flex; flex-direction:column; gap:12px; margin-top:4px;}
+  .keylist li{display:flex; gap:12px; font-size:15px; line-height:1.5; color:var(--ink);}
+  .keylist .dot{flex:0 0 22px; height:22px; border-radius:50%; background:var(--green-light);
+    color:var(--green-dark); display:grid; place-items:center; font-size:12px; font-weight:800;}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:2px solid var(--line); padding:14px 20px 20px;
+    max-width:560px; margin:0 auto; z-index:30;
+    transition:transform .25s;
+  }
+  .feedback{display:none; margin-bottom:14px;}
+  .feedback.show{display:block; animation:slide .25s;}
+  .fb-head{display:flex; align-items:center; gap:8px; font-weight:800; font-size:17px; margin-bottom:4px;}
+  .fb-head.ok{color:var(--green-dark);}
+  .fb-head.no{color:var(--red-dark);}
+  .fb-body{font-size:14px; line-height:1.5; color:var(--ink-soft);}
+  .fb-body b{color:var(--ink); font-weight:800;}
+
+  .cta{
+    width:100%; padding:16px; border:none; border-radius:16px;
+    background:var(--green); border-bottom:4px solid var(--green-dark);
+    color:#fff; font-family:inherit; font-size:16px; font-weight:800;
+    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;
+  }
+  .cta:hover:not(:disabled){filter:brightness(1.05);}
+  .cta:active:not(:disabled){transform:translateY(2px); border-bottom-width:2px;}
+  .cta:disabled{background:var(--line); border-color:var(--line); color:#AFAFAF; cursor:not-allowed;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="progress"><div class="progress-fill" id="fill"></div></div>
+    <div class="xp">⚡ <span id="xpVal">0</span> XP</div>
+  </header>
+
+  <main>
+
+    <!-- 1. HOOK -->
+    <section class="screen active" data-type="content">
+      <div class="eyebrow">Electrochemistry · Intuition First</div>
+      <h1>The Invisible Deposit</h1>
+      <p>You pass a current through a metal-salt solution. Metal plates out onto the electrode — atom by atom, layer by layer.</p>
+      <p>But watch the electrode. Nothing seems to happen. No crust. No coating you can see.</p>
+      <p><strong>Why is electroplating so slow?</strong> Because the number that governs it is almost unbelievably small. Let's go find it.</p>
+    </section>
+
+    <!-- 2. PASSAGE -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">The Passage</div>
+      <h2>Read it once. Don't solve it yet.</h2>
+      <div class="card passage">
+        <p>The electrochemical equivalent of a metal is <strong>1.3 × 10⁻⁷ kg C⁻¹</strong>. The mass of the metal which <strong>2.0 × 10⁴ C</strong> of electricity will deposit from a suitable electrolyte is…</p>
+      </div>
+      <p>Most students jump straight to multiplying. Don't. First, answer this:</p>
+      <p><strong>How heavy is 1.3 × 10⁻⁷ kg?</strong> If you can't picture it, the answer you calculate won't mean anything.</p>
+    </section>
+
+    <!-- 3. ANCHOR -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Build the Anchor</div>
+      <h2>What weighs 10⁻⁷ kg?</h2>
+      <div class="anchor">
+        <div class="salt"></div>
+        <div class="anchor-text">
+          A single grain of salt weighs roughly <b>3 × 10⁻⁷ kg</b>.<br>
+          <span style="color:var(--ink-soft)">1.3 × 10⁻⁷ kg is about <b>half a grain of salt</b>.</span>
+        </div>
+      </div>
+      <p>So read the electrochemical equivalent out loud, slowly:</p>
+      <div class="card" style="border-color:var(--yellow); background:#FFF9E5;">
+        <p style="color:var(--ink); margin:0; font-size:15px;">
+          <strong>“One coulomb of charge deposits about half a grain of salt's worth of metal.”</strong>
+        </p>
+      </div>
+      <p>One coulomb is a small charge — it's what flows through a torch bulb in about a tenth of a second. So this number is telling you: <strong>a normal current deposits almost nothing.</strong></p>
+    </section>
+
+    <!-- 4. Q1 -->
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 1 of 3</div>
+      <h2>1 coulomb of charge flows through the cell. How much metal appears on the electrode?</h2>
+      <div class="options" data-q="1">
+        <button class="opt" data-correct="false"><span class="num">A</span> A car door — about 20 kg</button>
+        <button class="opt" data-correct="true"><span class="num">B</span> A grain of salt — about 10⁻⁷ kg</button>
+        <button class="opt" data-correct="false"><span class="num">C</span> A coin — about 5 g</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> A paperclip — about 1 g</button>
+      </div>
+    </section>
+
+    <!-- 5. Q2 -->
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 2 of 3</div>
+      <h2>Now 2.0 × 10⁴ coulombs flow. That's twenty thousand times more charge. How much metal now?</h2>
+      <div class="options" data-q="2">
+        <button class="opt" data-correct="false"><span class="num">A</span> Still invisible — a few micrograms</button>
+        <button class="opt" data-correct="false"><span class="num">B</span> About 26 kg — a bag of cement</button>
+        <button class="opt" data-correct="true"><span class="num">C</span> About 2.6 g — a paperclip</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> About 260 g — a bag of sugar</button>
+      </div>
+    </section>
+
+    <!-- 6. LADDER -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">See the Sizes</div>
+      <h2>Where do these masses sit?</h2>
+      <div class="ladder">
+        <div class="track">
+          <div class="marker" style="left:22%"></div>
+          <div class="marker-label" style="left:22%">1 C deposits<br>1.3 × 10⁻⁷ kg</div>
+          <div class="marker hi" style="left:71%"></div>
+          <div class="marker-label hi" style="left:71%">2.0 × 10⁴ C deposits<br>2.6 × 10⁻³ kg</div>
+        </div>
+        <div class="decades">
+          <span>10⁻⁹ kg</span><span>10⁻⁶</span><span>10⁻³</span><span>10⁰ kg</span>
+        </div>
+      </div>
+      <div class="ladder-note">Each gap is <b>1000×</b>, not 3×.<br>The answer climbs about 4 decades to the right — from invisible to holdable.</div>
+      <p style="margin-top:28px;">That's the whole story of this question: <strong>tiny per-coulomb deposit × enormous charge = something you can finally see.</strong></p>
+    </section>
+
+    <!-- 7. CALC -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Now Do the Maths</div>
+      <h2>m = Z × Q</h2>
+      <p>Mass deposited = (mass per coulomb) × (coulombs passed).</p>
+      <div class="math">
+        <div class="row"><span>Z</span><span>1.3 × 10⁻⁷ kg C⁻¹</span></div>
+        <div class="row"><span>Q</span><span>2.0 × 10⁴ C</span></div>
+        <div class="row op"><span>m = ZQ</span><span>1.3 × 10⁻⁷ × 2.0 × 10⁴</span></div>
+        <div class="row op"><span></span><span>1.3 × 2.0 = 2.6</span></div>
+        <div class="row op"><span></span><span>10⁻⁷ × 10⁴ = 10⁻³</span></div>
+        <div class="row res"><span>m</span><span>2.6 × 10⁻³ kg</span></div>
+      </div>
+      <p>Convert to grams: <strong>2.6 × 10⁻³ kg = 2.6 g</strong>.</p>
+    </section>
+
+    <!-- 8. ANSWER -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Answer</div>
+      <div class="card answer">
+        <div class="tag green">Correct Answer</div>
+        <div class="big">2.6 × 10⁻³ kg</div>
+        <p style="color:var(--green-dark); margin:0; font-weight:700;">= 2.6 grams ≈ one paperclip</p>
+      </div>
+      <p>Twenty thousand coulombs — a hefty charge — bought you a paperclip. That's electrochemistry's reality: the deposit rate is minuscule, so industrial plating runs for hours at high current.</p>
+    </section>
+
+    <!-- 9. Q3 TRANSFER -->
+    <section class="screen" data-type="question">
+      <div class="eyebrow">Active Recall · 3 of 3</div>
+      <h2>Same metal. Same 2.0 × 10⁴ C. But now the current runs at <em>half</em> the speed for <em>twice</em> as long. What's the mass deposited?</h2>
+      <div class="options" data-q="3">
+        <button class="opt" data-correct="false"><span class="num">A</span> Half as much — 1.3 g</button>
+        <button class="opt" data-correct="true"><span class="num">B</span> The same — 2.6 g</button>
+        <button class="opt" data-correct="false"><span class="num">C</span> Twice as much — 5.2 g</button>
+        <button class="opt" data-correct="false"><span class="num">D</span> Four times as much — 10.4 g</button>
+      </div>
+    </section>
+
+    <!-- 10. SUMMARY -->
+    <section class="screen" data-type="content">
+      <div class="eyebrow">Lock It In</div>
+      <h2>What you actually learned</h2>
+      <ul class="keylist">
+        <li><span class="dot">✓</span><span><b>Z is tiny.</b> For metals it sits around 10⁻⁷ to 10⁻⁶ kg per coulomb — a grain of salt, not a gram.</span></li>
+        <li><span class="dot">✓</span><span><b>m = ZQ.</b> Mass deposited is just the per-coulomb amount times the total charge.</span></li>
+        <li><span class="dot">✓</span><span><b>Charge, not current, deposits mass.</b> Q = It, so slowing the current and running longer changes nothing.</span></li>
+        <li><span class="dot">✓</span><span><b>Anchors beat memorisation.</b> "Half a grain of salt per coulomb" tells you instantly that the answer must be grams, never kilograms.</span></li>
+      </ul>
+      <div class="card" style="border-color:var(--purple); background:#FBF0FF; margin-top:20px;">
+        <p style="margin:0; color:var(--ink); font-size:15px;">
+          <strong>Next time you meet a small number</strong>, don't calculate first. Ask: <em>what real object weighs this much?</em> Then the arithmetic has somewhere to land.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="feedback" id="fb"></div>
+    <button class="cta" id="cta" disabled>Continue</button>
+  </footer>
+
+</div>
+
+<script>
+const screens = [...document.querySelectorAll('.screen')];
+const fill = document.getElementById('fill');
+const cta = document.getElementById('cta');
+const fb = document.getElementById('fb');
+const xpVal = document.getElementById('xpVal');
+
+let idx = 0;
+let xp = 0;
+const answered = new Set();
+
+function show(i){
+  screens.forEach((s,n)=>s.classList.toggle('active', n===i));
+  idx = i;
+  const isQ = screens[i].dataset.type === 'question';
+  cta.disabled = isQ && !answered.has(i);
+  fb.classList.remove('show');
+  fb.innerHTML = '';
+  fill.style.width = (i/(screens.length-1))*100 + '%';
+
+  // If already answered, restore the feedback state
+  if (isQ && answered.has(i)) {
+    const opts = screens[i].querySelectorAll('.opt');
+    opts.forEach(o=>o.classList.add('locked'));
+    const right = screens[i].querySelector('[data-correct="true"]');
+    right.classList.add('correct');
+    renderFeedback(i, true, true);
+    cta.disabled = false;
+  }
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderFeedback(screenIdx, wasCorrect, restore){
+  const map = {
+    3: {
+      ok: ['Nice.', 'One coulomb deposits 1.3 × 10⁻⁷ kg — about half a grain of salt. That number is your anchor for everything else.'],
+      no: ['Not quite.', '1.3 × 10⁻⁷ kg is 0.13 milligrams. That\'s a grain of salt, not a coin. Anchor it now and the rest is easy.']
+    },
+    4: {
+      ok: ['Exactly.', '20,000 × (1.3 × 10⁻⁷ kg) = 2.6 × 10⁻³ kg = 2.6 g. Tiny deposit × huge charge = a paperclip.'],
+      no: ['Look at the ratio.', '2.0 × 10⁴ coulombs is 20,000× more charge. 20,000 × 0.13 mg = 2,600 mg = 2.6 g.']
+    },
+    8: {
+      ok: ['Sharp.', 'm depends on total charge Q, not on how fast it flows. Halve the current, double the time — Q is unchanged, so m is unchanged.'],
+      no: ['Careful.', 'm = ZQ, and Q = It. Halving I and doubling t leaves Q identical. So the mass deposited is identical too.']
+    }
+  };
+  const m = map[screenIdx];
+  if (!m) return;
+  const head = wasCorrect ? m.ok[0] : m.no[0];
+  const body = wasCorrect ? m.ok[1] : m.no[1];
+  fb.innerHTML = `<div class="fb-head ${wasCorrect?'ok':'no'}">${wasCorrect?'✓':'✕'} ${head}</div><div class="fb-body">${body}</div>`;
+  fb.classList.add('show');
+}
+
+// Option handling
+screens.forEach((screen, sIdx)=>{
+  const opts = screen.querySelectorAll('.opt');
+  if (!opts.length) return;
+
+  opts.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if (answered.has(sIdx)) return;
+      answered.add(sIdx);
+      const isCorrect = btn.dataset.correct === 'true';
+
+      opts.forEach(o=>o.classList.add('locked'));
+      if (isCorrect){
+        btn.classList.add('correct');
+        xp += 10;
+      } else {
+        btn.classList.add('wrong','shake');
+        screen.querySelector('[data-correct="true"]').classList.add('correct');
+        setTimeout(()=>btn.classList.remove('shake'), 450);
+      }
+      xpVal.textContent = xp;
+      renderFeedback(sIdx, isCorrect, false);
+      cta.disabled = false;
+    });
+  });
+});
+
+cta.addEventListener('click', ()=>{
+  if (idx < screens.length - 1) show(idx + 1);
+});
+
+show(0);
+</script>
+</body>
+</html>
