@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Photon Energy Rig — The EM Spectrum</title>
+<style>
+  :root{
+    --bg:#05080d; --panel:#0b121b; --panel2:#0e1822; --line:#1b2b3a;
+    --txt:#c9dcec; --dim:#5d7891; --cy:#4fc3ff; --am:#ffb347; --rd:#ff5a4a; --gr:#4fe0a8;
+    --pk:#ff4fa3; --vi:#c07aff; --rainbow:linear-gradient(90deg,#802020,#c05030,#e04030,#ff4040,#ffa040,#ffe040,#40ff60,#40a0ff,#a040ff,#c080ff,#a0c0ff,#ffffff);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--txt);
+    font:13px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    overflow:hidden;
+  }
+  .app{display:flex;height:100vh;width:100vw}
+  .stage{
+    position:relative;flex:1;min-width:0;overflow:hidden;
+    background:radial-gradient(circle at 50% 45%, #15182c 0%, #0a0c18 60%, #04060b 100%);
+    display:flex;align-items:center;justify-content:center;
+  }
+  svg#rig{display:block;height:100%;width:100%;overflow:visible}
+  .overlay{position:absolute;inset:0;pointer-events:none;padding:14px 16px;
+           display:flex;flex-direction:column;justify-content:space-between}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{
+    background:rgba(10,22,34,.78);border:1px solid var(--line);
+    padding:5px 11px;border-radius:99px;font-size:11px;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--dim);backdrop-filter:blur(6px)
+  }
+  .chip b{color:var(--cy);font-weight:600}
+  .chip.state b{color:var(--am)}
+  .chip.band b{color:var(--vi)}
+  .chip.energy b{color:var(--am)}
+  .chip.blown b{color:var(--rd)}
+  .chip.blown.on{background:rgba(255,90,74,.22);border-color:var(--rd)}
+  .hud-bottom{display:flex;flex-direction:column;gap:8px;max-width:440px}
+  .meter{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:.12em;color:var(--dim)}
+  .track{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;
+         border:1px solid var(--line);position:relative}
+  .track i{display:block;height:100%;width:0%;border-radius:99px;
+           background:linear-gradient(90deg,#1e6fa8,#4fc3ff);transition:width .08s linear}
+  .track.thermal i{background:linear-gradient(90deg,#a86f30,#ff8c40)}
+  .track.spectrum{background:var(--rainbow);height:8px;position:relative}
+  .track.spectrum i{background:transparent}
+  .track .mark{position:absolute;top:-3px;width:2px;height:12px;background:#fff;border-radius:1px;
+               box-shadow:0 0 6px rgba(255,255,255,.9)}
+  .blend{display:flex;gap:14px;font-size:10px;letter-spacing:.1em;color:var(--dim)}
+  .blend b{color:var(--cy);font-weight:600}
+  .panel{
+    width:352px;flex:0 0 352px;background:var(--panel);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain
+  }
+  .panel::-webkit-scrollbar{width:8px}
+  .panel::-webkit-scrollbar-thumb{background:#1b2b3a;border-radius:9px}
+  section{padding:13px 15px;border-bottom:1px solid var(--line)}
+  h3{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+     font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between}
+  h3 span{color:#2f4457}
+  .bands{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+  .btn{
+    padding:8px 10px;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;cursor:pointer;font:inherit;font-size:11px;text-align:center;
+    transition:.15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  .btn:hover{color:var(--txt);border-color:#2b4356;background:#122232}
+  .btn.on{background:#173a2a;border-color:var(--gr);color:var(--gr)}
+  .btn.vis{border-color:#2a1a3a;color:#a880e0}
+  .btn.vis:hover{background:#1a0e2a;border-color:var(--vi);color:#d0a0ff}
+  .btn.vis.on{background:#2a0f3a;border-color:var(--vi);color:#e0c0ff;
+              box-shadow:0 0 10px rgba(192,122,255,.3)}
+  .btn.fire{border-color:#3a2a12;color:#a8865a}
+  .btn.fire:hover{background:#2a1f0e;border-color:var(--am);color:var(--am)}
+  .btn.fire:active{background:#3a2a12}
+  .btn.go{border-color:#1a4a3a;color:var(--gr);text-align:center;font-weight:600;
+          letter-spacing:.1em;font-size:11px;padding:9px 4px}
+  .btn.go:hover{background:#0d2a1e;border-color:#4fe0a8;color:#7fffc8}
+  .fire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .slider{margin-bottom:11px}
+  .slider:last-child{margin-bottom:0}
+  .slider label{display:flex;justify-content:space-between;font-size:10px;
+                letter-spacing:.1em;color:var(--dim);margin-bottom:5px}
+  .slider label b{color:var(--cy);font-weight:600}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;
+    background:#16242f;outline:none;cursor:pointer
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:var(--vi);border:2px solid #05121c;cursor:pointer;
+    box-shadow:0 0 8px rgba(192,122,255,.6)
+  }
+  .big-readout{
+    display:flex;justify-content:space-between;align-items:baseline;
+    background:#0a1218;border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;margin-bottom:8px
+  }
+  .big-readout .k{font-size:9.5px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
+  .big-readout .v{font-size:18px;color:var(--cy);font-weight:700;font-family:ui-monospace,monospace}
+  .big-readout .v.vi{color:var(--vi)}
+  .big-readout .v.am{color:var(--am)}
+  .mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .tlrow{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10.5px}
+  .tlrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7e9ab3}
+  .tlrow.on .nm{color:var(--txt)}
+  .tlrow .bar{width:56px;height:4px;background:#132029;border-radius:99px;overflow:hidden;flex:none}
+  .tlrow .bar i{display:block;height:100%;width:0;background:var(--vi);border-radius:99px}
+  .tlrow.one .bar i{background:var(--am)}
+  .tlrow .spd{width:34px;text-align:right;color:#3f5a72;flex:none;font-size:9.5px}
+  .log{font-size:10.5px;line-height:1.7;max-height:112px;overflow:hidden;color:#4d6b84}
+  .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .log b{color:var(--am);font-weight:600}
+  .log i{color:var(--cy);font-style:normal}
+  .legstatus{
+    margin-top:8px;font-size:9.5px;letter-spacing:.08em;color:#3d5a72;
+    display:flex;flex-wrap:wrap;gap:6px;min-height:14px
+  }
+  .legstatus .tag{
+    padding:1px 5px;border-radius:3px;background:#0e1a24;border:1px solid #1c2f3d;
+    color:#5a8aa8;font-size:9px;text-transform:uppercase
+  }
+  .legstatus .tag.ok{background:#0d2a1e;border-color:#1a4a3a;color:var(--gr)}
+  .legstatus .tag.vi{background:#1e0d2e;border-color:#4a1a5a;color:var(--vi)}
+  .legstatus .tag.am{background:#2a1f0e;border-color:#5a3010;color:var(--am)}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .panel{width:100%;flex:1 1 auto;border-left:none;border-top:1px solid var(--line)}
+    .stage{flex:0 0 46vh}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="stage">
+    <svg id="rig" viewBox="0 0 500 640" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="sourceGlow">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/>
+          <stop offset="0.3" stop-color="#4fc3ff" stop-opacity="0.5"/>
+          <stop offset="1" stop-color="#4fc3ff" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="flashRad">
+          <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+          <stop offset="0.3" stop-color="#c0e0ff" stop-opacity="0.6"/>
+          <stop offset="1" stop-color="#4fc3ff" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="specGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0.00" stop-color="#401010"/>
+          <stop offset="0.15" stop-color="#802020"/>
+          <stop offset="0.28" stop-color="#c05030"/>
+          <stop offset="0.36" stop-color="#e04030"/>
+          <stop offset="0.42" stop-color="#ff4040"/>
+          <stop offset="0.45" stop-color="#ffa040"/>
+          <stop offset="0.48" stop-color="#ffe040"/>
+          <stop offset="0.51" stop-color="#40ff60"/>
+          <stop offset="0.54" stop-color="#40a0ff"/>
+          <stop offset="0.58" stop-color="#a040ff"/>
+          <stop offset="0.65" stop-color="#c080ff"/>
+          <stop offset="0.78" stop-color="#a0c0ff"/>
+          <stop offset="1.00" stop-color="#ffffff"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Background dot grid -->
+      <g id="grid" opacity="0.25">
+        <defs>
+          <pattern id="dotPat" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.8" fill="#1e3244"/>
+          </pattern>
+        </defs>
+        <rect x="0" y="0" width="500" height="640" fill="url(#dotPat)"/>
+      </g>
+
+      <!-- Source -->
+      <g id="sourceG">
+        <rect x="22" y="276" width="38" height="48" rx="6"
+              fill="#0e1822" stroke="#3a5468" stroke-width="1.5"/>
+        <polygon points="60,282 88,272 88,328 60,318"
+                 fill="#0e1822" stroke="#3a5468" stroke-width="1.5"/>
+        <circle id="sourceGlowCircle" cx="76" cy="300" r="8" fill="url(#sourceGlow)" opacity="0.7"/>
+        <circle id="sourceCore" cx="76" cy="300" r="3" fill="#ffffff"/>
+        <text x="41" y="266" text-anchor="middle" font-size="9" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.12em">SOURCE</text>
+      </g>
+
+      <!-- Interaction scenes (all hidden by default; toggle per state) -->
+      <!-- RADIO -->
+      <g id="sceneRadio" style="display:none" transform="translate(250 300)">
+        <line x1="-70" y1="-90" x2="-70" y2="90" stroke="#5d7891"
+              stroke-dasharray="3 5" opacity="0.28"/>
+        <line x1="70" y1="-90" x2="70" y2="90" stroke="#5d7891"
+              stroke-dasharray="3 5" opacity="0.28"/>
+        <g id="radioAnt" transform="translate(0 -30)">
+          <line x1="0" y1="60" x2="0" y2="-45" stroke="#7a94a8" stroke-width="1.5"/>
+          <line x1="-14" y1="60" x2="14" y2="60" stroke="#7a94a8" stroke-width="1.5"/>
+          <line x1="-10" y1="0" x2="10" y2="0" stroke="#7a94a8" stroke-width="1.5"/>
+          <line x1="-6" y1="-24" x2="6" y2="-24" stroke="#7a94a8" stroke-width="1.5"/>
+          <circle cx="0" cy="-45" r="2.5" fill="#a8b6c4"/>
+        </g>
+        <g id="radioRings" transform="translate(0 -45)" opacity="0.6">
+          <circle r="12" fill="none" stroke="#a8b6c4" stroke-width="0.8" opacity="0"/>
+          <circle r="24" fill="none" stroke="#a8b6c4" stroke-width="0.8" opacity="0"/>
+          <circle r="36" fill="none" stroke="#a8b6c4" stroke-width="0.8" opacity="0"/>
+        </g>
+        <text y="-115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">NO INTERACTION</text>
+        <text y="115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">λ ≫ object size</text>
+      </g>
+
+      <!-- MICROWAVE — spinning water molecules -->
+      <g id="sceneMicro" style="display:none" transform="translate(250 300)">
+        <g class="microMol" transform="translate(-55 -35)">
+          <circle r="11" fill="#4fc3ff" stroke="#1e6fa8" stroke-width="1.5"/>
+          <text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="#0a1218"
+                font-family="ui-monospace,monospace">O</text>
+          <circle cx="-8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <circle cx="8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <line x1="0" y1="0" x2="-8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+          <line x1="0" y1="0" x2="8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+        </g>
+        <g class="microMol" transform="translate(45 25)">
+          <circle r="11" fill="#4fc3ff" stroke="#1e6fa8" stroke-width="1.5"/>
+          <text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="#0a1218"
+                font-family="ui-monospace,monospace">O</text>
+          <circle cx="-8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <circle cx="8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <line x1="0" y1="0" x2="-8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+          <line x1="0" y1="0" x2="8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+        </g>
+        <g class="microMol" transform="translate(-25 65)">
+          <circle r="11" fill="#4fc3ff" stroke="#1e6fa8" stroke-width="1.5"/>
+          <text y="3" text-anchor="middle" font-size="9" font-weight="700" fill="#0a1218"
+                font-family="ui-monospace,monospace">O</text>
+          <circle cx="-8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <circle cx="8" cy="-8" r="5" fill="#ff5a4a" stroke="#8a2010" stroke-width="1"/>
+          <line x1="0" y1="0" x2="-8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+          <line x1="0" y1="0" x2="8" y2="-8" stroke="#5d7891" stroke-width="1.2"/>
+        </g>
+        <text y="-115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">MOLECULAR ROTATION</text>
+        <text y="115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">water spins → heat</text>
+      </g>
+
+      <!-- INFRARED — vibrating diatomic molecules -->
+      <g id="sceneIR" style="display:none" transform="translate(250 300)">
+        <g class="irMol" transform="translate(-55 -25)">
+          <circle class="irAtomA" cx="-18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <circle class="irAtomB" cx="18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <line class="irBond" x1="-10" y1="0" x2="10" y2="0" stroke="#5d7891" stroke-width="1.4"/>
+        </g>
+        <g class="irMol" transform="translate(50 30)">
+          <circle class="irAtomA" cx="-18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <circle class="irAtomB" cx="18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <line class="irBond" x1="-10" y1="0" x2="10" y2="0" stroke="#5d7891" stroke-width="1.4"/>
+        </g>
+        <g class="irMol" transform="translate(-15 60)">
+          <circle class="irAtomA" cx="-18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <circle class="irAtomB" cx="18" cy="0" r="8" fill="#ff8c40" stroke="#8a4a10" stroke-width="1.2"/>
+          <line class="irBond" x1="-10" y1="0" x2="10" y2="0" stroke="#5d7891" stroke-width="1.4"/>
+        </g>
+        <text y="-115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">MOLECULAR VIBRATION</text>
+        <text y="115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">bonds stretch &amp; compress</text>
+      </g>
+
+      <!-- VISIBLE — Bohr atom absorbing/emitting -->
+      <g id="sceneVisible" style="display:none" transform="translate(250 300)">
+        <ellipse rx="45" ry="45" fill="none" stroke="#5d7891"
+                 stroke-dasharray="3 5" opacity="0.45"/>
+        <ellipse rx="78" ry="78" fill="none" stroke="#5d7891"
+                 stroke-dasharray="3 5" opacity="0.25"/>
+        <circle r="12" fill="#ffb347" stroke="#8a4a10" stroke-width="1.5"/>
+        <text y="4" text-anchor="middle" font-size="11" font-weight="700" fill="#0a1218"
+              font-family="ui-monospace,monospace">+</text>
+        <!-- Electron: position computed in JS -->
+        <circle id="visElectron" r="5.5" fill="#4fc3ff" stroke="#0a1218" stroke-width="1.5"/>
+        <circle id="visIncoming" r="6" fill="#ffffff" opacity="0"/>
+        <circle id="visEmitted" r="6" fill="#ffffff" opacity="0"/>
+        <text y="-115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">ATOMIC ABSORPTION</text>
+        <text y="115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">hν → electron jump</text>
+      </g>
+
+      <!-- UV — photoelectric effect -->
+      <g id="sceneUV" style="display:none" transform="translate(250 300)">
+        <rect x="-75" y="18" width="150" height="42" rx="3"
+              fill="#1a2531" stroke="#5d7891" stroke-width="1.4"/>
+        <g stroke="#5d7891" stroke-width="1" opacity="0.35">
+          <line x1="-65" y1="18" x2="-45" y2="60"/>
+          <line x1="-35" y1="18" x2="-15" y2="60"/>
+          <line x1="-5"  y1="18" x2="15"  y2="60"/>
+          <line x1="25"  y1="18" x2="45"  y2="60"/>
+          <line x1="55"  y1="18" x2="70"  y2="60"/>
+        </g>
+        <text y="44" text-anchor="middle" font-size="10" font-weight="700"
+              fill="#5d7891" font-family="ui-monospace,monospace">METAL  φ = 4.5 eV</text>
+        <g id="uvElectrons"></g>
+        <text y="-115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">PHOTOELECTRIC EFFECT</text>
+        <text y="95" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">electrons ejected</text>
+      </g>
+
+      <!-- X-RAY — penetration through barrier -->
+      <g id="sceneXray" style="display:none" transform="translate(250 300)">
+        <rect x="-60" y="-60" width="120" height="120" rx="6"
+              fill="#0e1822" fill-opacity="0.85" stroke="#5d7891" stroke-width="1.2"/>
+        <rect x="-50" y="-50" width="100" height="100" rx="4"
+              fill="none" stroke="#3a5468" stroke-width="0.8" stroke-dasharray="2 4" opacity="0.5"/>
+        <text y="4" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">DENSE BARRIER</text>
+        <g id="xrayScatter"></g>
+        <text y="-90" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">PENETRATION</text>
+        <text y="95" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">passes through</text>
+      </g>
+
+      <!-- GAMMA — nuclear recoil through multiple barriers -->
+      <g id="sceneGamma" style="display:none" transform="translate(250 300)">
+        <line x1="-95" y1="-85" x2="-95" y2="85" stroke="#5d7891"
+              stroke-width="1" stroke-dasharray="3 5" opacity="0.4"/>
+        <line x1="-55" y1="-85" x2="-55" y2="85" stroke="#5d7891"
+              stroke-width="1" stroke-dasharray="3 5" opacity="0.4"/>
+        <line x1="55" y1="-85" x2="55" y2="85" stroke="#5d7891"
+              stroke-width="1" stroke-dasharray="3 5" opacity="0.4"/>
+        <line x1="95" y1="-85" x2="95" y2="85" stroke="#5d7891"
+              stroke-width="1" stroke-dasharray="3 5" opacity="0.4"/>
+        <g id="gammaNucleus">
+          <circle cx="-8" cy="-6" r="7" fill="#e0c0ff" stroke="#8030a0" stroke-width="1.2"/>
+          <circle cx="6" cy="-8" r="7" fill="#e0c0ff" stroke="#8030a0" stroke-width="1.2"/>
+          <circle cx="-7" cy="8" r="7" fill="#e0c0ff" stroke="#8030a0" stroke-width="1.2"/>
+          <circle cx="8" cy="6" r="7" fill="#e0c0ff" stroke="#8030a0" stroke-width="1.2"/>
+          <circle cx="0" cy="0" r="7" fill="#e0c0ff" stroke="#8030a0" stroke-width="1.2"/>
+        </g>
+        <text y="-110" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.14em">NUCLEAR TRANSITION</text>
+        <text y="115" text-anchor="middle" font-size="10" fill="#5d7891"
+              font-family="ui-monospace,monospace">deep penetration</text>
+      </g>
+
+      <!-- Beam (drawn on top of scenes) -->
+      <path id="beamGlow" fill="none" stroke="#4fc3ff" stroke-width="6"
+            stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>
+      <path id="beamWave" fill="none" stroke="#4fc3ff" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round"/>
+      <g id="beamPackets"></g>
+
+      <!-- Detector -->
+      <g id="detectorG">
+        <rect x="442" y="282" width="34" height="36" rx="4"
+              fill="#0e1822" stroke="#3a5468" stroke-width="1.5"/>
+        <text x="459" y="272" text-anchor="middle" font-size="9" fill="#5d7891"
+              font-family="ui-monospace,monospace" letter-spacing="0.12em">DETECT</text>
+        <circle id="detectorDot" cx="459" cy="300" r="4" fill="#4fc3ff"/>
+      </g>
+
+      <!-- State-change flash over the interaction zone -->
+      <circle id="stateFlash" cx="250" cy="300" r="0"
+              fill="url(#flashRad)" opacity="0" pointer-events="none"/>
+
+      <!-- Info card at top-left -->
+      <g id="infoG" transform="translate(28 90)">
+        <rect x="0" y="0" width="180" height="68" rx="6"
+              fill="#0a1218" stroke="#1b2b3a" opacity="0.85"/>
+        <text x="10" y="18" font-family="ui-monospace,monospace" font-size="9"
+              fill="#5d7891" letter-spacing="0.14em">PHOTON ENERGY</text>
+        <text id="infoE" x="10" y="38" font-family="ui-monospace,monospace" font-size="16"
+              font-weight="700" fill="#c07aff">2.00 eV</text>
+        <text id="infoL" x="10" y="55" font-family="ui-monospace,monospace" font-size="10"
+              fill="#5d7891">λ = 620 nm</text>
+      </g>
+
+      <!-- Spectrum strip -->
+      <g id="spectrumG" transform="translate(30 535)">
+        <rect x="-4" y="-4" width="448" height="42" rx="6"
+              fill="#0a1218" stroke="#1b2b3a"/>
+        <rect x="0" y="0" width="440" height="34" rx="4" fill="url(#specGrad)"/>
+        <polygon id="specMarker" points="0,-2 -6,-9 6,-9" fill="#ffffff"
+                 transform="translate(0 36)" opacity="0.95"/>
+        <text x="0" y="52" font-family="ui-monospace,monospace" font-size="8"
+              fill="#5d7891" letter-spacing="0.1em">RADIO</text>
+        <text x="220" y="52" text-anchor="middle" font-family="ui-monospace,monospace"
+              font-size="8" fill="#5d7891" letter-spacing="0.1em">VISIBLE</text>
+        <text x="440" y="52" text-anchor="end" font-family="ui-monospace,monospace"
+              font-size="8" fill="#5d7891" letter-spacing="0.1em">GAMMA</text>
+      </g>
+
+    </svg>
+
+    <div class="overlay">
+      <div class="row">
+        <div class="chip" id="modeChip">mode <b>em</b></div>
+        <div class="chip state" id="stateChip">state <b>Spectrum_Visible</b></div>
+        <div class="chip band" id="bandChip">band <b>VISIBLE</b></div>
+        <div class="chip energy" id="energyChip">E <b>2.00 eV</b></div>
+        <div class="chip" id="fpsChip">-- fps</div>
+      </div>
+      <div class="hud-bottom">
+        <div class="meter">
+          <span>ENERGY</span>
+          <div class="track spectrum" id="energyTrack">
+            <i></i>
+            <span class="mark" id="energyMark" style="left:50%"></span>
+          </div>
+          <b id="energyVal" style="color:var(--vi)">2.00 eV</b>
+        </div>
+        <div class="blend">
+          <span>BAND <b id="bandName">VISIBLE</b></span>
+          <span>λ <b id="waveVal">620 nm</b></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel">
+
+    <section>
+      <h3>Band selector <span>§2.1</span></h3>
+      <div class="bands">
+        <button class="btn vis" data-band="Radio">◊ Radio</button>
+        <button class="btn vis" data-band="Micro">≈ Microwave</button>
+        <button class="btn vis" data-band="IR">♨ Infrared</button>
+        <button class="btn vis on" data-band="Visible">◉ Visible</button>
+        <button class="btn vis" data-band="UV">☼ UV</button>
+        <button class="btn vis" data-band="Xray">✶ X-ray</button>
+        <button class="btn vis" data-band="Gamma" style="grid-column:span 2">☢ Gamma</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Photon energy <span>§3.1</span></h3>
+      <div class="slider">
+        <label>log₁₀ E <b><span id="vLogE">0.30</span></b></label>
+        <input type="range" id="fEnergy" min="-9" max="9" step="0.01" value="0.30">
+      </div>
+      <div class="big-readout">
+        <span class="k">Energy</span>
+        <span class="v vi" id="rE">2.00 eV</span>
+      </div>
+      <div class="mini-grid">
+        <div class="big-readout" style="flex-direction:column;align-items:flex-start;gap:2px">
+          <span class="k">Wavelength</span>
+          <span class="v" id="rL" style="font-size:13px">620 nm</span>
+        </div>
+        <div class="big-readout" style="flex-direction:column;align-items:flex-start;gap:2px">
+          <span class="k">Frequency</span>
+          <span class="v" id="rF" style="font-size:13px">4.8e14 Hz</span>
+        </div>
+      </div>
+      <div class="legstatus" id="bandStatus">
+        <span class="tag vi">visible</span>
+      </div>
+    </section>
+
+    <section>
+      <h3>Playback <span>§3.2</span></h3>
+      <div class="slider">
+        <label>speed <b><span id="vSpeed">100</span>%</b></label>
+        <input type="range" id="fSpeed" min="10" max="200" value="100">
+      </div>
+      <div class="slider">
+        <label>paused <b><span id="vPause">no</span></b></label>
+        <input type="range" id="fPause" min="0" max="1" value="0">
+      </div>
+    </section>
+
+    <section>
+      <h3>One-shot triggers <span>§3.3</span></h3>
+      <div class="fire-grid">
+        <button class="btn fire" data-fire="Pulse_Burst">burst</button>
+        <button class="btn fire" data-fire="Warn_Pulse">warn</button>
+        <button class="btn fire" id="btnReset">reset</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Timeline inspector <span id="tlCount">--</span></h3>
+      <div id="inspector"></div>
+    </section>
+
+    <section style="border-bottom:none">
+      <h3>Event log <span>§5</span></h3>
+      <div class="log" id="log"></div>
+    </section>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════
+   1. TIMELINE ENGINE
+   ══════════════════════════════════════════════════════════════ */
+let clock = 0;
+
+class Timeline {
+  constructor(name, dur, mode = 'loop', opts = {}) {
+    this.name = name; this.dur = dur; this.mode = mode;
+    this.t = opts.offset || 0; this.dir = 1; this.speed = 1;
+    this.active = false; this.w = 0; this.wTarget = 0;
+    this.manual = false; this.weightTarget = 0;
+    this.events = opts.events || []; this.onDone = null;
+  }
+  get p() { return this.dur ? Math.min(1, Math.max(0, this.t / this.dur)) : 0; }
+  start() {
+    if (this.mode === 'oneshot') this.t = 0;
+    this.active = true;
+    if (!this.manual) this.wTarget = 1;
+  }
+  stop() { this.active = false; if (!this.manual) this.wTarget = 0; }
+  tick(dt) {
+    const target = this.manual ? this.weightTarget : (this.active ? 1 : 0);
+    this.wTarget = target;
+    this.w += (target - this.w) * Math.min(1, dt * 9);
+    if (!this.active) return;
+    const prev = this.t;
+    this.t += dt * this.speed * this.dir;
+    if (this.mode === 'loop') {
+      if (this.t >= this.dur) { this.t -= this.dur; this._events(prev, this.t, true); }
+      else this._events(prev, this.t, false);
+    } else {
+      if (this.t >= this.dur) {
+        this.t = this.dur; this._events(prev, this.dur, false);
+        this.active = false; this.wTarget = 0;
+        if (this.onDone) this.onDone(this);
+      } else this._events(prev, this.t, false);
+    }
+  }
+  _events(p0, p1, wrapped) {
+    if (!this.events.length) return;
+    const a = p0 / this.dur, b = p1 / this.dur;
+    for (const e of this.events) {
+      const hit = wrapped ? (e.at > a || e.at <= b) : (e.at > a && e.at <= b);
+      if (hit) fireEvent(e.name, this.name);
+    }
+  }
+}
+
+const T = {};
+function reg(name, dur, mode, opts) { T[name] = new Timeline(name, dur, mode, opts || {}); }
+
+reg('Radio_Scroll',   4.0, 'loop');
+reg('Micro_Rotate',   0.8, 'loop');
+reg('IR_Vibrate',     0.5, 'loop');
+reg('Vis_Cycle',      2.5, 'loop', {events:[
+  {at:0.30, name:'photon-arrives'},
+  {at:0.70, name:'photon-emitted'}
+]});
+reg('UV_Fire',        1.0, 'loop', {events:[{at:0.5, name:'electron-ejected'}]});
+reg('Xray_Pulse',     1.2, 'loop');
+reg('Gamma_Pulse',    0.8, 'loop', {events:[{at:0.4, name:'nucleus-recoil'}]});
+reg('Pulse_Burst',    0.5, 'oneshot');
+reg('Warn_Pulse',     0.8, 'oneshot');
+reg('Global_Reset',   0.4, 'oneshot', {events:[{at:0,name:'onReset'}]});
+
+/* ══════════════════════════════════════════════════════════════
+   2. STATE MACHINE
+   ══════════════════════════════════════════════════════════════ */
+const STATES = {
+  Spectrum_Radio:   { scene:'sceneRadio',   primary:'Radio_Scroll' },
+  Spectrum_Micro:   { scene:'sceneMicro',   primary:'Micro_Rotate' },
+  Spectrum_IR:      { scene:'sceneIR',      primary:'IR_Vibrate' },
+  Spectrum_Visible: { scene:'sceneVisible', primary:'Vis_Cycle' },
+  Spectrum_UV:      { scene:'sceneUV',      primary:'UV_Fire' },
+  Spectrum_Xray:    { scene:'sceneXray',    primary:'Xray_Pulse' },
+  Spectrum_Gamma:   { scene:'sceneGamma',   primary:'Gamma_Pulse' },
+};
+let state = 'Spectrum_Visible';
+
+function setState(name) {
+  if (!STATES[name] || state === name) return;
+  const prev = STATES[state];
+  if (prev && prev.primary) T[prev.primary].stop();
+  // hide all scenes
+  for (const k in STATES) {
+    const s = document.getElementById(STATES[k].scene);
+    if (s) s.style.display = 'none';
+  }
+  state = name;
+  const next = STATES[name];
+  const el = document.getElementById(next.scene);
+  if (el) el.style.display = '';
+  if (next.primary) T[next.primary].start();
+  stateChangeTime = clock;
+  syncUI();
+}
+
+let stateChangeTime = -10;
+
+/* ══════════════════════════════════════════════════════════════
+   3. PHOTON PHYSICS
+   ══════════════════════════════════════════════════════════════ */
+let logE = 0.30;
+let paused = false;
+let speedMult = 1.0;
+
+function getEnergy() { return Math.pow(10, logE); }
+function wavelengthNm() {
+  const E = getEnergy();
+  return 1240 / E;  // nm
+}
+function frequencyHz() {
+  const E = getEnergy();
+  return E * 2.417989e14;
+}
+
+function pickState(e) {
+  if (e < -4)   return 'Spectrum_Radio';
+  if (e < -2)   return 'Spectrum_Micro';
+  if (e < 0.22) return 'Spectrum_IR';
+  if (e < 0.49) return 'Spectrum_Visible';
+  if (e < 2.09) return 'Spectrum_UV';
+  if (e < 5.09) return 'Spectrum_Xray';
+  return 'Spectrum_Gamma';
+}
+function bandName() {
+  return state.replace('Spectrum_','');
+}
+
+function beamColor(e) {
+  if (e < -4)   return '#905030';
+  if (e < -2)   return '#c05030';
+  if (e < 0.22) return '#e85030';
+  if (e < 0.49) {
+    const t = (e - 0.22) / 0.27;
+    return visibleRamp(t);
+  }
+  if (e < 2.09) return '#b060ff';
+  if (e < 5.09) return '#b0d0ff';
+  return '#e8d0ff';
+}
+function visibleRamp(t) {
+  t = Math.max(0, Math.min(1, t));
+  const stops = [
+    [0.00, [255,  50,  50]],
+    [0.15, [255, 140,  40]],
+    [0.30, [255, 230,  60]],
+    [0.50, [ 80, 255,  80]],
+    [0.70, [ 60, 140, 255]],
+    [0.88, [150,  80, 255]],
+    [1.00, [190,  50, 255]],
+  ];
+  for (let i = 1; i < stops.length; i++) {
+    if (t <= stops[i][0]) {
+      const [t0, c0] = stops[i-1], [t1, c1] = stops[i];
+      const u = (t - t0) / (t1 - t0);
+      const r = Math.round(c0[0] + (c1[0]-c0[0]) * u);
+      const g = Math.round(c0[1] + (c1[1]-c0[1]) * u);
+      const b = Math.round(c0[2] + (c1[2]-c0[2]) * u);
+      return `rgb(${r},${g},${b})`;
+    }
+  }
+  return '#b040ff';
+}
+function cyclesForEnergy(e) {
+  const t = (e + 9) / 18;
+  return 3 * Math.pow(120/3, t);
+}
+function amplitudeForEnergy(e) {
+  const t = (e + 9) / 18;
+  return 32 * (1 - t * 0.9);
+}
+function beamSpeedForEnergy(e) {
+  const t = (e + 9) / 18;
+  return 1.0 + t * 8.0;
+}
+
+/* Format helpers */
+function fmtEnergy(E) {
+  if (E >= 1e6) return (E/1e6).toFixed(2) + ' MeV';
+  if (E >= 1e3) return (E/1e3).toFixed(2) + ' keV';
+  if (E >= 1)   return E.toFixed(2) + ' eV';
+  if (E >= 1e-3) return (E*1e3).toFixed(2) + ' meV';
+  if (E >= 1e-6) return (E*1e6).toFixed(2) + ' µeV';
+  return E.toExponential(2) + ' eV';
+}
+function fmtWavelength(Lnm) {
+  if (Lnm >= 1e9) return (Lnm/1e9).toFixed(2) + ' Gm';
+  if (Lnm >= 1e6) return (Lnm/1e6).toFixed(2) + ' Mm';
+  if (Lnm >= 1e3) return (Lnm/1e3).toFixed(2) + ' µm';
+  if (Lnm >= 1)   return Lnm.toFixed(0) + ' nm';
+  return (Lnm*1e3).toFixed(2) + ' pm';
+}
+function fmtFreq(f) {
+  if (f >= 1e18) return (f/1e18).toFixed(2) + ' EHz';
+  if (f >= 1e15) return (f/1e15).toFixed(2) + ' PHz';
+  if (f >= 1e12) return (f/1e12).toFixed(2) + ' THz';
+  if (f >= 1e9)  return (f/1e9).toFixed(2)  + ' GHz';
+  if (f >= 1e6)  return (f/1e6).toFixed(2)  + ' MHz';
+  if (f >= 1e3)  return (f/1e3).toFixed(2)  + ' kHz';
+  return f.toFixed(2) + ' Hz';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. SVG REFS + BEAM
+   ══════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const beamWave = $('beamWave');
+const beamGlow = $('beamGlow');
+const beamPackets = $('beamPackets');
+const specMarker = $('specMarker');
+const stateFlash = $('stateFlash');
+const visElectron = $('visElectron');
+const visIncoming = $('visIncoming');
+const visEmitted = $('visEmitted');
+const uvElectronsG = $('uvElectrons');
+const xrayScatterG = $('xrayScatter');
+const gammaNucleus = $('gammaNucleus');
+const sourceCore = $('sourceCore');
+const detectorDot = $('detectorDot');
+
+function buildBeamPath(cycles, amp, x0, x1, y, phase) {
+  const N = Math.max(200, Math.min(2400, Math.round(cycles * 14)));
+  let d = '';
+  for (let k = 0; k <= N; k++) {
+    const u = k / N;
+    const x = x0 + u * (x1 - x0);
+    const yy = y + amp * Math.sin(u * cycles * Math.PI * 2 - phase);
+    d += (k ? 'L' : 'M') + x.toFixed(1) + ' ' + yy.toFixed(1) + ' ';
+  }
+  return d;
+}
+
+/* UV electron pool */
+const uvElectrons = [];
+function spawnUVElectron() {
+  if (uvElectrons.length >= 10) return;
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  el.setAttribute('r', '3.5');
+  el.setAttribute('fill', '#4fc3ff');
+  el.setAttribute('stroke', '#0a1218');
+  el.setAttribute('stroke-width', '1');
+  uvElectronsG.appendChild(el);
+  uvElectrons.push({
+    x: -20 + Math.random() * 40,
+    y: 10,
+    vx: 30 + Math.random() * 40,
+    vy: -60 - Math.random() * 50,
+    age: 0, life: 1.2,
+    el,
+  });
+}
+function stepUVElectrons(dt) {
+  for (let i = uvElectrons.length - 1; i >= 0; i--) {
+    const e = uvElectrons[i];
+    e.age += dt;
+    if (e.age > e.life) { e.el.remove(); uvElectrons.splice(i, 1); continue; }
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
+    e.vy += 40 * dt;  // gravity — ballistic
+    e.el.setAttribute('cx', e.x.toFixed(1));
+    e.el.setAttribute('cy', e.y.toFixed(1));
+    e.el.setAttribute('opacity', (1 - e.age / e.life).toFixed(2));
+  }
+}
+
+/* X-ray scatter pool */
+const xrayScatter = [];
+function spawnXrayScatter() {
+  if (xrayScatter.length >= 14) return;
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  el.setAttribute('r', '2');
+  el.setAttribute('fill', '#b0d0ff');
+  xrayScatterG.appendChild(el);
+  xrayScatter.push({
+    x: (Math.random() - 0.5) * 120,
+    y: (Math.random() - 0.5) * 120,
+    vx: (Math.random() - 0.5) * 30,
+    vy: (Math.random() - 0.5) * 30,
+    age: 0, life: 0.9,
+    el,
+  });
+}
+function stepXrayScatter(dt) {
+  for (let i = xrayScatter.length - 1; i >= 0; i--) {
+    const s = xrayScatter[i];
+    s.age += dt;
+    if (s.age > s.life) { s.el.remove(); xrayScatter.splice(i, 1); continue; }
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    s.el.setAttribute('cx', s.x.toFixed(1));
+    s.el.setAttribute('cy', s.y.toFixed(1));
+    s.el.setAttribute('opacity', (1 - s.age / s.life).toFixed(2));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. UPDATE
+   ══════════════════════════════════════════════════════════════ */
+function update(dt) {
+  if (paused) dt = 0;
+  clock += dt * speedMult;
+
+  // Auto-select state from energy
+  const want = pickState(logE);
+  if (want !== state) setState(want);
+
+  // Speed link
+  const bs = beamSpeedForEnergy(logE);
+  T['Radio_Scroll'].speed = bs;
+  T['Micro_Rotate'].speed = 0.6 + bs * 0.4;
+  T['IR_Vibrate'].speed   = 0.5 + bs * 0.5;
+  T['Vis_Cycle'].speed    = 1.0;
+  T['UV_Fire'].speed      = 1.0;
+  T['Xray_Pulse'].speed   = 1.0;
+  T['Gamma_Pulse'].speed  = 1.2;
+
+  for (const k in T) T[k].tick(dt);
+
+  stepUVElectrons(dt);
+  stepXrayScatter(dt);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. RENDER
+   ══════════════════════════════════════════════════════════════ */
+function applyRig() {
+  const E = getEnergy();
+  const cycles = cyclesForEnergy(logE);
+  const amp = amplitudeForEnergy(logE);
+  const col = beamColor(logE);
+  const bs = beamSpeedForEnergy(logE);
+
+  /* Beam */
+  const phase = clock * bs * 2.0;
+  const x0 = 76, x1 = 459, y = 300;
+  const path = buildBeamPath(cycles, amp, x0, x1, y, phase);
+  beamWave.setAttribute('d', path);
+  beamWave.setAttribute('stroke', col);
+  beamGlow.setAttribute('d', path);
+  beamGlow.setAttribute('stroke', col);
+
+  /* Source + detector tint */
+  sourceCore.setAttribute('fill', col);
+  detectorDot.setAttribute('fill', col);
+
+  /* ---- Per-scene animations ---- */
+  const primary = STATES[state] ? T[STATES[state].primary] : null;
+  const p = primary ? primary.p : 0;
+
+  if (state === 'Spectrum_Radio') {
+    // Rings emanate from antenna at the cycle rate
+    const rings = document.getElementById('radioRings');
+    const children = rings.children;
+    for (let i = 0; i < children.length; i++) {
+      const phase = (p + i / children.length) % 1;
+      const r = 8 + phase * 42;
+      children[i].setAttribute('r', r.toFixed(1));
+      children[i].setAttribute('opacity', (0.6 * (1 - phase)).toFixed(2));
+    }
+    // Antenna quiver
+    const ant = document.getElementById('radioAnt');
+    const q = Math.sin(clock * 3) * 0.8;
+    ant.setAttribute('transform', `translate(${q.toFixed(2)} -30)`);
+  }
+
+  if (state === 'Spectrum_Micro') {
+    // Water molecules spin — speed from energy
+    const spin = clock * (40 + logE * 6);
+    document.querySelectorAll('.microMol').forEach((el, i) => {
+      const ox = el.getAttribute('transform').match(/translate\((-?[\d.]+) (-?[\d.]+)\)/);
+      const tx = ox ? parseFloat(ox[1]) : 0;
+      const ty = ox ? parseFloat(ox[2]) : 0;
+      el.setAttribute('transform', `translate(${tx} ${ty}) rotate(${(spin + i*60).toFixed(1)})`);
+    });
+  }
+
+  if (state === 'Spectrum_IR') {
+    // Bond length oscillates
+    const vib = Math.sin(p * Math.PI * 2);
+    const stretch = 1 + vib * 0.28;
+    document.querySelectorAll('.irMol').forEach(el => {
+      const A = el.querySelector('.irAtomA');
+      const B = el.querySelector('.irAtomB');
+      const bond = el.querySelector('.irBond');
+      A.setAttribute('cx', (-18 * stretch).toFixed(1));
+      B.setAttribute('cx', ( 18 * stretch).toFixed(1));
+      bond.setAttribute('x1', (-10 * stretch).toFixed(1));
+      bond.setAttribute('x2', ( 10 * stretch).toFixed(1));
+    });
+  }
+
+  if (state === 'Spectrum_Visible') {
+    /* Electron: orbit + jump between r=45 and r=78 */
+    let r;
+    if (p < 0.30) r = 45;
+    else if (p < 0.42) r = 45 + (78 - 45) * (p - 0.30) / 0.12;
+    else if (p < 0.70) r = 78;
+    else r = 78 - (78 - 45) * (p - 0.70) / 0.30;
+    const theta = clock * 1.6 + (p > 0.3 && p < 0.7 ? 0 : 0);
+    visElectron.setAttribute('cx', (r * Math.cos(theta)).toFixed(1));
+    visElectron.setAttribute('cy', (r * Math.sin(theta)).toFixed(1));
+
+    /* Incoming photon: p in [0, 0.30] travels from -180 to 0 */
+    if (p < 0.30) {
+      const x = -180 + (p / 0.30) * 180;
+      visIncoming.setAttribute('cx', x.toFixed(1));
+      visIncoming.setAttribute('cy', '0');
+      visIncoming.setAttribute('opacity', '1');
+      visIncoming.setAttribute('fill', col);
+    } else {
+      visIncoming.setAttribute('opacity', '0');
+    }
+    /* Emitted photon: p in [0.70, 1.0] travels from 0 to 220 */
+    if (p >= 0.70) {
+      const x = ((p - 0.70) / 0.30) * 220;
+      visEmitted.setAttribute('cx', x.toFixed(1));
+      visEmitted.setAttribute('cy', '0');
+      visEmitted.setAttribute('opacity', '1');
+      visEmitted.setAttribute('fill', col);
+    } else {
+      visEmitted.setAttribute('opacity', '0');
+    }
+  }
+
+  if (state === 'Spectrum_UV') {
+    /* Photons hit plate — spawn electron on each half-cycle */
+    // handled by events in fireEvent
+  }
+
+  if (state === 'Spectrum_Xray') {
+    /* Spawn scatter points over time */
+    if (Math.random() < 0.35) spawnXrayScatter();
+  }
+
+  if (state === 'Spectrum_Gamma') {
+    /* Nucleus quiver — amplitude from primary weight */
+    const gp = T['Gamma_Pulse'];
+    const shake = gp.w * Math.sin(clock * 40) * 3;
+    gammaNucleus.setAttribute('transform', `translate(${shake.toFixed(2)} 0)`);
+  }
+
+  /* State-change flash */
+  const dt = clock - stateChangeTime;
+  if (dt >= 0 && dt < 0.35) {
+    const a = Math.max(0, 1 - dt / 0.35);
+    stateFlash.setAttribute('r', (150 * a).toFixed(1));
+    stateFlash.setAttribute('opacity', (a * 0.9).toFixed(2));
+  } else {
+    stateFlash.setAttribute('opacity', '0');
+  }
+
+  /* Info card */
+  $('infoE').textContent = fmtEnergy(E);
+  $('infoE').setAttribute('fill', col);
+  $('infoL').textContent = 'λ = ' + fmtWavelength(wavelengthNm());
+
+  /* Spectrum marker */
+  const t = (logE + 9) / 18;
+  specMarker.setAttribute('transform',
+    `translate(${(t * 440).toFixed(1)} 36)`);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. EVENTS
+   ══════════════════════════════════════════════════════════════ */
+const logEl = $('log');
+const logs = [];
+function fireEvent(name, tl) {
+  logs.unshift({ t: clock, name, tl });
+  if (logs.length > 40) logs.pop();
+  renderLog();
+
+  if (name === 'electron-ejected') spawnUVElectron();
+  if (name === 'photon-arrives') {
+    // small spark on the atom
+  }
+  if (name === 'nucleus-recoil') {
+    // handled by the beam pulse hitting the nucleus
+  }
+}
+function renderLog() {
+  logEl.innerHTML = logs.slice(0, 7)
+    .map(l => `<div><i>${l.t.toFixed(2)}s</i> ${l.tl} → <b>${l.name}</b></div>`)
+    .join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   8. UI
+   ══════════════════════════════════════════════════════════════ */
+function syncUI() {
+  $('stateChip').innerHTML = 'state <b>' + state + '</b>';
+  $('bandChip').innerHTML = 'band <b>' + bandName().toUpperCase() + '</b>';
+  $('bandName').textContent = bandName().toUpperCase();
+  document.querySelectorAll('[data-band]').forEach(b => {
+    b.classList.toggle('on', b.dataset.band === bandName());
+  });
+}
+
+const BAND_CENTERS = {
+  Radio: -6.5, Micro: -3, IR: -1, Visible: 0.30,
+  UV: 1.3, Xray: 3.5, Gamma: 7.0,
+};
+document.querySelectorAll('[data-band]').forEach(b => {
+  b.onclick = () => {
+    const band = b.dataset.band;
+    const center = BAND_CENTERS[band];
+    logE = center;
+    $('fEnergy').value = center;
+    $('vLogE').textContent = center.toFixed(2);
+    updateReadouts();
+    logs.unshift({ t: clock, name: 'band-select', tl: band });
+    if (logs.length > 40) logs.pop();
+    renderLog();
+  };
+});
+
+$('fEnergy').oninput = (e) => {
+  logE = +e.target.value;
+  $('vLogE').textContent = logE.toFixed(2);
+  updateReadouts();
+};
+$('fSpeed').oninput = (e) => {
+  speedMult = +e.target.value / 100;
+  $('vSpeed').textContent = e.target.value;
+};
+$('fPause').oninput = (e) => {
+  paused = +e.target.value === 1;
+  $('vPause').textContent = paused ? 'yes' : 'no';
+};
+
+document.querySelectorAll('[data-fire]').forEach(b => {
+  b.onclick = () => {
+    const name = b.dataset.fire;
+    const tl = T[name];
+    if (!tl) return;
+    tl.start();
+    logs.unshift({ t: clock, name: 'trigger', tl: name });
+    if (logs.length > 40) logs.pop();
+    renderLog();
+  };
+});
+$('btnReset').onclick = () => {
+  logE = 0.30;
+  $('fEnergy').value = 0.30;
+  $('vLogE').textContent = '0.30';
+  speedMult = 1.0;
+  paused = false;
+  $('fSpeed').value = 100; $('vSpeed').textContent = '100';
+  $('fPause').value = 0;   $('vPause').textContent = 'no';
+  for (const k in T) T[k].stop();
+  for (const p of uvElectrons) p.el.remove();
+  uvElectrons.length = 0;
+  for (const s of xrayScatter) s.el.remove();
+  xrayScatter.length = 0;
+  updateReadouts();
+  renderLog();
+};
+
+function updateReadouts() {
+  const E = getEnergy();
+  const λ = wavelengthNm();
+  const f = frequencyHz();
+  $('rE').textContent = fmtEnergy(E);
+  $('rL').textContent = fmtWavelength(λ);
+  $('rF').textContent = fmtFreq(f);
+  $('energyChip').innerHTML = 'E <b>' + fmtEnergy(E) + '</b>';
+  $('energyVal').textContent = fmtEnergy(E);
+  $('waveVal').textContent = fmtWavelength(λ);
+  $('energyMark').style.left = ((logE + 9) / 18 * 100) + '%';
+
+  const bandStatus = $('bandStatus');
+  bandStatus.innerHTML = `<span class="tag vi">${bandName().toLowerCase()}</span>`;
+}
+
+/* Inspector */
+const GROUPS = [
+  { title: 'Bands', items: ['Radio_Scroll','Micro_Rotate','IR_Vibrate','Vis_Cycle','UV_Fire','Xray_Pulse','Gamma_Pulse'] },
+  { title: 'Effects', items: ['Pulse_Burst','Warn_Pulse'] },
+  { title: 'Global', items: ['Global_Reset'] },
+];
+const rows = {};
+const inspEl = $('inspector');
+GROUPS.forEach(g => {
+  const h = document.createElement('div');
+  h.style.cssText = 'font-size:9.5px;letter-spacing:.14em;color:#31485b;margin:9px 0 3px;text-transform:uppercase';
+  h.textContent = g.title;
+  inspEl.appendChild(h);
+  g.items.forEach(name => {
+    const tl = T[name];
+    if (!tl) return;
+    const row = document.createElement('div');
+    row.className = 'tlrow ' + (tl.mode === 'oneshot' ? 'one' : '');
+    row.innerHTML = `<span class="nm">${name}</span>
+                     <span class="bar"><i></i></span>
+                     <span class="spd">1.00×</span>`;
+    inspEl.appendChild(row);
+    rows[name] = { el: row, bar: row.querySelector('i'), spd: row.querySelector('.spd') };
+  });
+});
+$('tlCount').textContent = Object.keys(T).length + ' timelines';
+
+function updateStatus() {
+  for (const name in rows) {
+    const tl = T[name], r = rows[name];
+    r.bar.style.width = (tl.p * 100).toFixed(1) + '%';
+    r.el.classList.toggle('on', tl.w > 0.05);
+    r.el.style.opacity = (0.28 + 0.72 * tl.w).toFixed(2);
+    r.spd.textContent = tl.speed.toFixed(2) + '×';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. MAIN LOOP
+   ══════════════════════════════════════════════════════════════ */
+let last = performance.now(), fpsAcc = 0, fpsN = 0, fpsT = 0;
+function frame(now) {
+  let dt = (now - last) / 1000; last = now;
+  dt = Math.min(dt, 0.05);
+  update(dt);
+  applyRig();
+  updateReadouts();
+  updateStatus();
+  fpsAcc += dt; fpsN++; fpsT += dt;
+  if (fpsT > 0.5) {
+    $('fpsChip').textContent = Math.round(fpsN / fpsAcc) + ' fps';
+    fpsAcc = 0; fpsN = 0; fpsT = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   10. BOOT
+   ══════════════════════════════════════════════════════════════ */
+// Start on Visible with a clean state
+document.getElementById('sceneVisible').style.display = '';
+T['Vis_Cycle'].start();
+state = 'Spectrum_Visible';
+syncUI();
+updateReadouts();
+renderLog();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

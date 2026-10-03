@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fuse Rig — Thermal + Blow Simulation</title>
+<style>
+  :root{
+    --bg:#05080d; --panel:#0b121b; --panel2:#0e1822; --line:#1b2b3a;
+    --txt:#c9dcec; --dim:#5d7891; --cy:#4fc3ff; --am:#ffb347; --rd:#ff5a4a; --gr:#4fe0a8;
+    --pk:#ff4fa3; --smoke:#a8b0ba;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--txt);
+    font:13px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    overflow:hidden;
+  }
+  .app{display:flex;height:100vh;width:100vw}
+  .stage{
+    position:relative;flex:1;min-width:0;overflow:hidden;
+    background:radial-gradient(circle at 50% 45%, #1c1a2e 0%, #0f0e1c 55%, #06060d 100%);
+    display:flex;align-items:center;justify-content:center;
+  }
+  svg#rig{display:block;height:100%;width:100%;overflow:visible}
+  .overlay{position:absolute;inset:0;pointer-events:none;padding:14px 16px;
+           display:flex;flex-direction:column;justify-content:space-between}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{
+    background:rgba(10,22,34,.78);border:1px solid var(--line);
+    padding:5px 11px;border-radius:99px;font-size:11px;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--dim);backdrop-filter:blur(6px)
+  }
+  .chip b{color:var(--cy);font-weight:600}
+  .chip.state b{color:var(--am)}
+  .chip.ratio b{color:var(--rd)}
+  .chip.temp b{color:#ff8c40}
+  .chip.blown b{color:var(--rd)}
+  .chip.blown.on{background:rgba(255,90,74,.22);border-color:var(--rd)}
+  .chip.rating b{color:var(--gr)}
+  .chip.mode b{color:var(--pk)}
+  .hud-bottom{display:flex;flex-direction:column;gap:8px;max-width:420px}
+  .meter{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:.12em;color:var(--dim)}
+  .track{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;
+         border:1px solid var(--line);position:relative}
+  .track i{display:block;height:100%;width:0%;border-radius:99px;
+           background:linear-gradient(90deg,#a86f30,#ff8c40);transition:width .08s linear}
+  .track.cur i{background:linear-gradient(90deg,#1e6fa8,#4fc3ff)}
+  .track.cur.over i{background:linear-gradient(90deg,#ffb347,#ff5a4a)}
+  .track .mark{position:absolute;top:-3px;width:2px;height:12px;background:#ff5a4a;border-radius:1px}
+  .blend{display:flex;gap:14px;font-size:10px;letter-spacing:.1em;color:var(--dim)}
+  .blend b{color:var(--cy);font-weight:600}
+  .panel{
+    width:352px;flex:0 0 352px;background:var(--panel);border-left:1px solid var(--line);
+    display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain
+  }
+  .panel::-webkit-scrollbar{width:8px}
+  .panel::-webkit-scrollbar-thumb{background:#1b2b3a;border-radius:9px}
+  section{padding:13px 15px;border-bottom:1px solid var(--line)}
+  h3{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+     font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between}
+  h3 span{color:#2f4457}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{
+    flex:1;padding:7px 0;text-align:center;background:var(--panel2);border:1px solid var(--line);
+    color:var(--dim);border-radius:6px;cursor:pointer;font:inherit;font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;transition:.15s
+  }
+  .tab:hover{color:var(--txt);border-color:#2b4356}
+  .tab.on{background:#12283a;border-color:var(--cy);color:var(--cy)}
+  .states{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .btn{
+    padding:7px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
+    border-radius:6px;cursor:pointer;font:inherit;font-size:11px;text-align:left;
+    transition:.15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  .btn:hover{color:var(--txt);border-color:#2b4356;background:#122232}
+  .btn.on{background:#173a2a;border-color:var(--gr);color:var(--gr)}
+  .btn.fire{border-color:#3a2a12;color:#a8865a}
+  .btn.fire:hover{background:#2a1f0e;border-color:var(--am);color:var(--am)}
+  .btn.fire:active{background:#3a2a12}
+  .btn.danger{border-color:#3a1a1a;color:#a86666}
+  .btn.danger:hover{background:#2a0e0e;border-color:var(--rd);color:var(--rd)}
+  .btn.danger:active{background:#4a1a1a}
+  .btn.go{border-color:#1a4a3a;color:var(--gr);text-align:center;font-weight:600;
+          letter-spacing:.1em;font-size:11px;padding:9px 4px}
+  .btn.go:hover{background:#0d2a1e;border-color:#4fe0a8;color:#7fffc8}
+  .btn.rating{border-color:#1a3a4a;color:#5fb8d8;text-align:center;font-size:11px;padding:8px 4px}
+  .btn.rating:hover{background:#0d2533;border-color:var(--cy);color:var(--cy)}
+  .btn.rating.on{background:#0f3a3a;border-color:var(--gr);color:var(--gr)}
+  .btn.scen{border-color:#2a1a4a;color:#a880e0;text-align:center;font-size:10px;padding:8px 4px}
+  .btn.scen:hover{background:#1a0e2a;border-color:var(--pk);color:#d0a0ff}
+  .btn.scen.on{background:#2a0f3a;border-color:var(--pk);color:#e0c0ff;
+               box-shadow:0 0 10px rgba(255,79,163,.3)}
+  .fire-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .slider{margin-bottom:11px}
+  .slider:last-child{margin-bottom:0}
+  .slider label{display:flex;justify-content:space-between;font-size:10px;
+                letter-spacing:.1em;color:var(--dim);margin-bottom:5px}
+  .slider label b{color:var(--cy);font-weight:600}
+  .slider.rd label b{color:var(--rd)}
+  .slider.gr label b{color:var(--gr)}
+  .slider.am label b{color:var(--am)}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;
+    background:#16242f;outline:none;cursor:pointer
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+    background:var(--cy);border:2px solid #05121c;cursor:pointer
+  }
+  input[type=range].rd::-webkit-slider-thumb{background:var(--rd)}
+  input[type=range].rd::-moz-range-thumb{background:var(--rd)}
+  input[type=range].gr::-webkit-slider-thumb{background:var(--gr)}
+  input[type=range].gr::-moz-range-thumb{background:var(--gr)}
+  input[type=range].am::-webkit-slider-thumb{background:var(--am)}
+  input[type=range].am::-moz-range-thumb{background:var(--am)}
+  .tlrow{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10.5px}
+  .tlrow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#7e9ab3}
+  .tlrow.on .nm{color:var(--txt)}
+  .tlrow .bar{width:56px;height:4px;background:#132029;border-radius:99px;overflow:hidden;flex:none}
+  .tlrow .bar i{display:block;height:100%;width:0;background:var(--cy);border-radius:99px}
+  .tlrow.one .bar i{background:var(--am)}
+  .tlrow.hot .bar i{background:var(--rd)}
+  .tlrow.gr .bar i{background:var(--gr)}
+  .tlrow .spd{width:34px;text-align:right;color:#3f5a72;flex:none;font-size:9.5px}
+  .log{font-size:10.5px;line-height:1.7;max-height:112px;overflow:hidden;color:#4d6b84}
+  .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .log b{color:var(--am);font-weight:600}
+  .log i{color:var(--cy);font-style:normal}
+  .log .danger{color:var(--rd)}
+  .legstatus{
+    margin-top:8px;font-size:9.5px;letter-spacing:.08em;color:#3d5a72;
+    display:flex;flex-wrap:wrap;gap:6px;min-height:14px
+  }
+  .legstatus .tag{
+    padding:1px 5px;border-radius:3px;background:#0e1a24;border:1px solid #1c2f3d;
+    color:#5a8aa8;font-size:9px;text-transform:uppercase
+  }
+  .legstatus .tag.hot{background:#2a1208;border-color:#5a3010;color:#e89050}
+  .legstatus .tag.ok{background:#0d2a1e;border-color:#1a4a3a;color:var(--gr)}
+  .legstatus .tag.cold{background:#0d2533;border-color:#1a3a4a;color:var(--cy)}
+  .legstatus .tag.danger{background:#2a0a0a;border-color:#5a1010;color:var(--rd)}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .panel{width:100%;flex:1 1 auto;border-left:none;border-top:1px solid var(--line)}
+    .stage{flex:0 0 46vh}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <main class="stage">
+    <svg id="rig" viewBox="0 0 456 636" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1a2c3e" stop-opacity="0.85"/>
+          <stop offset="0.5" stop-color="#0a1420" stop-opacity="0.95"/>
+          <stop offset="1" stop-color="#1a2c3e" stop-opacity="0.85"/>
+        </linearGradient>
+        <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4a5c6e"/>
+          <stop offset="0.5" stop-color="#8a9cae"/>
+          <stop offset="1" stop-color="#2a3a48"/>
+        </linearGradient>
+        <radialGradient id="flashRad">
+          <stop offset="0" stop-color="#fff"/>
+          <stop offset="0.3" stop-color="#ffe0b0"/>
+          <stop offset="0.7" stop-color="#ff8c40" stop-opacity="0.6"/>
+          <stop offset="1" stop-color="#ff2000" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="glowRad">
+          <stop offset="0" stop-color="#ffcc80" stop-opacity="0.95"/>
+          <stop offset="0.4" stop-color="#ff8c40" stop-opacity="0.55"/>
+          <stop offset="1" stop-color="#ff4020" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="shadowGrad" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#000" stop-opacity="0.55"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <g id="world">
+
+        <!-- subtle floor shadow -->
+        <ellipse id="groundShadow" cx="228" cy="410" rx="140" ry="10"
+                 fill="url(#shadowGrad)" opacity="0.4"/>
+
+        <!-- Thermometer (left) -->
+        <g id="thermoG" transform="translate(24 130)">
+          <text x="0" y="-10" font-family="ui-monospace,monospace" font-size="8"
+                fill="#5d7891" letter-spacing="0.12em">TEMP °C</text>
+          <rect x="0" y="0" width="14" height="200" rx="7" fill="#0e1822" stroke="#1b2b3a"/>
+          <rect id="thermoFill" x="2" y="198" width="10" height="0" rx="5" fill="#4fc3ff"/>
+          <line id="meltMark" x1="-3" y1="0" x2="17" y2="0" stroke="#ff5a4a"
+                stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text id="thermoVal" x="22" y="200" font-family="ui-monospace,monospace"
+                font-size="11" fill="#4fc3ff">20</text>
+          <text x="22" y="0" font-family="ui-monospace,monospace" font-size="8"
+                fill="#5d7891">350</text>
+        </g>
+
+        <!-- Current gauge (right) -->
+        <g id="currentG" transform="translate(418 130)">
+          <text x="0" y="-10" font-family="ui-monospace,monospace" font-size="8"
+                fill="#5d7891" letter-spacing="0.12em" text-anchor="end">CURRENT A</text>
+          <rect x="-14" y="0" width="14" height="200" rx="7" fill="#0e1822" stroke="#1b2b3a"/>
+          <rect id="currentFill" x="-12" y="198" width="10" height="0" rx="5" fill="#4fe0a8"/>
+          <line id="ratingMark" x1="-17" y1="0" x2="3" y2="0" stroke="#4fe0a8"
+                stroke-width="1.5" stroke-dasharray="3 2"/>
+          <line id="blowMark" x1="-17" y1="0" x2="3" y2="0" stroke="#ff5a4a"
+                stroke-width="1.5" stroke-dasharray="3 2"/>
+          <text id="currentVal" x="-4" y="200" text-anchor="end"
+                font-family="ui-monospace,monospace" font-size="11" fill="#4fe0a8">0.0</text>
+          <text x="-4" y="0" text-anchor="end" font-family="ui-monospace,monospace"
+                font-size="8" fill="#5d7891">30</text>
+        </g>
+
+        <!-- Central fuse -->
+        <g id="fuseG" transform="translate(228 320)">
+
+          <!-- wire glow halo -->
+          <ellipse id="wireGlow" cx="0" cy="0" rx="200" ry="60"
+                   fill="url(#glowRad)" opacity="0"/>
+
+          <!-- glass body -->
+          <rect x="-190" y="-46" width="380" height="92" rx="18"
+                fill="url(#glassGrad)" stroke="#3a5468" stroke-width="1.5"/>
+
+          <!-- glass fog / smoke tint -->
+          <rect id="glassTint" x="-182" y="-38" width="364" height="76" rx="12"
+                fill="#2a2a2a" opacity="0"/>
+
+          <!-- glass highlight -->
+          <path d="M -180 -32 Q 0 -42 180 -32" fill="none" stroke="#ffffff"
+                stroke-opacity="0.06" stroke-width="1.5"/>
+
+          <!-- rating and temp labels inside glass -->
+          <text id="ratingLabel" x="-158" y="6" text-anchor="start"
+                font-family="ui-monospace,monospace" font-size="14"
+                fill="#4fc3ff" font-weight="700">3 A</text>
+          <text id="tempLabel" x="160" y="6" text-anchor="end"
+                font-family="ui-monospace,monospace" font-size="11"
+                fill="#5d7891">20 °C</text>
+
+          <!-- tick marks along top -->
+          <g stroke="#3a5468" stroke-width="1">
+            <line x1="-120" y1="-46" x2="-120" y2="-38"/>
+            <line x1="-80"  y1="-46" x2="-80"  y2="-38"/>
+            <line x1="-40"  y1="-46" x2="-40"  y2="-38"/>
+            <line x1="0"    y1="-46" x2="0"    y2="-38"/>
+            <line x1="40"   y1="-46" x2="40"   y2="-38"/>
+            <line x1="80"   y1="-46" x2="80"   y2="-38"/>
+            <line x1="120"  y1="-46" x2="120"  y2="-38"/>
+          </g>
+
+          <!-- end caps -->
+          <rect x="-202" y="-46" width="34" height="92" rx="12"
+                fill="url(#capGrad)" stroke="#5a6f82" stroke-width="1.2"/>
+          <rect x="168" y="-46" width="34" height="92" rx="12"
+                fill="url(#capGrad)" stroke="#5a6f82" stroke-width="1.2"/>
+          <!-- cap grooves -->
+          <g stroke="#2a3a48" stroke-width="1">
+            <line x1="-196" y1="-46" x2="-196" y2="46"/>
+            <line x1="-188" y1="-46" x2="-188" y2="46"/>
+            <line x1="-180" y1="-46" x2="-180" y2="46"/>
+            <line x1="180"  y1="-46" x2="180"  y2="46"/>
+            <line x1="188"  y1="-46" x2="188"  y2="46"/>
+            <line x1="196"  y1="-46" x2="196"  y2="46"/>
+          </g>
+
+          <!-- intact wire -->
+          <line id="wireIntact" x1="-168" y1="0" x2="168" y2="0"
+                stroke="#a8b6c4" stroke-width="3" stroke-linecap="round"/>
+
+          <!-- broken wire (hidden) -->
+          <line id="wireL" x1="-168" y1="0" x2="-14" y2="0"
+                stroke="#3a3a3a" stroke-width="3" stroke-linecap="round"
+                style="display:none"/>
+          <line id="wireR" x1="14" y1="0" x2="168" y2="0"
+                stroke="#3a3a3a" stroke-width="3" stroke-linecap="round"
+                style="display:none"/>
+          <circle id="tipL" cx="-14" cy="0" r="3.5"
+                  fill="#2a2a2a" style="display:none"/>
+          <circle id="tipR" cx="14" cy="0" r="3.5"
+                  fill="#2a2a2a" style="display:none"/>
+
+          <!-- rating band on wire -->
+          <rect x="-38" y="-5" width="76" height="10" rx="2"
+                fill="#0a1218" stroke="#1b2b3a"/>
+          <text x="0" y="3" text-anchor="middle"
+                font-family="ui-monospace,monospace" font-size="8"
+                fill="#5d7891">ELEMENT</text>
+
+          <!-- flash overlay -->
+          <circle id="flashCirc" cx="0" cy="0" r="0"
+                  fill="url(#flashRad)" opacity="0" pointer-events="none"/>
+
+          <!-- smoke particles -->
+          <g id="smokeLayer"></g>
+        </g>
+
+        <!-- Waveform panel -->
+        <g id="waveG" transform="translate(28 500)">
+          <rect width="400" height="100" rx="8"
+                fill="#0a1218" stroke="#1b2b3a"/>
+          <text x="8" y="14" font-family="ui-monospace,monospace" font-size="8"
+                fill="#5d7891" letter-spacing="0.12em">CURRENT I(t)</text>
+
+          <!-- Rating marker -->
+          <line id="waveRating" x1="0" y1="70" x2="400" y2="70"
+                stroke="#4fe0a8" stroke-width="1"
+                stroke-dasharray="3 3" opacity="0.5"/>
+          <text id="waveRatingLabel" x="396" y="67" text-anchor="end"
+                font-family="ui-monospace,monospace" font-size="8"
+                fill="#4fe0a8" opacity="0.7">1× rating</text>
+
+          <!-- Blow threshold marker -->
+          <line id="waveBlow" x1="0" y1="40" x2="400" y2="40"
+                stroke="#ff5a4a" stroke-width="1"
+                stroke-dasharray="3 3" opacity="0.5"/>
+          <text id="waveBlowLabel" x="396" y="37" text-anchor="end"
+                font-family="ui-monospace,monospace" font-size="8"
+                fill="#ff5a4a" opacity="0.7">2× rating</text>
+
+          <!-- Current waveform -->
+          <path id="wavePath" fill="none" stroke="#4fc3ff"
+                stroke-width="1.5" stroke-linejoin="round"/>
+
+          <!-- Blow marker line -->
+          <line id="blowMarker" x1="0" y1="0" x2="0" y2="100"
+                stroke="#ff5a4a" stroke-width="2" opacity="0"/>
+          <text id="blowMarkerLabel" x="0" y="12"
+                text-anchor="middle" font-family="ui-monospace,monospace"
+                font-size="8" fill="#ff5a4a" opacity="0">BLOW</text>
+        </g>
+
+      </g>
+    </svg>
+
+    <div class="overlay">
+      <div class="row">
+        <div class="chip" id="modeChip">mode <b>idle</b></div>
+        <div class="chip state" id="stateChip">state <b>Idle_Cold</b></div>
+        <div class="chip rating" id="ratingChip">rating <b>3 A</b></div>
+        <div class="chip ratio" id="ratioChip">ratio <b>0.00×</b></div>
+        <div class="chip temp" id="tempChip">temp <b>20°C</b></div>
+        <div class="chip blown" id="blownChip" style="display:none">blown</div>
+        <div class="chip" id="fpsChip">-- fps</div>
+      </div>
+      <div class="hud-bottom">
+        <div class="meter">
+          <span>THERMAL</span>
+          <div class="track"><i id="thermalFill"></i></div>
+          <b id="thermalVal" style="color:#ff8c40">0</b>
+        </div>
+        <div class="meter">
+          <span>CURRENT</span>
+          <div class="track cur" id="currentTrack"><i id="currentBarFill"></i>
+            <span class="mark" id="currentBarRating"></span>
+          </div>
+          <b id="currentBarVal" style="color:var(--cy)">0.0</b>
+        </div>
+        <div class="blend">
+          <span>HEADROOM <b id="headroom">1.00</b></span>
+          <span>TIME <b id="timeToBlow">—</b></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="panel">
+
+    <section>
+      <h3>Scenario <span>§2.1</span></h3>
+      <div class="tabs">
+        <button class="tab on" data-board="idle">Idle</button>
+        <button class="tab" data-board="load">Load</button>
+        <button class="tab" data-board="fault">Fault</button>
+        <button class="tab" data-board="reset">Reset</button>
+      </div>
+      <div class="states" id="states"></div>
+    </section>
+
+    <section>
+      <h3>Fuse rating <span>§3.1</span></h3>
+      <div class="fire-grid" style="grid-template-columns:repeat(4,1fr)">
+        <button class="btn rating" data-rating="1">1 A</button>
+        <button class="btn rating on" data-rating="3">3 A</button>
+        <button class="btn rating" data-rating="5">5 A</button>
+        <button class="btn rating" data-rating="13">13 A</button>
+      </div>
+      <div class="legstatus" id="ratingStatus">
+        <span class="tag cold">click a rating to set the fuse</span>
+      </div>
+    </section>
+
+    <section>
+      <h3>Load current <span>§3.2</span></h3>
+      <div class="slider">
+        <label>current <b><span id="vCurrent">0.0</span> A</b></label>
+        <input type="range" id="fCurrent" min="0" max="300" value="0">
+      </div>
+      <div class="slider">
+        <label>auto sweep <b><span id="vSweep">off</span></b></label>
+        <input type="range" id="fSweep" min="0" max="100" value="0">
+      </div>
+      <div class="legstatus" id="loadStatus">
+        <span class="tag cold">no load</span>
+      </div>
+    </section>
+
+    <section>
+      <h3>Fuse specs <span>§3.3</span></h3>
+      <div class="slider am">
+        <label>resistance <b><span id="vRes">0.010</span> Ω</b></label>
+        <input type="range" id="fRes" class="am" min="5" max="50" value="10">
+      </div>
+      <div class="slider am">
+        <label>melting point <b><span id="vMelt">350</span> °C</b></label>
+        <input type="range" id="fMelt" class="am" min="150" max="600" value="350">
+      </div>
+      <div class="slider am">
+        <label>thermal mass <b><span id="vMass">100</span></b></label>
+        <input type="range" id="fMass" class="am" min="20" max="200" value="100">
+      </div>
+      <div class="slider am">
+        <label>cooling rate <b><span id="vCool">100</span>%</b></label>
+        <input type="range" id="fCool" class="am" min="20" max="200" value="100">
+      </div>
+    </section>
+
+    <section>
+      <h3>Environment <span>§3.4</span></h3>
+      <div class="slider gr">
+        <label>ambient temp <b><span id="vAmb">20</span> °C</b></label>
+        <input type="range" id="fAmb" class="gr" min="-20" max="80" value="20">
+      </div>
+      <div class="slider gr">
+        <label>preheat <b><span id="vPreheat">0</span> °C</b></label>
+        <input type="range" id="fPreheat" class="gr" min="0" max="250" value="0">
+      </div>
+    </section>
+
+    <section>
+      <h3>One-shot triggers <span>§3.5</span></h3>
+      <div class="fire-grid">
+        <button class="btn fire" data-fire="Smoke_Puff">puff</button>
+        <button class="btn fire" data-fire="Flash_Burst">flash</button>
+        <button class="btn fire" data-fire="Warning_Pulse">warn</button>
+        <button class="btn danger" data-fire="Force_Blow">blow</button>
+        <button class="btn go" id="btnReplace">↻ replace</button>
+        <button class="btn fire" id="btnReset">reset</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>Live readings <span>§4</span></h3>
+      <div class="slider rd" style="margin-bottom:8px">
+        <label>time to blow <b><span id="vTTB">—</span></b></label>
+      </div>
+      <div class="legstatus" id="readoutStatus"></div>
+    </section>
+
+    <section>
+      <h3>Timeline inspector <span id="tlCount">--</span></h3>
+      <div id="inspector"></div>
+    </section>
+
+    <section style="border-bottom:none">
+      <h3>Event log <span>§5</span></h3>
+      <div class="log" id="log"></div>
+    </section>
+  </aside>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════
+   1. TIMELINE ENGINE
+   ══════════════════════════════════════════════════════════════ */
+let clock = 0;
+
+class Timeline {
+  constructor(name, dur, mode = 'loop', opts = {}) {
+    this.name = name; this.dur = dur; this.mode = mode;
+    this.t = opts.offset || 0; this.dir = 1; this.speed = 1;
+    this.active = false; this.w = 0; this.wTarget = 0;
+    this.manual = false; this.weightTarget = 0;
+    this.events = opts.events || []; this.onDone = null;
+  }
+  get p() { return this.dur ? Math.min(1, Math.max(0, this.t / this.dur)) : 0; }
+  start() {
+    if (this.mode === 'oneshot') this.t = 0;
+    this.active = true;
+    if (!this.manual) this.wTarget = 1;
+  }
+  stop() { this.active = false; if (!this.manual) this.wTarget = 0; }
+  tick(dt) {
+    const target = this.manual ? this.weightTarget : (this.active ? 1 : 0);
+    this.wTarget = target;
+    this.w += (target - this.w) * Math.min(1, dt * 9);
+    if (!this.active) return;
+    const prev = this.t;
+    this.t += dt * this.speed * this.dir;
+    if (this.mode === 'loop') {
+      if (this.t >= this.dur) { this.t -= this.dur; this._events(prev, this.t, true); }
+      else this._events(prev, this.t, false);
+    } else if (this.mode === 'pingpong') {
+      if (this.t >= this.dur) { this.t = this.dur * 2 - this.t; this.dir = -1; }
+      else if (this.t <= 0)   { this.t = -this.t;               this.dir =  1; }
+    } else {
+      if (this.t >= this.dur) {
+        this.t = this.dur; this._events(prev, this.dur, false);
+        this.active = false; this.wTarget = 0;
+        if (this.onDone) this.onDone(this);
+      } else this._events(prev, this.t, false);
+    }
+  }
+  _events(p0, p1, wrapped) {
+    if (!this.events.length) return;
+    const a = p0 / this.dur, b = p1 / this.dur;
+    for (const e of this.events) {
+      const hit = wrapped ? (e.at > a || e.at <= b) : (e.at > a && e.at <= b);
+      if (hit) fireEvent(e.name, this.name);
+    }
+  }
+}
+
+const T = {};
+function reg(name, dur, mode, opts) { T[name] = new Timeline(name, dur, mode, opts || {}); }
+
+reg('Glow_Breathe',    3.2, 'loop');
+reg('Glass_Sheen',     5.5, 'loop');
+reg('Heat_Slow',       2.4, 'loop');
+reg('Heat_Fast',       1.2, 'loop');
+reg('Melt_Flicker',    0.30,'loop');
+reg('Warning_Pulse',   0.80,'loop', {events:[{at:0,name:'onWarn'}]});
+reg('Danger_Shake',    0.12,'loop');
+reg('Smoke_Drift',     2.4, 'loop');
+reg('Flash_Burst',     0.35,'oneshot', {events:[
+  {at:0.00,name:'onFlashPeak'},
+  {at:0.10,name:'onFlashFade'}
+]});
+reg('Wire_Snap',       0.55,'oneshot', {events:[
+  {at:0.02,name:'onSnapStart'},
+  {at:0.08,name:'onSnapComplete'},
+  {at:0.20,name:'onSmokeBurst'},
+  {at:0.50,name:'onSnapEnd'}
+]});
+reg('Force_Blow',      0.80,'oneshot', {events:[
+  {at:0.05,name:'onBlowFlash'},
+  {at:0.15,name:'onBlowSnap'},
+  {at:0.30,name:'onBlowSmoke'}
+]});
+reg('Smoke_Puff',      1.20,'oneshot', {events:[{at:0,name:'onPuff'}]});
+reg('Cool_Down',       4.00,'oneshot');
+reg('Replace_Pop',     0.45,'oneshot', {events:[
+  {at:0.00,name:'onPop'},
+  {at:0.45,name:'onReplaceDone'}
+]});
+reg('Global_FadeIn',   0.50,'oneshot');
+reg('Global_FadeOut',  0.30,'oneshot');
+reg('Global_Reset',    0.40,'oneshot', {events:[{at:0,name:'onReset'}]});
+
+T['Wire_Snap'].onDone   = () => { if (FUSE.state === 'Load_Blown') spawnBlowSmoke(); };
+T['Force_Blow'].onDone  = () => {};
+
+/* ══════════════════════════════════════════════════════════════
+   2. STATE MACHINE
+   ══════════════════════════════════════════════════════════════ */
+const STATES = {
+  Idle_Cold:      { board:'idle',  layers:{sheen:'Glass_Sheen'} },
+  Idle_Warm:      { board:'idle',  layers:{breathe:'Glow_Breathe', sheen:'Glass_Sheen'} },
+  Load_Normal:    { board:'load',  layers:{breathe:'Glow_Breathe', sheen:'Glass_Sheen'} },
+  Load_Heating:   { board:'load',  layers:{heat:'Heat_Slow', warn:'Warning_Pulse'} },
+  Load_Melting:   { board:'load',  layers:{heat:'Heat_Fast', melt:'Melt_Flicker',
+                                            warn:'Warning_Pulse', smoke:'Smoke_Drift'} },
+  Load_Blown:     { board:'load',  layers:{smoke:'Smoke_Drift'} },
+  Fault_Short:    { board:'fault', layers:{heat:'Heat_Fast', warn:'Warning_Pulse',
+                                            shake:'Danger_Shake'} },
+  Reset_Cooling:  { board:'reset', layers:{smoke:'Smoke_Drift'} },
+  Reset_New:      { board:'reset', layers:{breathe:'Glow_Breathe', sheen:'Glass_Sheen'} },
+};
+const BOARD_DEFAULT = {
+  idle:'Idle_Cold', load:'Load_Normal', fault:'Fault_Short', reset:'Reset_New'
+};
+let board = 'idle', state = 'Idle_Cold';
+
+function setState(name, force) {
+  if (!STATES[name]) return;
+  if (state === name && !force) return;
+  const prev = STATES[state], next = STATES[name];
+  const prevL = prev ? prev.layers : {}, nextL = next.layers;
+  for (const k in prevL) if (nextL[k] !== prevL[k]) T[prevL[k]].stop();
+  for (const k in nextL) T[nextL[k]].start();
+  state = name; board = next.board; syncUI();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3. FUSE MODEL
+   ══════════════════════════════════════════════════════════════ */
+const FUSE = {
+  rating: 3,
+  resistance: 0.010,
+  meltingPoint: 350,
+  thermalMass: 1.0,
+  coolingMult: 1.0,
+  ambient: 20,
+  preheat: 0,
+  temp: 20,
+  current: 0,
+  state: 'Idle_Cold',
+  blown: false,
+  blownAt: -1,
+  timeInOverload: 0,
+};
+
+const K_HEAT = 120;
+const K_COOL = 1.0;
+
+function physicsStep(dt) {
+  if (FUSE.blown) {
+    FUSE.current = 0;
+    const k = K_COOL * FUSE.coolingMult;
+    FUSE.temp += (FUSE.ambient - FUSE.temp) * k * dt;
+    if (FUSE.temp < FUSE.ambient + 0.5) FUSE.temp = FUSE.ambient;
+    return;
+  }
+  applySweep(dt);
+  const ratio = FUSE.current / FUSE.rating;
+  const heatRate = K_HEAT * ratio * ratio * (1 / FUSE.thermalMass);
+  const coolRate = K_COOL * FUSE.coolingMult * (FUSE.temp - FUSE.ambient);
+  FUSE.temp += (heatRate - coolRate) * dt;
+  if (FUSE.temp < FUSE.ambient) FUSE.temp = FUSE.ambient;
+  if (FUSE.temp >= FUSE.meltingPoint) triggerBlow('threshold');
+}
+
+function timeToBlow() {
+  const r = FUSE.current / FUSE.rating;
+  if (r < 1.0) return Infinity;
+  if (r >= 2.0) return 2 / Math.pow(r - 1, 2);
+  return 30 / Math.pow(r, 3);
+}
+
+function triggerBlow(reason) {
+  if (FUSE.blown) return;
+  FUSE.blown = true;
+  FUSE.blownAt = clock;
+  T['Force_Blow'].start();
+  logs.unshift({ t: clock, name: 'BLOW · ' + reason, tl: 'fuse', danger: true });
+  if (logs.length > 40) logs.pop();
+  renderLog();
+}
+
+function replaceFuse() {
+  FUSE.blown = false;
+  FUSE.temp = FUSE.ambient;
+  FUSE.timeInOverload = 0;
+  T['Replace_Pop'].start();
+  clearSmoke();
+  logs.unshift({ t: clock, name: 'fuse replaced', tl: 'reset' });
+  if (logs.length > 40) logs.pop();
+  renderLog();
+}
+
+let sweepPhase = 0;
+function applySweep(dt) {
+  const amount = parseInt(document.getElementById('fSweep').value, 10) / 100;
+  if (amount <= 0.001) return;
+  sweepPhase += dt * 0.25 * amount;
+  const cyc = sweepPhase % 1;
+  const target = FUSE.rating * 2.5 * (cyc < 0.75 ? cyc / 0.75 : 1);
+  FUSE.current = target;
+  const curSlider = document.getElementById('fCurrent');
+  curSlider.value = Math.round(target * 10);
+  document.getElementById('vCurrent').textContent = target.toFixed(1);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. SMOKE
+   ══════════════════════════════════════════════════════════════ */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const smokeLayer = document.getElementById('smokeLayer');
+const smokeParticles = [];
+
+function spawnSmoke(x, y, count, spread = 40, life = 1.0) {
+  for (let i = 0; i < count; i++) {
+    const el = document.createElementNS(SVGNS, 'circle');
+    el.setAttribute('fill', '#c8c8c8');
+    smokeLayer.appendChild(el);
+    smokeParticles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * spread,
+      vy: -20 - Math.random() * spread,
+      r: 2 + Math.random() * 4,
+      life: life * (0.6 + Math.random() * 0.8),
+      age: 0,
+      el,
+    });
+  }
+}
+function spawnBlowSmoke() { spawnSmoke(0, 0, 30, 60, 1.4); }
+function clearSmoke() {
+  for (const p of smokeParticles) p.el.remove();
+  smokeParticles.length = 0;
+}
+function stepSmoke(dt) {
+  for (let i = smokeParticles.length - 1; i >= 0; i--) {
+    const p = smokeParticles[i];
+    p.age += dt;
+    if (p.age > p.life) { p.el.remove(); smokeParticles.splice(i, 1); continue; }
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy *= 0.985;
+    p.vx *= 0.99;
+    const a = Math.max(0, 1 - p.age / p.life);
+    p.el.setAttribute('cx', p.x.toFixed(1));
+    p.el.setAttribute('cy', p.y.toFixed(1));
+    p.el.setAttribute('r', (p.r + p.age * 8).toFixed(1));
+    p.el.setAttribute('opacity', (a * 0.42).toFixed(3));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. VISUAL REFS
+   ══════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const wireIntact = $('wireIntact');
+const wireL = $('wireL');
+const wireR = $('wireR');
+const tipL = $('tipL');
+const tipR = $('tipR');
+const wireGlow = $('wireGlow');
+const glassTint = $('glassTint');
+const flashCirc = $('flashCirc');
+const ratingLabel = $('ratingLabel');
+const tempLabel = $('tempLabel');
+const thermoFill = $('thermoFill');
+const thermoVal = $('thermoVal');
+const currentFill = $('currentFill');
+const currentVal = $('currentVal');
+const wavePath = $('wavePath');
+const blowMarker = $('blowMarker');
+const blowMarkerLabel = $('blowMarkerLabel');
+const meltMark = $('meltMark');
+const ratingMark = $('ratingMark');
+const blowMark = $('blowMark');
+
+function wireColour(T, melt) {
+  const t = Math.max(0, Math.min(1, (T - 20) / (melt - 20)));
+  if (t < 0.15) return '#a8b6c4';
+  if (t < 0.40) return lerpHex('#a8b6c4', '#ff8c40', (t - 0.15) / 0.25);
+  if (t < 0.80) return lerpHex('#ff8c40', '#ff5a4a', (t - 0.40) / 0.40);
+  return lerpHex('#ff5a4a', '#ffffff', (t - 0.80) / 0.20);
+}
+function lerpHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const ar=(pa>>16)&255, ag=(pa>>8)&255, ab=pa&255;
+  const br=(pb>>16)&255, bg=(pb>>8)&255, bb=pb&255;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return `rgb(${r},${g},${bl})`;
+}
+
+const WAVE_N = 200;
+const waveBuf = new Float32Array(WAVE_N);
+let waveHead = 0;
+function pushWave(i) {
+  waveBuf[waveHead] = i;
+  waveHead = (waveHead + 1) % WAVE_N;
+}
+function renderWave() {
+  const x0 = 0, x1 = 400, y0 = 20, y1 = 100;
+  const maxI = Math.max(FUSE.rating * 3, 3);
+  const d = [];
+  if (FUSE.blown && FUSE.blownAt >= 0) {
+    const secsAgo = clock - FUSE.blownAt;
+    if (secsAgo < 6) {
+      const xx = x1 - (secsAgo / 6) * (x1 - x0);
+      blowMarker.setAttribute('x1', xx.toFixed(1));
+      blowMarker.setAttribute('x2', xx.toFixed(1));
+      blowMarker.setAttribute('opacity', (1 - secsAgo / 6).toFixed(2));
+      blowMarkerLabel.setAttribute('x', xx.toFixed(1));
+      blowMarkerLabel.setAttribute('opacity', (1 - secsAgo / 6).toFixed(2));
+    } else {
+      blowMarker.setAttribute('opacity', 0);
+      blowMarkerLabel.setAttribute('opacity', 0);
+    }
+  } else {
+    blowMarker.setAttribute('opacity', 0);
+    blowMarkerLabel.setAttribute('opacity', 0);
+  }
+  for (let k = 0; k < WAVE_N; k++) {
+    const idx = (waveHead + k) % WAVE_N;
+    const val = waveBuf[idx];
+    const x = x0 + (k / (WAVE_N - 1)) * (x1 - x0);
+    const y = y1 - (Math.min(val, maxI) / maxI) * (y1 - y0);
+    d.push((k ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1));
+  }
+  wavePath.setAttribute('d', d.join(' '));
+  const yRating = y1 - (FUSE.rating / maxI) * (y1 - y0);
+  const yBlow = y1 - (Math.min(FUSE.rating * 2, maxI) / maxI) * (y1 - y0);
+  $('waveRating').setAttribute('y1', yRating); $('waveRating').setAttribute('y2', yRating);
+  $('waveRatingLabel').setAttribute('y', (yRating - 3));
+  $('waveBlow').setAttribute('y1', yBlow); $('waveBlow').setAttribute('y2', yBlow);
+  $('waveBlowLabel').setAttribute('y', (yBlow - 3));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. UPDATE
+   ══════════════════════════════════════════════════════════════ */
+function update(dt) {
+  clock += dt;
+  const heatSpeed = Math.max(0.4, Math.min(3, 0.6 + FUSE.current / FUSE.rating * 0.5));
+  T['Heat_Slow'].speed = heatSpeed;
+  T['Heat_Fast'].speed = heatSpeed * 1.6;
+  T['Warning_Pulse'].speed = 1.0;
+  T['Glow_Breathe'].speed = 1.0;
+  T['Glass_Sheen'].speed = 1.0;
+  T['Smoke_Drift'].speed = 1.0;
+
+  physicsStep(dt);
+
+  const ratio = FUSE.current / FUSE.rating;
+  let nextState;
+  if (FUSE.blown)              nextState = (clock - FUSE.blownAt < 4) ? 'Load_Blown' : 'Reset_Cooling';
+  else if (ratio < 0.4)        nextState = 'Idle_Cold';
+  else if (ratio < 0.95)       nextState = 'Idle_Warm';
+  else if (ratio < 1.15)       nextState = 'Load_Normal';
+  else if (ratio < 1.55)       nextState = 'Load_Heating';
+  else if (ratio < 2.0)        nextState = 'Load_Melting';
+  else                         nextState = 'Fault_Short';
+  setState(nextState);
+  FUSE.state = state;
+
+  for (const k in T) T[k].tick(dt);
+  stepSmoke(dt);
+  pushWave(FUSE.current);
+  renderWave();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. RENDER
+   ══════════════════════════════════════════════════════════════ */
+function applyRig() {
+  if (FUSE.blown) {
+    wireIntact.style.display = 'none';
+    wireL.style.display = ''; wireR.style.display = '';
+    tipL.style.display = ''; tipR.style.display = '';
+    tipL.setAttribute('fill', '#2a2a2a');
+    tipR.setAttribute('fill', '#2a2a2a');
+    wireL.setAttribute('stroke', '#2a2a2a');
+    wireR.setAttribute('stroke', '#2a2a2a');
+    wireGlow.setAttribute('opacity', 0);
+  } else {
+    wireIntact.style.display = '';
+    wireL.style.display = 'none'; wireR.style.display = 'none';
+    tipL.style.display = 'none'; tipR.style.display = 'none';
+    const col = wireColour(FUSE.temp, FUSE.meltingPoint);
+    wireIntact.setAttribute('stroke', col);
+    const t = Math.max(0, (FUSE.temp - 60) / (FUSE.meltingPoint - 60));
+    const pulse = 0.85 + 0.15 * Math.sin(clock * 12);
+    wireGlow.setAttribute('opacity', (t * 0.95 * pulse).toFixed(3));
+    wireGlow.setAttribute('rx', (200 + t * 20).toFixed(1));
+    wireGlow.setAttribute('ry', (60 + t * 18).toFixed(1));
+  }
+
+  const sm = T['Smoke_Drift'].w;
+  if (sm > 0.01) {
+    glassTint.setAttribute('opacity', (sm * 0.45).toFixed(3));
+  } else if (FUSE.blown && (clock - FUSE.blownAt) > 2) {
+    const fog = Math.min(0.55, (clock - FUSE.blownAt - 2) * 0.08);
+    glassTint.setAttribute('opacity', fog.toFixed(3));
+  } else {
+    glassTint.setAttribute('opacity', 0);
+  }
+
+  const fb = T['Force_Blow'], ws = T['Wire_Snap'], fb2 = T['Flash_Burst'];
+  let flash = 0;
+  if (fb.active) flash = Math.max(flash, Math.max(0, 1 - fb.p * 8));
+  if (ws.active) flash = Math.max(flash, Math.max(0, 1 - ws.p * 10));
+  if (fb2.active) flash = Math.max(flash, Math.sin(fb2.p * Math.PI) * 0.9);
+  if (flash > 0.01) {
+    flashCirc.setAttribute('r', (120 * (0.6 + flash * 0.6)).toFixed(1));
+    flashCirc.setAttribute('opacity', flash.toFixed(3));
+  } else {
+    flashCirc.setAttribute('r', 0);
+    flashCirc.setAttribute('opacity', 0);
+  }
+
+  const tMax = 500;
+  const tN = Math.max(0, Math.min(1, (FUSE.temp - (-50)) / (tMax + 50)));
+  const tH = 200 * tN;
+  thermoFill.setAttribute('y', (200 - tH).toFixed(1));
+  thermoFill.setAttribute('height', tH.toFixed(1));
+  const tCol = FUSE.temp < 100 ? '#4fc3ff'
+             : FUSE.temp < 200 ? '#ffc843'
+             : FUSE.temp < 320 ? '#ff8c40'
+             : '#ff5a4a';
+  thermoFill.setAttribute('fill', tCol);
+  thermoVal.textContent = Math.round(FUSE.temp);
+  thermoVal.setAttribute('fill', tCol);
+
+  const meltY = 200 - 200 * ((FUSE.meltingPoint - (-50)) / (tMax + 50));
+  meltMark.setAttribute('y1', meltY.toFixed(1));
+  meltMark.setAttribute('y2', meltY.toFixed(1));
+
+  const cMax = 30;
+  const cN = Math.max(0, Math.min(1, FUSE.current / cMax));
+  const cH = 200 * cN;
+  currentFill.setAttribute('y', (200 - cH).toFixed(1));
+  currentFill.setAttribute('height', cH.toFixed(1));
+  const cCol = FUSE.blown ? '#5d7891'
+             : FUSE.current < FUSE.rating ? '#4fe0a8'
+             : FUSE.current < FUSE.rating * 1.5 ? '#ffb347'
+             : '#ff5a4a';
+  currentFill.setAttribute('fill', cCol);
+  currentVal.textContent = FUSE.current.toFixed(1);
+  currentVal.setAttribute('fill', cCol);
+
+  const ratingY = 200 - 200 * (FUSE.rating / cMax);
+  const blowY = 200 - 200 * Math.min(1, (FUSE.rating * 2) / cMax);
+  ratingMark.setAttribute('y1', ratingY.toFixed(1));
+  ratingMark.setAttribute('y2', ratingY.toFixed(1));
+  blowMark.setAttribute('y1', blowY.toFixed(1));
+  blowMark.setAttribute('y2', blowY.toFixed(1));
+
+  ratingLabel.textContent = FUSE.rating.toFixed(0) + ' A';
+  tempLabel.textContent = Math.round(FUSE.temp) + ' °C';
+  const labelCol = FUSE.temp < 100 ? '#5d7891'
+                 : FUSE.temp < 300 ? '#ffb347'
+                 : '#ff5a4a';
+  tempLabel.setAttribute('fill', labelCol);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   8. EVENTS
+   ══════════════════════════════════════════════════════════════ */
+const logEl = $('log');
+const logs = [];
+function fireEvent(name, tl) {
+  logs.unshift({ t: clock, name, tl });
+  if (logs.length > 40) logs.pop();
+  renderLog();
+  if (name === 'onSmokeBurst') spawnBlowSmoke();
+  if (name === 'onBlowSmoke')  spawnBlowSmoke();
+  if (name === 'onPuff')       spawnSmoke(0, 0, 14, 30, 1.0);
+  if (name === 'onFlashPeak')  spawnSmoke(0, 0, 6, 20, 0.6);
+}
+function renderLog() {
+  logEl.innerHTML = logs.slice(0, 7)
+    .map(l => `<div class="${l.danger ? 'danger' : ''}"><i>${l.t.toFixed(2)}s</i> ${l.tl} → <b>${l.name}</b></div>`)
+    .join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. UI
+   ══════════════════════════════════════════════════════════════ */
+const statesEl = $('states');
+function buildStateButtons() {
+  statesEl.innerHTML = '';
+  for (const name in STATES) {
+    if (STATES[name].board !== board) continue;
+    const b = document.createElement('button');
+    b.className = 'btn scen';
+    b.textContent = name.replace(/^[A-Za-z]+_/, '');
+    b.title = name; b.dataset.state = name;
+    b.onclick = () => setState(name, true);
+    statesEl.appendChild(b);
+  }
+}
+function syncUI() {
+  $('modeChip').innerHTML = 'mode <b>' + board + '</b>';
+  $('stateChip').innerHTML = 'state <b>' + state + '</b>';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.board === board));
+  document.querySelectorAll('.scen').forEach(b => b.classList.toggle('on', b.dataset.state === state));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    board = tab.dataset.board;
+    buildStateButtons();
+    syncUI();
+  };
+});
+
+document.querySelectorAll('[data-rating]').forEach(b => {
+  b.onclick = () => {
+    const r = parseFloat(b.dataset.rating);
+    FUSE.rating = r;
+    document.querySelectorAll('[data-rating]').forEach(x =>
+      x.classList.toggle('on', +x.dataset.rating === r));
+    $('ratingChip').innerHTML = 'rating <b>' + r + ' A</b>';
+    $('ratingStatus').innerHTML =
+      `<span class="tag cold">${r} A · blows around ${(r*1.5).toFixed(1)} A</span>`;
+    logs.unshift({ t: clock, name: 'rating set ' + r + 'A', tl: 'fuse' });
+    if (logs.length > 40) logs.pop();
+    renderLog();
+  };
+});
+
+$('fCurrent').oninput = (e) => {
+  FUSE.current = +e.target.value / 10;
+  $('vCurrent').textContent = FUSE.current.toFixed(1);
+};
+$('fSweep').oninput = (e) => {
+  const on = +e.target.value;
+  $('vSweep').textContent = on > 0 ? (on + '%') : 'off';
+};
+
+$('fRes').oninput = (e) => {
+  FUSE.resistance = +e.target.value / 1000;
+  $('vRes').textContent = FUSE.resistance.toFixed(3);
+};
+$('fMelt').oninput = (e) => {
+  FUSE.meltingPoint = +e.target.value;
+  $('vMelt').textContent = FUSE.meltingPoint;
+};
+$('fMass').oninput = (e) => {
+  FUSE.thermalMass = +e.target.value / 100;
+  $('vMass').textContent = e.target.value;
+};
+$('fCool').oninput = (e) => {
+  FUSE.coolingMult = +e.target.value / 100;
+  $('vCool').textContent = e.target.value;
+};
+$('fAmb').oninput = (e) => {
+  FUSE.ambient = +e.target.value;
+  $('vAmb').textContent = FUSE.ambient;
+  if (!FUSE.blown && FUSE.temp < FUSE.ambient) FUSE.temp = FUSE.ambient;
+};
+$('fPreheat').oninput = (e) => {
+  FUSE.preheat = +e.target.value;
+  $('vPreheat').textContent = FUSE.preheat;
+  if (!FUSE.blown) {
+    FUSE.temp = Math.max(FUSE.temp, FUSE.ambient + FUSE.preheat * 0.6);
+  }
+};
+
+document.querySelectorAll('[data-fire]').forEach(b => {
+  b.onclick = () => {
+    const name = b.dataset.fire;
+    if (name === 'Force_Blow') { triggerBlow('manual'); return; }
+    trigger(name);
+  };
+});
+function trigger(name) {
+  const tl = T[name];
+  if (!tl) return;
+  tl.start();
+  logs.unshift({ t: clock, name: 'trigger', tl: name });
+  if (logs.length > 40) logs.pop();
+  renderLog();
+}
+
+$('btnReplace').onclick = replaceFuse;
+$('btnReset').onclick = () => {
+  for (const k in T) T[k].stop();
+  T['Global_Reset'].start();
+  FUSE.rating = 3;
+  FUSE.resistance = 0.010;
+  FUSE.meltingPoint = 350;
+  FUSE.thermalMass = 1.0;
+  FUSE.coolingMult = 1.0;
+  FUSE.ambient = 20;
+  FUSE.preheat = 0;
+  FUSE.current = 0;
+  FUSE.temp = 20;
+  FUSE.blown = false;
+  FUSE.blownAt = -1;
+  clearSmoke();
+  waveBuf.fill(0);
+  $('fCurrent').value = 0; $('vCurrent').textContent = '0.0';
+  $('fSweep').value = 0; $('vSweep').textContent = 'off';
+  $('fRes').value = 10; $('vRes').textContent = '0.010';
+  $('fMelt').value = 350; $('vMelt').textContent = '350';
+  $('fMass').value = 100; $('vMass').textContent = '100';
+  $('fCool').value = 100; $('vCool').textContent = '100';
+  $('fAmb').value = 20; $('vAmb').textContent = '20';
+  $('fPreheat').value = 0; $('vPreheat').textContent = '0';
+  document.querySelectorAll('[data-rating]').forEach(x =>
+    x.classList.toggle('on', +x.dataset.rating === 3));
+  $('ratingChip').innerHTML = 'rating <b>3 A</b>';
+  state = '';
+  setTimeout(() => setState('Idle_Cold', true), 400);
+  renderLog();
+};
+
+/* Inspector */
+const GROUPS = [
+  { title: 'Idle',    items: ['Glow_Breathe','Glass_Sheen'] },
+  { title: 'Heating', items: ['Heat_Slow','Heat_Fast','Melt_Flicker'] },
+  { title: 'Warning', items: ['Warning_Pulse','Danger_Shake'] },
+  { title: 'Effects', items: ['Smoke_Drift','Flash_Burst','Wire_Snap','Force_Blow','Smoke_Puff','Cool_Down','Replace_Pop'] },
+  { title: 'Global',  items: ['Global_FadeIn','Global_FadeOut','Global_Reset'] },
+];
+const rows = {};
+const inspEl = $('inspector');
+GROUPS.forEach(g => {
+  const h = document.createElement('div');
+  h.style.cssText = 'font-size:9.5px;letter-spacing:.14em;color:#31485b;margin:9px 0 3px;text-transform:uppercase';
+  h.textContent = g.title;
+  inspEl.appendChild(h);
+  g.items.forEach(name => {
+    const tl = T[name];
+    if (!tl) return;
+    const row = document.createElement('div');
+    const cls = tl.mode === 'oneshot' ? 'one'
+              : name.includes('Heat') || name.includes('Warning') || name.includes('Danger') ? 'hot'
+              : 'gr';
+    row.className = 'tlrow ' + cls;
+    row.innerHTML = `<span class="nm">${name}</span>
+                     <span class="bar"><i></i></span>
+                     <span class="spd">1.00×</span>`;
+    inspEl.appendChild(row);
+    rows[name] = { el: row, bar: row.querySelector('i'), spd: row.querySelector('.spd') };
+  });
+});
+$('tlCount').textContent = Object.keys(T).length + ' timelines';
+
+function updateStatus() {
+  const ratio = FUSE.current / FUSE.rating;
+  const ttb = timeToBlow();
+  const headroom = Math.max(0, 2 - ratio);
+
+  $('ratioChip').innerHTML = 'ratio <b>' + ratio.toFixed(2) + '×</b>';
+  $('tempChip').innerHTML = 'temp <b>' + Math.round(FUSE.temp) + '°C</b>';
+  $('blownChip').style.display = FUSE.blown ? '' : 'none';
+
+  const tPct = Math.max(0, Math.min(100, (FUSE.temp / FUSE.meltingPoint) * 100));
+  $('thermalFill').style.width = tPct.toFixed(1) + '%';
+  $('thermalVal').textContent = Math.round(FUSE.temp) + '°C';
+
+  const cPct = Math.max(0, Math.min(100, (FUSE.current / (FUSE.rating * 2)) * 100));
+  $('currentBarFill').style.width = cPct.toFixed(1) + '%';
+  $('currentBarVal').textContent = FUSE.current.toFixed(1) + 'A';
+  $('currentTrack').classList.toggle('over', ratio > 1.0);
+
+  const markPct = Math.min(100, (FUSE.rating / (FUSE.rating * 2)) * 100);
+  $('currentBarRating').style.left = markPct + '%';
+
+  $('headroom').textContent = headroom.toFixed(2);
+  $('timeToBlow').textContent = FUSE.blown ? 'BLOWN'
+    : (ratio < 1.0 ? '∞'
+    : (ttb < 1 ? ttb.toFixed(2) + 's'
+    : Math.round(ttb) + 's'));
+
+  const loadStatusEl = $('loadStatus');
+  if (FUSE.blown) {
+    loadStatusEl.innerHTML = '<span class="tag danger">blown · replace to reset</span>';
+  } else if (ratio < 0.4) {
+    loadStatusEl.innerHTML = '<span class="tag cold">cold · no load</span>';
+  } else if (ratio < 0.95) {
+    loadStatusEl.innerHTML = '<span class="tag ok">normal load · warm</span>';
+  } else if (ratio < 1.15) {
+    loadStatusEl.innerHTML = '<span class="tag ok">rated load · steady warm</span>';
+  } else if (ratio < 1.55) {
+    loadStatusEl.innerHTML = '<span class="tag hot">overload · heating</span>';
+  } else if (ratio < 2.0) {
+    loadStatusEl.innerHTML = '<span class="tag hot">heavy overload · melting soon</span>';
+  } else {
+    loadStatusEl.innerHTML = '<span class="tag danger">short circuit · blowing now</span>';
+  }
+
+  const ro = $('readoutStatus');
+  const tags = [];
+  tags.push(['P ' + (FUSE.current*FUSE.current*FUSE.resistance).toFixed(3) + 'W', null, 'ok']);
+  tags.push(['R ' + FUSE.resistance.toFixed(3) + 'Ω', null, 'cold']);
+  tags.push(['melt ' + FUSE.meltingPoint + '°C', null, 'hot']);
+  if (FUSE.blown) tags.push(['blown at ' + FUSE.blownAt.toFixed(1) + 's', null, 'danger']);
+  ro.innerHTML = tags.map(([n,c,cls]) => `<span class="tag ${cls}">${n}</span>`).join('');
+
+  for (const name in rows) {
+    const tl = T[name], r = rows[name];
+    r.bar.style.width = (tl.p * 100).toFixed(1) + '%';
+    r.el.classList.toggle('on', tl.w > 0.05);
+    r.el.style.opacity = (0.28 + 0.72 * tl.w).toFixed(2);
+    r.spd.textContent = tl.speed.toFixed(2) + '×';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   10. MAIN LOOP
+   ══════════════════════════════════════════════════════════════ */
+let last = performance.now(), fpsAcc = 0, fpsN = 0, fpsT = 0;
+function frame(now) {
+  let dt = (now - last) / 1000; last = now;
+  dt = Math.min(dt, 0.05);
+  update(dt);
+  applyRig();
+  updateStatus();
+  fpsAcc += dt; fpsN++; fpsT += dt;
+  if (fpsT > 0.5) {
+    $('fpsChip').textContent = Math.round(fpsN / fpsAcc) + ' fps';
+    fpsAcc = 0; fpsN = 0; fpsT = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   11. BOOT
+   ══════════════════════════════════════════════════════════════ */
+buildStateButtons();
+setState('Idle_Cold', true);
+T['Global_FadeIn'].start();
+$('ratingChip').innerHTML = 'rating <b>3 A</b>';
+$('ratingStatus').innerHTML = '<span class="tag cold">3 A · blows around 4.5 A</span>';
+renderLog();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
