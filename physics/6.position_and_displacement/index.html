@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Electrochemical Equivalent — Study Guide</title>
+<title>Electrochemical Equivalent — Interactive Study Guide</title>
 <style>
   :root{
     --green:#58CC02; --green-dark:#58A700; --green-light:#D7FFB8;
@@ -16,20 +16,17 @@
   body{
     font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     background:var(--bg); color:var(--ink);
-    display:flex; justify-content:center; min-height:100vh;
-    font-weight:600;
+    display:flex; justify-content:center; min-height:100vh; font-weight:600;
   }
   .app{width:100%; max-width:560px; display:flex; flex-direction:column; min-height:100vh; position:relative;}
 
-  /* ---------- HEADER ---------- */
   header{padding:16px 20px 8px; display:flex; align-items:center; gap:12px; position:sticky; top:0; background:var(--bg); z-index:20;}
   .progress{flex:1; height:16px; background:var(--line); border-radius:99px; overflow:hidden;}
   .progress-fill{height:100%; width:0%; background:var(--green); border-radius:99px; transition:width .5s cubic-bezier(.4,0,.2,1);}
   .xp{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--yellow); font-size:15px;}
   .xp span{color:var(--ink-soft); font-size:13px;}
 
-  /* ---------- STAGE ---------- */
-  main{flex:1; padding:8px 20px 140px;}
+  main{flex:1; padding:8px 20px 160px;}
   .screen{display:none; animation:slide .35s cubic-bezier(.4,0,.2,1);}
   .screen.active{display:block;}
   @keyframes slide{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:translateY(0)}}
@@ -40,67 +37,142 @@
   p strong{color:var(--ink); font-weight:800;}
   .eyebrow{font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--blue); margin-bottom:8px;}
 
-  /* ---------- CARDS ---------- */
-  .card{
-    border:2px solid var(--line); border-radius:16px; padding:18px;
-    margin-bottom:16px; background:#fff;
-  }
+  .card{border:2px solid var(--line); border-radius:16px; padding:18px; margin-bottom:16px; background:#fff;}
   .card.passage{border-color:var(--blue); background:var(--blue-light);}
   .card.passage p{color:var(--ink); font-size:15px; margin:0; line-height:1.6;}
   .card.answer{border-color:var(--green); background:var(--green-light); text-align:center;}
-  .card.answer .big{font-size:32px; font-weight:800; color:var(--green-dark); margin:6px 0;}
+  .card.answer .big{font-size:30px; font-weight:800; color:var(--green-dark); margin:6px 0;}
 
   .tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
     padding:4px 10px; border-radius:99px; margin-bottom:10px;}
-  .tag.blue{background:var(--blue); color:#fff;}
   .tag.green{background:var(--green); color:#fff;}
 
-  /* ---------- MATH ---------- */
   .math{
     font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
-    font-size:16px; line-height:1.9; background:#F7F7F7;
+    font-size:15px; line-height:1.9; background:#F7F7F7;
     border-radius:12px; padding:16px 18px; margin-bottom:14px;
   }
   .math .row{display:flex; justify-content:space-between; gap:12px;}
   .math .op{color:var(--ink-soft);}
   .math .res{color:var(--green-dark); font-weight:800; border-top:2px solid var(--line); padding-top:8px; margin-top:8px;}
 
-  /* ---------- ANCHOR VISUAL ---------- */
-  .anchor{display:flex; align-items:center; gap:16px; padding:20px; border:2px dashed var(--line); border-radius:16px; margin-bottom:16px;}
-  .salt{
-    width:34px; height:34px; flex:0 0 34px; border-radius:6px;
-    background:linear-gradient(135deg,#fff,#e8e8e8);
-    border:1.5px solid #d0d0d0; box-shadow:0 2px 0 #dcdcdc, inset 0 -2px 4px rgba(0,0,0,.06);
-    transform:rotate(12deg);
+  /* ============ INTERACTIVE LAB ============ */
+  .lab{
+    border:2px solid var(--ink); border-radius:20px; overflow:hidden;
+    margin-bottom:16px; background:#0d1418;
   }
-  .anchor-text{font-size:15px; line-height:1.5;}
-  .anchor-text b{font-weight:800;}
+  .lab-header{
+    padding:12px 16px; background:#16212a; color:#fff;
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  }
+  .lab-header .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 8px var(--green);
+    animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .lab-header .title{flex:1}
+  .lab-header .readout{
+    font-family:'SF Mono',ui-monospace,monospace;
+    color:var(--blue); font-size:12px;
+  }
 
-  /* ---------- SIZE LADDER ---------- */
+  .lab-body{display:flex; padding:14px 16px; gap:12px; align-items:stretch;}
+
+  .beaker-wrap{flex:1; position:relative; min-height:260px;}
+  .beaker-wrap svg{display:block; width:100%; height:100%; overflow:visible;}
+
+  .side-panel{
+    flex:0 0 130px; display:flex; flex-direction:column; gap:8px;
+  }
+  .mini-readout{
+    background:#16212a; border:1px solid #1e2d38; border-radius:10px;
+    padding:10px 12px;
+  }
+  .mini-readout .label{
+    font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    color:#6a7a86; margin-bottom:4px;
+  }
+  .mini-readout .value{
+    font-family:'SF Mono',ui-monospace,monospace;
+    font-size:14px; font-weight:700; color:var(--blue);
+  }
+  .mini-readout .value.green{color:var(--green);}
+
+  .compare-box{
+    background:#16212a; border:1px dashed #2a3a46; border-radius:10px;
+    padding:10px 12px; flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    transition:.25s;
+  }
+  .compare-box .icon{
+    width:32px; height:32px; margin-bottom:6px; display:block;
+  }
+  .compare-box .text{
+    font-size:10px; font-weight:800; color:#8a99a4;
+    letter-spacing:.5px; text-transform:uppercase; line-height:1.3;
+  }
+
+  .controls{
+    padding:14px 16px 16px; background:#0a1014; border-top:1px solid #1e2d38;
+  }
+  .slider-row{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .slider-row .tag-mini{
+    font-size:10px; font-weight:800; color:#6a7a86;
+    font-family:'SF Mono',ui-monospace,monospace;
+    flex:0 0 auto;
+  }
+  input[type=range]{
+    flex:1; -webkit-appearance:none; appearance:none;
+    background:transparent; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px; border-radius:3px;
+    background:linear-gradient(90deg, var(--blue) 0%, var(--blue) var(--pct,0%), #2a3a46 var(--pct,0%), #2a3a46 100%);
+  }
+  input[type=range]::-moz-range-track{height:6px; border-radius:3px; background:#2a3a46;}
+  input[type=range]::-moz-range-progress{height:6px; border-radius:3px; background:var(--blue);}
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:#fff; border:3px solid var(--blue); margin-top:-7px;
+    box-shadow:0 2px 6px rgba(0,0,0,.5);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--blue);
+  }
+  .presets{display:flex; gap:6px;}
+  .preset{
+    flex:1; padding:6px 4px; border-radius:8px;
+    background:#16212a; border:1px solid #2a3a46; color:#8a99a4;
+    font-family:inherit; font-size:10px; font-weight:800;
+    cursor:pointer; transition:.12s; letter-spacing:.3px;
+  }
+  .preset:hover{background:#1e2d38; color:#fff;}
+  .preset.active{background:var(--blue); color:#fff; border-color:var(--blue);}
+
+  /* ============ LADDER ============ */
   .ladder{margin:24px 0 8px; padding:0 6px;}
-  .track{position:relative; height:5px; background:var(--line); border-radius:99px;}
+  .track-ladder{position:relative; height:5px; background:var(--line); border-radius:99px;}
   .marker{position:absolute; top:-7px; width:3px; height:19px; background:var(--blue); border-radius:2px; transform:translateX(-50%);}
   .marker.hi{background:var(--green); height:25px; top:-10px;}
-  .marker-label{position:absolute; top:-34px; transform:translateX(-50%); white-space:nowrap;
-    font-size:11px; font-weight:800; color:var(--blue);}
-  .marker-label.hi{color:var(--green-dark);}
+  .marker-label{position:absolute; top:-36px; transform:translateX(-50%); white-space:nowrap;
+    font-size:10px; font-weight:800; color:var(--blue); text-align:center; line-height:1.2;}
+  .marker-label.hi{color:var(--green-dark); font-size:11px;}
   .decades{display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:var(--ink-soft); font-weight:700;}
-  .ladder-note{font-size:13px; color:var(--ink-soft); text-align:center; margin-top:26px; line-height:1.5;}
+  .ladder-note{font-size:13px; color:var(--ink-soft); text-align:center; margin-top:30px; line-height:1.5;}
 
-  /* ---------- OPTIONS ---------- */
+  /* ============ OPTIONS ============ */
   .options{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
-  .opt{
-    display:flex; align-items:center; gap:14px; text-align:left;
+  .opt{display:flex; align-items:center; gap:14px; text-align:left;
     padding:16px; background:#fff; border:2px solid var(--line); border-bottom-width:4px;
     border-radius:16px; font-family:inherit; font-size:16px; font-weight:700;
-    color:var(--ink); cursor:pointer; transition:.12s; width:100%;
-  }
+    color:var(--ink); cursor:pointer; transition:.12s; width:100%;}
   .opt:hover:not(.locked){background:#F7F7F7;}
   .opt:active:not(.locked){transform:translateY(2px); border-bottom-width:2px;}
-  .opt .num{
-    flex:0 0 28px; height:28px; border-radius:8px; border:2px solid var(--line);
-    display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--ink-soft);
-  }
+  .opt .num{flex:0 0 28px; height:28px; border-radius:8px; border:2px solid var(--line);
+    display:grid; place-items:center; font-size:13px; font-weight:800; color:var(--ink-soft);}
   .opt.correct{background:var(--green-light); border-color:var(--green); color:var(--green-dark);}
   .opt.correct .num{border-color:var(--green); color:var(--green-dark);}
   .opt.wrong{background:var(--red-light); border-color:var(--red); color:var(--red-dark);}
@@ -109,19 +181,31 @@
   .shake{animation:shake .4s;}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-  /* ---------- SUMMARY LIST ---------- */
   .keylist{list-style:none; display:flex; flex-direction:column; gap:12px; margin-top:4px;}
   .keylist li{display:flex; gap:12px; font-size:15px; line-height:1.5; color:var(--ink);}
   .keylist .dot{flex:0 0 22px; height:22px; border-radius:50%; background:var(--green-light);
     color:var(--green-dark); display:grid; place-items:center; font-size:12px; font-weight:800;}
 
-  /* ---------- FOOTER ---------- */
-  footer{
-    position:fixed; bottom:0; left:0; right:0; background:#fff;
-    border-top:2px solid var(--line); padding:14px 20px 20px;
-    max-width:560px; margin:0 auto; z-index:30;
-    transition:transform .25s;
+  /* ============ COMPLETION ============ */
+  .completion{text-align:center; padding-top:30px;}
+  .big-star{
+    font-size:84px; line-height:1; margin-bottom:8px;
+    animation:starPop .8s cubic-bezier(.34,1.56,.64,1);
+    display:inline-block;
   }
+  @keyframes starPop{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+  .completion h1{font-size:28px; margin-bottom:8px;}
+  .completion .sub{color:var(--ink-soft); font-size:15px; margin-bottom:24px;}
+  .stat-row{display:flex; gap:12px; margin-bottom:24px;}
+  .stat{flex:1; border:2px solid var(--line); border-radius:16px; padding:16px 8px; text-align:center;}
+  .stat .n{font-size:24px; font-weight:800; color:var(--green-dark);}
+  .stat .l{font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft); margin-top:4px;}
+
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:100;}
+
+  footer{position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:2px solid var(--line); padding:14px 20px 20px;
+    max-width:560px; margin:0 auto; z-index:30; transition:transform .25s;}
   .feedback{display:none; margin-bottom:14px;}
   .feedback.show{display:block; animation:slide .25s;}
   .fb-head{display:flex; align-items:center; gap:8px; font-weight:800; font-size:17px; margin-bottom:4px;}
@@ -130,18 +214,17 @@
   .fb-body{font-size:14px; line-height:1.5; color:var(--ink-soft);}
   .fb-body b{color:var(--ink); font-weight:800;}
 
-  .cta{
-    width:100%; padding:16px; border:none; border-radius:16px;
+  .cta{width:100%; padding:16px; border:none; border-radius:16px;
     background:var(--green); border-bottom:4px solid var(--green-dark);
     color:#fff; font-family:inherit; font-size:16px; font-weight:800;
-    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;
-  }
+    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;}
   .cta:hover:not(:disabled){filter:brightness(1.05);}
   .cta:active:not(:disabled){transform:translateY(2px); border-bottom-width:2px;}
   .cta:disabled{background:var(--line); border-color:var(--line); color:#AFAFAF; cursor:not-allowed;}
 </style>
 </head>
 <body>
+<canvas id="confetti"></canvas>
 <div class="app">
 
   <header>
@@ -171,31 +254,159 @@
       <p><strong>How heavy is 1.3 × 10⁻⁷ kg?</strong> If you can't picture it, the answer you calculate won't mean anything.</p>
     </section>
 
-    <!-- 3. ANCHOR -->
+    <!-- 3. INTERACTIVE LAB -->
     <section class="screen" data-type="content">
-      <div class="eyebrow">Build the Anchor</div>
-      <h2>What weighs 10⁻⁷ kg?</h2>
-      <div class="anchor">
-        <div class="salt"></div>
-        <div class="anchor-text">
-          A single grain of salt weighs roughly <b>3 × 10⁻⁷ kg</b>.<br>
-          <span style="color:var(--ink-soft)">1.3 × 10⁻⁷ kg is about <b>half a grain of salt</b>.</span>
+      <div class="eyebrow">Build the Anchor · Interactive</div>
+      <h2>Watch the metal grow</h2>
+      <p>Drag the charge slider. Watch metal physically deposit on the cathode. Notice how much charge you need before it becomes visible.</p>
+
+      <div class="lab">
+        <div class="lab-header">
+          <div class="dot"></div>
+          <div class="title">Electrolysis Cell · Live</div>
+          <div class="readout" id="labReadout">Q = 0 C</div>
+        </div>
+
+        <div class="lab-body">
+          <div class="beaker-wrap">
+            <!-- ==== VECTOR SVG CELL ==== -->
+            <svg id="beaker" viewBox="0 0 260 260" preserveAspectRatio="xMidYMid meet"
+                 xmlns="http://www.w3.org/2000/svg" aria-label="Electrolysis cell">
+              <defs>
+                <radialGradient id="cellGlow" cx="130" cy="150" r="140"
+                                gradientUnits="userSpaceOnUse">
+                  <stop offset="0"   stop-color="#1CB0F6" stop-opacity="0.07"/>
+                  <stop offset="1"   stop-color="#1CB0F6" stop-opacity="0"/>
+                </radialGradient>
+
+                <linearGradient id="solGrad" x1="0" y1="95" x2="0" y2="235"
+                                gradientUnits="userSpaceOnUse">
+                  <stop offset="0"   stop-color="#1CB0F6" stop-opacity="0.18"/>
+                  <stop offset="1"   stop-color="#1CB0F6" stop-opacity="0.42"/>
+                </linearGradient>
+
+                <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0"   stop-color="#4a5560"/>
+                  <stop offset="0.5" stop-color="#8a99a4"/>
+                  <stop offset="1"   stop-color="#4a5560"/>
+                </linearGradient>
+
+                <linearGradient id="depGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0"   stop-color="#DCE6F0" stop-opacity="0.15"/>
+                  <stop offset="0.5" stop-color="#E8F1F8" stop-opacity="0.7"/>
+                  <stop offset="1"   stop-color="#F4F9FD" stop-opacity="0.98"/>
+                </linearGradient>
+
+                <radialGradient id="ionGrad" cx="0.5" cy="0.5" r="0.5">
+                  <stop offset="0"   stop-color="#C8F0FF" stop-opacity="1"/>
+                  <stop offset="0.35" stop-color="#78DCFF" stop-opacity="0.75"/>
+                  <stop offset="1"   stop-color="#78DCFF" stop-opacity="0"/>
+                </radialGradient>
+
+                <!-- filters for soft vector glow (no rasterisation) -->
+                <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="b"/>
+                  <feMerge>
+                    <feMergeNode in="b"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- background glow -->
+              <rect x="0" y="0" width="260" height="260" fill="url(#cellGlow)"/>
+
+              <!-- solution body -->
+              <path d="M 32 95 L 228 95 L 228 221 Q 228 235 214 235 L 46 235 Q 32 235 32 221 Z"
+                    fill="url(#solGrad)"/>
+
+              <!-- solution surface line -->
+              <line x1="32" y1="95" x2="228" y2="95"
+                    stroke="#1CB0F6" stroke-opacity="0.55" stroke-width="1.5"/>
+
+              <!-- ions (populated by JS) -->
+              <g id="ionLayer" filter="url(#softGlow)"></g>
+
+              <!-- anode (left, +) -->
+              <rect x="58" y="75" width="12" height="150"
+                    fill="url(#metalGrad)" rx="1"/>
+
+              <!-- deposit layer (grows left from cathode) -->
+              <rect id="deposit" x="190" y="78" width="0" height="144"
+                    fill="url(#depGrad)" rx="1"/>
+
+              <!-- cathode (right, −) -->
+              <rect x="190" y="75" width="12" height="150"
+                    fill="url(#metalGrad)" rx="1"/>
+
+              <!-- beaker outline -->
+              <path d="M 30 60 L 230 60 L 230 221 Q 230 235 216 235 L 44 235 Q 30 235 30 221 Z"
+                    fill="none" stroke="#C8D7E1" stroke-opacity="0.5" stroke-width="2"/>
+
+              <!-- rim highlight -->
+              <line x1="30" y1="60" x2="230" y2="60"
+                    stroke="#C8D7E1" stroke-opacity="0.85" stroke-width="3"
+                    stroke-linecap="round"/>
+
+              <!-- labels -->
+              <text x="64" y="70" font-family="Nunito, sans-serif" font-size="10"
+                    font-weight="700" fill="#A0B4C3" fill-opacity="0.9" text-anchor="middle">anode  +</text>
+              <text x="196" y="70" font-family="Nunito, sans-serif" font-size="10"
+                    font-weight="700" fill="#A0B4C3" fill-opacity="0.9" text-anchor="middle">cathode  −</text>
+            </svg>
+          </div>
+
+          <div class="side-panel">
+            <div class="mini-readout">
+              <div class="label">Charge (Q)</div>
+              <div class="value" id="readQ">0 C</div>
+            </div>
+            <div class="mini-readout">
+              <div class="label">Mass deposited</div>
+              <div class="value green" id="readM">0 kg</div>
+            </div>
+            <div class="compare-box">
+              <svg class="icon" id="cmpIcon" viewBox="0 0 32 32"></svg>
+              <div class="text" id="cmpText">Nothing<br>yet</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="slider-row">
+            <span class="tag-mini">0</span>
+            <input type="range" id="chargeSlider" min="0" max="20000" step="50" value="0">
+            <span class="tag-mini">20k C</span>
+          </div>
+          <div class="presets">
+            <button class="preset" data-q="1">1 C</button>
+            <button class="preset" data-q="100">100 C</button>
+            <button class="preset" data-q="1000">1k C</button>
+            <button class="preset" data-q="10000">10k C</button>
+            <button class="preset active" data-q="20000">20k C</button>
+          </div>
         </div>
       </div>
-      <p>So read the electrochemical equivalent out loud, slowly:</p>
+
+      <p>Notice three things:</p>
+      <p><strong>1.</strong> At 1 coulomb, the deposit is invisible — less than a millionth of a gram.<br>
+         <strong>2.</strong> You need <em>thousands</em> of coulombs before the metal layer becomes visible to the eye.<br>
+         <strong>3.</strong> At 20,000 C, you've only deposited about 2.6 grams. That's a paperclip's worth.</p>
+
+      <p>Now read the passage number out loud:</p>
       <div class="card" style="border-color:var(--yellow); background:#FFF9E5;">
         <p style="color:var(--ink); margin:0; font-size:15px;">
           <strong>“One coulomb of charge deposits about half a grain of salt's worth of metal.”</strong>
         </p>
       </div>
-      <p>One coulomb is a small charge — it's what flows through a torch bulb in about a tenth of a second. So this number is telling you: <strong>a normal current deposits almost nothing.</strong></p>
+      <p>That's the anchor. Once you feel how tiny that is, the rest of the problem becomes obvious — you're going to need a <em>lot</em> of charge to see anything.</p>
     </section>
 
     <!-- 4. Q1 -->
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 1 of 3</div>
       <h2>1 coulomb of charge flows through the cell. How much metal appears on the electrode?</h2>
-      <div class="options" data-q="1">
+      <div class="options">
         <button class="opt" data-correct="false"><span class="num">A</span> A car door — about 20 kg</button>
         <button class="opt" data-correct="true"><span class="num">B</span> A grain of salt — about 10⁻⁷ kg</button>
         <button class="opt" data-correct="false"><span class="num">C</span> A coin — about 5 g</button>
@@ -207,7 +418,7 @@
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 2 of 3</div>
       <h2>Now 2.0 × 10⁴ coulombs flow. That's twenty thousand times more charge. How much metal now?</h2>
-      <div class="options" data-q="2">
+      <div class="options">
         <button class="opt" data-correct="false"><span class="num">A</span> Still invisible — a few micrograms</button>
         <button class="opt" data-correct="false"><span class="num">B</span> About 26 kg — a bag of cement</button>
         <button class="opt" data-correct="true"><span class="num">C</span> About 2.6 g — a paperclip</button>
@@ -220,7 +431,7 @@
       <div class="eyebrow">See the Sizes</div>
       <h2>Where do these masses sit?</h2>
       <div class="ladder">
-        <div class="track">
+        <div class="track-ladder">
           <div class="marker" style="left:22%"></div>
           <div class="marker-label" style="left:22%">1 C deposits<br>1.3 × 10⁻⁷ kg</div>
           <div class="marker hi" style="left:71%"></div>
@@ -265,7 +476,7 @@
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 3 of 3</div>
       <h2>Same metal. Same 2.0 × 10⁴ C. But now the current runs at <em>half</em> the speed for <em>twice</em> as long. What's the mass deposited?</h2>
-      <div class="options" data-q="3">
+      <div class="options">
         <button class="opt" data-correct="false"><span class="num">A</span> Half as much — 1.3 g</button>
         <button class="opt" data-correct="true"><span class="num">B</span> The same — 2.6 g</button>
         <button class="opt" data-correct="false"><span class="num">C</span> Twice as much — 5.2 g</button>
@@ -290,6 +501,36 @@
       </div>
     </section>
 
+    <!-- 11. COMPLETION -->
+    <section class="screen" data-type="content">
+      <div class="completion">
+        <div class="big-star">⭐</div>
+        <h1>Lesson Complete</h1>
+        <p class="sub">You can now feel the size of a per-coulomb deposit before you calculate it.</p>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="n" id="finalXp">0</div>
+            <div class="l">XP Earned</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="finalCorrect">0/3</div>
+            <div class="l">Correct</div>
+          </div>
+          <div class="stat">
+            <div class="n">2.6 g</div>
+            <div class="l">Anchor</div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:var(--green); background:var(--green-light); text-align:left;">
+          <p style="color:var(--green-dark); margin:0; font-size:15px; font-weight:700;">
+            1 coulomb deposits half a grain of salt. 20,000 coulombs buy a paperclip. Charge — not current — decides the mass. That's the whole lesson.
+          </p>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer>
@@ -300,39 +541,94 @@
 </div>
 
 <script>
+// ==================== STATE ====================
 const screens = [...document.querySelectorAll('.screen')];
 const fill = document.getElementById('fill');
 const cta = document.getElementById('cta');
 const fb = document.getElementById('fb');
 const xpVal = document.getElementById('xpVal');
 
-let idx = 0;
-let xp = 0;
-const answered = new Set();
+const Z = 1.3e-7;
 
+const state = {
+  idx: 0,
+  xp: 0,
+  answered: new Set(),
+  charge: 0,
+  rafId: null
+};
+
+// ==================== SVG HELPERS ====================
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs = {}){
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ==================== ION POOL ====================
+const ION_COUNT = 34;
+const ionLayer = document.getElementById('ionLayer');
+const ions = [];
+
+function buildIonPool(){
+  for (let i = 0; i < ION_COUNT; i++){
+    const c = svgEl('circle', {
+      r: 5,
+      fill: 'url(#ionGrad)',
+      opacity: 0
+    });
+    ionLayer.appendChild(c);
+    ions.push({
+      el: c,
+      x: 45 + Math.random() * 175,
+      y: 100 + Math.random() * 128,
+      speed: 0.35 + Math.random() * 0.9,
+      wobble: Math.random() * Math.PI * 2
+    });
+  }
+}
+buildIonPool();
+
+// ==================== NAVIGATION ====================
 function show(i){
-  screens.forEach((s,n)=>s.classList.toggle('active', n===i));
-  idx = i;
-  const isQ = screens[i].dataset.type === 'question';
-  cta.disabled = isQ && !answered.has(i);
+  screens.forEach((s, n)=>s.classList.toggle('active', n === i));
+  state.idx = i;
+  const screen = screens[i];
+  const isQ = screen.dataset.type === 'question';
+  const isLast = i === screens.length - 1;
+
+  if (isLast) cta.textContent = 'Start over';
+  else if (i === screens.length - 2) cta.textContent = 'Finish';
+  else cta.textContent = 'Continue';
+
+  cta.disabled = isQ && !state.answered.has(i);
   fb.classList.remove('show');
   fb.innerHTML = '';
-  fill.style.width = (i/(screens.length-1))*100 + '%';
+  fill.style.width = (i / (screens.length - 1)) * 100 + '%';
 
-  // If already answered, restore the feedback state
-  if (isQ && answered.has(i)) {
-    const opts = screens[i].querySelectorAll('.opt');
-    opts.forEach(o=>o.classList.add('locked'));
-    const right = screens[i].querySelector('[data-correct="true"]');
-    right.classList.add('correct');
-    renderFeedback(i, true, true);
+  if (isQ && state.answered.has(i)){
+    screen.querySelectorAll('.opt').forEach(o=>o.classList.add('locked'));
+    screen.querySelector('[data-correct="true"]').classList.add('correct');
+    renderFeedback(i, true);
     cta.disabled = false;
   }
 
-  window.scrollTo({top:0, behavior:'smooth'});
+  // start/stop the SVG animation loop
+  if (screen.querySelector('#beaker')) startBeaker();
+  else stopBeaker();
+
+  if (isLast){
+    document.getElementById('finalXp').textContent = state.xp;
+    document.getElementById('finalCorrect').textContent = state.answered.size + '/3';
+    launchConfetti();
+  }
+
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
-function renderFeedback(screenIdx, wasCorrect, restore){
+// ==================== FEEDBACK ====================
+function renderFeedback(screenIdx, wasCorrect){
   const map = {
     3: {
       ok: ['Nice.', 'One coulomb deposits 1.3 × 10⁻⁷ kg — about half a grain of salt. That number is your anchor for everything else.'],
@@ -355,37 +651,242 @@ function renderFeedback(screenIdx, wasCorrect, restore){
   fb.classList.add('show');
 }
 
-// Option handling
+// ==================== OPTIONS ====================
 screens.forEach((screen, sIdx)=>{
   const opts = screen.querySelectorAll('.opt');
   if (!opts.length) return;
-
   opts.forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      if (answered.has(sIdx)) return;
-      answered.add(sIdx);
+      if (state.answered.has(sIdx)) return;
+      state.answered.add(sIdx);
       const isCorrect = btn.dataset.correct === 'true';
-
       opts.forEach(o=>o.classList.add('locked'));
       if (isCorrect){
         btn.classList.add('correct');
-        xp += 10;
+        state.xp += 10;
       } else {
         btn.classList.add('wrong','shake');
         screen.querySelector('[data-correct="true"]').classList.add('correct');
         setTimeout(()=>btn.classList.remove('shake'), 450);
       }
-      xpVal.textContent = xp;
-      renderFeedback(sIdx, isCorrect, false);
+      xpVal.textContent = state.xp;
+      renderFeedback(sIdx, isCorrect);
       cta.disabled = false;
     });
   });
 });
 
+// ==================== CTA ====================
 cta.addEventListener('click', ()=>{
-  if (idx < screens.length - 1) show(idx + 1);
+  if (state.idx < screens.length - 1){
+    show(state.idx + 1);
+  } else {
+    state.xp = 0;
+    state.answered.clear();
+    xpVal.textContent = '0';
+    screens.forEach(s=>{
+      s.querySelectorAll('.opt').forEach(o=>o.classList.remove('locked','correct','wrong'));
+    });
+    show(0);
+  }
 });
 
+// ==================== SVG ANIMATION LOOP ====================
+const depositEl = document.getElementById('deposit');
+
+function startBeaker(){
+  if (state.rafId) return;
+  const tick = ()=>{
+    animateIons();
+    state.rafId = requestAnimationFrame(tick);
+  };
+  state.rafId = requestAnimationFrame(tick);
+}
+function stopBeaker(){
+  if (state.rafId){
+    cancelAnimationFrame(state.rafId);
+    state.rafId = null;
+  }
+}
+
+function animateIons(){
+  // progress 0..1 (log scale so small charges still show some motion)
+  const progress = Math.log10(state.charge + 1) / Math.log10(20001);
+  const targetCount = Math.round(progress * ION_COUNT);
+  const speedMul = 0.4 + progress * 1.6;
+  const alpha = 0.15 + progress * 0.8;
+
+  for (let i = 0; i < ION_COUNT; i++){
+    const p = ions[i];
+    if (i < targetCount){
+      p.el.setAttribute('opacity', alpha.toFixed(2));
+      p.x += p.speed * speedMul;
+      p.wobble += 0.08;
+      if (p.x > 220){
+        p.x = 40;
+        p.y = 100 + Math.random() * 128;
+      }
+      const py = p.y + Math.sin(p.wobble) * 2;
+      p.el.setAttribute('cx', p.x.toFixed(1));
+      p.el.setAttribute('cy', py.toFixed(1));
+    } else {
+      p.el.setAttribute('opacity', '0');
+    }
+  }
+
+  // deposit grows leftward from the cathode
+  const depositW = progress * 20;
+  depositEl.setAttribute('x', (190 - depositW).toFixed(2));
+  depositEl.setAttribute('width', depositW.toFixed(2));
+}
+
+// ==================== CHARGE CONTROL ====================
+const slider = document.getElementById('chargeSlider');
+const readQ = document.getElementById('readQ');
+const readM = document.getElementById('readM');
+const labReadout = document.getElementById('labReadout');
+const cmpIcon = document.getElementById('cmpIcon');
+const cmpText = document.getElementById('cmpText');
+
+function formatMass(kg){
+  if (kg === 0) return '0 kg';
+  if (kg < 1e-3) return kg.toExponential(2).replace('e', ' × 10^') + ' kg';
+  if (kg < 1) return (kg * 1000).toFixed(2) + ' g';
+  return kg.toFixed(2) + ' kg';
+}
+
+function formatCharge(c){
+  if (c === 0) return '0 C';
+  if (c < 1000) return c + ' C';
+  if (c < 10000) return (c/1000).toFixed(1) + 'k C';
+  return (c/1000).toFixed(0) + 'k C';
+}
+
+// SVG icons for the comparison box — all vector, no blur
+const cmpIcons = {
+  nothing: `<circle cx="16" cy="16" r="3" fill="#5a6a76" opacity="0.5"/>`,
+  bacteria: `<ellipse cx="16" cy="16" rx="8" ry="4" fill="#7CFF6B" transform="rotate(-25 16 16)"/>
+             <circle cx="20" cy="14" r="1" fill="#3C3C3C"/>
+             <path d="M22 15 Q25 17 24 20" stroke="#7CFF6B" stroke-width="1.2" fill="none" stroke-linecap="round"/>`,
+  dust: `<circle cx="10" cy="14" r="1.6" fill="#E5E5E5"/>
+         <circle cx="16" cy="20" r="2.2" fill="#F0F0F0"/>
+         <circle cx="22" cy="12" r="1.3" fill="#DADADA"/>
+         <circle cx="18" cy="10" r="1" fill="#E5E5E5"/>
+         <circle cx="24" cy="20" r="1.5" fill="#EDEDED"/>`,
+  salt: `<path d="M 9 14 L 12 10 L 22 11 L 23 21 L 12 22 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.8"/>
+         <path d="M 12 10 L 15 13 L 12 22 M 15 13 L 22 11 M 15 13 L 23 21" stroke="#D5E2EB" stroke-width="0.6" fill="none"/>`,
+  saltFew: `<path d="M 6 18 L 8.5 15 L 14 15.5 L 14.5 20 L 8 20.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.7"/>
+            <path d="M 15 11 L 17.5 8 L 23 9 L 23.5 14 L 17 14.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.7"/>
+            <path d="M 18 20 L 20 18 L 25 18.5 L 25 22 L 19 22.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.7"/>`,
+  pinch: `<path d="M 5 20 L 8 17 L 13 17.5 L 13.5 22 L 7 22.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.6"/>
+          <path d="M 12 12 L 15 9 L 20 9.5 L 20.5 14 L 14 14.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.6"/>
+          <path d="M 18 20 L 21 17 L 26 17.5 L 26.5 22 L 20 22.5 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.6"/>
+          <path d="M 9 8 L 11 6 L 15 6.5 L 15.5 9.5 L 11 10 Z" fill="#FFFFFF" stroke="#C8D7E1" stroke-width="0.5"/>`,
+  rice: `<ellipse cx="16" cy="16" rx="5" ry="9" fill="#F8F4E8" stroke="#DDD2B5" stroke-width="0.8" transform="rotate(20 16 16)"/>
+         <path d="M 12 12 Q 16 16 20 20" stroke="#E8DFC5" stroke-width="0.6" fill="none"/>`,
+  paperclip: `<path d="M 20 8 L 12 16 Q 9 19 12 22 Q 15 25 18 22 L 24 16 Q 26 14 24 12 Q 22 10 20 12 L 14 18"
+                      stroke="#B8C4CC" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  coin: `<circle cx="16" cy="16" r="10" fill="#FFC800" stroke="#E0A800" stroke-width="1.5"/>
+         <circle cx="16" cy="16" r="6.5" fill="none" stroke="#E0A800" stroke-width="0.8"/>
+         <text x="16" y="20" text-anchor="middle" font-size="9" font-weight="800" fill="#B8860B" font-family="Nunito, sans-serif">₦</text>`
+};
+
+function getComparison(kg){
+  if (kg === 0) return { icon: 'nothing', text: 'Nothing<br>yet' };
+  if (kg < 1e-8) return { icon: 'bacteria', text: 'Less than<br>a bacterium' };
+  if (kg < 5e-7) return { icon: 'dust', text: 'A speck<br>of dust' };
+  if (kg < 2e-6) return { icon: 'salt', text: 'A grain<br>of salt' };
+  if (kg < 1e-5) return { icon: 'saltFew', text: 'A few grains<br>of salt' };
+  if (kg < 1e-4) return { icon: 'pinch', text: 'A pinch<br>of salt' };
+  if (kg < 8e-4) return { icon: 'rice', text: 'A grain<br>of rice' };
+  if (kg < 3e-3) return { icon: 'paperclip', text: 'A paperclip' };
+  return { icon: 'coin', text: 'A coin' };
+}
+
+function applyCharge(c){
+  state.charge = c;
+  const mass = Z * c;
+
+  readQ.textContent = formatCharge(c);
+  readM.textContent = formatMass(mass);
+  labReadout.textContent = 'Q = ' + formatCharge(c);
+
+  const pct = (c / 20000) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+
+  const cmp = getComparison(mass);
+  cmpIcon.innerHTML = cmpIcons[cmp.icon];
+  cmpText.innerHTML = cmp.text;
+
+  document.querySelectorAll('.preset').forEach(p=>{
+    p.classList.toggle('active', parseInt(p.dataset.q) === c);
+  });
+
+  // if lab isn't running (not on that screen), still update the deposit shape
+  if (!state.rafId) animateIons();
+}
+
+slider.addEventListener('input', e=>{
+  applyCharge(parseInt(e.target.value));
+});
+
+document.querySelectorAll('.preset').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const q = parseInt(btn.dataset.q);
+    slider.value = q;
+    applyCharge(q);
+  });
+});
+
+// ==================== CONFETTI ====================
+function launchConfetti(){
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#58CC02','#1CB0F6','#FFC800','#CE82FF','#FF4B4B'];
+  const particles = [];
+  for (let i = 0; i < 120; i++){
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      size: 6 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.3,
+      life: 0
+    });
+  }
+
+  let frame = 0;
+  function tick(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.rot += p.rotV;
+      p.life++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - p.life / 200);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 220) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  tick();
+}
+
+// ==================== INIT ====================
+applyCharge(0);
 show(0);
 </script>
 </body>

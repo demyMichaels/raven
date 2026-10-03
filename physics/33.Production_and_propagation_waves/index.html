@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Frequency &amp; Period — Study Guide</title>
+<title>Frequency & Period — Interactive Study Guide</title>
 <style>
   :root{
     --green:#58CC02; --green-dark:#58A700; --green-light:#D7FFB8;
@@ -16,8 +16,7 @@
   body{
     font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     background:var(--bg); color:var(--ink);
-    display:flex; justify-content:center; min-height:100vh;
-    font-weight:600;
+    display:flex; justify-content:center; min-height:100vh; font-weight:600;
   }
   .app{width:100%; max-width:560px; display:flex; flex-direction:column; min-height:100vh; position:relative;}
 
@@ -27,7 +26,7 @@
   .xp{display:flex; align-items:center; gap:4px; font-weight:800; color:var(--yellow); font-size:15px;}
   .xp span{color:var(--ink-soft); font-size:13px;}
 
-  main{flex:1; padding:8px 20px 140px;}
+  main{flex:1; padding:8px 20px 160px;}
   .screen{display:none; animation:slide .35s cubic-bezier(.4,0,.2,1);}
   .screen.active{display:block;}
   @keyframes slide{from{opacity:0; transform:translateY(14px)}to{opacity:1; transform:translateY(0)}}
@@ -42,111 +41,203 @@
   .card.passage{border-color:var(--blue); background:var(--blue-light);}
   .card.passage p{color:var(--ink); font-size:15px; margin:0; line-height:1.6;}
   .card.answer{border-color:var(--green); background:var(--green-light); text-align:center;}
-  .card.answer .big{font-size:30px; font-weight:800; color:var(--green-dark); margin:6px 0;}
+  .card.answer .big{font-size:28px; font-weight:800; color:var(--green-dark); margin:6px 0;}
 
   .tag{display:inline-block; font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
     padding:4px 10px; border-radius:99px; margin-bottom:10px;}
   .tag.green{background:var(--green); color:#fff;}
 
-  .math{font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+  .math{
+    font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
     font-size:15px; line-height:1.9; background:#F7F7F7;
-    border-radius:12px; padding:16px 18px; margin-bottom:14px;}
+    border-radius:12px; padding:16px 18px; margin-bottom:14px;
+  }
   .math .row{display:flex; justify-content:space-between; gap:12px;}
   .math .op{color:var(--ink-soft);}
   .math .res{color:var(--green-dark); font-weight:800; border-top:2px solid var(--line); padding-top:8px; margin-top:8px;}
 
-  .anchor{display:flex; align-items:center; gap:20px; padding:20px; border:2px dashed var(--line); border-radius:16px; margin-bottom:16px;}
-  .fork-wrap{flex:0 0 60px; position:relative;}
-  .fork-wrap svg{display:block; width:60px; height:80px;}
-  .anchor-text{font-size:15px; line-height:1.55;}
-  .anchor-text b{font-weight:800;}
-
-  /* ---------- SOUND LAB ---------- */
-  .lab{border:2px solid var(--blue); border-radius:20px; padding:22px 18px; background:var(--blue-light); margin-bottom:18px;}
-  .lab-stage{display:flex; flex-direction:column; align-items:center; margin-bottom:18px;}
-  .play-btn{
-    position:relative; width:120px; height:120px; border-radius:50%;
-    background:var(--blue); border:none; cursor:pointer;
-    display:grid; place-items:center;
-    box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.5);
-    transition:transform .1s, box-shadow .1s;
+  /* ============ INTERACTIVE LAB ============ */
+  .lab{
+    border:2px solid var(--ink); border-radius:20px; overflow:hidden;
+    margin-bottom:16px; background:#1a1a1a;
   }
-  .play-btn:active{transform:translateY(3px); box-shadow:0 3px 0 var(--blue-dark);}
-  .play-btn svg{width:48px; height:48px; fill:#fff;}
-  .play-btn .icon-stop{display:none;}
-  .play-btn.playing .icon-play{display:none;}
-  .play-btn.playing .icon-stop{display:block;}
-  .play-btn.playing{
-    box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.6);
+  .lab-header{
+    padding:12px 16px; background:#252525; color:#fff;
+    display:flex; align-items:center; gap:10px;
+    font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+  }
+  .lab-header .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 8px var(--green);
+    animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .lab-header .title{flex:1}
+  .lab-header .readout{
+    font-family:'SF Mono',ui-monospace,monospace;
+    color:var(--blue); font-size:13px;
+  }
+
+  .lab-body{display:flex; padding:16px; gap:16px; align-items:center;}
+
+  /* Tuning fork */
+  .fork-stage{
+    flex:0 0 90px; height:150px; position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .fork{position:relative; width:70px; height:130px;}
+  .prong{
+    position:absolute; top:0; width:7px; height:60px;
+    background:linear-gradient(180deg,#e0e0e0,#a0a0a0);
+    border-radius:4px; box-shadow:0 0 8px rgba(28,176,246,.3);
+  }
+  .prong.left{left:16px; transform-origin:50% 100%;}
+  .prong.right{right:16px; transform-origin:50% 100%;}
+  .fork-base{
+    position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+    width:7px; height:70px;
+    background:linear-gradient(180deg,#a0a0a0,#666);
+    border-radius:4px;
+  }
+  .fork-curve{
+    position:absolute; top:56px; left:16px; right:16px; height:20px;
+    border:7px solid transparent;
+    border-bottom:7px solid #c0c0c0;
+    border-radius:0 0 40px 40px;
+  }
+  .prong.left.vibrate{animation:prongL var(--dur,0.25s) ease-in-out infinite alternate;}
+  .prong.right.vibrate{animation:prongR var(--dur,0.25s) ease-in-out infinite alternate;}
+  @keyframes prongL{from{transform:translateX(0)}to{transform:translateX(-6px)}}
+  @keyframes prongR{from{transform:translateX(0)}to{transform:translateX(6px)}}
+
+  .waves{
+    position:absolute; top:20px; left:50%; transform:translateX(-50%);
+    pointer-events:none; opacity:0;
+  }
+  .waves.on{opacity:1;}
+  .waves span{
+    position:absolute; top:0; left:50%; width:6px; height:6px;
+    border-radius:50%; background:var(--blue);
     animation:ripple 1.4s ease-out infinite;
   }
+  .waves span:nth-child(2){animation-delay:.35s}
+  .waves span:nth-child(3){animation-delay:.7s}
+  .waves span:nth-child(4){animation-delay:1.05s}
   @keyframes ripple{
-    0%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,.55);}
-    100%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 34px rgba(28,176,246,0);}
+    0%{transform:translate(-50%,0) scale(.5); opacity:1}
+    100%{transform:translate(-50%,0) scale(2.5) translateY(-40px); opacity:0}
   }
-  .lab-readout{margin-top:14px; text-align:center;}
-  .lab-freq{font-size:26px; font-weight:800; color:var(--blue-dark); letter-spacing:-.5px;}
-  .lab-name{font-size:13px; color:var(--ink-soft); margin-top:2px;}
 
-  /* ---------- OSCILLOSCOPE ---------- */
-  .scope-wrap{position:relative; background:#0F172A; border-radius:14px; overflow:hidden; padding:10px 0 8px; margin-bottom:14px; box-shadow: inset 0 0 0 1px rgba(125,211,252,.15);}
-  .scope{display:block; width:100%; height:130px;}
-  .scope-foot{display:flex; justify-content:space-between; padding:0 14px; font-size:10px; color:#7DD3FC; font-weight:800; text-transform:uppercase; letter-spacing:.8px; opacity:.75;}
-  .scope-foot .live-dot{display:inline-block; width:6px; height:6px; border-radius:50%; background:#58CC02; margin-right:5px; vertical-align:middle; animation:pulse 1s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
-
-  .lab-desc{font-size:13px; color:var(--ink-soft); text-align:center; line-height:1.5; margin:14px 0 0;}
-
-  .chips-label{font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); margin:6px 0 10px; text-align:center;}
-  .chips{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-  .chip{
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-    padding:9px 13px; border-radius:12px; border:2px solid var(--line);
-    border-bottom-width:3px; background:#fff; cursor:pointer;
-    font-family:inherit; font-weight:800; font-size:13px; color:var(--ink);
-    transition:.12s;
+  /* Scope */
+  .scope-wrap{
+    flex:1; position:relative; height:150px;
+    border-radius:10px; overflow:hidden;
+    background:radial-gradient(ellipse at center, #0a1e2c 0%, #05121a 100%);
+    box-shadow:inset 0 0 20px rgba(28,176,246,.15);
   }
-  .chip:hover{background:#F7F7F7;}
-  .chip:active{transform:translateY(2px); border-bottom-width:2px;}
-  .chip.active{background:var(--green-light); border-color:var(--green); color:var(--green-dark);}
-  .chip small{font-size:10px; font-weight:700; color:var(--ink-soft);}
-  .chip.active small{color:var(--green-dark);}
-
-  /* ---------- FREQUENCY SCALE ---------- */
-  .freq-scale{border:2px solid var(--line); border-radius:16px; padding:6px 4px; margin:16px 0 8px; background:#fff;}
-  .freq-row{
-    display:grid; grid-template-columns: 110px 1fr 78px;
-    align-items:center; gap:10px;
-    padding:11px 12px; border-radius:12px;
-    cursor:pointer; transition:.12s;
+  #scope{display:block; width:100%; height:100%;}
+  .scope-caption{
+    position:absolute; bottom:6px; right:8px;
+    font-family:'SF Mono',ui-monospace,monospace;
+    font-size:9px; color:rgba(28,176,246,.6); letter-spacing:.5px;
   }
-  .freq-row + .freq-row{border-top:1px solid var(--line); border-radius:0;}
-  .freq-row:first-child{border-radius:12px 12px 0 0;}
-  .freq-row:last-child{border-radius:0 0 12px 12px;}
-  .freq-row:hover{background:#F7F7F7;}
-  .freq-row.active{background:var(--green-light);}
-  .freq-row.active .freq-name,
-  .freq-row.active .freq-val{color:var(--green-dark);}
-  .freq-row.ours .freq-name,
-  .freq-row.ours .freq-val{color:var(--green-dark); font-weight:800;}
-  .freq-row.ours{background:var(--green-light);}
 
-  .freq-name{font-size:13px; font-weight:700; color:var(--ink); line-height:1.25;}
-  .freq-name small{display:block; font-size:10px; font-weight:700; color:var(--ink-soft); margin-top:1px;}
-  .freq-row.active .freq-name small,
-  .freq-row.ours .freq-name small{color:var(--green-dark);}
+  /* Controls */
+  .controls{
+    padding:16px; background:#111; border-top:1px solid #252525;
+  }
+  .control-row{
+    display:flex; align-items:center; gap:14px; margin-bottom:14px;
+  }
+  .play-btn{
+    flex:0 0 42px; height:42px; border-radius:50%; border:none;
+    background:var(--blue); color:#fff; font-size:16px; cursor:pointer;
+    display:grid; place-items:center; transition:.15s;
+    box-shadow:0 0 0 0 rgba(28,176,246,.6);
+  }
+  .play-btn:hover{background:var(--blue-dark);}
+  .play-btn:active{transform:scale(.94);}
+  .play-btn.playing{animation:playPulse .8s infinite;}
+  @keyframes playPulse{
+    0%{box-shadow:0 0 0 0 rgba(28,176,246,.6)}
+    100%{box-shadow:0 0 0 16px rgba(28,176,246,0)}
+  }
 
-  .freq-bar-track{position:relative; height:14px; background:var(--line); border-radius:7px; overflow:hidden;}
-  .freq-bar-fill{height:100%; background:var(--blue); border-radius:7px;}
-  .freq-row.ours .freq-bar-fill{background:var(--green);}
-  .freq-row.active .freq-bar-fill{background:var(--green);}
+  .slider-track{
+    flex:1; position:relative; padding:8px 0;
+  }
+  input[type=range]{
+    width:100%; -webkit-appearance:none; appearance:none;
+    background:transparent; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:6px; border-radius:3px;
+    background:linear-gradient(90deg, var(--blue) 0%, var(--blue) var(--pct,26%), #333 var(--pct,26%), #333 100%);
+  }
+  input[type=range]::-moz-range-track{
+    height:6px; border-radius:3px; background:#333;
+  }
+  input[type=range]::-moz-range-progress{
+    height:6px; border-radius:3px; background:var(--blue);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:#fff; border:3px solid var(--blue); margin-top:-7px;
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--blue);
+  }
 
-  .freq-val{font-size:12px; font-weight:800; color:var(--blue-dark); text-align:right; font-variant-numeric:tabular-nums;}
+  .readout-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  }
+  .readout-cell{
+    background:#1a1a1a; border:1px solid #2a2a2a; border-radius:10px;
+    padding:10px 12px;
+  }
+  .readout-cell .label{
+    font-size:9px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+    color:#666; margin-bottom:4px;
+  }
+  .readout-cell .value{
+    font-family:'SF Mono',ui-monospace,monospace;
+    font-size:15px; font-weight:700; color:var(--blue);
+  }
+  .readout-cell .value.big{font-size:18px;}
 
-  .freq-scale-foot{display:flex; justify-content:space-between; padding:6px 12px 4px; font-size:10px; font-weight:800; color:var(--ink-soft);}
-  .freq-note{font-size:12px; color:var(--ink-soft); text-align:center; margin:8px 0 0; line-height:1.5;}
-  .freq-note b{color:var(--ink); font-weight:800;}
+  /* ============ BARS ============ */
+  .bars{margin:18px 0 8px;}
+  .bar-row{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .bar-label{flex:0 0 70px; font-size:13px; font-weight:800; color:var(--ink); text-align:right;}
+  .bar-track{flex:1; height:22px; background:var(--line); border-radius:6px; position:relative; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--blue); border-radius:6px; transition:width .3s;}
+  .bar-fill.tiny{background:var(--green);}
+  .bar-val{flex:0 0 100px; font-size:12px; font-weight:700; color:var(--ink-soft);}
+  .scale-note{font-size:12px; color:var(--ink-soft); text-align:center; font-style:italic; margin-top:4px;}
 
+  /* ============ LADDER ============ */
+  .ladder{margin:24px 0 8px; padding:0 6px;}
+  .track-ladder{position:relative; height:5px; background:var(--line); border-radius:99px;}
+  .marker{position:absolute; top:-7px; width:3px; height:19px; background:var(--blue); border-radius:2px; transform:translateX(-50%);}
+  .marker.hi{background:var(--green); height:25px; top:-10px;}
+  .marker-label{position:absolute; top:-36px; transform:translateX(-50%); white-space:nowrap;
+    font-size:10px; font-weight:800; color:var(--blue); text-align:center; line-height:1.2;}
+  .marker-label.hi{color:var(--green-dark); font-size:11px;}
+  .decades{display:flex; justify-content:space-between; margin-top:12px; font-size:10px; color:var(--ink-soft); font-weight:700;}
+  .ladder-note{font-size:13px; color:var(--ink-soft); text-align:center; margin-top:30px; line-height:1.5;}
+
+  /* ============ TABLE ============ */
+  .ctable{width:100%; border-collapse:collapse; margin-top:14px; font-size:14px;}
+  .ctable th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--ink-soft); padding:8px 6px; border-bottom:2px solid var(--line); font-weight:800;}
+  .ctable td{padding:9px 6px; border-bottom:1px solid var(--line); color:var(--ink-soft);}
+  .ctable td:first-child{color:var(--ink); font-weight:700;}
+  .ctable tr.ours td{background:var(--green-light); color:var(--green-dark); font-weight:800;}
+  .ctable tr.ours td:first-child{color:var(--green-dark);}
+
+  /* ============ OPTIONS ============ */
   .options{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
   .opt{display:flex; align-items:center; gap:14px; text-align:left;
     padding:16px; background:#fff; border:2px solid var(--line); border-bottom-width:4px;
@@ -164,14 +255,34 @@
   .shake{animation:shake .4s;}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
+  /* ============ KEYLIST ============ */
   .keylist{list-style:none; display:flex; flex-direction:column; gap:12px; margin-top:4px;}
   .keylist li{display:flex; gap:12px; font-size:15px; line-height:1.5; color:var(--ink);}
   .keylist .dot{flex:0 0 22px; height:22px; border-radius:50%; background:var(--green-light);
     color:var(--green-dark); display:grid; place-items:center; font-size:12px; font-weight:800;}
 
+  /* ============ COMPLETION ============ */
+  .completion{text-align:center; padding-top:30px;}
+  .big-star{
+    font-size:84px; line-height:1; margin-bottom:8px;
+    animation:starPop .8s cubic-bezier(.34,1.56,.64,1);
+    display:inline-block;
+  }
+  @keyframes starPop{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+  .completion h1{font-size:28px; margin-bottom:8px;}
+  .completion .sub{color:var(--ink-soft); font-size:15px; margin-bottom:24px;}
+  .stat-row{display:flex; gap:12px; margin-bottom:24px;}
+  .stat{flex:1; border:2px solid var(--line); border-radius:16px; padding:16px 8px; text-align:center;}
+  .stat .n{font-size:26px; font-weight:800; color:var(--green-dark);}
+  .stat .l{font-size:11px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft); margin-top:4px;}
+
+  /* confetti canvas */
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:100;}
+
+  /* ============ FOOTER ============ */
   footer{position:fixed; bottom:0; left:0; right:0; background:#fff;
     border-top:2px solid var(--line); padding:14px 20px 20px;
-    max-width:560px; margin:0 auto; z-index:30;}
+    max-width:560px; margin:0 auto; z-index:30; transition:transform .25s;}
   .feedback{display:none; margin-bottom:14px;}
   .feedback.show{display:block; animation:slide .25s;}
   .fb-head{display:flex; align-items:center; gap:8px; font-weight:800; font-size:17px; margin-bottom:4px;}
@@ -187,10 +298,10 @@
   .cta:hover:not(:disabled){filter:brightness(1.05);}
   .cta:active:not(:disabled){transform:translateY(2px); border-bottom-width:2px;}
   .cta:disabled{background:var(--line); border-color:var(--line); color:#AFAFAF; cursor:not-allowed;}
-  .cta.restart{background:var(--purple); border-color:#A560E8;}
 </style>
 </head>
 <body>
+<canvas id="confetti"></canvas>
 <div class="app">
 
   <header>
@@ -200,6 +311,7 @@
 
   <main>
 
+    <!-- 1. HOOK -->
     <section class="screen active" data-type="content">
       <div class="eyebrow">Waves · Intuition First</div>
       <h1>The Note You Can Hear</h1>
@@ -208,6 +320,7 @@
       <p>That number — 1300 per second — is what we're about to make sense of. And it has a surprise: the <em>time</em> for one vibration is a number you'd never guess.</p>
     </section>
 
+    <!-- 2. PASSAGE -->
     <section class="screen" data-type="content">
       <div class="eyebrow">The Passage</div>
       <h2>Read it once. Don't solve it yet.</h2>
@@ -218,70 +331,71 @@
       <p><strong>What does 1.30 × 10³ Hz actually sound like?</strong> If you can't place this number in the real world, the arithmetic won't teach you anything.</p>
     </section>
 
+    <!-- 3. INTERACTIVE LAB -->
     <section class="screen" data-type="content">
-      <div class="eyebrow">Build the Anchor</div>
-      <h2>What is 1.30 × 10³ Hz?</h2>
-      <div class="anchor">
-        <div class="fork-wrap">
-          <svg viewBox="0 0 60 80">
-            <path d="M 18 10 L 18 42 Q 18 56, 30 56 Q 42 56, 42 42 L 42 10"
-                  stroke="#777" stroke-width="5" fill="none" stroke-linecap="round"/>
-            <line x1="30" y1="56" x2="30" y2="76" stroke="#777" stroke-width="5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="anchor-text">
-          <b>1300 vibrations every second.</b><br>
-          <span style="color:var(--ink-soft)">That's a high musical note — roughly E6, near the top of a soprano's range. About 3× higher than concert A (440 Hz).</span>
-        </div>
-      </div>
-      <p>So read it out loud, slowly:</p>
-      <div class="card" style="border-color:var(--yellow); background:#FFF9E5;">
-        <p style="color:var(--ink); margin:0; font-size:15px;">
-          <strong>"One thousand three hundred wiggles per second."</strong>
-        </p>
-      </div>
-      <p>Now — how long does <em>one</em> wiggle take? On the next screen, you'll <strong>hear it and see it</strong>.</p>
-    </section>
-
-    <section class="screen" data-type="content">
-      <div class="eyebrow">Sound Lab · Press Play</div>
-      <h2>Hear 1300 Hz — and See the Wave</h2>
+      <div class="eyebrow">Build the Anchor · Interactive</div>
+      <h2>See it. Hear it. Then name it.</h2>
 
       <div class="lab">
-        <div class="lab-stage">
-          <button class="play-btn" id="playMain" aria-label="Play 1300 Hz tone">
-            <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <svg class="icon-stop" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-          </button>
-          <div class="lab-readout">
-            <div class="lab-freq" id="readoutFreq">1.30 × 10³ Hz</div>
-            <div class="lab-name" id="readoutName">≈ E6 · near the top of a soprano's range</div>
+        <div class="lab-header">
+          <div class="dot"></div>
+          <div class="title">Oscillator Lab · Live</div>
+          <div class="readout" id="labReadout">1.30 × 10³ Hz</div>
+        </div>
+
+        <div class="lab-body">
+          <div class="fork-stage">
+            <div class="fork">
+              <div class="prong left" id="prongL"></div>
+              <div class="prong right" id="prongR"></div>
+              <div class="fork-curve"></div>
+              <div class="fork-base"></div>
+            </div>
+            <div class="waves" id="waves">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="scope-wrap">
+            <canvas id="scope"></canvas>
+            <div class="scope-caption">time window · 10 ms</div>
           </div>
         </div>
 
-        <div class="scope-wrap">
-          <canvas class="scope" id="scope"></canvas>
-          <div class="scope-foot">
-            <span id="scopeStatus"><span class="live-dot" style="display:none"></span>Paused</span>
-            <span id="scopeCycles">≈ 10 cycles shown</span>
+        <div class="controls">
+          <div class="control-row">
+            <button class="play-btn" id="playBtn" title="Hear this frequency">▶</button>
+            <div class="slider-track">
+              <input type="range" id="freqSlider" min="100" max="5000" step="10" value="1300">
+            </div>
+          </div>
+          <div class="readout-grid">
+            <div class="readout-cell">
+              <div class="label">Frequency</div>
+              <div class="value big" id="readFreq">1300 Hz</div>
+            </div>
+            <div class="readout-cell">
+              <div class="label">Period (one wiggle)</div>
+              <div class="value big" id="readPeriod">0.77 ms</div>
+            </div>
           </div>
         </div>
-
-        <p class="lab-desc">Higher frequency = more cycles squeezed into the same window. That's what your ear hears as a higher pitch.</p>
       </div>
 
-      <div class="chips-label">Compare with</div>
-      <div class="chips" id="chipRow">
-        <button class="chip" data-freq="1">1 Hz <small>clock tick</small></button>
-        <button class="chip" data-freq="50">50 Hz <small>hummingbird</small></button>
-        <button class="chip" data-freq="262">262 Hz <small>middle C</small></button>
-        <button class="chip" data-freq="440">440 Hz <small>concert A</small></button>
-        <button class="chip" data-freq="1300">1300 Hz <small>our tone</small></button>
-        <button class="chip" data-freq="4186">4186 Hz <small>top C8</small></button>
-        <button class="chip" data-freq="8000">8000 Hz <small>very high</small></button>
+      <p>Play with the slider. Notice three things:</p>
+      <p><strong>1.</strong> As frequency goes <em>up</em>, the waveform gets <em>denser</em> — more wiggles packed into the same 10 ms.<br>
+         <strong>2.</strong> The period gets <em>smaller</em>. High frequency = short period.<br>
+         <strong>3.</strong> The tuning fork always vibrates at the same <em>visible</em> speed. Real 1300 Hz motion is far too fast for your eye — it's been slowed down hundreds of times.</p>
+
+      <p>Now read the passage number out loud:</p>
+      <div class="card" style="border-color:var(--yellow); background:#FFF9E5;">
+        <p style="color:var(--ink); margin:0; font-size:15px;">
+          <strong>“One thousand three hundred wiggles per second.”</strong>
+        </p>
       </div>
+      <p>That's a high musical note — roughly <strong>E6</strong>, near the top of a soprano's range, about 3× higher than concert A (440 Hz). One wiggle lasts less than a millisecond: about the duration of a camera flash.</p>
     </section>
 
+    <!-- 4. Q1 -->
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 1 of 3</div>
       <h2>The oscillator vibrates at 1.30 × 10³ Hz. How long does one vibration take?</h2>
@@ -293,6 +407,7 @@
       </div>
     </section>
 
+    <!-- 5. Q2 -->
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 2 of 3</div>
       <h2>Two oscillators: one at 100 Hz, one at 1300 Hz. Which has the longer period?</h2>
@@ -304,57 +419,44 @@
       </div>
     </section>
 
+    <!-- 6. LADDER -->
     <section class="screen" data-type="content">
-      <div class="eyebrow">See the Sizes · Tap to Hear</div>
+      <div class="eyebrow">See the Sizes</div>
       <h2>Where does 1300 Hz sit?</h2>
-      <p style="font-size:14px;">Each row is one sound. Bar length shows the frequency on a log scale — equal steps are <b>10×</b>, not 2×.</p>
-
-      <div class="freq-scale" id="freqScale">
-        <div class="freq-row playable" data-freq="1">
-          <div class="freq-name">Clock tick<small>once per second</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:0%"></div></div>
-          <div class="freq-val">1 Hz</div>
+      <div class="ladder">
+        <div class="track-ladder">
+          <div class="marker" style="left:0%"></div>
+          <div class="marker-label" style="left:0%">1 Hz<br>clock tick</div>
+          <div class="marker" style="left:40%"></div>
+          <div class="marker-label" style="left:40%">100 Hz<br>deep bass</div>
+          <div class="marker hi" style="left:62.3%"></div>
+          <div class="marker-label hi" style="left:62.3%">1300 Hz<br>our oscillator</div>
+          <div class="marker" style="left:80%"></div>
+          <div class="marker-label" style="left:80%">10 kHz<br>TV whine</div>
+          <div class="marker" style="left:86%"></div>
+          <div class="marker-label" style="left:86%">20 kHz<br>hearing limit</div>
         </div>
-        <div class="freq-row playable" data-freq="50">
-          <div class="freq-name">Hummingbird<small>wing beat</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:40%"></div></div>
-          <div class="freq-val">50 Hz</div>
-        </div>
-        <div class="freq-row playable" data-freq="262">
-          <div class="freq-name">Middle C<small>C4</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:56%"></div></div>
-          <div class="freq-val">262 Hz</div>
-        </div>
-        <div class="freq-row playable" data-freq="440">
-          <div class="freq-name">Concert A<small>orchestra tuning</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:61%"></div></div>
-          <div class="freq-val">440 Hz</div>
-        </div>
-        <div class="freq-row ours playable active" data-freq="1300">
-          <div class="freq-name">Our oscillator<small>the passage</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:72%"></div></div>
-          <div class="freq-val">1300 Hz</div>
-        </div>
-        <div class="freq-row playable" data-freq="4186">
-          <div class="freq-name">Top piano note<small>C8</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:84%"></div></div>
-          <div class="freq-val">4186 Hz</div>
-        </div>
-        <div class="freq-row playable" data-freq="12000">
-          <div class="freq-name">Hearing limit<small>young ears · scaled</small></div>
-          <div class="freq-bar-track"><div class="freq-bar-fill" style="width:100%"></div></div>
-          <div class="freq-val">20 kHz</div>
+        <div class="decades">
+          <span>1 Hz</span><span>10²</span><span>10³</span><span>10⁴</span><span>10⁵ Hz</span>
         </div>
       </div>
-      <div class="freq-scale-foot">
-        <span>1 Hz</span><span>10²</span><span>10³</span><span>10⁴</span><span>10⁵ Hz</span>
-      </div>
+      <div class="ladder-note">Each gap is <b>10×</b>, not 2×.<br>1300 Hz sits in the sweet spot of human hearing — near the top of music, well below ultrasound.</div>
 
-      <p class="freq-note">
-        1300 Hz sits in the sweet spot of human hearing — <b>near the top of music</b>, well below ultrasound. Tap any row to hear it.
-      </p>
+      <table class="ctable">
+        <tr><th>Source</th><th>Frequency</th><th>vs 1300 Hz</th></tr>
+        <tr><td>Clock tick</td><td>1 Hz</td><td>1300× lower</td></tr>
+        <tr><td>Hummingbird wing</td><td>50 Hz</td><td>26× lower</td></tr>
+        <tr><td>Middle C (C4)</td><td>262 Hz</td><td>5× lower</td></tr>
+        <tr><td>Concert A (A4)</td><td>440 Hz</td><td>3× lower</td></tr>
+        <tr class="ours"><td>Our oscillator</td><td>1300 Hz</td><td>—</td></tr>
+        <tr><td>Top piano note (C8)</td><td>4186 Hz</td><td>3.2× higher</td></tr>
+        <tr><td>Hearing limit (young)</td><td>20,000 Hz</td><td>15× higher</td></tr>
+        <tr><td>Bat echolocation</td><td>50,000 Hz</td><td>38× higher</td></tr>
+        <tr><td>AM radio carrier</td><td>1,000,000 Hz</td><td>770× higher</td></tr>
+      </table>
     </section>
 
+    <!-- 7. CALC -->
     <section class="screen" data-type="content">
       <div class="eyebrow">Now Do the Maths</div>
       <h2>T = 1/f and N = f × t</h2>
@@ -376,6 +478,7 @@
       </div>
     </section>
 
+    <!-- 8. ANSWER -->
     <section class="screen" data-type="content">
       <div class="eyebrow">Answer</div>
       <div class="card answer">
@@ -387,6 +490,7 @@
       <p>Notice the pattern: <strong>high frequency means short period.</strong> The numbers move in opposite directions. That inverse relationship is the whole point — and it's why a 1300 Hz note feels "fast" to your ear: each cycle is over in under a millisecond.</p>
     </section>
 
+    <!-- 9. Q3 -->
     <section class="screen" data-type="question">
       <div class="eyebrow">Active Recall · 3 of 3</div>
       <h2>Same oscillator. But now the frequency doubles to 2.60 × 10³ Hz. What happens to the period?</h2>
@@ -398,19 +502,50 @@
       </div>
     </section>
 
+    <!-- 10. SUMMARY -->
     <section class="screen" data-type="content">
       <div class="eyebrow">Lock It In</div>
       <h2>What you actually learned</h2>
       <ul class="keylist">
         <li><span class="dot">✓</span><span><b>Hz means "per second."</b> 1.30 × 10³ Hz = 1300 vibrations every second.</span></li>
         <li><span class="dot">✓</span><span><b>Period is the inverse of frequency.</b> T = 1/f. High f → tiny T.</span></li>
-        <li><span class="dot">✓</span><span><b>0.77 ms is the anchor.</b> A camera flash. Something you can feel, not just compute.</span></li>
-        <li><span class="dot">✓</span><span><b>You heard it — and saw it.</b> Higher frequencies squeeze more cycles into the same window.</span></li>
+        <li><span class="dot">✓</span><span><b>0.77 ms is the anchor.</b> A camera flash. A blink. Something you can feel, not just compute.</span></li>
+        <li><span class="dot">✓</span><span><b>1300 Hz is a musical note.</b> Roughly E6 — near the top of a soprano's range, well inside human hearing.</span></li>
       </ul>
       <div class="card" style="border-color:var(--purple); background:#FBF0FF; margin-top:20px;">
         <p style="margin:0; color:var(--ink); font-size:15px;">
           <strong>Next time you meet a frequency</strong>, don't jump to T = 1/f. First ask: <em>can I hear this? Is it fast or slow compared to my heartbeat?</em> Then the arithmetic has somewhere to land.
         </p>
+      </div>
+    </section>
+
+    <!-- 11. COMPLETION -->
+    <section class="screen" data-type="content">
+      <div class="completion">
+        <div class="big-star">⭐</div>
+        <h1>Lesson Complete</h1>
+        <p class="sub">You can now place a frequency in the real world before you calculate it.</p>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="n" id="finalXp">0</div>
+            <div class="l">XP Earned</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="finalCorrect">0/3</div>
+            <div class="l">Correct</div>
+          </div>
+          <div class="stat">
+            <div class="n">1300 Hz</div>
+            <div class="l">Anchor</div>
+          </div>
+        </div>
+
+        <div class="card" style="border-color:var(--green); background:var(--green-light); text-align:left;">
+          <p style="color:var(--green-dark); margin:0; font-size:15px; font-weight:700;">
+            You can hear 1300 Hz. You know one cycle takes 0.77 ms. You know T and f move in opposite directions. That's the whole lesson.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -424,376 +559,83 @@
 </div>
 
 <script>
-/* ============================================================
-   Web Audio module
-   ============================================================ */
-const Tone = {
-  ctx: null,
-  osc: null,
-  gain: null,
-  playing: null,
-
-  async ensure() {
-    if (this.ctx) {
-      if (this.ctx.state === 'running') return this.ctx;
-      try { await this.ctx.resume(); } catch (e) {}
-      if (this.ctx.state === 'running') return this.ctx;
-      try { this.ctx.close(); } catch (e) {}
-      this.ctx = null;
-    }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) throw new Error('Web Audio not supported');
-    const ctx = new AC();
-    if (ctx.state !== 'running') {
-      try { await ctx.resume(); } catch (e) {}
-    }
-    this.ctx = ctx;
-    return ctx;
-  },
-
-  async play(freq, duration) {
-    let ctx;
-    try {
-      ctx = await this.ensure();
-    } catch (e) {
-      console.warn('Audio unavailable:', e);
-      return;
-    }
-
-    if (this.osc) {
-      try { this.osc.onended = null; } catch (e) {}
-      try { this.osc.stop(); } catch (e) {}
-      try { this.osc.disconnect(); } catch (e) {}
-      this.osc = null;
-    }
-    if (this.gain) {
-      try { this.gain.disconnect(); } catch (e) {}
-      this.gain = null;
-    }
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    const now = ctx.currentTime;
-    const dur = duration || 1.0;
-    const peak = 0.15;
-
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(peak, now + 0.02);
-    gain.gain.setValueAtTime(peak, now + dur - 0.06);
-    gain.gain.linearRampToValueAtTime(0, now + dur);
-
-    osc.start(now);
-    osc.stop(now + dur + 0.05);
-
-    this.osc = osc;
-    this.gain = gain;
-    this.playing = freq;
-
-    osc.onended = () => {
-      if (this.osc === osc) {
-        this.osc = null;
-        this.gain = null;
-        this.playing = null;
-        syncPlayUI();
-      }
-    };
-
-    syncPlayUI();
-  },
-
-  stop() {
-    if (this.osc) {
-      try { this.osc.onended = null; } catch (e) {}
-      try { this.osc.stop(); } catch (e) {}
-      try { this.osc.disconnect(); } catch (e) {}
-    }
-    if (this.gain) {
-      try { this.gain.disconnect(); } catch (e) {}
-    }
-    this.osc = null;
-    this.gain = null;
-    this.playing = null;
-    syncPlayUI();
-  },
-
-  toggle(freq, duration) {
-    if (this.playing === freq) {
-      this.stop();
-      return false;
-    }
-    this.play(freq, duration);
-    return true;
-  }
-};
-
-/* ============================================================
-   Oscilloscope
-   ============================================================ */
-class Scope {
-  constructor(canvas, statusEl, cyclesEl) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.statusEl = statusEl;
-    this.cyclesEl = cyclesEl;
-    this.freq = 1300;
-    this.playing = false;
-    this.phase = 0;
-    this.w = 0;
-    this.h = 0;
-    this.dpr = window.devicePixelRatio || 1;
-    this.resize();
-    this.loop = this.loop.bind(this);
-    requestAnimationFrame(this.loop);
-  }
-
-  resize() {
-    const rect = this.canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    this.w = rect.width;
-    this.h = rect.height;
-    this.canvas.width = rect.width * this.dpr;
-    this.canvas.height = rect.height * this.dpr;
-    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-  }
-
-  setFreq(f) {
-    this.freq = f;
-    this.updateLabels();
-  }
-
-  setPlaying(p) {
-    this.playing = p;
-    this.updateLabels();
-  }
-
-  updateLabels() {
-    if (this.cyclesEl) {
-      const cycles = 1 + Math.log10(this.freq + 1) * 3;
-      this.cyclesEl.textContent = '≈ ' + cycles.toFixed(1) + ' cycles shown';
-    }
-    if (this.statusEl) {
-      const dot = this.statusEl.querySelector('.live-dot');
-      if (this.playing) {
-        this.statusEl.innerHTML = '<span class="live-dot"></span>Live';
-      } else {
-        this.statusEl.innerHTML = '<span class="live-dot" style="display:none"></span>Paused';
-      }
-    }
-  }
-
-  loop() {
-    const rect = this.canvas.getBoundingClientRect();
-    if (rect.width !== this.w || rect.height !== this.h) this.resize();
-    this.draw();
-    requestAnimationFrame(this.loop);
-  }
-
-  draw() {
-    if (this.w === 0 || this.h === 0) return;
-    const ctx = this.ctx;
-    const w = this.w, h = this.h;
-    ctx.clearRect(0, 0, w, h);
-
-    // Grid
-    ctx.strokeStyle = 'rgba(125, 211, 252, 0.10)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= w; x += w / 10) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-    }
-    for (let y = 0; y <= h; y += h / 4) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-    }
-
-    // Center line brighter
-    ctx.strokeStyle = 'rgba(125, 211, 252, 0.28)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
-
-    // Sine wave
-    const cycles = 1 + Math.log10(this.freq + 1) * 3;
-    const amplitude = h * 0.32;
-    const centerY = h / 2;
-
-    ctx.beginPath();
-    const steps = Math.max(200, Math.min(600, w));
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const x = t * w;
-      const y = centerY + Math.sin(t * Math.PI * 2 * cycles + this.phase) * amplitude;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = '#7DD3FC';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.shadowColor = '#38BDF8';
-    ctx.shadowBlur = 10;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    if (this.playing) {
-      // Scroll speed scales with frequency — faster tones look more energetic
-      this.phase -= 0.03 * (1 + Math.log10(this.freq + 1) * 1.5);
-    }
-  }
-}
-
-/* ============================================================
-   Element refs
-   ============================================================ */
-const playMain = document.getElementById('playMain');
-const chipRow = document.getElementById('chipRow');
-const readoutFreq = document.getElementById('readoutFreq');
-const readoutName = document.getElementById('readoutName');
-const scopeCanvas = document.getElementById('scope');
-const scopeStatus = document.getElementById('scopeStatus');
-const scopeCycles = document.getElementById('scopeCycles');
-
-let scope = null;
-
-/* ============================================================
-   UI sync
-   ============================================================ */
-function syncPlayUI() {
-  const isPlaying = Tone.playing != null;
-
-  playMain.classList.toggle('playing', isPlaying && Tone.playing === 1300);
-
-  chipRow.querySelectorAll('.chip').forEach(c => {
-    const f = parseFloat(c.dataset.freq);
-    c.classList.toggle('active', isPlaying && f === Tone.playing);
-  });
-
-  document.querySelectorAll('#freqScale .playable').forEach(r => {
-    const f = parseFloat(r.dataset.freq);
-    const match = isPlaying && f === Tone.playing;
-    r.classList.toggle('active', match || r.classList.contains('ours'));
-  });
-
-  if (scope) {
-    if (isPlaying) {
-      scope.setFreq(Tone.playing);
-      scope.setPlaying(true);
-      // Update readout to reflect the currently-playing tone
-      readoutFreq.textContent = formatFreq(Tone.playing);
-      readoutName.textContent = describeFreq(Tone.playing);
-    } else {
-      scope.setPlaying(false);
-    }
-  }
-}
-
-function formatFreq(f) {
-  if (f >= 1000) return (f / 1000).toFixed(2).replace(/\.?0+$/, '') + ' × 10³ Hz';
-  return f + ' Hz';
-}
-
-function describeFreq(f) {
-  const map = {
-    1: 'Clock tick — one per second',
-    50: 'Hummingbird wing beat',
-    262: 'Middle C (C4) — piano',
-    440: 'Concert A (A4) — orchestra tuning',
-    1300: '≈ E6 · near the top of a soprano\'s range',
-    4186: 'Top piano note (C8)',
-    8000: 'Very high — near hearing threshold for many adults',
-    12000: 'Scaled-down hearing limit'
-  };
-  return map[f] || '';
-}
-
-/* ============================================================
-   Boot
-   ============================================================ */
-scope = new Scope(scopeCanvas, scopeStatus, scopeCycles);
-scope.setFreq(1300);
-scope.setPlaying(false);
-
-playMain.addEventListener('click', () => {
-  Tone.toggle(1300, 1.6);
-});
-
-chipRow.querySelectorAll('.chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    Tone.toggle(parseFloat(chip.dataset.freq), 1.0);
-  });
-});
-
-document.querySelectorAll('#freqScale .playable').forEach(row => {
-  row.addEventListener('click', () => {
-    Tone.toggle(parseFloat(row.dataset.freq), 1.0);
-  });
-});
-
-/* ============================================================
-   App navigation
-   ============================================================ */
+// ==================== STATE ====================
 const screens = [...document.querySelectorAll('.screen')];
 const fill = document.getElementById('fill');
 const cta = document.getElementById('cta');
 const fb = document.getElementById('fb');
 const xpVal = document.getElementById('xpVal');
 
-let idx = 0;
-let xp = 0;
-const answered = new Set();
+const state = {
+  idx: 0,
+  xp: 0,
+  answered: new Set(),
+  currentFreq: 1300,
+  phase: 0,
+  rafId: null,
+  audioCtx: null,
+  playing: false
+};
 
+// ==================== SCREEN NAV ====================
 function show(i){
-  Tone.stop();
-
   screens.forEach((s,n)=>s.classList.toggle('active', n===i));
-  idx = i;
-  const isQ = screens[i].dataset.type === 'question';
+  state.idx = i;
+  const screen = screens[i];
+  const isQ = screen.dataset.type === 'question';
   const isLast = i === screens.length - 1;
 
-  cta.disabled = isQ && !answered.has(i);
-  cta.textContent = isLast ? 'Restart Lesson' : 'Continue';
-  cta.classList.toggle('restart', isLast);
+  // CTA label
+  if (isLast) cta.textContent = 'Start over';
+  else if (i === screens.length - 2) cta.textContent = 'Finish';
+  else cta.textContent = 'Continue';
 
+  cta.disabled = isQ && !state.answered.has(i);
   fb.classList.remove('show');
   fb.innerHTML = '';
   fill.style.width = (i/(screens.length-1))*100 + '%';
 
-  if (isQ && answered.has(i)) {
-    const opts = screens[i].querySelectorAll('.opt');
+  // Restore answered question state
+  if (isQ && state.answered.has(i)) {
+    const opts = screen.querySelectorAll('.opt');
     opts.forEach(o=>o.classList.add('locked'));
-    screens[i].querySelector('[data-correct="true"]').classList.add('correct');
+    screen.querySelector('[data-correct="true"]').classList.add('correct');
     renderFeedback(i, true);
     cta.disabled = false;
+  }
+
+  // Manage lab animation
+  if (screen.querySelector('#scope')) {
+    startScope();
+    applyFrequency(state.currentFreq);
+  } else {
+    stopScope();
+    stopTone();
+  }
+
+  // Completion effects
+  if (isLast) {
+    document.getElementById('finalXp').textContent = state.xp;
+    document.getElementById('finalCorrect').textContent =
+      state.answered.size + '/3';
+    launchConfetti();
   }
 
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function restart() {
-  xp = 0;
-  xpVal.textContent = '0';
-  answered.clear();
-  screens.forEach(s => {
-    s.querySelectorAll('.opt').forEach(o => {
-      o.classList.remove('correct', 'wrong', 'locked');
-    });
-  });
-  show(0);
-}
-
+// ==================== FEEDBACK ====================
 function renderFeedback(screenIdx, wasCorrect){
   const map = {
-    4: {
+    3: {
       ok: ['Spot on.', 'T = 1/f = 1/1300 ≈ 7.7 × 10⁻⁴ s = 0.77 ms. One vibration lasts less than a millisecond — about as long as a camera flash.'],
-      no: ['Think inverse.', 'Hz means "per second." 1300 vibrations fit into one second, so each one takes 1/1300 of a second ≈ 0.77 ms. Tiny, not huge.']
+      no: ['Think inverse.', 'Hz means "per second." 1300 vibrations fit into one second, so each takes 1/1300 s ≈ 0.77 ms. Tiny, not huge.']
     },
-    5: {
+    4: {
       ok: ['Yes.', 'T = 1/f. Lower frequency → longer period. The 100 Hz oscillator takes 10 ms per cycle; the 1300 Hz one takes 0.77 ms.'],
       no: ['Flip it.', 'Period is the inverse of frequency. A slower vibration (lower Hz) takes longer per cycle. So the 100 Hz one wins.']
     },
-    9: {
+    8: {
       ok: ['Sharp.', 'T = 1/f, so doubling f halves T. 1/(2.60 × 10³) = 3.8 × 10⁻⁴ s. Frequency and period always move in opposite directions.'],
       no: ['Careful.', 'T and f are inversely related: T = 1/f. Double the frequency, halve the period. The new T is 3.8 × 10⁻⁴ s, not larger.']
     }
@@ -806,44 +648,275 @@ function renderFeedback(screenIdx, wasCorrect){
   fb.classList.add('show');
 }
 
+// ==================== OPTIONS ====================
 screens.forEach((screen, sIdx)=>{
   const opts = screen.querySelectorAll('.opt');
   if (!opts.length) return;
-
   opts.forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      if (answered.has(sIdx)) return;
-      answered.add(sIdx);
+      if (state.answered.has(sIdx)) return;
+      state.answered.add(sIdx);
       const isCorrect = btn.dataset.correct === 'true';
-
       opts.forEach(o=>o.classList.add('locked'));
       if (isCorrect){
         btn.classList.add('correct');
-        xp += 10;
+        state.xp += 10;
       } else {
         btn.classList.add('wrong','shake');
         screen.querySelector('[data-correct="true"]').classList.add('correct');
         setTimeout(()=>btn.classList.remove('shake'), 450);
       }
-      xpVal.textContent = xp;
+      xpVal.textContent = state.xp;
       renderFeedback(sIdx, isCorrect);
       cta.disabled = false;
     });
   });
 });
 
+// ==================== CTA ====================
 cta.addEventListener('click', ()=>{
-  if (idx < screens.length - 1) {
-    show(idx + 1);
+  if (state.idx < screens.length - 1) {
+    show(state.idx + 1);
   } else {
-    restart();
+    // Start over
+    state.xp = 0;
+    state.answered.clear();
+    xpVal.textContent = '0';
+    screens.forEach(s => {
+      s.querySelectorAll('.opt').forEach(o=>o.classList.remove('locked','correct','wrong'));
+    });
+    show(0);
   }
 });
 
-document.addEventListener('visibilitychange', ()=>{
-  if (document.hidden) Tone.stop();
+// ==================== OSCILLOSCOPE ====================
+const scopeCanvas = document.getElementById('scope');
+
+function startScope(){
+  if (state.rafId) return;
+  const loop = ()=>{
+    drawScope();
+    state.rafId = requestAnimationFrame(loop);
+  };
+  state.rafId = requestAnimationFrame(loop);
+}
+function stopScope(){
+  if (state.rafId){
+    cancelAnimationFrame(state.rafId);
+    state.rafId = null;
+  }
+}
+
+function drawScope(){
+  const canvas = document.getElementById('scope');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width === 0) return;
+  if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr){
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const w = rect.width;
+  const h = rect.height;
+  const midY = h / 2;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // grid
+  ctx.strokeStyle = 'rgba(28,176,246,0.12)';
+  ctx.lineWidth = 1;
+  for (let i = 1; i < 8; i++){
+    const x = (i/8) * w;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for (let i = 1; i < 4; i++){
+    const y = (i/4) * h;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // center line
+  ctx.strokeStyle = 'rgba(28,176,246,0.3)';
+  ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(w, midY); ctx.stroke();
+
+  // waveform
+  const timeWindow = 0.010; // 10 ms
+  const samples = 700;
+  const freq = state.currentFreq;
+
+  ctx.strokeStyle = '#1CB0F6';
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(28,176,246,0.6)';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  for (let i = 0; i <= samples; i++){
+    const t = (i/samples) * timeWindow;
+    const y = midY - Math.sin(2 * Math.PI * freq * (t + state.phase)) * (h * 0.35);
+    const x = (i/samples) * w;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  state.phase += 0.00008; // slow scroll
+}
+
+// ==================== FREQUENCY CONTROL ====================
+const slider = document.getElementById('freqSlider');
+const readFreq = document.getElementById('readFreq');
+const readPeriod = document.getElementById('readPeriod');
+const labReadout = document.getElementById('labReadout');
+const prongL = document.getElementById('prongL');
+const prongR = document.getElementById('prongR');
+const waves = document.getElementById('waves');
+
+function applyFrequency(freq){
+  state.currentFreq = freq;
+
+  // readouts
+  const period = 1 / freq;
+  const periodMs = period * 1000;
+
+  readFreq.textContent = freq + ' Hz';
+  readPeriod.textContent = periodMs < 1
+    ? periodMs.toFixed(2) + ' ms'
+    : periodMs.toFixed(2) + ' ms';
+
+  // sci notation header
+  labReadout.textContent = freq.toExponential(2).replace('e+', ' × 10^').replace('e-', ' × 10^-');
+
+  // slider fill
+  const pct = ((freq - 100) / (5000 - 100)) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+
+  // tuning fork visual rate: fixed slow-motion that feels proportional
+  // visual period in seconds, clamped to a visible range
+  const visualPeriod = Math.max(0.08, Math.min(0.6, 0.4 * (1000/freq)));
+  prongL.style.setProperty('--dur', visualPeriod + 's');
+  prongR.style.setProperty('--dur', visualPeriod + 's');
+
+  // update fork vibration speed
+  prongL.classList.add('vibrate');
+  prongR.classList.add('vibrate');
+}
+
+slider.addEventListener('input', e=>{
+  applyFrequency(parseInt(e.target.value));
 });
 
+// ==================== AUDIO ====================
+const playBtn = document.getElementById('playBtn');
+
+function stopTone(){
+  if (state.playing){
+    try {
+      state.playing.stop();
+      state.playing.disconnect();
+    } catch(e){}
+    state.playing = null;
+  }
+  playBtn.classList.remove('playing');
+  playBtn.textContent = '▶';
+  waves.classList.remove('on');
+}
+
+function playTone(freq){
+  if (!state.audioCtx){
+    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (state.audioCtx.state === 'suspended'){
+    state.audioCtx.resume();
+  }
+  stopTone();
+
+  const osc = state.audioCtx.createOscillator();
+  const gain = state.audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+
+  // Gentle envelope so it isn't piercing
+  const t = state.audioCtx.currentTime;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.06, t + 0.05);
+  gain.gain.linearRampToValueAtTime(0.06, t + 0.55);
+  gain.gain.linearRampToValueAtTime(0, t + 0.7);
+
+  osc.connect(gain);
+  gain.connect(state.audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + 0.75);
+
+  state.playing = osc;
+  playBtn.classList.add('playing');
+  playBtn.textContent = '■';
+  waves.classList.add('on');
+
+  osc.onended = ()=>{
+    stopTone();
+  };
+}
+
+playBtn.addEventListener('click', ()=>{
+  if (state.playing){
+    stopTone();
+  } else {
+    playTone(state.currentFreq);
+  }
+});
+
+// ==================== CONFETTI ====================
+function launchConfetti(){
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#58CC02','#1CB0F6','#FFC800','#CE82FF','#FF4B4B'];
+  const particles = [];
+  for (let i = 0; i < 120; i++){
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      size: 6 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.3,
+      life: 0
+    });
+  }
+
+  let frame = 0;
+  function tick(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.rot += p.rotV;
+      p.life++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - p.life / 200);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 220) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  tick();
+}
+
+// ==================== INIT ====================
+applyFrequency(1300);
 show(0);
 </script>
 </body>
