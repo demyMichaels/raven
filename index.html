@@ -1,1193 +1,1716 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Raven Academy | 350+ JAMB Score</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* ===== FRIENDLY, TUTOR-LIKE DESIGN ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Knowledge Graph — WAEC · NECO · JAMB</title>
+<style>
+  :root{
+    --bg:#0d1418; --panel:#16212a; --panel-2:#1a2733;
+    --line:#1e2d38; --line-2:#2b4356;
+    --ink:#c9dcef; --ink-soft:#7d8f9c; --ink-dim:#5d7284;
+    --cyan:#4fc3ff; --green:#58cc02; --amber:#ffb347;
+    --coral:#ff5a4a; --violet:#c07aff; --yellow:#ffe040;
+    --pink:#ff4fa3;
+    --waec:#58cc02; --neco:#4fc3ff; --jamb:#ffe040;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); font-weight:600;}
+  .app{width:100%; height:100vh; display:flex; flex-direction:column;}
 
-        :root {
-            --primary: #4361EE;
-            --primary-light: #E0E7FF;
-            --primary-dark: #3730A3;
-            --accent: #FF6B6B;
-            --accent-light: #FFE3E3;
-            --accent-dark: #E53E3E;
-            --success: #10B981;
-            --warning: #F59E0B;
-            --dark: #1F2937;
-            --gray: #6B7280;
-            --light-gray: #F3F4F6;
-            --white: #FFFFFF;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-full: 9999px;
-        }
+  header{padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:14px; flex:0 0 auto; z-index:10;}
+  .title-block{flex:1; min-width:0;}
+  .eyebrow{font-size:9.5px; font-weight:800; letter-spacing:1.4px;
+    text-transform:uppercase; color:var(--cyan); margin-bottom:2px;}
+  h1{font-size:16px; font-weight:800; color:#e6f1fa; line-height:1.15;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .exam-pills{display:flex; gap:5px; flex:0 0 auto;}
+  .exam-pill{
+    font-size:9px; font-weight:800; letter-spacing:.8px; padding:4px 8px;
+    border-radius:99px; text-transform:uppercase; border:1.5px solid;
+    cursor:pointer; transition:.15s; background:transparent;
+    font-family:inherit; color:#7d8f9c; border-color:#2b4356;
+  }
+  .exam-pill[data-exam="WAEC"]{color:#58cc02; border-color:rgba(88,204,2,.4);}
+  .exam-pill[data-exam="NECO"]{color:#4fc3ff; border-color:rgba(79,195,255,.4);}
+  .exam-pill[data-exam="JAMB"]{color:#ffe040; border-color:rgba(255,224,64,.4);}
+  .exam-pill.on{background:currentColor; }
+  .exam-pill.on[data-exam="WAEC"]{background:rgba(88,204,2,.18); color:#58cc02;}
+  .exam-pill.on[data-exam="NECO"]{background:rgba(79,195,255,.18); color:#4fc3ff;}
+  .exam-pill.on[data-exam="JAMB"]{background:rgba(255,224,64,.18); color:#ffe040;}
+  .exam-pill.off{opacity:.35;}
+  .controls{display:flex; gap:5px; flex:0 0 auto;}
+  .ctrl{min-width:34px; height:34px; padding:0 10px; background:var(--panel-2);
+    border:1.5px solid var(--line); border-radius:9px; color:var(--ink-soft);
+    font-family:inherit; font-size:13px; font-weight:800; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:.15s;}
+  .ctrl:hover{border-color:var(--cyan); color:var(--cyan);}
+  .ctrl.wide{font-size:10px; letter-spacing:.8px; text-transform:uppercase; padding:0 12px;}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--light-gray);
-            color: var(--dark);
-            line-height: 1.5;
-        }
+  .legend-bar{padding:8px 18px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; gap:12px; overflow-x:auto; flex:0 0 auto; scrollbar-width:none; z-index:9;}
+  .legend-bar::-webkit-scrollbar{display:none}
+  .legend-item{display:flex; align-items:center; gap:5px; font-size:9.5px;
+    font-weight:800; letter-spacing:.9px; text-transform:uppercase;
+    color:var(--ink-soft); flex:0 0 auto; white-space:nowrap; cursor:pointer;}
+  .legend-item.dim{opacity:.3;}
+  .legend-swatch{width:10px; height:10px; border-radius:3px; flex:0 0 auto;}
 
-        h1 { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
-        h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
-        h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
-        p { font-size: 0.95rem; color: var(--gray); }
+  .stage{flex:1; position:relative; overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(79,195,255,.04), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(192,122,255,.04), transparent 40%),
+      var(--bg);}
+  #graph{width:100%; height:100%; display:block; cursor:grab; touch-action:none; user-select:none;}
+  #graph.dragging{cursor:grabbing;}
 
-        .container {
-            width: 100%;
-            padding: 0 1rem;
-            margin: 0 auto;
-        }
+  .hint{position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:9.5px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--ink-dim); font-weight:800; pointer-events:none;
+    background:rgba(13,20,24,.85); padding:6px 14px; border-radius:99px;
+    border:1px solid var(--line); transition:opacity .4s;}
+  .hint.hide{opacity:0;}
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.875rem 1.25rem;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            font-size: 0.95rem;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            width: 100%;
-            background: var(--accent);
-            color: white;
-            box-shadow: var(--shadow-sm);
-        }
+  .node{cursor:pointer; transition:opacity .25s;}
+  .node rect{transition:stroke-opacity .15s, fill .15s; fill:#16212a; stroke-width:1.4;}
+  .node:hover rect{stroke-opacity:1; fill:#1c2c39;}
+  .node.selected rect{stroke-opacity:1; stroke-width:2.4; fill:#1f3040;}
+  .node.dim{opacity:.12;}
+  .node text{pointer-events:none;}
+  .node .node-name{font-family:'Nunito',sans-serif; font-weight:800;
+    fill:#d0e2f0; pointer-events:none;}
+  .node .node-footer{font-family:ui-monospace,'SF Mono',monospace; font-weight:700;
+    letter-spacing:.5px; pointer-events:none;}
+  .node .mis-dot{fill:#ff4b4b;}
+  .node .exam-badge{font-family:'Nunito',sans-serif; font-weight:800; font-size:7px;
+    letter-spacing:.5px; pointer-events:none;}
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+  .edge{fill:none; stroke-linecap:round; transition:stroke .2s, stroke-opacity .2s, stroke-width .2s;}
+  .edge.prereq{stroke:#3a5468; stroke-width:1.2; stroke-opacity:.5;}
+  .edge.cross{stroke:#c07aff; stroke-width:1; stroke-opacity:.35; stroke-dasharray:4 4;}
+  .edge.highlight{stroke-opacity:1 !important; stroke-width:2.2;}
+  .edge.highlight.prereq{stroke:#4fc3ff;}
+  .edge.highlight.cross{stroke:#c07aff;}
+  .edge.dim{stroke-opacity:.04 !important;}
 
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
+  .detail{position:absolute; left:0; right:0; bottom:0; max-height:78vh;
+    background:var(--panel); border-top:2px solid var(--line-2);
+    border-radius:22px 22px 0 0; transform:translateY(105%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1); z-index:20;
+    box-shadow:0 -12px 40px rgba(0,0,0,.55); display:flex; flex-direction:column;}
+  .detail.open{transform:translateY(0);}
+  .detail-inner{padding:20px 22px 28px; overflow-y:auto; flex:1;
+    scrollbar-width:thin; scrollbar-color:var(--line-2) transparent;}
+  .detail-inner::-webkit-scrollbar{width:6px}
+  .detail-inner::-webkit-scrollbar-thumb{background:var(--line-2); border-radius:3px}
 
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            width: auto;
-        }
+  .detail-close{position:absolute; top:12px; right:14px; width:34px; height:34px;
+    border-radius:10px; background:var(--panel-2); border:1.5px solid var(--line);
+    color:var(--ink-soft); font-size:18px; font-weight:800; cursor:pointer;
+    display:grid; place-items:center; transition:.15s; z-index:2; font-family:inherit;}
+  .detail-close:hover{border-color:var(--coral); color:var(--coral);}
 
-        /* Header */
-        .site-header {
-            background: var(--white);
-            padding: 0.75rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--light-gray);
-        }
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .logo-icon {
-            background: var(--primary);
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
-        .logo-text {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--dark);
-        }
-        .logo-text span {
-            color: var(--accent);
-        }
+  .detail-layer{font-size:10px; font-weight:800; letter-spacing:1.3px;
+    text-transform:uppercase; margin-bottom:6px;}
+  .detail h2{font-size:22px; font-weight:800; color:#e6f1fa; line-height:1.2;
+    margin-bottom:8px; padding-right:40px;}
+  .exam-chips{display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap;}
+  .exam-chip{font-size:9px; font-weight:800; letter-spacing:.8px; padding:3px 9px;
+    border-radius:99px; text-transform:uppercase; border:1.5px solid;}
+  .exam-chip[data-exam="WAEC"]{color:#58cc02; border-color:rgba(88,204,2,.5);
+    background:rgba(88,204,2,.08);}
+  .exam-chip[data-exam="NECO"]{color:#4fc3ff; border-color:rgba(79,195,255,.5);
+    background:rgba(79,195,255,.08);}
+  .exam-chip[data-exam="JAMB"]{color:#ffe040; border-color:rgba(255,224,64,.5);
+    background:rgba(255,224,64,.08);}
 
-        /* Hero */
-        .hero {
-            padding: 1.5rem 0;
-        }
-        .hero-content {
-            text-align: center;
-        }
-        .hero h1 {
-            margin-bottom: 1rem;
-        }
-        .hero h1 span {
-            color: var(--accent);
-            background: var(--accent-light);
-            padding: 0.2rem 0.5rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-        }
-        .hero-stats {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-        .stat {
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-        }
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--gray);
-        }
-        .hero-image {
-            background: var(--primary-light);
-            border-radius: var(--radius-md);
-            padding: 0.75rem;
-            margin: 1rem 0;
-        }
-        .hero-image img {
-            width: 100%;
-            border-radius: var(--radius-sm);
-            display: block;
-        }
+  .detail-desc{font-size:14px; line-height:1.55; color:var(--ink-soft); margin-bottom:18px;}
+  .detail-section{margin-bottom:16px;}
+  .detail-section:last-child{margin-bottom:0;}
+  .detail-label{font-size:10px; font-weight:800; letter-spacing:1.3px;
+    text-transform:uppercase; color:var(--ink-dim); margin-bottom:8px;
+    display:flex; align-items:center; gap:8px;}
+  .detail-label .count{background:var(--panel-2); border:1px solid var(--line);
+    padding:1px 7px; border-radius:99px; font-size:9px; color:var(--ink-soft);
+    font-family:ui-monospace,monospace;}
 
-        /* Pain cards */
-        .pain-point {
-            padding: 1rem 0;
-        }
-        .intro-message {
-            background: var(--white);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--accent);
-        }
-        .intro-message p {
-            color: var(--dark);
-            font-size: 0.95rem;
-        }
-        .pain-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .pain-card {
-            background: var(--white);
-            padding: 0.875rem 1rem;
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            box-shadow: var(--shadow-sm);
-        }
-        .pain-icon {
-            font-size: 1.5rem;
-            min-width: 32px;
-        }
-        .pain-card p {
-            color: var(--dark);
-            font-size: 0.9rem;
-            margin: 0;
-        }
+  .chip-row{display:flex; flex-wrap:wrap; gap:5px;}
+  .chip{display:inline-flex; align-items:center; gap:6px;
+    background:var(--panel-2); border:1.5px solid var(--line);
+    border-radius:8px; padding:7px 10px; font-size:11.5px; font-weight:700;
+    color:var(--ink); font-family:inherit; cursor:pointer; transition:.15s; text-align:left;}
+  .chip:hover{border-color:var(--cyan); color:var(--cyan); transform:translateY(-1px);}
+  .chip .cdot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
+  .chip.empty{background:transparent; border:none; color:var(--ink-dim);
+    font-style:italic; cursor:default; padding:4px 0; font-weight:600;}
+  .chip.empty:hover{color:var(--ink-dim); transform:none;}
 
-        /* Journey Section */
-        .journey-section {
-            padding: 1.5rem 0 2rem;
-        }
-        .journey-title {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 1.2rem;
-        }
-        .journey-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            background: var(--white);
-            padding: 2rem 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-        }
-        .journey-item {
-            text-align: center;
-            flex: 1;
-        }
-        .journey-item img {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            border: 4px solid var(--primary-light);
-            object-fit: cover;
-        }
-        .journey-item.large img {
-            width: 150px;
-            height: 150px;
-            border-color: var(--success);
-            border-width: 5px;
-        }
-        .journey-item p {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-top: 0.5rem;
-            color: var(--dark);
-        }
-        .journey-arrow {
-            font-size: 2rem;
-            color: var(--primary);
-            font-weight: 700;
-        }
+  .detail-list{list-style:none; display:flex; flex-direction:column; gap:6px;}
+  .detail-list li{font-size:12.5px; line-height:1.5; color:var(--ink);
+    display:flex; gap:9px; align-items:flex-start; font-weight:600;}
+  .detail-list li::before{content:''; width:5px; height:5px; border-radius:50%;
+    flex:0 0 auto; margin-top:8px; background:var(--cyan);}
+  .detail-list.warn li::before{background:var(--coral);}
+  .detail-list.code li{font-family:ui-monospace,'SF Mono',monospace;
+    background:var(--panel-2); border:1px solid var(--line);
+    padding:7px 10px; border-radius:7px; font-size:11.5px; color:var(--amber);
+    display:block;}
+  .detail-list.code li::before{display:none;}
 
-        /* Video Lesson */
-        .video-class-section {
-            padding: 1.5rem 0;
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            margin: 1rem 0;
-        }
-        .class-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .class-badge {
-            background: var(--accent);
-            color: white;
-            padding: 0.5rem 1.25rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-            font-weight: 700;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        .tutor-message {
-            background: var(--primary-light);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin: 1rem;
-            border-left: 4px solid var(--primary);
-        }
-        .tutor-message p {
-            color: var(--dark);
-            font-size: 1rem;
-        }
-
-        /* Video card */
-        .video-card {
-            background: var(--light-gray);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            margin: 1rem;
-            box-shadow: var(--shadow-md);
-        }
-        .video-container {
-            background: #000;
-            aspect-ratio: 16/9;
-        }
-        .video-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .video-notes {
-            padding: 1.25rem;
-            background: var(--white);
-        }
-        .video-notes h3 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-        .explanation {
-            background: var(--primary-light);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin: 1rem 0;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-        .explanation strong {
-            color: var(--primary-dark);
-        }
-        .formula-note {
-            background: var(--light-gray);
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-            margin: 0.5rem 0;
-            font-family: monospace;
-            font-size: 1rem;
-        }
-
-        /* Chart container */
-        .chart-container {
-            background: var(--white);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin: 1.5rem 0;
-            box-shadow: var(--shadow-sm);
-            width: 100%;
-            overflow: hidden;
-        }
-        .chart-container h4 {
-            color: var(--primary);
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        .chart-wrapper {
-            position: relative;
-            width: 100%;
-            height: 0;
-            padding-bottom: 50%;
-            overflow: hidden;
-        }
-        .chart-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100% !important;
-            height: 100% !important;
-        }
-
-        /* Quiz Section */
-        .quiz-section {
-            padding: 1.5rem 0;
-        }
-        .quiz-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .quiz-badge {
-            background: var(--primary);
-            color: white;
-            padding: 0.4rem 1rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-            font-weight: 600;
-            font-size: 0.8rem;
-            margin-bottom: 0.5rem;
-        }
-        .quiz-container {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            box-shadow: var(--shadow-md);
-        }
-        .quiz-progress {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-        }
-        .quiz-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--light-gray);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            color: var(--gray);
-        }
-        .quiz-dot.completed {
-            background: var(--success);
-            color: white;
-        }
-        .quiz-dot.current {
-            background: var(--primary);
-            color: white;
-            transform: scale(1.1);
-            box-shadow: var(--shadow-sm);
-        }
-        .quiz-question-box {
-            margin-bottom: 1.5rem;
-        }
-        .quiz-question-text {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            color: var(--dark);
-        }
-        .quiz-option {
-            background: var(--light-gray);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin-bottom: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-        }
-        .quiz-option:hover {
-            background: var(--primary-light);
-        }
-        .quiz-option.selected {
-            background: var(--primary-light);
-            border-color: var(--primary);
-            font-weight: 600;
-        }
-        .quiz-option.correct {
-            background: var(--success);
-            color: white;
-        }
-        .quiz-option.wrong {
-            background: var(--accent);
-            color: white;
-        }
-        .quiz-feedback {
-            background: var(--primary-light);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin: 1rem 0;
-            font-size: 0.95rem;
-        }
-        .quiz-next {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem;
-            border-radius: var(--radius-full);
-            font-weight: 600;
-            width: 100%;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-        .quiz-next:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .quiz-score-box {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        /* Study plan card */
-        .study-plan-card {
-            background: var(--white);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-            box-shadow: var(--shadow-md);
-            border: 2px solid var(--primary-light);
-        }
-        .study-plan-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .study-plan-icon {
-            background: var(--primary-light);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-        .jamb-score {
-            background: var(--accent);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-            font-weight: 700;
-            font-size: 1rem;
-            margin: 0.5rem 0;
-        }
-
-        /* ===== OFFER SECTION – WITH 350+ SCORER IMAGE PROMINENT ===== */
-        .offer-section {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            border-radius: var(--radius-lg);
-            padding: 2rem 1.5rem;
-            margin: 2rem 0;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        .offer-section::before {
-            content: "🏆";
-            position: absolute;
-            bottom: -20px;
-            right: -20px;
-            font-size: 120px;
-            opacity: 0.1;
-            transform: rotate(-10deg);
-        }
-        .offer-badge {
-            background: var(--accent);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-full);
-            display: inline-block;
-            font-weight: 700;
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .offer-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        @media (min-width: 768px) {
-            .offer-grid {
-                flex-direction: row;
-                align-items: center;
-            }
-        }
-        .offer-content {
-            flex: 2;
-        }
-        .offer-content h2 {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-        .offer-content h2 span {
-            color: var(--accent);
-            border-bottom: 3px solid var(--accent);
-            padding-bottom: 0.2rem;
-        }
-        .price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 0.5rem;
-            margin: 1rem 0;
-            flex-wrap: wrap;
-        }
-        .price-original {
-            text-decoration: line-through;
-            color: rgba(255,255,255,0.6);
-            font-size: 1.1rem;
-        }
-        .price-current {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-        .price-label {
-            background: rgba(255,255,255,0.2);
-            padding: 0.3rem 0.8rem;
-            border-radius: var(--radius-full);
-            font-size: 0.8rem;
-        }
-        .referral-deal {
-            background: rgba(255,255,255,0.1);
-            padding: 1.2rem;
-            border-radius: var(--radius-md);
-            margin: 1.5rem 0;
-            border: 2px dashed var(--accent);
-        }
-        .referral-price {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-        .offer-image {
-            flex: 1;
-            text-align: center;
-        }
-        .offer-image img {
-            width: 100%;
-            max-width: 200px;
-            border-radius: 50%;
-            border: 5px solid var(--accent);
-            box-shadow: var(--shadow-lg);
-            margin: 0 auto;
-        }
-        @media (min-width: 768px) {
-            .offer-image img {
-                max-width: 180px;
-            }
-        }
-        .offer-image p {
-            color: rgba(255,255,255,0.9);
-            margin-top: 0.5rem;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        .offer-image span {
-            background: var(--accent);
-            color: var(--dark);
-            padding: 0.2rem 0.8rem;
-            border-radius: var(--radius-full);
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        /* Testimonials */
-        .testimonials {
-            padding: 2rem 0;
-        }
-        .testimonial-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        .testimonial-card {
-            background: var(--white);
-            border-radius: var(--radius-md);
-            padding: 1.25rem;
-            box-shadow: var(--shadow-md);
-        }
-        .testimonial-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .testimonial-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 3px solid var(--accent);
-            object-fit: cover;
-        }
-        .testimonial-name {
-            font-weight: 700;
-            color: var(--primary);
-        }
-        .testimonial-problem {
-            background: var(--accent-light);
-            padding: 0.75rem;
-            border-radius: var(--radius-md);
-            margin-bottom: 0.75rem;
-            font-size: 0.9rem;
-        }
-        .testimonial-transformation {
-            background: var(--primary-light);
-            padding: 0.75rem;
-            border-radius: var(--radius-md);
-            font-size: 0.9rem;
-        }
-
-        /* Floating CTA */
-        .floating-cta {
-            position: fixed;
-            bottom: 0.75rem;
-            left: 1rem;
-            right: 1rem;
-            z-index: 99;
-        }
-        .floating-cta .btn {
-            box-shadow: var(--shadow-lg);
-        }
-    </style>
+  @media (max-width:600px){
+    header{padding:8px 12px; gap:8px;}
+    h1{font-size:14px;}
+    .exam-pill{font-size:8px; padding:3px 6px;}
+    .legend-bar{padding:6px 12px;}
+    .detail-inner{padding:18px 18px 24px;}
+    .detail h2{font-size:19px;}
+  }
+</style>
 </head>
 <body>
-    <!-- Floating CTA -->
-    <div class="floating-cta">
-        <a href="tel:+2349160002029" class="btn">
-            📞 Call Me – Options from ₦1,000
-        </a>
+<div class="app">
+
+  <header>
+    <div class="title-block">
+      <div class="eyebrow">Physics · WAEC · NECO · JAMB</div>
+      <h1>Integrated Knowledge Graph</h1>
     </div>
+    <div class="exam-pills" id="examPills">
+      <button class="exam-pill on" data-exam="WAEC">WAEC</button>
+      <button class="exam-pill on" data-exam="NECO">NECO</button>
+      <button class="exam-pill on" data-exam="JAMB">JAMB</button>
+    </div>
+    <div class="controls">
+      <button class="ctrl" id="zoomOut" title="Zoom out">−</button>
+      <button class="ctrl wide" id="zoomReset">Fit</button>
+      <button class="ctrl" id="zoomIn" title="Zoom in">+</button>
+    </div>
+  </header>
 
-    <!-- Header -->
-    <header class="site-header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">R</div>
-                    <div class="logo-text">Raven <span>Academy</span></div>
-                </div>
-                <a href="tel:+2349160002029" class="btn-small btn-outline" style="width: auto;">
-                    📞 Call
-                </a>
-            </div>
-        </div>
-    </header>
+  <div class="legend-bar" id="legendBar"></div>
 
-    <main>
-        <!-- Hero -->
-        <section class="hero">
-            <div class="container">
-                <div class="hero-content">
-                    <h1>Hey! Stop <span>forgetting</span> what you read.<br>Let's get you <span>350+</span> in JAMB.</h1>
-                    
-                    <div class="hero-stats">
-                        <div class="stat">
-                            <div class="stat-number">350+</div>
-                            <div class="stat-label">JAMB Score</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">10min</div>
-                            <div class="stat-label">Early Finish</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-number">500+</div>
-                            <div class="stat-label">Students</div>
-                        </div>
-                    </div>
+  <main class="stage">
+    <svg id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="hint" id="hint">Drag to pan · Scroll to zoom · Click a node</div>
+  </main>
 
-                    <div class="hero-image">
-                        <img src="https://images.now/ib/ZMnmjgIjwZzbOQ8_1771335497.jpg" alt="Student studying" loading="lazy">
-                    </div>
-                </div>
-            </div>
-        </section>
+  <div class="detail" id="detail">
+    <button class="detail-close" id="detailClose">×</button>
+    <div class="detail-inner" id="detailInner"></div>
+  </div>
 
-        <!-- Pain Point -->
-        <section class="pain-point">
-            <div class="container">
-                <div class="intro-message">
-                    <p>👋 Hey, I see you. I know what you're going through. Most students tell me...</p>
-                </div>
-                
-                <div class="pain-grid">
-                    <div class="pain-card">
-                        <div class="pain-icon">📖</div>
-                        <p>"I read and forget everything immediately"</p>
-                    </div>
-                    <div class="pain-card">
-                        <div class="pain-icon">😫</div>
-                        <p>"I don't understand physics and chemistry"</p>
-                    </div>
-                    <div class="pain-card">
-                        <div class="pain-icon">⏰</div>
-                        <p>"No schedule, don't know where to start"</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+</div>
 
-        <!-- Journey -->
-        <section class="journey-section">
-            <div class="container">
-                <div class="journey-title">YOUR JOURNEY TO 350+</div>
-                <div class="journey-container">
-                    <div class="journey-item">
-                        <img src="https://images.now/ib/EVRMSXb2CdThY3N_1771336805.png" alt="Struggling student">
-                        <p>Struggling Now</p>
-                    </div>
-                    <div class="journey-arrow">→</div>
-                    <div class="journey-item large">
-                        <img src="https://images.now/ib/5TXBxI4qBrCuy13_1771335503.png" alt="Graduating student">
-                        <p>350+ Scorer</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+<script>
+// ============================================================
+// LAYERS — full WAEC / NECO / JAMB span
+// ============================================================
+const LAYERS = [
+  { id:0,  name:'Foundations & Measurement',  color:'#4fc3ff' },
+  { id:1,  name:'Vectors & Position',         color:'#3fb8f0' },
+  { id:2,  name:'Kinematics',                 color:'#58cc02' },
+  { id:3,  name:'Forces & Newton',            color:'#7ac020' },
+  { id:4,  name:'Equilibrium & Machines',     color:'#ff8c40' },
+  { id:5,  name:'Work, Energy & Power',       color:'#ffb347' },
+  { id:6,  name:'Elasticity & Matter',        color:'#ffd040' },
+  { id:7,  name:'Fluids at Rest',             color:'#ffe040' },
+  { id:8,  name:'Heat & Thermal',             color:'#ff5a4a' },
+  { id:9,  name:'Waves',                      color:'#c07aff' },
+  { id:10, name:'Sound',                      color:'#a85fe0' },
+  { id:11, name:'Light & Optics',             color:'#ff4fa3' },
+  { id:12, name:'Electrostatics & Capacitors',color:'#40e0d0' },
+  { id:13, name:'Current Electricity',        color:'#20c0b0' },
+  { id:14, name:'Magnetism',                  color:'#40a0e0' },
+  { id:15, name:'EM Induction & AC',          color:'#6a80e0' },
+  { id:16, name:'Modern Physics',             color:'#a050e0' },
+  { id:17, name:'Electronics & Applications', color:'#e050a0' }
+];
 
-        <!-- VIDEO LESSON -->
-        <section class="video-class-section">
-            <div class="container">
-                <div class="class-header">
-                    <span class="class-badge">🎥 FREE CHEMISTRY CLASS</span>
-                    <h2>Let's Learn About Catalysts Together</h2>
-                </div>
-                
-                <div class="tutor-message">
-                    <p>🧪 <strong>Hi there!</strong> I'm going to explain catalysts in a way that actually makes sense. No complex jargon, just real understanding. Ready? Let's go!</p>
-                </div>
-            </div>
-            
-            <!-- Potassium Chlorate Video -->
-            <div class="video-card">
-                <div class="video-container">
-                    <iframe src="https://www.youtube.com/embed/txkRCIPSsjM" title="KClO3 decomposition" allowfullscreen loading="lazy"></iframe>
-                </div>
-                <div class="video-notes">
-                    <h3>🧪 Potassium Chlorate Decomposition</h3>
-                    
-                    <div class="explanation">
-                        <p><strong>First, what are we looking at?</strong> Potassium chlorate (say: po-TASS-ee-um KLOR-ate) is a chemical that breaks down when heated. Its chemical formula is <span class="formula-note">KClO₃</span>.</p>
-                        <p style="margin-top: 0.5rem;">When it breaks down, it turns into <strong>potassium chloride</strong> (<span class="formula-note">KCl</span> – that's regular table salt!) and <strong>oxygen gas</strong> (<span class="formula-note">O₂</span>).</p>
-                    </div>
-                    
-                    <div class="explanation">
-                        <p><strong>Here's the cool part:</strong> Without any help, this reaction needs a lot of heat – about <strong>480°C</strong> (that's really hot!).</p>
-                        <p style="margin-top: 0.5rem;">But when we add a tiny bit of <strong>manganese dioxide</strong> (<span class="formula-note">MnO₂</span>) – which is a catalyst – the temperature drops to just <strong>350°C</strong>! That's 130 degrees cooler.</p>
-                    </div>
-                    
-                    <div class="explanation">
-                        <p><strong>Think of it this way:</strong> Imagine you're trying to climb over a mountain. Without a catalyst, you have to go all the way up and down. With a catalyst, it's like someone dug a tunnel through the mountain – same destination, but much easier journey!</p>
-                    </div>
+// ============================================================
+// NODES — comprehensive WAEC / NECO / JAMB coverage
+// ============================================================
+const NODES = [
+  /* ===== L0 · FOUNDATIONS ===== */
+  { id:'fund-units', name:'Fundamental Quantities & Units', layer:0, pre:[], exams:['WAEC','NECO','JAMB'],
+    desc:'The seven SI base quantities: length, mass, time, electric current, temperature, luminous intensity, amount of substance.',
+    formulas:['[L]=m','[M]=kg','[T]=s','[I]=A','[θ]=K','[Iv]=cd','[n]=mol'],
+    misc:['Units are optional','Any unit system works'] },
 
-                    <!-- Activation Energy Chart -->
-                    <div class="chart-container">
-                        <h4>📈 What's Happening Inside the Reaction</h4>
-                        <div class="chart-wrapper">
-                            <canvas id="activationEnergyChart" class="chart-canvas"></canvas>
-                        </div>
-                        <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem;">See how the catalyst lowers the "energy mountain" you need to climb?</p>
-                    </div>
-                    
-                    <div class="key-point" style="background: var(--primary-light); padding: 1rem; border-radius: var(--radius-md); margin-top: 1rem;">
-                        <p style="color: var(--primary-dark); font-weight: 600;">🔑 Key takeaway: Catalysts make reactions easier and faster by lowering the energy barrier. And the best part? They don't get used up – you can use them again and again!</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+  { id:'derived-units', name:'Derived Quantities & Units', layer:0, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Quantities built from base units — area, volume, speed, force, pressure, work, power.',
+    formulas:['[v]=m·s⁻¹','[F]=kg·m·s⁻²','[P]=kg·m⁻¹·s⁻²','[W]=kg·m²·s⁻²'],
+    misc:['Derived units are independent of base units'] },
 
-        <!-- STEP-BY-STEP QUIZ -->
-        <section class="quiz-section">
-            <div class="container">
-                <div class="quiz-header">
-                    <span class="quiz-badge">📝 QUICK CHECK</span>
-                    <h2>Let's see what you remember</h2>
-                    <p style="font-size: 0.9rem;">Answer one question at a time – take it slow</p>
-                </div>
+  { id:'dimensions', name:'Dimensions & Dimensional Analysis', layer:0, pre:['derived-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Expressing quantities as powers of M, L, T, I, θ. Used to verify equations and derive relationships.',
+    formulas:['[F]=MLT⁻²','[E]=ML²T⁻²','[P]=ML⁻¹T⁻²','[h]=ML²T⁻¹'],
+    misc:['Dimensions must balance on both sides','Dimensionless means meaningless'] },
 
-                <div class="quiz-container" id="quizContainer">
-                    <!-- Progress dots -->
-                    <div class="quiz-progress" id="quizProgress"></div>
-                    
-                    <!-- Current question -->
-                    <div id="currentQuestionContainer"></div>
-                    
-                    <!-- Next button -->
-                    <button class="quiz-next" id="nextButton" disabled>Next Question →</button>
-                    
-                    <!-- Score display -->
-                    <div class="quiz-score-box" id="quizScoreBox"></div>
-                </div>
-            </div>
-        </section>
+  { id:'measuring-tools', name:'Measuring Instruments', layer:0, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Vernier calipers, micrometer screw gauge, metre rule, measuring cylinder, stopwatch, beam balance.',
+    formulas:['Vernier LC = 0.1 mm','Micrometer LC = 0.01 mm'],
+    misc:['All measurements are exact','Zero error is always positive'] },
 
-        <!-- Study Plan Card -->
-        <div class="container">
-            <div class="study-plan-card">
-                <div class="study-plan-header">
-                    <div class="study-plan-icon">🎨</div>
-                    <div>
-                        <div style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">From Struggling Art Student to 362 Scorer</div>
-                    </div>
-                </div>
-                
-                <div class="explanation" style="background: var(--primary-light);">
-                    <p><strong>Meet Chidi.</strong> He's an art student preparing for JAMB – with subjects like Literature, Government, CRK, and Arts.</p>
-                    <p style="margin-top: 0.5rem;">Chidi was struggling to remember literature texts, couldn't keep up with Government topics, and kept forgetting what he read. He felt overwhelmed and didn't know where to start.</p>
-                    <p style="margin-top: 0.5rem;">We built him a <strong>personalized timetable</strong> that scheduled his art practice AND his study time. We created active recall flashcards for literature quotes and Government concepts, and helped him break down complex topics into simple chunks.</p>
-                    <p style="margin-top: 0.5rem;"><strong>The result?</strong> He finished his syllabus 2 weeks before JAMB, walked into the exam hall calm, and scored 362 – including top marks in Literature and Government!</p>
-                </div>
-                
-                <img src="https://images.now/ib/xBsP2z2YmLXQCsV_1771332578.png" alt="Chidi's study plan" style="width: 100%; border-radius: var(--radius-md); margin: 1rem 0;">
-                
-                <div class="jamb-score">🔥 362 in JAMB 2025</div>
-                <p style="margin-top: 0.5rem;">"I never thought I could remember all those literature quotes. Raven made it simple." – Chidi</p>
-            </div>
-        </div>
+  { id:'errors-precision', name:'Errors, Accuracy & Precision', layer:0, pre:['measuring-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'Systematic vs random errors; accuracy vs precision; simple error estimation.',
+    formulas:['% error = (|true − meas| / true) × 100','% diff = |a−b|/avg × 100'],
+    misc:['Precision and accuracy mean the same','More readings eliminate all errors'] },
 
-        <!-- ===== OFFER SECTION WITH 350+ SCORER IMAGE ===== -->
-        <div class="container">
-            <section class="offer-section">
-                <div class="offer-grid">
-                    <div class="offer-content">
-                        <span class="offer-badge">🎯 SPECIAL OFFER</span>
-                        
-                        <h2>Your personal <span>roadmap to 350+</span></h2>
-                        
-                        <div class="price-row">
-                            <span class="price-original">₦5,000</span>
-                            <span class="price-current">₦2,000</span>
-                            <span class="price-label">60% off</span>
-                        </div>
-                        
-                        <div class="referral-deal">
-                            <p style="font-weight: 600; margin-bottom: 0.5rem;">📢 REFER 3 FRIENDS & YOU PAY ONLY:</p>
-                            <div>
-                                <span class="referral-price">₦1,000</span>
-                                <span style="font-size: 1rem;">(instead of ₦5,000)</span>
-                            </div>
-                            <p style="font-size: 0.85rem; margin-top: 0.75rem; color: rgba(255,255,255,0.9);">Your friends pay ₦2,000 – you get yours for just ₦1,000 when all 3 sign up!</p>
-                        </div>
-                        
-                        <a href="tel:+2349160002029" class="btn" style="background: var(--accent); margin: 0.75rem 0;">
-                            📞 Call Me – Let's Build Your Plan
-                        </a>
-                        
-                        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.8);">
-                            ⏰ 7-day money-back · Limited spots
-                        </div>
-                    </div>
-                    
-                    <div class="offer-image">
-                        <img src="https://images.now/ib/5TXBxI4qBrCuy13_1771335503.png" alt="350+ JAMB Scorer">
-                        <p>Join the <span>350+ Club</span></p>
-                        <p style="font-size: 0.8rem;">Like Chidi, Amara, and Femi</p>
-                    </div>
-                </div>
-            </section>
-        </div>
+  { id:'sigfig-standard', name:'Significant Figures & Standard Form', layer:0, pre:['measuring-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'How many digits matter; writing very large/small numbers as a × 10ⁿ.',
+    formulas:['3.14 → 3 s.f.','0.0042 → 2 s.f.','3000 = 3 × 10³'],
+    misc:['Trailing zeros never count','All digits are significant'] },
 
-        <!-- Testimonials -->
-        <section class="testimonials">
-            <div class="container">
-                <h2>Hear what our past students have to say</h2>
+  { id:'graphing-data', name:'Graphing & Data Analysis', layer:0, pre:['measuring-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'Plotting measurements, drawing lines of best fit, reading slope and intercept.',
+    formulas:['y = mx + c','slope = Δy/Δx','intercept = c'],
+    misc:['Slope has no physical meaning','Always connect the dots'] },
 
-                <div class="testimonial-grid">
-                    <!-- Testimonial 1 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-header">
-                            <img src="https://images.now/ib/4nY14caHOuBuUyq_1771337182.png" alt="Amara" class="testimonial-image">
-                            <div>
-                                <div class="testimonial-name">Amara</div>
-                                <div style="font-size: 0.8rem;">SS3 Student</div>
-                            </div>
-                        </div>
-                        <div class="testimonial-problem">
-                            😟 "I was battling with consistency and distractions. I'd read and forget everything."
-                        </div>
-                        <div class="testimonial-transformation">
-                            ✨ "With Raven's timetable, I finished my syllabus 2 weeks early and scored 358 in JAMB!"
-                        </div>
-                    </div>
+  { id:'math-tools', name:'Mathematical Tools', layer:0, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Algebra, trigonometry, and geometry used throughout physics.',
+    formulas:['sin²θ + cos²θ = 1','tan θ = sin θ / cos θ','Area = πr²','Volume = (4/3)πr³'],
+    misc:['Trig is only for right triangles','All angles are in degrees'] },
 
-                    <!-- Testimonial 2 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-header">
-                            <img src="https://images.now/ib/MzSccFo7AKG63KS_1771337188.png" alt="Femi" class="testimonial-image">
-                            <div>
-                                <div class="testimonial-name">Femi</div>
-                                <div style="font-size: 0.8rem;">JAMB Candidate</div>
-                            </div>
-                        </div>
-                        <div class="testimonial-problem">
-                            😟 "I had no idea how to solve physics and chemistry problems. Formulas just wouldn't stick."
-                        </div>
-                        <div class="testimonial-transformation">
-                            ✨ "The videos made everything click. Physics 85, Chemistry 82 in JAMB!"
-                        </div>
-                    </div>
+  /* ===== L1 · VECTORS & POSITION ===== */
+  { id:'scalars-vectors', name:'Scalars & Vectors', layer:1, pre:['fund-units','math-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'Scalars: magnitude only. Vectors: magnitude and direction.',
+    formulas:['Scalars: mass, time, speed, energy','Vectors: force, velocity, displacement'],
+    misc:['Vectors add like numbers','Direction is optional'] },
 
-                    <!-- Testimonial 3 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-header">
-                            <img src="https://images.now/ib/oUVb6o4TkWBBN28_1771337187.png" alt="Chioma" class="testimonial-image">
-                            <div>
-                                <div class="testimonial-name">Chioma</div>
-                                <div style="font-size: 0.8rem;">Undergraduate</div>
-                            </div>
-                        </div>
-                        <div class="testimonial-problem">
-                            😟 "I forgot anything I read. I'd study for hours and remember nothing the next day."
-                        </div>
-                        <div class="testimonial-transformation">
-                            ✨ "The active recall flashcards built into my timetable changed everything. 4.0 GPA this semester!"
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+  { id:'vector-notation', name:'Vector Representation', layer:1, pre:['scalars-vectors'], exams:['WAEC','NECO','JAMB'],
+    desc:'Drawing vectors as arrows; notation A, ā, or bold; unit vector notation.',
+    formulas:['A = Ax î + Ay ĵ','|A| = length of arrow'],
+    misc:['Arrow length is arbitrary','Vectors cannot be negative'] },
 
-    <script>
-        // Activation Energy Chart
-        const ctx = document.getElementById('activationEnergyChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Start', 'Reaction Progress', 'Peak', 'End'],
-                datasets: [{
-                    label: 'Without Catalyst',
-                    data: [1, 8, 5, 2],
-                    borderColor: '#FF6B6B',
-                    backgroundColor: 'rgba(255,107,107,0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: false,
-                    pointBackgroundColor: '#FF6B6B',
-                    pointRadius: 4
-                }, {
-                    label: 'With Catalyst',
-                    data: [1, 5, 3, 2],
-                    borderColor: '#4361EE',
-                    backgroundColor: 'rgba(67,97,238,0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: false,
-                    pointBackgroundColor: '#4361EE',
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 12 }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10,
-                        title: {
-                            display: true,
-                            text: 'Energy Level'
-                        },
-                        grid: {
-                            color: 'rgba(0,0,0,0.05)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
-        });
+  { id:'vector-addition', name:'Vector Addition & Resultant', layer:1, pre:['vector-notation'], exams:['WAEC','NECO','JAMB'],
+    desc:'Triangle, parallelogram, and polygon laws; analytical addition by components.',
+    formulas:['R² = A² + B² + 2AB cos θ','Rx = Ax + Bx','Ry = Ay + By'],
+    misc:['Order affects the result','Resultant equals sum of magnitudes'] },
 
-        // Quiz data
-        const quizData = [
-            {
-                question: "What is the chemical name of KClO₃? (The one we just watched)",
-                options: ["Potassium chloride", "Potassium chlorate", "Potassium carbonate", "Potassium oxide"],
-                correct: 1,
-                explanation: "KClO₃ is potassium chlorate. KCl (without the O₃) is potassium chloride – that's table salt!"
-            },
-            {
-                question: "What temperature is needed to break down potassium chlorate WITHOUT a catalyst?",
-                options: ["250°C", "350°C", "480°C", "600°C"],
-                correct: 2,
-                explanation: "Without a catalyst, you need 480°C – that's really hot! Think of it like climbing a steep mountain."
-            },
-            {
-                question: "How much does the catalyst (MnO₂) lower the temperature?",
-                options: ["50°C", "130°C", "200°C", "300°C"],
-                correct: 1,
-                explanation: "It drops from 480°C to 350°C – that's 130°C lower! Like finding a tunnel through the mountain instead of climbing over."
-            },
-            {
-                question: "What happens to the catalyst (MnO₂) after the reaction?",
-                options: ["It gets used up completely", "It turns into gas", "It can be filtered and reused", "It disappears"],
-                correct: 2,
-                explanation: "Catalysts are like tour guides – they show the way but don't become part of the destination. You can filter out MnO₂ and use it again!"
-            },
-            {
-                question: "In the mountain analogy, what does the 'tunnel' represent?",
-                options: ["Higher temperature", "Lower activation energy", "More products", "Faster cooling"],
-                correct: 1,
-                explanation: "The tunnel represents lower activation energy – an easier path to get to the same destination (the products)."
-            }
-        ];
+  { id:'vector-resolution', name:'Resolution of Vectors', layer:1, pre:['vector-addition'], exams:['WAEC','NECO','JAMB'],
+    desc:'Splitting a vector into two perpendicular components.',
+    formulas:['Ax = A cos θ','Ay = A sin θ','A = √(Ax² + Ay²)','θ = tan⁻¹(Ay/Ax)'],
+    misc:['Both components have the same magnitude as A','cos and sin are interchangeable'] },
 
-        let currentQuestion = 0;
-        let answers = new Array(quizData.length).fill(null);
-        let quizCompleted = false;
+  { id:'position-coords', name:'Position & Coordinate Systems', layer:1, pre:['scalars-vectors'], exams:['WAEC','NECO','JAMB'],
+    desc:'Locating a point using rectangular (Cartesian) coordinates in 2D and 3D.',
+    formulas:['(x, y) in 2D','(x, y, z) in 3D'],
+    misc:['Position is absolute','Coordinates only work in 2D'] },
 
-        const quizProgress = document.getElementById('quizProgress');
-        const currentQuestionContainer = document.getElementById('currentQuestionContainer');
-        const nextButton = document.getElementById('nextButton');
-        const quizScoreBox = document.getElementById('quizScoreBox');
+  { id:'distance-displacement', name:'Distance & Displacement', layer:1, pre:['position-coords'], exams:['WAEC','NECO','JAMB'],
+    desc:'Distance = total path length; displacement = straight-line change in position.',
+    formulas:['Δx = x_f − x_i','distance ≥ |displacement|'],
+    misc:['Distance equals displacement','Displacement can exceed distance'] },
 
-        function renderProgress() {
-            let html = '';
-            for (let i = 0; i < quizData.length; i++) {
-                let className = 'quiz-dot';
-                if (answers[i] !== null) className += ' completed';
-                if (i === currentQuestion && !quizCompleted) className += ' current';
-                html += `<div class="${className}">${i + 1}</div>`;
-            }
-            quizProgress.innerHTML = html;
-        }
+  { id:'bearing-direction', name:'Direction & Bearing', layer:1, pre:['position-coords'], exams:['WAEC','NECO','JAMB'],
+    desc:'Describing direction using compass points, angles, and bearings measured clockwise from North.',
+    formulas:['Bearing ∈ [0°, 360°)','Compass: N, S, E, W'],
+    misc:['Bearings measured counterclockwise'] },
 
-        function renderQuestion() {
-            if (quizCompleted) return;
-            
-            const q = quizData[currentQuestion];
-            let html = `
-                <div class="quiz-question-box">
-                    <div class="quiz-question-text">${currentQuestion + 1}. ${q.question}</div>
-                    <div class="quiz-options" id="quizOptions">
-            `;
-            
-            q.options.forEach((option, idx) => {
-                const selectedClass = answers[currentQuestion] === idx ? ' selected' : '';
-                html += `<div class="quiz-option${selectedClass}" data-opt="${idx}">${option}</div>`;
-            });
-            
-            html += `</div>`;
-            
-            if (answers[currentQuestion] !== null) {
-                const isCorrect = answers[currentQuestion] === q.correct;
-                html += `
-                    <div class="quiz-feedback">
-                        ${isCorrect ? '✅ Correct! ' : '❌ Not quite. '}
-                        ${q.explanation}
-                    </div>
-                `;
-            }
-            
-            html += `</div>`;
-            currentQuestionContainer.innerHTML = html;
-            
-            document.querySelectorAll('.quiz-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    if (answers[currentQuestion] !== null || quizCompleted) return;
-                    
-                    const selectedIdx = parseInt(opt.dataset.opt);
-                    answers[currentQuestion] = selectedIdx;
-                    
-                    renderQuestion();
-                    renderProgress();
-                    
-                    nextButton.disabled = false;
-                    
-                    if (answers.every(a => a !== null)) {
-                        setTimeout(() => {
-                            completeQuiz();
-                        }, 500);
-                    }
-                });
-            });
-        }
+  { id:'frame-of-reference', name:'Frame of Reference', layer:1, pre:['position-coords'], exams:['WAEC','NECO','JAMB'],
+    desc:'Motion is relative to a chosen reference frame. Relative velocity between two frames.',
+    formulas:['v_AB = v_A − v_B','v_BA = −v_AB'],
+    misc:['Motion is absolute','Any frame gives the same velocity'] },
 
-        function completeQuiz() {
-            quizCompleted = true;
-            
-            const correctCount = answers.filter((ans, idx) => ans === quizData[idx].correct).length;
-            const score = Math.round((correctCount / quizData.length) * 100);
-            
-            quizScoreBox.innerHTML = `🎉 You scored ${correctCount}/${quizData.length} (${score}%)`;
-            nextButton.style.display = 'none';
-        }
+  /* ===== L2 · KINEMATICS ===== */
+  { id:'types-of-motion', name:'Types of Motion', layer:2, pre:['scalars-vectors'], exams:['WAEC','NECO','JAMB'],
+    desc:'Random, rectilinear, translational, rotational, circular, orbital, spin, oscillatory.',
+    formulas:['Uniform vs non-uniform','Linear vs angular'],
+    misc:['All motion is the same type','Oscillatory is the same as circular'] },
 
-        function nextQuestion() {
-            if (currentQuestion < quizData.length - 1) {
-                currentQuestion++;
-                renderProgress();
-                renderQuestion();
-                nextButton.disabled = true;
-            }
-        }
+  { id:'speed', name:'Speed', layer:2, pre:['distance-displacement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of change of distance. Scalar quantity.',
+    formulas:['speed = distance / time','avg speed = total dist / total time'],
+    misc:['Speed is a vector','Speed and velocity are identical'] },
 
-        renderProgress();
-        renderQuestion();
-        
-        nextButton.addEventListener('click', nextQuestion);
-    </script>
+  { id:'velocity', name:'Velocity', layer:2, pre:['distance-displacement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of change of displacement. Vector quantity.',
+    formulas:['v = Δx/Δt','v_avg = (u + v)/2 (uniform a)'],
+    misc:['Velocity is scalar','Zero velocity means zero acceleration'] },
+
+  { id:'acceleration', name:'Acceleration / Deceleration', layer:2, pre:['velocity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of change of velocity. Negative acceleration = deceleration.',
+    formulas:['a = Δv/Δt','units: m·s⁻²'],
+    misc:['Acceleration always means speeding up','Heavy objects accelerate slower'] },
+
+  { id:'motion-graphs', name:'Motion Graphs', layer:2, pre:['graphing-data','velocity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reading and translating between distance-time, displacement-time, velocity-time graphs.',
+    formulas:['slope of x-t = v','slope of v-t = a','area under v-t = Δx'],
+    misc:['Flat line means at rest','Slope always means speed'] },
+
+  { id:'eqns-motion', name:'Equations of Motion', layer:2, pre:['acceleration'], exams:['WAEC','NECO','JAMB'],
+    desc:'The four kinematic equations for uniform acceleration.',
+    formulas:['v = u + at','s = ut + ½at²','v² = u² + 2as','s = (u+v)t/2'],
+    misc:['Any equation works for any motion','Valid when acceleration changes'] },
+
+  { id:'free-fall', name:'Motion Under Gravity', layer:2, pre:['eqns-motion'], exams:['WAEC','NECO','JAMB'],
+    desc:'Special case of kinematics with a = g = 9.8 m/s² downward.',
+    formulas:['v = gt','h = ½gt²','v² = 2gh'],
+    misc:['Heavier objects fall faster','g depends on the object'] },
+
+  { id:'projectile', name:'Projectile Motion', layer:2, pre:['eqns-motion','vector-resolution'], exams:['WAEC','NECO','JAMB'],
+    desc:'2D motion under gravity. Horizontal and vertical components are independent.',
+    formulas:['T = 2u sinθ/g','H = u²sin²θ/(2g)','R = u²sin(2θ)/g'],
+    misc:['Horizontal velocity changes during flight','Components are coupled'] },
+
+  { id:'relative-motion', name:'Relative Motion', layer:2, pre:['velocity','frame-of-reference'], exams:['WAEC','NECO','JAMB'],
+    desc:'Velocity measured in different frames of reference.',
+    formulas:['v_AB = v_A − v_B','River-crossing problems'],
+    misc:['Velocity is the same in all frames','Relative velocity is always zero'] },
+
+  /* ===== L3 · FORCES & NEWTON ===== */
+  { id:'concept-force', name:'Concept of Force', layer:3, pre:['vector-notation'], exams:['WAEC','NECO','JAMB'],
+    desc:'A push or pull that changes motion. Vector quantity, measured in newtons.',
+    formulas:['1 N = 1 kg·m·s⁻²','F_net = ΣF'],
+    misc:['Force causes motion','Motion requires constant force'] },
+
+  { id:'types-force', name:'Types of Force', layer:3, pre:['concept-force'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contact forces (push, pull, friction) and non-contact / field forces (gravity, electric, magnetic).',
+    formulas:['Contact: acts on contact','Field: acts at a distance'],
+    misc:['Gravity requires contact','All forces act at a distance'] },
+
+  { id:'newton-first', name:"Newton's First Law", layer:3, pre:['concept-force'], exams:['WAEC','NECO','JAMB'],
+    desc:'An object stays at rest or in uniform motion unless acted on by a net external force.',
+    formulas:['ΣF = 0 → v = constant'],
+    misc:['Objects naturally slow down','Motion needs a force'] },
+
+  { id:'inertia-mass', name:'Inertia & Mass', layer:3, pre:['newton-first'], exams:['WAEC','NECO','JAMB'],
+    desc:'Inertia is resistance to change in motion; mass is its measure.',
+    formulas:['Larger mass → greater inertia'],
+    misc:['Mass and weight are the same','Inertia depends on velocity'] },
+
+  { id:'newton-second', name:"Newton's Second Law", layer:3, pre:['newton-first'], exams:['WAEC','NECO','JAMB'],
+    desc:'Net force equals mass times acceleration. F = ma.',
+    formulas:['F = ma','F = Δp/Δt'],
+    misc:['F = mv','Force is the same as velocity'] },
+
+  { id:'newton-third', name:"Newton's Third Law", layer:3, pre:['newton-second'], exams:['WAEC','NECO','JAMB'],
+    desc:'For every action, there is an equal and opposite reaction.',
+    formulas:['F_AB = −F_BA'],
+    misc:['Action-reaction pairs cancel','Pairs act on the same object'] },
+
+  { id:'fbd', name:'Free-Body Diagrams', layer:3, pre:['newton-second'], exams:['WAEC','NECO','JAMB'],
+    desc:'Drawing every external force on a single object — the key tool for solving dynamics.',
+    formulas:['ΣF_x = ma_x','ΣF_y = ma_y'],
+    misc:['Include the object\'s own force','Forget the normal force'] },
+
+  { id:'friction', name:'Friction', layer:3, pre:['fbd'], exams:['WAEC','NECO','JAMB'],
+    desc:'Static and dynamic (kinetic) friction; limiting friction; coefficient of friction.',
+    formulas:['f = μN','f_s ≤ μ_s N','f_k = μ_k N'],
+    misc:['Friction depends on area','Friction always opposes motion'] },
+
+  { id:'viscosity-stokes', name:'Viscosity & Stokes Law', layer:3, pre:['friction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Friction in fluids; terminal velocity; Stokes\' law for spherical objects.',
+    formulas:['F = 6πηrv (Stokes)','Terminal v: mg = 6πηrv'],
+    misc:['Viscosity is friction between solids','Terminal velocity is zero'] },
+
+  { id:'impulse', name:'Impulse', layer:3, pre:['newton-second'], exams:['WAEC','NECO','JAMB'],
+    desc:'Force applied over time — the change in momentum.',
+    formulas:['J = FΔt','J = Δp','Area under F-t graph'],
+    misc:['Impulse equals force','Longer contact time means more impulse'] },
+
+  { id:'momentum', name:'Momentum', layer:3, pre:['impulse'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mass in motion — a vector quantity.',
+    formulas:['p = mv','Δp = FΔt'],
+    misc:['Momentum is a scalar','Momentum = kinetic energy'] },
+
+  { id:'cons-momentum', name:'Conservation of Linear Momentum', layer:3, pre:['momentum'], exams:['WAEC','NECO','JAMB'],
+    desc:'In a closed system, total momentum before = total momentum after.',
+    formulas:['m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂'],
+    misc:['Momentum is lost in collisions','Works only for elastic collisions'] },
+
+  { id:'collisions', name:'Collisions & Coefficient of Restitution', layer:3, pre:['cons-momentum'], exams:['WAEC','NECO','JAMB'],
+    desc:'Elastic and inelastic collisions; explosion problems.',
+    formulas:['e = (v₂ − v₁) / (u₁ − u₂)','e = 1 elastic, e < 1 inelastic'],
+    misc:['All collisions are elastic','KE is always conserved'] },
+
+  { id:'circular-motion', name:'Circular Motion', layer:3, pre:['newton-second','vector-resolution'], exams:['WAEC','NECO','JAMB'],
+    desc:'Angular velocity, centripetal force, and applications of uniform circular motion.',
+    formulas:['ω = 2πf','v = ωr','a_c = v²/r','F_c = mv²/r'],
+    misc:['Centrifugal force pushes outward','Circular motion needs no force'] },
+
+  /* ===== L4 · EQUILIBRIUM & MACHINES ===== */
+  { id:'equilibrium-coplanar', name:'Equilibrium of Coplanar Forces', layer:4, pre:['vector-resolution','newton-first'], exams:['WAEC','NECO','JAMB'],
+    desc:'Conditions for equilibrium: net force = 0 and net torque = 0.',
+    formulas:['ΣF_x = 0','ΣF_y = 0','Στ = 0'],
+    misc:['Equilibrium means at rest only','One condition is enough'] },
+
+  { id:'triangle-polygon', name:'Triangle & Polygon of Forces', layer:4, pre:['equilibrium-coplanar','vector-addition'], exams:['WAEC','NECO','JAMB'],
+    desc:'Three or more forces in equilibrium can be drawn head-to-tail to form a closed polygon.',
+    formulas:['Closed triangle → equilibrium'],
+    misc:['Forces in equilibrium form an open shape'] },
+
+  { id:'lami', name:"Lami's Theorem", layer:4, pre:['triangle-polygon'], exams:['WAEC','NECO','JAMB'],
+    desc:'For three concurrent forces in equilibrium, each is proportional to the sine of the opposite angle.',
+    formulas:['A/sin α = B/sin β = C/sin γ'],
+    misc:['Applies to any number of forces','Uses cos instead of sin'] },
+
+  { id:'moments', name:'Principle of Moments', layer:4, pre:['equilibrium-coplanar'], exams:['WAEC','NECO','JAMB'],
+    desc:'For a body in rotational equilibrium, sum of clockwise moments = sum of anticlockwise moments.',
+    formulas:['Moment = F × d','ΣM_cw = ΣM_acw'],
+    misc:['Moment depends only on force','Distance measured from any point'] },
+
+  { id:'couples-torque', name:'Couples & Torque', layer:4, pre:['moments'], exams:['WAEC','NECO','JAMB'],
+    desc:'Two equal, opposite, parallel forces form a couple; torque is their rotational effect.',
+    formulas:['τ = F × perpendicular distance','Couple = Fd'],
+    misc:['A couple produces translation','Couple is the same as single force'] },
+
+  { id:'center-gravity', name:'Centre of Gravity', layer:4, pre:['moments'], exams:['WAEC','NECO','JAMB'],
+    desc:'The point where the entire weight of a body appears to act.',
+    formulas:['x̄ = Σ(m_ix_i) / Σm_i'],
+    misc:['CG is always at the geometric center','CG is the same as center of mass'] },
+
+  { id:'stability', name:'Stability & Equilibrium Types', layer:4, pre:['center-gravity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Stable, unstable, and neutral equilibrium; conditions for stability.',
+    formulas:['Stable: CG rises when displaced','Unstable: CG falls'],
+    misc:['All equilibria are stable','Wide base always means stability'] },
+
+  { id:'simple-machines', name:'Simple Machines Overview', layer:4, pre:['moments'], exams:['WAEC','NECO','JAMB'],
+    desc:'Levers, pulleys, inclined planes, wedges, screws, wheel & axle, gears.',
+    formulas:['MA = load/effort','VR = effort dist/load dist','η = MA/VR × 100%'],
+    misc:['MA and VR are the same','Machines create energy'] },
+
+  { id:'levers', name:'Levers', layer:4, pre:['simple-machines'], exams:['WAEC','NECO','JAMB'],
+    desc:'Three classes of levers based on positions of fulcrum, load, and effort.',
+    formulas:['Class 1: F-L-E','Class 2: F-E-L','Class 3: F-L-E'],
+    misc:['All levers give mechanical advantage'] },
+
+  { id:'pulleys', name:'Pulleys', layer:4, pre:['simple-machines'], exams:['WAEC','NECO','JAMB'],
+    desc:'Fixed, movable, and block-and-tackle pulley systems.',
+    formulas:['Fixed pulley: MA = 1','Movable: MA = 2','n pulleys: MA = n'],
+    misc:['Pulleys reduce force always','Fixed pulley changes force direction only'] },
+
+  { id:'inclined-wedge-screw', name:'Inclined Plane, Wedge & Screw', layer:4, pre:['simple-machines'], exams:['WAEC','NECO','JAMB'],
+    desc:'Inclined planes reduce force; wedges and screws are applications.',
+    formulas:['VR = 1/sin θ','Screw: VR = 2πr/pitch'],
+    misc:['Inclined plane multiplies energy'] },
+
+  { id:'wheel-axle-gears', name:'Wheel & Axle and Gears', layer:4, pre:['simple-machines'], exams:['WAEC','NECO','JAMB'],
+    desc:'Wheel-and-axle systems and gear trains.',
+    formulas:['VR = R/r','Gears: VR = N_driven/N_driver'],
+    misc:['Gears multiply energy','Larger gear always turns faster'] },
+
+  /* ===== L5 · WORK, ENERGY & POWER ===== */
+  { id:'work', name:'Work', layer:5, pre:['newton-second','vector-resolution'], exams:['WAEC','NECO','JAMB'],
+    desc:'Work is done when a force moves an object through a distance in its direction.',
+    formulas:['W = Fd cos θ','W = ΔKE','Area under F-d graph'],
+    misc:['Holding a weight is work','Work is always positive'] },
+
+  { id:'energy-forms', name:'Forms of Energy', layer:5, pre:['work'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mechanical, thermal, chemical, electrical, nuclear, light, sound.',
+    formulas:['All energy in joules (J)','1 kJ = 1000 J'],
+    misc:['Energy and force are the same','Energy can be created'] },
+
+  { id:'cons-energy', name:'Conservation of Energy', layer:5, pre:['energy-forms'], exams:['WAEC','NECO','JAMB'],
+    desc:'Energy cannot be created or destroyed — only converted from one form to another.',
+    formulas:['E_total = constant','KE₁ + PE₁ = KE₂ + PE₂'],
+    misc:['Energy is used up','Machines create energy'] },
+
+  { id:'ke', name:'Kinetic Energy', layer:5, pre:['work'], exams:['WAEC','NECO','JAMB'],
+    desc:'Energy of motion — depends on mass and velocity squared.',
+    formulas:['KE = ½mv²','KE = p²/(2m)'],
+    misc:['KE doubles when v doubles','KE and momentum are the same'] },
+
+  { id:'gpe', name:'Gravitational Potential Energy', layer:5, pre:['work'], exams:['WAEC','NECO','JAMB'],
+    desc:'Energy stored in an object\'s height above a reference level.',
+    formulas:['PE = mgh','ΔPE = mgΔh'],
+    misc:['PE is absolute','Reference level doesn\'t matter'] },
+
+  { id:'elastic-pe', name:'Elastic Potential Energy', layer:5, pre:['work'], exams:['WAEC','NECO','JAMB'],
+    desc:'Energy stored in a stretched or compressed elastic material.',
+    formulas:['PE = ½kx²','From F-x graph: area'],
+    misc:['PE is linear in stretch','Doubling stretch doubles PE'] },
+
+  { id:'power', name:'Power', layer:5, pre:['work'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of doing work or transferring energy.',
+    formulas:['P = W/t','P = Fv','1 W = 1 J/s'],
+    misc:['Power is the same as force','More power means more energy'] },
+
+  { id:'energy-society', name:'Energy & Society', layer:5, pre:['cons-energy'], exams:['WAEC','NECO','JAMB'],
+    desc:'Renewable and non-renewable resources; energy crises; environmental impact.',
+    formulas:['Renewable: solar, wind, hydro','Non-renewable: coal, oil, gas'],
+    misc:['All energy sources are renewable','Nuclear is fossil fuel'] },
+
+  { id:'energy-production', name:'Energy Production (Dams, Solar, Nuclear)', layer:5, pre:['energy-society'], exams:['WAEC','NECO','JAMB'],
+    desc:'Hydroelectric dams, solar collectors, photovoltaic cells, nuclear power.',
+    formulas:['Dam: PE → KE → electrical','Solar cell: light → electrical'],
+    misc:['Solar panels work at night','Nuclear energy = burning uranium'] },
+
+  { id:'photo-electric-intro', name:'Photoelectric Effect (Intro)', layer:5, pre:['energy-production'], exams:['WAEC','NECO','JAMB'],
+    desc:'Light ejecting electrons from a metal surface; work function and threshold frequency.',
+    formulas:['E = hf','W = hf₀','KE_max = hf − W'],
+    misc:['Brighter light always ejects electrons','Intensity affects electron energy'] },
+
+  /* ===== L6 · ELASTICITY & MATTER ===== */
+  { id:'hookes-law', name:"Hooke's Law", layer:6, pre:['newton-third'], exams:['WAEC','NECO','JAMB'],
+    desc:'Extension is proportional to the applied force, up to the elastic limit.',
+    formulas:['F = ke','k = spring constant (N/m)'],
+    misc:['Hooke\'s law always applies','Beyond elastic limit still linear'] },
+
+  { id:'youngs-modulus', name:"Young's Modulus", layer:6, pre:['hookes-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Ratio of stress to strain within the elastic limit.',
+    formulas:['E = stress/strain','stress = F/A','strain = ΔL/L'],
+    misc:['E depends on dimensions','E is the same for all materials'] },
+
+  { id:'stress-strain', name:'Stress-Strain Curve', layer:6, pre:['youngs-modulus'], exams:['WAEC','NECO','JAMB'],
+    desc:'Elastic limit, yield point, plastic region, breaking point.',
+    formulas:['Elastic limit → yield point','Breaking stress = ultimate strength'],
+    misc:['Materials break at the elastic limit','No distinction between elastic and plastic'] },
+
+  { id:'spring-energy', name:'Work Done in Springs & Strings', layer:6, pre:['hookes-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Energy stored in elastic materials; area under force-extension graph.',
+    formulas:['W = ½Fe','W = ½ke²','Energy per unit volume = ½ × stress × strain'],
+    misc:['W = Fe always','Energy is not stored in springs'] },
+
+  { id:'structure-matter', name:'Structure of Matter', layer:6, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Atoms and molecules; molecular theory of matter.',
+    formulas:['Atoms → molecules → matter'],
+    misc:['Atoms are indivisible','Molecules are the same as atoms'] },
+
+  { id:'kinetic-theory', name:'Kinetic Theory of Matter', layer:6, pre:['structure-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Explains gas pressure, temperature, diffusion, Brownian motion from molecular motion.',
+    formulas:['PV = (1/3)Nm<c²>','KE_avg = (3/2)kT'],
+    misc:['Molecules are stationary','Temperature depends on molecule size'] },
+
+  { id:'surface-tension', name:'Surface Tension & Capillarity', layer:6, pre:['structure-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Adhesion, cohesion, surface tension, capillarity, angle of contact.',
+    formulas:['Surface tension γ = F/L','Capillary rise h = 2γcosθ/(ρgr)'],
+    misc:['Surface tension depends on area','Capillarity works only in tubes'] },
+
+  /* ===== L7 · FLUIDS AT REST ===== */
+  { id:'density', name:'Density & Relative Density', layer:7, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Density = mass/volume; relative density compares to water.',
+    formulas:['ρ = m/V','RD = ρ_sub / ρ_water'],
+    misc:['Density and weight are the same','Density depends on shape'] },
+
+  { id:'pressure', name:'Pressure in Fluids', layer:7, pre:['density'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pressure = force/area; increases with depth and density.',
+    formulas:['P = F/A','P = ρgh','1 Pa = 1 N/m²'],
+    misc:['Pressure depends on container shape','Pressure is the same at all depths'] },
+
+  { id:'atmospheric-pressure', name:'Atmospheric Pressure', layer:7, pre:['pressure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pressure exerted by the atmosphere; measured with barometer or manometer.',
+    formulas:['1 atm = 1.013 × 10⁵ Pa','Barometer: hρg'],
+    misc:['Atmospheric pressure is the same everywhere','Barometer measures temperature'] },
+
+  { id:'pascal-principle', name:"Pascal's Principle", layer:7, pre:['pressure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pressure applied to a confined fluid is transmitted equally in all directions.',
+    formulas:['F₁/A₁ = F₂/A₂','Hydraulic press'],
+    misc:['Pressure changes with depth','Hydraulic systems amplify force for free'] },
+
+  { id:'archimedes', name:"Archimedes' Principle", layer:7, pre:['pressure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Upthrust equals weight of fluid displaced.',
+    formulas:['Upthrust = ρ_fluid × V_displaced × g','Apparent weight = W − U'],
+    misc:['Upthrust depends on object density','Upthrust equals weight always'] },
+
+  { id:'flotation', name:'Law of Flotation', layer:7, pre:['archimedes'], exams:['WAEC','NECO','JAMB'],
+    desc:'A floating body displaces its own weight of fluid.',
+    formulas:['Weight = Upthrust (floating)','Fraction submerged = ρ_object / ρ_fluid'],
+    misc:['Floating depends on weight only','All objects float on water'] },
+
+  { id:'fluid-equilibrium', name:'Equilibrium of Bodies in Fluids', layer:7, pre:['flotation'], exams:['WAEC','NECO','JAMB'],
+    desc:'Conditions for a body to float, sink, or remain suspended.',
+    formulas:['Float: ρ_body < ρ_fluid','Sink: ρ_body > ρ_fluid'],
+    misc:['Heavy objects always sink','Shape doesn\'t affect floating'] },
+
+  /* ===== L8 · HEAT & THERMAL ===== */
+  { id:'temperature', name:'Temperature & Measurement', layer:8, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Concept of temperature; thermometric properties; calibration of thermometers.',
+    formulas:['Celsius ↔ Kelvin: T(K) = θ(°C) + 273','C ↔ F: F = (9/5)C + 32'],
+    misc:['Temperature = heat','Kelvin has negative values'] },
+
+  { id:'thermal-expansion', name:'Thermal Expansion', layer:8, pre:['temperature'], exams:['WAEC','NECO','JAMB'],
+    desc:'Linear, area, and volume expansion of solids; volume expansion of liquids.',
+    formulas:['ΔL = L₀αΔθ','ΔA = A₀βΔθ (β = 2α)','ΔV = V₀γΔθ (γ = 3α)'],
+    misc:['All expansivities are equal','Anomalous expansion of water is normal'] },
+
+  { id:'heat-capacity', name:'Heat Capacity & Specific Heat', layer:8, pre:['temperature'], exams:['WAEC','NECO','JAMB'],
+    desc:'Heat needed to raise temperature; specific heat per unit mass.',
+    formulas:['Q = mcΔθ','Heat capacity = mc','Method of mixtures'],
+    misc:['Heat capacity depends on temperature','Specific heat = total heat'] },
+
+  { id:'latent-heat', name:'Latent Heat', layer:8, pre:['heat-capacity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Heat absorbed during phase change without temperature change.',
+    formulas:['Q = mL','L_f (fusion), L_v (vaporization)'],
+    misc:['Temperature rises during melting','Latent heat depends on mass only'] },
+
+  { id:'change-of-state', name:'Change of State', layer:8, pre:['latent-heat'], exams:['WAEC','NECO','JAMB'],
+    desc:'Melting, boiling, evaporation, condensation, sublimation.',
+    formulas:['Boiling: T = constant','Evaporation: surface phenomenon'],
+    misc:['Evaporation only happens at boiling point','Boiling and evaporation are the same'] },
+
+  { id:'gas-laws', name:'Gas Laws (Boyle, Charles, Pressure)', layer:8, pre:['kinetic-theory'], exams:['WAEC','NECO','JAMB'],
+    desc:'Isothermal, isobaric, isochoric processes and the combined gas law.',
+    formulas:['Boyle: PV = const','Charles: V/T = const','Pressure: P/T = const','Combined: PV/T = const'],
+    misc:['All gases obey laws exactly','Temperature in Celsius for gas laws'] },
+
+  { id:'ideal-gas', name:'Ideal Gas Equation', layer:8, pre:['gas-laws'], exams:['WAEC','NECO','JAMB'],
+    desc:'PV = nRT; molar gas constant; deviations in real gases.',
+    formulas:['PV = nRT','R = 8.314 J/(mol·K)','Van der Waals for real gases'],
+    misc:['Ideal gas law works for all conditions','Real gases always obey PV = nRT'] },
+
+  { id:'vapours', name:'Vapours & SVP', layer:8, pre:['change-of-state'], exams:['WAEC','NECO','JAMB'],
+    desc:'Saturated and unsaturated vapour; saturated vapour pressure.',
+    formulas:['SVP depends only on temperature','Barometer tube method'],
+    misc:['SVP depends on volume','Saturated vapours obey gas laws'] },
+
+  { id:'humidity', name:'Humidity, Dew Point & Weather', layer:8, pre:['vapours'], exams:['WAEC','NECO','JAMB'],
+    desc:'Absolute humidity, relative humidity, dew point, hygrometry.',
+    formulas:['RH = (actual vapour pressure / SVP) × 100%','Wet & dry bulb hygrometer'],
+    misc:['Humidity and relative humidity are the same','Dew point is constant everywhere'] },
+
+  { id:'heat-transfer', name:'Heat Transfer', layer:8, pre:['heat-capacity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Conduction, convection, radiation and their applications.',
+    formulas:['Conduction: Q/t = kA(ΔT)/L','Stefan: E = σT⁴','Thermos flask design'],
+    misc:['Heat travels through vacuum by conduction','Convection works in solids'] },
+
+  { id:'thermal-conductivity', name:'Thermal Conductivity', layer:8, pre:['heat-transfer'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of heat flow through a material; temperature gradient; heat flux.',
+    formulas:['Q/t = kA ΔT / L','Thermal resistance = L/kA'],
+    misc:['All metals conduct equally','Conductivity depends on length'] },
+
+  { id:'blackbody', name:'Black Body Radiation', layer:8, pre:['heat-transfer'], exams:['WAEC','NECO','JAMB'],
+    desc:'Perfect absorber and emitter; variation of intensity with wavelength and temperature.',
+    formulas:['Wien: λ_max T = 2.9 × 10⁻³ m·K','Stefan-Boltzmann: E = σT⁴'],
+    misc:['Black bodies reflect light','Intensity independent of temperature'] },
+
+  /* ===== L9 · WAVES ===== */
+  { id:'wave-motion', name:'Wave Motion & Production', layer:9, pre:['kinetic-theory','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Vibrating systems produce waves; waves transfer energy without transferring matter.',
+    formulas:['v = fλ','T = 1/f'],
+    misc:['Waves transfer matter','Waves are the same as particles'] },
+
+  { id:'wave-types', name:'Types of Waves', layer:9, pre:['wave-motion'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mechanical vs electromagnetic; transverse vs longitudinal; progressive vs stationary.',
+    formulas:['Transverse: ⊥','Longitudinal: ∥'],
+    misc:['Sound is transverse','Light is mechanical'] },
+
+  { id:'wave-equation', name:'Progressive Wave Equation', layer:9, pre:['wave-motion'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mathematical representation of a wave; phase, wave number, wave vector.',
+    formulas:['y = A sin(ωt ± kx)','k = 2π/λ','ω = 2πf'],
+    misc:['Phase difference is always zero','Wave number = 1/λ'] },
+
+  { id:'wave-properties', name:'Properties of Waves', layer:9, pre:['wave-types'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reflection, refraction, diffraction, interference, polarization.',
+    formulas:['Reflection: angle i = angle r','Snell: n₁sin θ₁ = n₂sin θ₂'],
+    misc:['Waves don\'t diffract','Polarization works for sound'] },
+
+  { id:'superposition', name:'Superposition & Interference', layer:9, pre:['wave-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Waves add algebraically; constructive and destructive interference.',
+    formulas:['y_total = y₁ + y₂','Path diff = nλ (constructive)'],
+    misc:['Waves pass through each other unchanged','Interference destroys energy'] },
+
+  { id:'stationary-waves', name:'Stationary Waves', layer:9, pre:['superposition'], exams:['WAEC','NECO','JAMB'],
+    desc:'Standing waves from superposition of progressive waves; nodes and antinodes.',
+    formulas:['Node: y = 0','Antinode: max amplitude','Distance between nodes = λ/2'],
+    misc:['Stationary waves transfer energy','Nodes are the loudest points'] },
+
+  { id:'beats', name:'Beats', layer:9, pre:['superposition'], exams:['WAEC','NECO','JAMB'],
+    desc:'Beat frequency from two close frequencies.',
+    formulas:['f_beat = |f₁ − f₂|'],
+    misc:['Beats = echo','Beats depend on amplitude'] },
+
+  { id:'doppler', name:'Doppler Effect', layer:9, pre:['wave-motion'], exams:['WAEC','NECO','JAMB'],
+    desc:'Apparent change in frequency due to relative motion between source and observer.',
+    formulas:['f\' = f(v ± v_o)/(v ∓ v_s)'],
+    misc:['Doppler effect changes wavelength only','Applies only to sound'] },
+
+  { id:'em-waves', name:'Electromagnetic Waves', layer:9, pre:['wave-types'], exams:['WAEC','NECO','JAMB'],
+    desc:'EM spectrum — radio, microwave, infrared, visible, UV, X-ray, gamma.',
+    formulas:['c = fλ','c = 3 × 10⁸ m/s'],
+    misc:['EM waves need a medium','All EM waves have the same wavelength'] },
+
+  { id:'polarization', name:'Polarization', layer:9, pre:['wave-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Restriction of wave oscillations to a single plane; only transverse waves polarize.',
+    formulas:['Malus: I = I₀cos²θ'],
+    misc:['Sound can be polarized','Polarization is the same as reflection'] },
+
+  /* ===== L10 · SOUND ===== */
+  { id:'sound-sources', name:'Sources & Transmission of Sound', layer:10, pre:['wave-motion'], exams:['WAEC','NECO','JAMB'],
+    desc:'Vibrating bodies produce sound; requires a material medium.',
+    formulas:['Speed in air ≈ 343 m/s','Solid > Liquid > Gas'],
+    misc:['Sound travels in vacuum','Sound speed is constant'] },
+
+  { id:'sound-speed', name:'Speed of Sound', layer:10, pre:['sound-sources'], exams:['WAEC','NECO','JAMB'],
+    desc:'Speed of sound in solids, liquids, and gases; effect of temperature.',
+    formulas:['v ≈ 331 + 0.6θ (m/s in air)','v = √(E/ρ) in solids'],
+    misc:['Speed depends on loudness','Speed depends on frequency'] },
+
+  { id:'echoes', name:'Echoes & Reverberation', layer:10, pre:['sound-speed'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reflected sound; echo vs reverberation; applications.',
+    formulas:['Distance = v × t / 2','Reverberation: multiple reflections'],
+    misc:['Echoes happen in small rooms','Reverberation is an echo'] },
+
+  { id:'sound-characteristics', name:'Characteristics of Sound', layer:10, pre:['sound-sources'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pitch, loudness, quality (timbre); noise vs music.',
+    formulas:['Pitch ∝ frequency','Loudness ∝ intensity'],
+    misc:['Pitch and loudness are the same','Quality depends on frequency'] },
+
+  { id:'vibrating-strings', name:'Vibration in Strings', layer:10, pre:['stationary-waves'], exams:['WAEC','NECO','JAMB'],
+    desc:'Standing waves on strings; harmonics and overtones.',
+    formulas:['f = (1/2L)√(T/μ)','Fundamental: f₁ = v/(2L)'],
+    misc:['Only one frequency possible','Tension has no effect on pitch'] },
+
+  { id:'air-columns', name:'Vibration of Air in Pipes', layer:10, pre:['stationary-waves'], exams:['WAEC','NECO','JAMB'],
+    desc:'Open and closed pipes; harmonics and end correction.',
+    formulas:['Open: f = nv/(2L)','Closed: f = nv/(4L) (odd n)'],
+    misc:['Closed pipe has all harmonics','Open pipe has only odd harmonics'] },
+
+  { id:'resonance', name:'Forced Vibration & Resonance', layer:10, pre:['vibrating-strings'], exams:['WAEC','NECO','JAMB'],
+    desc:'Driven oscillations and resonance; applications and dangers.',
+    formulas:['Resonance: f_driver = f_natural'],
+    misc:['Resonance is always beneficial','Resonance requires same amplitude'] },
+
+  { id:'acoustics', name:'Acoustics & Applications', layer:10, pre:['sound-characteristics'], exams:['WAEC','NECO','JAMB'],
+    desc:'Acoustic design, musical instruments, ultrasound.',
+    formulas:['Ultrasound: f > 20 kHz'],
+    misc:['Ultrasound is audible','Musical instruments don\'t use resonance'] },
+
+  /* ===== L11 · LIGHT & OPTICS ===== */
+  { id:'light-sources', name:'Sources of Light', layer:11, pre:['em-waves'], exams:['WAEC','NECO','JAMB'],
+    desc:'Natural and artificial sources; luminous and non-luminous objects.',
+    formulas:['Speed: c = 3 × 10⁸ m/s'],
+    misc:['All objects are luminous','The Moon produces light'] },
+
+  { id:'rectilinear-light', name:'Rectilinear Propagation', layer:11, pre:['light-sources'], exams:['WAEC','NECO','JAMB'],
+    desc:'Light travels in straight lines; formation of shadows and eclipses; pinhole camera.',
+    formulas:['Pinhole: h_i/h_o = v/u'],
+    misc:['Light bends around corners','Shadows have no penumbra'] },
+
+  { id:'reflection-plane', name:'Reflection at Plane Surfaces', layer:11, pre:['rectilinear-light'], exams:['WAEC','NECO','JAMB'],
+    desc:'Laws of reflection; image formation by plane mirrors; periscope, kaleidoscope.',
+    formulas:['Angle i = angle r','Virtual image, same size'],
+    misc:['Plane mirrors produce real images','Image is inverted'] },
+
+  { id:'reflection-curved', name:'Reflection at Curved Surfaces', layer:11, pre:['reflection-plane'], exams:['WAEC','NECO','JAMB'],
+    desc:'Concave and convex mirrors; focal length; mirror formula.',
+    formulas:['1/f = 1/u + 1/v','m = −v/u','f = R/2'],
+    misc:['Convex mirrors magnify','All mirrors produce real images'] },
+
+  { id:'refraction-plane', name:'Refraction at Plane Surfaces', layer:11, pre:['reflection-plane'], exams:['WAEC','NECO','JAMB'],
+    desc:"Snell's law; refractive index; real and apparent depth; total internal reflection.",
+    formulas:['n₁sin θ₁ = n₂sin θ₂','n = c/v','Critical angle: sin C = 1/n'],
+    misc:['Light always bends toward normal','Total internal reflection happens at all angles'] },
+
+  { id:'prisms', name:'Prisms & Minimum Deviation', layer:11, pre:['refraction-plane'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rectangular and triangular prisms; minimum deviation.',
+    formulas:['n = sin((A+D)/2) / sin(A/2)','Lateral displacement'],
+    misc:['Deviation is constant','Prism always disperses light'] },
+
+  { id:'lenses', name:'Lenses (Converging & Diverging)', layer:11, pre:['refraction-plane'], exams:['WAEC','NECO','JAMB'],
+    desc:'Convex and concave lenses; image formation; lens formula; magnification.',
+    formulas:['1/f = 1/v − 1/u','m = v/u','P = 1/f (diopters)'],
+    misc:['All lenses magnify','Concave lenses produce real images'] },
+
+  { id:'optical-instruments', name:'Optical Instruments', layer:11, pre:['lenses'], exams:['WAEC','NECO','JAMB'],
+    desc:'Microscopes, telescopes, cameras, projectors, and the human eye.',
+    formulas:['Angular magnification M = β/α','Near point = 25 cm'],
+    misc:['Eye and camera are identical','Telescopes magnify by one lens only'] },
+
+  { id:'dispersion', name:'Dispersion & Colours', layer:11, pre:['prisms'], exams:['WAEC','NECO','JAMB'],
+    desc:'White light split by a prism; primary and secondary colours; rainbow.',
+    formulas:['Violet bends most, red least','Additive: R+G+B = white'],
+    misc:['Red bends most','All colours travel at same speed in glass'] },
+
+  { id:'em-spectrum', name:'Electromagnetic Spectrum', layer:11, pre:['em-waves'], exams:['WAEC','NECO','JAMB'],
+    desc:'Full spectrum — sources, detectors, and uses of each band.',
+    formulas:['Radio → Gamma (increasing f)','c = fλ'],
+    misc:['All EM waves look the same','X-rays are visible'] },
+
+  { id:'fibre-optics', name:'Fibre Optics', layer:11, pre:['refraction-plane'], exams:['WAEC','NECO','JAMB'],
+    desc:'Total internal reflection in optical fibres; applications in communication, medicine, sensing.',
+    formulas:['Numerical aperture NA = √(n₁² − n₂²)','Core-cladding structure'],
+    misc:['Fibre optics use reflection only','Light escapes at bends'] },
+
+  { id:'lasers', name:'Introduction to Lasers', layer:11, pre:['light-sources'], exams:['WAEC','NECO','JAMB'],
+    desc:'Meaning of LASER; types (solid, gas, liquid, semiconductor); applications and dangers.',
+    formulas:['Coherent, monochromatic, collimated'],
+    misc:['Lasers are just bright light','Lasers are always dangerous'] },
+
+  /* ===== L12 · ELECTROSTATICS & CAPACITORS ===== */
+  { id:'electric-charge', name:'Electric Charge', layer:12, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Positive and negative charges; conservation of charge; charging by friction, contact, induction.',
+    formulas:['q = ne','e = 1.6 × 10⁻¹⁹ C'],
+    misc:['Charge can be created','Protons move in metals'] },
+
+  { id:'electroscope', name:'Electroscope & Charge Detection', layer:12, pre:['electric-charge'], exams:['WAEC','NECO','JAMB'],
+    desc:'Gold-leaf electroscope; detecting charge; distribution of charge on conductors.',
+    formulas:['Like charges repel','Conductors: charge on surface'],
+    misc:['Electroscope measures current','Charge is uniform in conductors'] },
+
+  { id:'coulomb-law', name:"Coulomb's Law", layer:12, pre:['electric-charge','vector-addition'], exams:['WAEC','NECO','JAMB'],
+    desc:'Force between two point charges varies inversely with square of distance.',
+    formulas:['F = kq₁q₂/r²','k = 9 × 10⁹ N·m²/C²'],
+    misc:['Force is the same on both charges','Force doesn\'t depend on distance'] },
+
+  { id:'electric-field', name:'Electric Field & Field Intensity', layer:12, pre:['coulomb-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Force per unit positive charge; field lines; potential gradient.',
+    formulas:['E = F/q','E = kq/r²','E = −dV/dr'],
+    misc:['Field equals force','Field requires a test charge'] },
+
+  { id:'electric-potential', name:'Electric Potential & PD', layer:12, pre:['electric-field'], exams:['WAEC','NECO','JAMB'],
+    desc:'Work done per unit charge in bringing a charge from infinity; potential difference.',
+    formulas:['V = kq/r','V = W/q','ΔV = Ed (uniform field)'],
+    misc:['Potential is a vector','Voltage and current are the same'] },
+
+  { id:'capacitors', name:'Capacitors & Capacitance', layer:12, pre:['electric-potential'], exams:['WAEC','NECO','JAMB'],
+    desc:'Parallel plate capacitors; capacitance; series and parallel arrangement; energy stored.',
+    formulas:['C = Q/V','C = ε₀ε_rA/d','Series: 1/C = Σ1/Cᵢ','Parallel: C = ΣCᵢ','E = ½CV²'],
+    misc:['Capacitance depends on charge','Series capacitors add directly'] },
+
+  { id:'electric-discharge', name:'Electric Discharge & Lightning', layer:12, pre:['electric-field'], exams:['WAEC','NECO','JAMB'],
+    desc:'Discharge through gases; lightning; lightning conductors.',
+    formulas:['Action of points → discharge'],
+    misc:['Lightning is electrical','Lightning conductors attract lightning'] },
+
+  /* ===== L13 · CURRENT ELECTRICITY ===== */
+  { id:'emf-pd', name:'EMF & Potential Difference', layer:13, pre:['electric-potential'], exams:['WAEC','NECO','JAMB'],
+    desc:'EMF is the energy per unit charge from a source; PD is energy per unit charge across a component.',
+    formulas:['EMF = W/Q','V = IR','ε = I(R + r)'],
+    misc:['EMF and PD are the same','EMF is a force'] },
+
+  { id:'current', name:'Electric Current', layer:13, pre:['emf-pd'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate of flow of charge; conventional current direction.',
+    formulas:['I = Q/t','I = nAve','1 A = 1 C/s'],
+    misc:['Current is used up','Electrons travel at light speed'] },
+
+  { id:'ohms-law', name:"Ohm's Law & Resistance", layer:13, pre:['current'], exams:['WAEC','NECO','JAMB'],
+    desc:'V = IR; ohmic vs non-ohmic conductors; resistivity and conductivity.',
+    formulas:['V = IR','R = ρL/A','σ = 1/ρ'],
+    misc:['Ohm\'s law applies to everything','Resistance depends only on voltage'] },
+
+  { id:'resistance-measure', name:'Measurement of Resistance', layer:13, pre:['ohms-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Ammeter, voltmeter, meter bridge, potentiometer, Wheatstone bridge.',
+    formulas:['Meter bridge: R₁/R₂ = L₁/L₂','Potentiometer: E ∝ L'],
+    misc:['Ammeters have high resistance','Voltmeters have low resistance'] },
+
+  { id:'resistors-combo', name:'Resistors in Series & Parallel', layer:13, pre:['ohms-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Equivalent resistance calculations for series, parallel, and mixed networks.',
+    formulas:['Series: R = ΣRᵢ','Parallel: 1/R = Σ(1/Rᵢ)'],
+    misc:['Adding resistors in parallel increases R','Voltage same in series'] },
+
+  { id:'kirchhoff', name:"Kirchhoff's Laws & Networks", layer:13, pre:['resistors-combo'], exams:['WAEC','NECO','JAMB'],
+    desc:'Junction rule (ΣI = 0) and loop rule (ΣV = 0); solving complex networks.',
+    formulas:['ΣI_in = ΣI_out','ΣV_loop = 0'],
+    misc:['Kirchhoff\'s laws violate Ohm\'s law','Only one loop is allowed'] },
+
+  { id:'cells-batteries', name:'Electric Cells & Batteries', layer:13, pre:['emf-pd'], exams:['WAEC','NECO','JAMB'],
+    desc:'Primary and secondary cells; simple voltaic, Daniel, Leclanché, lead-acid, NiFe, Li-ion.',
+    formulas:['Series cells: ε_total = Σε','Parallel: same ε, larger capacity'],
+    misc:['All cells are rechargeable','Cells store charge'] },
+
+  { id:'internal-resistance', name:'Internal Resistance & Lost Volts', layer:13, pre:['cells-batteries'], exams:['WAEC','NECO','JAMB'],
+    desc:'Real cells have internal resistance; terminal PD is less than EMF.',
+    formulas:['V = ε − Ir','Lost volts = Ir','Efficiency = V/ε'],
+    misc:['Terminal PD equals EMF','Internal resistance is zero in real cells'] },
+
+  { id:'electrical-energy', name:'Electrical Energy & Power', layer:13, pre:['ohms-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Power in circuits; heating effect; commercial units (kWh).',
+    formulas:['P = VI = I²R = V²/R','E = Pt','1 kWh = 3.6 × 10⁶ J'],
+    misc:['Power and energy are the same','1 kWh is the SI unit'] },
+
+  { id:'power-transmission', name:'Power Transmission & Distribution', layer:13, pre:['electrical-energy'], exams:['WAEC','NECO','JAMB'],
+    desc:'Grid transmission at high voltage to reduce losses; transformers.',
+    formulas:['P_loss = I²R','High V → low I → less loss'],
+    misc:['High voltage increases losses','Transformers work on DC'] },
+
+  { id:'house-wiring', name:'Electrical Wiring & Fuses', layer:13, pre:['electrical-energy'], exams:['WAEC','NECO','JAMB'],
+    desc:'House wiring; parallel arrangement; fuses and circuit breakers.',
+    formulas:['Fuse rating > current draw','Parallel: same voltage'],
+    misc:['Series wiring used in homes','Fuses increase current'] },
+
+  { id:'conduction-materials', name:'Conduction Through Materials', layer:13, pre:['ohms-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Conductors, semiconductors, insulators; band theory; electrolysis; discharge through gases.',
+    formulas:['Band gap: conductor < 1 eV','Semiconductor: 1–3 eV','Insulator > 3 eV'],
+    misc:['All solids conduct','Semiconductors are always doped'] },
+
+  { id:'faraday-electrolysis', name:"Faraday's Laws of Electrolysis", layer:13, pre:['conduction-materials'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mass deposited proportional to charge; electrochemical equivalent.',
+    formulas:['m = ZQ = ZIt','m = (M/nF)Q'],
+    misc:['Electrolysis works in solids','F = 96500 C/mol'] },
+
+  /* ===== L14 · MAGNETISM ===== */
+  { id:'magnets', name:'Magnets & Magnetic Materials', layer:14, pre:['fund-units'], exams:['WAEC','NECO','JAMB'],
+    desc:'Natural and artificial magnets; soft iron vs steel; magnetization and demagnetization.',
+    formulas:['Like poles repel','Unlike attract'],
+    misc:['All metals are magnetic','Magnets attract all materials'] },
+
+  { id:'magnetic-field', name:'Magnetic Field & Field Lines', layer:14, pre:['magnets'], exams:['WAEC','NECO','JAMB'],
+    desc:'Field around a bar magnet; flux and flux density; field patterns.',
+    formulas:['B = Φ/A','Field lines N → S'],
+    misc:['Field lines cross each other','Field is strongest far from poles'] },
+
+  { id:'field-current', name:'Field Around Current-Carrying Conductor', layer:14, pre:['magnetic-field','current'], exams:['WAEC','NECO','JAMB'],
+    desc:'Field around straight wire, circular loop, and solenoid.',
+    formulas:['B = μ₀I/(2πr) (straight wire)','B = μ₀nI (solenoid)'],
+    misc:['Field direction is random','Field depends only on current magnitude'] },
+
+  { id:'force-conductor', name:'Force on a Current-Carrying Conductor', layer:14, pre:['field-current'], exams:['WAEC','NECO','JAMB'],
+    desc:"Force on a conductor in a magnetic field; Fleming's left-hand rule.",
+    formulas:['F = BIL sin θ','Direction: Fleming\'s LHR'],
+    misc:['Force is always along the wire','Force independent of B'] },
+
+  { id:'force-parallel', name:'Force Between Parallel Conductors', layer:14, pre:['force-conductor'], exams:['WAEC','NECO','JAMB'],
+    desc:'Like currents attract, opposite currents repel; force per unit length.',
+    formulas:['F/L = μ₀I₁I₂/(2πd)'],
+    misc:['Like currents repel','Force is independent of separation'] },
+
+  { id:'force-charge', name:'Force on a Moving Charge', layer:14, pre:['force-conductor'], exams:['WAEC','NECO','JAMB'],
+    desc:'Magnetic force on a charged particle; motion in a magnetic field.',
+    formulas:['F = qvB sin θ','r = mv/(qB)'],
+    misc:['Force is always along velocity','Force does work on the charge'] },
+
+  { id:'dc-motor', name:'DC Motor & Electromagnets', layer:14, pre:['force-conductor'], exams:['WAEC','NECO','JAMB'],
+    desc:'Working of a DC motor; electromagnets; carbon microphone; moving coil & moving iron instruments.',
+    formulas:['Torque = NIAB sin θ'],
+    misc:['Motors generate electricity','Electromagnets are permanent'] },
+
+  { id:'galvanometer', name:'Galvanometers, Ammeters & Voltmeters', layer:14, pre:['dc-motor'], exams:['WAEC','NECO','JAMB'],
+    desc:'Converting a galvanometer using shunts and multipliers; sensitivity.',
+    formulas:['Shunt: S = I_g G/(I − I_g)','Multiplier: R = V/I_g − G'],
+    misc:['Shunts increase sensitivity','Ammeters have high resistance'] },
+
+  { id:'earth-magnetic', name:"Earth's Magnetic Field", layer:14, pre:['magnetic-field'], exams:['WAEC','NECO','JAMB'],
+    desc:'Magnetic elements: declination, dip; navigation and mineral exploration.',
+    formulas:['B_H = B cos δ','B_V = B sin δ'],
+    misc:['Earth has a magnetic monopole','Compass points to true North'] },
+
+  /* ===== L15 · EM INDUCTION & AC ===== */
+  { id:'faraday-law', name:"Faraday's Law of Induction", layer:15, pre:['magnetic-field','force-conductor'], exams:['WAEC','NECO','JAMB'],
+    desc:'Changing magnetic flux induces an EMF; induced EMF proportional to rate of change of flux.',
+    formulas:['ε = −N dΦ/dt','Φ = BA cos θ'],
+    misc:['Static fields induce current','EMF is constant'] },
+
+  { id:'lenz-law', name:"Lenz's Law", layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Induced current opposes the change producing it — conservation of energy.',
+    formulas:['Direction: opposes flux change'],
+    misc:['Lenz\'s law violates energy conservation','Induced current aids the change'] },
+
+  { id:'ac-generator', name:'AC & DC Generators', layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Working of a.c. and d.c. generators; slip rings and commutators.',
+    formulas:['ε = NBAω sin(ωt)','Peak EMF = NBAω'],
+    misc:['DC generator produces DC directly','Commutator produces AC'] },
+
+  { id:'transformers', name:'Transformers', layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Step-up and step-down transformers; ideal and real efficiency.',
+    formulas:['V_s/V_p = N_s/N_p','I_s/I_p = N_p/N_s','η = P_out/P_in'],
+    misc:['Transformers work on DC','Real transformers are 100% efficient'] },
+
+  { id:'inductance', name:'Inductance', layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Self and mutual inductance; energy stored in an inductor.',
+    formulas:['ε = −L dI/dt','E = ½LI²','Unit: henry (H)'],
+    misc:['Inductance depends on current','Inductors store charge'] },
+
+  { id:'eddy-currents', name:'Eddy Currents', layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Circulating currents in bulk conductors; losses and applications.',
+    formulas:['Minimized by laminations','Induction furnace, brake'],
+    misc:['Eddy currents are beneficial only','Eddy currents cannot be reduced'] },
+
+  { id:'ac-currents', name:'AC Currents & Voltage', layer:15, pre:['faraday-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Peak and r.m.s. values; graphical representation.',
+    formulas:['I_rms = I_peak/√2','V_rms = V_peak/√2'],
+    misc:['Peak and rms are the same','Meters measure peak values'] },
+
+  { id:'reactance-impedance', name:'Reactance & Impedance', layer:15, pre:['ac-currents'], exams:['WAEC','NECO','JAMB'],
+    desc:'Capacitive and inductive reactance; impedance in R-L-C circuits.',
+    formulas:['X_C = 1/(2πfC)','X_L = 2πfL','Z = √(R² + (X_L − X_C)²)'],
+    misc:['Reactance is like resistance always','Impedance equals resistance'] },
+
+  { id:'rlc-resonance', name:'R-L-C Circuits & Resonance', layer:15, pre:['reactance-impedance'], exams:['WAEC','NECO','JAMB'],
+    desc:'Series R-L-C circuits; vector diagrams; resonance frequency and power factor.',
+    formulas:['f_res = 1/(2π√(LC))','Power factor = cos φ'],
+    misc:['Resonance happens at any frequency','Power factor is always 1'] },
+
+  { id:'ac-power', name:'Power in AC Circuits', layer:15, pre:['rlc-resonance'], exams:['WAEC','NECO','JAMB'],
+    desc:'Instantaneous, average, and apparent power; power factor.',
+    formulas:['P_avg = V_rms I_rms cos φ','P_app = V_rms I_rms'],
+    misc:['Power is always V × I','Power factor can exceed 1'] },
+
+  /* ===== L16 · MODERN PHYSICS ===== */
+  { id:'atom-models', name:'Models of the Atom', layer:16, pre:['electric-charge'], exams:['WAEC','NECO','JAMB'],
+    desc:"Thomson, Rutherford, Bohr models and their limitations.",
+    formulas:['Bohr: E_n = −13.6/n² eV','r_n = n² × 0.529 Å'],
+    misc:['Electrons orbit like planets','Atom is mostly empty space'] },
+
+  { id:'energy-quantization', name:'Energy Quantization & Spectra', layer:16, pre:['atom-models'], exams:['WAEC','NECO','JAMB'],
+    desc:'Discrete energy levels; emission and absorption spectra.',
+    formulas:['ΔE = hf = E₂ − E₁','E = hf, h = 6.63 × 10⁻³⁴ J·s'],
+    misc:['Energy levels are continuous','Spectra are the same for all atoms'] },
+
+  { id:'thermionic', name:'Thermionic Emission', layer:16, pre:['energy-quantization'], exams:['WAEC','NECO','JAMB'],
+    desc:'Emission of electrons from heated metals; applications in CRTs, X-ray tubes.',
+    formulas:['Richardson: I = AT²e^(−W/kT)'],
+    misc:['Thermionic emission needs light','Works at room temperature'] },
+
+  { id:'photoelectric', name:'Photoelectric Effect', layer:16, pre:['energy-quantization'], exams:['WAEC','NECO','JAMB'],
+    desc:'Light ejecting electrons; work function; stopping potential; Einstein\'s equation.',
+    formulas:['KE_max = hf − W','W = hf₀','eV_s = KE_max'],
+    misc:['Brighter light → faster electrons','Intensity affects KE'] },
+
+  { id:'x-rays', name:'X-Rays', layer:16, pre:['thermionic'], exams:['WAEC','NECO','JAMB'],
+    desc:'Production of X-rays; properties; applications; safety.',
+    formulas:['λ_min = hc/(eV)','Bragg: nλ = 2d sin θ'],
+    misc:['X-rays are visible','X-rays are harmless'] },
+
+  { id:'nucleus', name:'Structure of the Nucleus', layer:16, pre:['atom-models'], exams:['WAEC','NECO','JAMB'],
+    desc:'Protons, neutrons, atomic number, mass number, isotopes.',
+    formulas:['A = Z + N','Isotopes: same Z, different N'],
+    misc:['Isotopes have different chemistry','Nucleus contains electrons'] },
+
+  { id:'radioactivity', name:'Radioactivity', layer:16, pre:['nucleus'], exams:['WAEC','NECO','JAMB'],
+    desc:'Natural and artificial radioactivity; alpha, beta, gamma; half-life; decay law.',
+    formulas:['N = N₀e^(−λt)','t½ = ln2/λ = 0.693/λ','A = λN'],
+    misc:['Half-life is constant for all nuclei','All radiation is harmful'] },
+
+  { id:'nuclear-reactions', name:'Nuclear Reactions & Fission/Fusion', layer:16, pre:['radioactivity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Fission and fusion; mass defect; binding energy; E = mc².',
+    formulas:['E = Δmc²','Δm = mass defect','BE/A binding energy curve'],
+    misc:['Mass is conserved in nuclear reactions','Fusion is easier than fission'] },
+
+  { id:'wave-particle', name:'Wave-Particle Duality', layer:16, pre:['photoelectric'], exams:['WAEC','NECO','JAMB'],
+    desc:'Light and matter exhibit both wave and particle behavior.',
+    formulas:['de Broglie: λ = h/p','E = hf (photon)'],
+    misc:['Light is only a wave','Matter has no wave nature'] },
+
+  { id:'electron-diffraction', name:'Electron Diffraction', layer:16, pre:['wave-particle'], exams:['WAEC','NECO','JAMB'],
+    desc:'Davisson-Germer experiment; electrons diffract like waves.',
+    formulas:['Bragg condition: 2d sin θ = nλ'],
+    misc:['Electrons are pure particles','Diffraction needs light'] },
+
+  { id:'uncertainty', name:'Uncertainty Principle', layer:16, pre:['wave-particle'], exams:['WAEC','NECO','JAMB'],
+    desc:"Heisenberg's uncertainty principle — position and momentum cannot both be known exactly.",
+    formulas:['Δx · Δp ≥ h/(4π)','ΔE · Δt ≥ h/(4π)'],
+    misc:['Uncertainty is due to instrument error','It applies to large objects too'] },
+
+  /* ===== L17 · ELECTRONICS & APPLICATIONS ===== */
+  { id:'semiconductors', name:'Conductors, Semiconductors & Insulators', layer:17, pre:['conduction-materials'], exams:['WAEC','NECO','JAMB'],
+    desc:'Band theory; classification of materials by band gap; semiconductor materials (Si, Ge).',
+    formulas:['Conductor: gap < 1 eV','Semiconductor: 1–3 eV','Insulator: > 3 eV'],
+    misc:['All solids are conductors','Semiconductors are useless'] },
+
+  { id:'intrinsic-extrinsic', name:'Intrinsic & Extrinsic Semiconductors', layer:17, pre:['semiconductors'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pure vs doped semiconductors; n-type and p-type; charge carriers.',
+    formulas:['n-type: donor','p-type: acceptor','n_i² = n·p'],
+    misc:['Doping adds charge','n-type is negatively charged'] },
+
+  { id:'diodes', name:'Diodes & Rectification', layer:17, pre:['intrinsic-extrinsic'], exams:['WAEC','NECO','JAMB'],
+    desc:'p-n junction diode; forward and reverse bias; half-wave and full-wave rectification.',
+    formulas:['Forward: low resistance','Reverse: high resistance'],
+    misc:['Diodes conduct both ways','Rectification converts AC to DC'] },
+
+  { id:'transistors', name:'Transistors & Amplification', layer:17, pre:['intrinsic-extrinsic'], exams:['WAEC','NECO','JAMB'],
+    desc:'Bipolar junction transistors; NPN and PNP; amplification.',
+    formulas:['I_E = I_B + I_C','Gain β = I_C / I_B'],
+    misc:['Transistors are just switches','Transistors don\'t need power'] },
+
+  { id:'integrated-circuits', name:'Integrated Circuits & Applications', layer:17, pre:['transistors'], exams:['WAEC','NECO','JAMB'],
+    desc:'ICs in modern electronics; microprocessors; applications.',
+    formulas:['Moore\'s law'],
+    misc:['ICs are just small circuits'] }
+];
+
+// ============================================================
+// CROSS-LINKS (analogies, shared structure, non-prerequisite)
+// ============================================================
+const CROSS_LINKS = [
+  ['grav-not-used', 'coulomb-law'],     // placeholder — will be filtered
+  ['gpe', 'electric-potential'],        // PE analogies
+  ['elastic-pe', 'gpe'],                // PE analogies
+  ['ke', 'elastic-pe'],                 // energy equivalents
+  ['momentum', 'cons-energy'],          // conservation principles
+  ['waves', 'em-waves'],                // same wave physics
+  ['refraction-plane', 'sound-speed'],  // refraction applies to sound too
+  ['projectile', 'free-fall'],          // shared kinematics
+  ['circular-motion', 'shm'],           // circular ↔ oscillation
+  ['grav-not-used2', 'electric-field'], // placeholder
+  ['kinetic-theory', 'gas-laws'],       // micro ↔ macro
+  ['friction', 'viscosity-stokes'],     // friction in solids vs fluids
+  ['ac-currents', 'rlc-resonance'],     // AC building blocks
+  ['faraday-law', 'lenz-law'],          // same law, two perspectives
+  ['magnetic-field', 'electric-field'], // field analogies
+  ['resistors-combo', 'capacitors'],    // series/parallel similarity
+  ['heat-transfer', 'thermal-conductivity'],
+  ['pressure', 'electric-potential'],   // gradient analogies
+  ['wave-particle', 'em-waves'],        // light wave nature
+  ['photo-electric-intro', 'photoelectric'],
+  ['equilibrium-coplanar', 'newton-first'],
+  ['optical-instruments', 'lenses'],
+  ['electron-diffraction', 'em-waves']
+];
+
+const byId = {};
+NODES.forEach(n => byId[n.id] = n);
+
+function isPrereq(a, b){
+  return (byId[a]?.pre || []).includes(b) || (byId[b]?.pre || []).includes(a);
+}
+
+const CLEAN_CROSS = CROSS_LINKS.filter(([a,b]) => byId[a] && byId[b] && !isPrereq(a,b));
+
+// ============================================================
+// DERIVE SUCCESSORS
+// ============================================================
+const NEXT = {};
+NODES.forEach(n => { NEXT[n.id] = []; });
+NODES.forEach(n => {
+  n.pre.forEach(p => { if (NEXT[p]) NEXT[p].push(n.id); });
+});
+
+// Cross-link map
+const CROSS_MAP = {};
+NODES.forEach(n => { CROSS_MAP[n.id] = []; });
+CLEAN_CROSS.forEach(([a,b]) => {
+  CROSS_MAP[a].push(b);
+  CROSS_MAP[b].push(a);
+});
+
+// ============================================================
+// LAYOUT
+// ============================================================
+const NODE_W = 175;
+const NODE_H = 60;
+const COL_GAP = 55;
+const COL_SPACING = NODE_W + COL_GAP;
+const COL_X = LAYERS.map((_, i) => 40 + i * COL_SPACING);
+const CANVAS_W = COL_X[LAYERS.length-1] + NODE_W + 60;
+const CANVAS_H = 1250;
+const CENTER_Y = CANVAS_H / 2;
+
+const byLayer = LAYERS.map(() => []);
+NODES.forEach(n => byLayer[n.layer].push(n));
+
+byLayer.forEach(list => {
+  const gap = 18;
+  const totalH = list.length * NODE_H + (list.length - 1) * gap;
+  const startY = Math.max(80, CENTER_Y - totalH / 2);
+  list.forEach((n, i) => {
+    n.x = COL_X[n.layer];
+    n.y = startY + i * (NODE_H + gap);
+  });
+});
+
+// Barycenter passes
+for (let iter = 0; iter < 8; iter++){
+  NODES.forEach(n => {
+    if (n.pre.length === 0){ n._want = n.y; return; }
+    const avg = n.pre.reduce((s, p) => s + (byId[p]?.y ?? n.y), 0) / n.pre.length;
+    n._want = avg;
+  });
+  byLayer.forEach(list => {
+    list.sort((a, b) => (a._want ?? a.y) - (b._want ?? b.y));
+    const gap = 18;
+    const totalH = list.length * NODE_H + (list.length - 1) * gap;
+    const startY = Math.max(80, CENTER_Y - totalH / 2);
+    list.forEach((n, i) => {
+      n.y = startY + i * (NODE_H + gap);
+    });
+  });
+}
+
+// ============================================================
+// SVG HELPERS
+// ============================================================
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs = {}){
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function splitName(name){
+  if (name.length <= 16) return [name];
+  const words = name.split(' ');
+  if (words.length === 1) return [name];
+  let best = 1, bestDiff = Infinity;
+  for (let i = 1; i < words.length; i++){
+    const a = words.slice(0, i).join(' ');
+    const b = words.slice(i).join(' ');
+    const diff = Math.abs(a.length - b.length);
+    if (diff < bestDiff){ bestDiff = diff; best = i; }
+  }
+  return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  selected: null,
+  examFilter: new Set(['WAEC','NECO','JAMB'])
+};
+
+const svgEl = document.getElementById('graph');
+let viewport, edgesGroup, nodesGroup;
+const nodeEls = {};
+const edgeEls = [];
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  svgEl.innerHTML = '';
+
+  const defs = svg('defs');
+  const grid = svg('pattern', { id:'grid', width:40, height:40, patternUnits:'userSpaceOnUse' });
+  grid.appendChild(svg('circle', { cx:1, cy:1, r:0.7, fill:'#1a2733' }));
+  defs.appendChild(grid);
+
+  const marker = svg('marker', {
+    id:'arrow', viewBox:'0 0 10 10', refX:'9', refY:'5',
+    markerWidth:'5', markerHeight:'5', orient:'auto-start-reverse'
+  });
+  marker.appendChild(svg('path', { d:'M 0 0 L 10 5 L 0 10 Z', fill:'#3a5468' }));
+  defs.appendChild(marker);
+  svgEl.appendChild(defs);
+
+  svgEl.appendChild(svg('rect', { x:0, y:0, width:CANVAS_W, height:CANVAS_H, fill:'url(#grid)' }));
+
+  viewport = svg('g', { id:'viewport' });
+  svgEl.appendChild(viewport);
+
+  // Layer headers
+  const headerG = svg('g');
+  LAYERS.forEach((layer, i) => {
+    const t = svg('text', {
+      x: COL_X[i] + NODE_W / 2, y: 28,
+      'text-anchor':'middle',
+      'font-family':"'Nunito',sans-serif",
+      'font-size':10,
+      'font-weight':800,
+      'letter-spacing':1.5,
+      fill: layer.color, opacity:0.75
+    });
+    t.textContent = layer.name.toUpperCase();
+    headerG.appendChild(t);
+
+    headerG.appendChild(svg('line', {
+      x1: COL_X[i] + 8, y1: 40, x2: COL_X[i] + NODE_W - 8, y2: 40,
+      stroke: layer.color, 'stroke-width':1, opacity:0.2
+    }));
+  });
+  viewport.appendChild(headerG);
+
+  edgesGroup = svg('g');
+  viewport.appendChild(edgesGroup);
+  nodesGroup = svg('g');
+  viewport.appendChild(nodesGroup);
+
+  // Prereq edges
+  NODES.forEach(n => {
+    n.pre.forEach(pid => {
+      const p = byId[pid];
+      if (p) drawEdge(p, n, 'prereq');
+    });
+  });
+
+  // Cross edges
+  CLEAN_CROSS.forEach(([a, b]) => {
+    const A = byId[a], B = byId[b];
+    const [left, right] = A.x <= B.x ? [A, B] : [B, A];
+    drawEdge(left, right, 'cross');
+  });
+
+  // Nodes
+  NODES.forEach(n => drawNode(n));
+
+  applyExamFilter();
+  fitToView();
+}
+
+function drawEdge(from, to, type){
+  const x1 = from.x + NODE_W;
+  const y1 = from.y + NODE_H / 2;
+  const x2 = to.x;
+  const y2 = to.y + NODE_H / 2;
+  const dx = Math.max(40, (x2 - x1) * 0.5);
+  const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+  const path = svg('path', {
+    d, class:`edge ${type}`,
+    'data-from': from.id, 'data-to': to.id
+  });
+  if (type === 'prereq') path.setAttribute('marker-end', 'url(#arrow)');
+  edgeEls.push({ el: path, from: from.id, to: to.id, type });
+  edgesGroup.appendChild(path);
+}
+
+function drawNode(n){
+  const layer = LAYERS[n.layer];
+  const g = svg('g', {
+    class:'node', 'data-id': n.id,
+    transform:`translate(${n.x} ${n.y})`
+  });
+
+  const rect = svg('rect', {
+    x:0, y:0, width:NODE_W, height:NODE_H, rx:12, ry:12,
+    stroke: layer.color, 'stroke-opacity':0.7
+  });
+  g.appendChild(rect);
+
+  g.appendChild(svg('rect', {
+    x:0, y:0, width:3.5, height:NODE_H, rx:1.7, ry:1.7,
+    fill: layer.color, opacity:0.9
+  }));
+
+  // Name
+  const lines = splitName(n.name);
+  if (lines.length === 1){
+    const t = svg('text', {
+      x:13, y:32, class:'node-name', 'font-size':12.5
+    });
+    t.textContent = lines[0];
+    g.appendChild(t);
+  } else {
+    const t1 = svg('text', { x:13, y:25, class:'node-name', 'font-size':11.5 });
+    t1.textContent = lines[0];
+    g.appendChild(t1);
+    const t2 = svg('text', { x:13, y:40, class:'node-name', 'font-size':11.5 });
+    t2.textContent = lines[1];
+    g.appendChild(t2);
+  }
+
+  // Exam badges
+  const exams = n.exams || [];
+  const badgeY = NODE_H - 9;
+  let badgeX = 13;
+  exams.forEach(ex => {
+    const col = ex === 'WAEC' ? '#58cc02' : ex === 'NECO' ? '#4fc3ff' : '#ffe040';
+    const label = ex[0]; // W, N, J
+    const badge = svg('text', {
+      x: badgeX, y: badgeY,
+      class:'exam-badge', fill: col, opacity:0.85
+    });
+    badge.textContent = label;
+    g.appendChild(badge);
+    badgeX += 10;
+  });
+
+  // Prereq count
+  const preCount = n.pre.length;
+  const footer = svg('text', {
+    x: NODE_W - 10, y: badgeY,
+    class:'node-footer', 'font-size':7,
+    'text-anchor':'end',
+    fill: layer.color, opacity:0.6
+  });
+  footer.textContent = preCount === 0 ? 'ENTRY' : `${preCount} PRE`;
+  g.appendChild(footer);
+
+  // Misconception dot
+  if (n.misc && n.misc.length){
+    g.appendChild(svg('circle', { cx: NODE_W - 10, cy: 11, r: 3, class:'mis-dot' }));
+  }
+
+  g.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectNode(n.id);
+  });
+  g.addEventListener('mouseenter', () => hoverNode(n.id));
+  g.addEventListener('mouseleave', unhoverNode);
+
+  nodesGroup.appendChild(g);
+  nodeEls[n.id] = g;
+}
+
+// ============================================================
+// EXAM FILTER
+// ============================================================
+function applyExamFilter(){
+  NODES.forEach(n => {
+    const visible = (n.exams || []).some(ex => state.examFilter.has(ex));
+    nodeEls[n.id].style.display = visible ? '' : 'none';
+  });
+  edgeEls.forEach(e => {
+    const a = byId[e.from], b = byId[e.to];
+    const aVis = (a.exams || []).some(ex => state.examFilter.has(ex));
+    const bVis = (b.exams || []).some(ex => state.examFilter.has(ex));
+    e.el.style.display = (aVis && bVis) ? '' : 'none';
+  });
+  if (state.selected){
+    const n = byId[state.selected];
+    if (!(n.exams || []).some(ex => state.examFilter.has(ex))){
+      clearSelection();
+    }
+  }
+}
+
+// ============================================================
+// HOVER
+// ============================================================
+function hoverNode(id){
+  const connected = new Set([id]);
+  edgeEls.forEach(e => {
+    if (e.from === id || e.to === id){
+      connected.add(e.from); connected.add(e.to);
+    }
+  });
+  NODES.forEach(n => {
+    nodeEls[n.id].classList.toggle('dim', !connected.has(n.id));
+  });
+  edgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    e.el.classList.toggle('dim', !on);
+  });
+}
+
+function unhoverNode(){
+  if (state.selected) return;
+  NODES.forEach(n => nodeEls[n.id].classList.remove('dim'));
+  edgeEls.forEach(e => {
+    e.el.classList.remove('highlight', 'dim');
+  });
+}
+
+// ============================================================
+// SELECT
+// ============================================================
+function selectNode(id){
+  state.selected = id;
+  const connected = new Set([id]);
+  edgeEls.forEach(e => {
+    if (e.from === id || e.to === id){
+      connected.add(e.from); connected.add(e.to);
+    }
+  });
+  NODES.forEach(n => {
+    const g = nodeEls[n.id];
+    g.classList.toggle('selected', n.id === id);
+    g.classList.toggle('dim', !connected.has(n.id));
+  });
+  edgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    e.el.classList.toggle('dim', !on);
+  });
+  showDetail(byId[id]);
+}
+
+function clearSelection(){
+  state.selected = null;
+  NODES.forEach(n => nodeEls[n.id].classList.remove('dim', 'selected'));
+  edgeEls.forEach(e => e.el.classList.remove('highlight', 'dim'));
+  closeDetail();
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+const detailEl = document.getElementById('detail');
+const detailInner = document.getElementById('detailInner');
+
+function chipHTML(id){
+  const n = byId[id];
+  if (!n) return '';
+  const layer = LAYERS[n.layer];
+  const visible = (n.exams || []).some(ex => state.examFilter.has(ex));
+  if (!visible) return '';
+  return `<button class="chip" data-jump="${id}">
+    <span class="cdot" style="background:${layer.color}"></span>${n.name}
+  </button>`;
+}
+
+function section(label, count, html){
+  return `<div class="detail-section">
+    <div class="detail-label">${label}${count != null ? `<span class="count">${count}</span>` : ''}</div>
+    ${html}
+  </div>`;
+}
+
+function listSection(label, items, cls=''){
+  if (!items || !items.length) return '';
+  return section(label, items.length,
+    `<ul class="detail-list ${cls}">${items.map(i => `<li>${i}</li>`).join('')}</ul>`);
+}
+
+function showDetail(node){
+  const layer = LAYERS[node.layer];
+  const nexts = NEXT[node.id] || [];
+  const crosses = CROSS_MAP[node.id] || [];
+  const exams = node.exams || [];
+
+  let html = `
+    <div class="detail-layer" style="color:${layer.color}">
+      Layer ${node.layer} · ${layer.name}
+    </div>
+    <h2>${node.name}</h2>
+    <div class="exam-chips">
+      ${exams.map(ex => `<span class="exam-chip" data-exam="${ex}">${ex}</span>`).join('')}
+    </div>
+    <p class="detail-desc">${node.desc}</p>
+  `;
+
+  html += section('Prerequisites', node.pre.length,
+    node.pre.length
+      ? `<div class="chip-row">${node.pre.map(chipHTML).join('')}</div>`
+      : `<span class="chip empty">None — this is an entry point.</span>`);
+
+  html += section('Leads to', nexts.length,
+    nexts.length
+      ? `<div class="chip-row">${nexts.map(chipHTML).join('')}</div>`
+      : `<span class="chip empty">Terminal node — no follow-ups.</span>`);
+
+  const crossChips = crosses.map(chipHTML).join('');
+  if (crosses.length){
+    html += section('Cross-links', crosses.length,
+      `<div class="chip-row">${crossChips}</div>`);
+  }
+
+  html += listSection('Key formulas', node.formulas, 'code');
+  html += listSection('Common misconceptions', node.misc, 'warn');
+
+  detailInner.innerHTML = html;
+
+  detailInner.querySelectorAll('[data-jump]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.jump;
+      centerOn(id);
+      selectNode(id);
+    });
+  });
+
+  detailEl.classList.add('open');
+}
+
+function closeDetail(){ detailEl.classList.remove('open'); }
+document.getElementById('detailClose').addEventListener('click', clearSelection);
+
+// ============================================================
+// PAN / ZOOM
+// ============================================================
+const view = { tx:0, ty:0, scale:1 };
+
+function applyTransform(){
+  viewport.setAttribute('transform',
+    `translate(${view.tx} ${view.ty}) scale(${view.scale})`);
+}
+
+function fitToView(){
+  const rect = svgEl.getBoundingClientRect();
+  const cw = rect.width, ch = rect.height;
+  const scale = Math.min(cw / CANVAS_W, ch / CANVAS_H) * 0.92;
+  view.scale = scale;
+  view.tx = (cw - CANVAS_W * scale) / 2;
+  view.ty = (ch - CANVAS_H * scale) / 2;
+  applyTransform();
+}
+
+function centerOn(id){
+  const n = byId[id];
+  if (!n) return;
+  const rect = svgEl.getBoundingClientRect();
+  const cw = rect.width, ch = rect.height;
+  view.tx = cw / 2 - (n.x + NODE_W/2) * view.scale;
+  view.ty = ch / 2 - (n.y + NODE_H/2) * view.scale;
+  applyTransform();
+}
+
+document.getElementById('zoomIn').onclick = () => zoomAt(svgEl.clientWidth/2, svgEl.clientHeight/2, 1.25);
+document.getElementById('zoomOut').onclick = () => zoomAt(svgEl.clientWidth/2, svgEl.clientHeight/2, 0.8);
+document.getElementById('zoomReset').onclick = fitToView;
+
+function zoomAt(px, py, factor){
+  const newScale = Math.max(0.12, Math.min(4, view.scale * factor));
+  const wx = (px - view.tx) / view.scale;
+  const wy = (py - view.ty) / view.scale;
+  view.scale = newScale;
+  view.tx = px - wx * newScale;
+  view.ty = py - wy * newScale;
+  applyTransform();
+}
+
+let isDragging = false, dragStart = null, moved = false;
+
+svgEl.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.node')) return;
+  isDragging = true; moved = false;
+  dragStart = { x:e.clientX, y:e.clientY, tx:view.tx, ty:view.ty };
+  svgEl.classList.add('dragging');
+  svgEl.setPointerCapture(e.pointerId);
+});
+
+svgEl.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+  view.tx = dragStart.tx + dx;
+  view.ty = dragStart.ty + dy;
+  applyTransform();
+});
+
+function endDrag(e){
+  if (!isDragging) return;
+  isDragging = false;
+  svgEl.classList.remove('dragging');
+  try { svgEl.releasePointerCapture(e.pointerId); } catch(_){}
+  if (!moved && !e.target.closest('.node')) clearSelection();
+}
+svgEl.addEventListener('pointerup', endDrag);
+svgEl.addEventListener('pointercancel', endDrag);
+
+svgEl.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = svgEl.getBoundingClientRect();
+  zoomAt(e.clientX - rect.left, e.clientY - rect.top, e.deltaY < 0 ? 1.12 : 0.89);
+}, { passive:false });
+
+// ============================================================
+// LEGEND
+// ============================================================
+function buildLegend(){
+  const bar = document.getElementById('legendBar');
+  bar.innerHTML = '';
+  LAYERS.forEach(layer => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.dataset.layer = layer.id;
+    item.innerHTML = `
+      <span class="legend-swatch" style="background:${layer.color}"></span>
+      <span>${layer.name}</span>`;
+    bar.appendChild(item);
+  });
+}
+
+// ============================================================
+// EXAM FILTER PILLS
+// ============================================================
+document.querySelectorAll('.exam-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const ex = pill.dataset.exam;
+    if (state.examFilter.has(ex)){
+      if (state.examFilter.size === 1) return; // keep at least one
+      state.examFilter.delete(ex);
+      pill.classList.remove('on');
+      pill.classList.add('off');
+    } else {
+      state.examFilter.add(ex);
+      pill.classList.add('on');
+      pill.classList.remove('off');
+    }
+    applyExamFilter();
+  });
+});
+
+// ============================================================
+// HINT
+// ============================================================
+const hintEl = document.getElementById('hint');
+setTimeout(() => hintEl.classList.add('hide'), 4500);
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+buildLegend();
+
+window.addEventListener('resize', () => { if (!state.selected) fitToView(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') clearSelection();
+});
+</script>
 </body>
 </html>
