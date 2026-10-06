@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Physics by Induction — Faraday's Law Lab</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#FFFFFF; --ink:#3C3C3C; --ink-soft:#777; --muted:#AFAFAF; --line:#E5E5E5;
+    --green:#58CC02; --green-d:#46A302; --green-l:#D7FFB8; --green-t:#4B8B00;
+    --blue:#1CB0F6; --blue-d:#0B7BB0; --blue-l:#DDF4FF;
+    --purple:#A855F7; --purple-d:#8B44B8; --purple-l:#F3E4FF;
+    --orange:#FF9600; --orange-d:#B36A00; --orange-l:#FFF1DC;
+    --red:#FF4B4B; --red-d:#C42B2B; --red-l:#FFECEC;
+    --teal:#00C2A8; --teal-d:#007F6E; --teal-l:#DDFAF5;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Nunito', ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background:var(--bg); color:var(--ink); font-weight:700; line-height:1.45;
+    min-height:100vh; overflow-x:hidden;
+    padding-bottom:calc(28px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ============ TOPBAR ============ */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,255,255,.96);
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border-bottom:2px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:960px; margin:0 auto; padding:10px 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .brand{display:flex; align-items:center; gap:9px; font-size:1rem; font-weight:900; letter-spacing:-.02em;}
+  .brand-icon{
+    width:32px; height:32px; border-radius:10px; background:var(--blue); color:#fff;
+    display:grid; place-items:center; font-size:1rem; box-shadow:0 3px 0 var(--blue-d); flex-shrink:0;
+  }
+  .brand .accent{color:var(--blue-d);}
+  .stat{
+    display:inline-flex; align-items:center; gap:5px; background:#F7F7F7;
+    border:2px solid var(--line); border-radius:999px; padding:5px 12px;
+    font-size:.7rem; font-weight:900; color:var(--ink-soft); letter-spacing:.03em; white-space:nowrap;
+  }
+
+  /* ============ TABS ============ */
+  .tabs-wrap{
+    max-width:960px; margin:0 auto; padding:10px 14px 4px;
+    border-bottom:2px solid var(--line); background:rgba(255,255,255,.96);
+  }
+  .tabs{display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tabs button{
+    font:inherit; font-size:12px; font-weight:800; letter-spacing:.02em;
+    padding:8px 14px; border-radius:10px; white-space:nowrap;
+    border:2px solid var(--line); background:#FFFFFF; color:var(--ink-soft);
+    cursor:pointer; transition:.15s;
+  }
+  .tabs button:hover{color:var(--ink); border-color:#C8C8C8;}
+  .tabs button.on{background:var(--blue-l); border-color:var(--blue); color:var(--blue-d);}
+
+  /* ============ MAIN ============ */
+  main{
+    max-width:960px; margin:0 auto; padding:14px 12px 0;
+    display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:12px;
+    align-items:start;
+  }
+  .stage-wrap{min-width:0;}
+
+  /* ============ STAGE ============ */
+  .stage{
+    position:relative; border:2.5px solid var(--line); border-radius:20px;
+    overflow:hidden; background:#FFFFFF;
+    box-shadow:0 4px 0 rgba(0,0,0,.03);
+    aspect-ratio:16/10; min-height:320px;
+  }
+  .stage canvas{display:block; width:100%; height:100%; touch-action:none; cursor:grab;}
+  .stage canvas.grabbing{cursor:grabbing;}
+
+  .hud{
+    position:absolute; top:14px; left:14px;
+    display:flex; flex-direction:column; gap:6px; pointer-events:none;
+  }
+  .hitem{
+    background:rgba(255,255,255,.92);
+    border:2px solid var(--line); border-radius:11px;
+    padding:5px 12px; display:flex; gap:9px; align-items:baseline;
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    min-width:158px; box-shadow:0 2px 0 rgba(0,0,0,.03);
+  }
+  .hk{
+    font-size:9.5px; font-weight:800; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--muted); flex:1;
+  }
+  .hv{
+    font-family:ui-monospace,Menlo,monospace;
+    font-size:13px; font-weight:900; color:var(--ink);
+  }
+  .hitem.hot .hv{color:var(--blue-d);}
+  .hitem.warm .hv{color:var(--orange-d);}
+
+  .hint{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:10.5px; font-weight:900; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--ink-soft); background:rgba(255,255,255,.94);
+    border:2px solid var(--line); border-radius:999px; padding:6px 16px;
+    transition:opacity .5s; pointer-events:none; white-space:nowrap;
+    box-shadow:0 2px 0 rgba(0,0,0,.03);
+  }
+
+  /* ============ PANEL ============ */
+  .panel{display:flex; flex-direction:column; gap:12px;}
+  .card{
+    border:2.5px solid var(--line); border-radius:20px;
+    background:#FFFFFF; padding:14px 14px;
+    box-shadow:0 4px 0 rgba(0,0,0,.03);
+  }
+
+  .lawhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:11px;}
+  .lawhead b{font-size:10.5px; letter-spacing:.16em; color:var(--muted); font-weight:900;}
+  .lawhead span{font-family:ui-monospace,Menlo,monospace; font-size:12.5px; font-weight:900; color:var(--orange-d);}
+
+  .lawgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:11px;}
+  .stat-box{
+    background:#F7F7F7; border:2px solid var(--line); border-radius:11px;
+    padding:7px 10px; position:relative;
+  }
+  .stat-box .k{
+    display:block; font-size:9px; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--muted); font-weight:900;
+  }
+  .stat-box .v{
+    font-family:ui-monospace,Menlo,monospace;
+    font-size:15px; font-weight:900; color:var(--ink);
+  }
+  .stat-box .u{font-size:9.5px; color:var(--muted); margin-left:3px; font-weight:800;}
+  .stat-box.hl{border-color:#FFE0B8; background:var(--orange-l);}
+  .stat-box.hl .v{color:var(--orange-d);}
+
+  #scope{
+    display:block; width:100%; height:78px; border-radius:10px;
+    background:#FFFFFF; border:2px solid var(--line);
+  }
+
+  /* ============ CONTROLS ============ */
+  .crow{margin:11px 0 2px;}
+  .crow:first-child{margin-top:0;}
+  .crow .lab{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;}
+  .crow .lab span:first-child{font-size:11.5px; font-weight:800; color:var(--ink-soft);}
+  .crow .lab span:last-child{font-family:ui-monospace,Menlo,monospace; font-size:11.5px; font-weight:900; color:var(--ink);}
+  input[type=range]{width:100%; accent-color:var(--blue); height:20px; cursor:pointer; background:transparent;}
+  select{
+    width:100%; font:inherit; font-size:12.5px; font-weight:800;
+    padding:8px 10px; border-radius:10px; background:#FFFFFF;
+    color:var(--ink); border:2px solid var(--line); cursor:pointer;
+  }
+  .seg{display:flex; gap:8px; margin-top:10px;}
+  .seg button{
+    flex:1; font:inherit; font-size:10.5px; font-weight:900;
+    letter-spacing:.07em; text-transform:uppercase; padding:8px 6px;
+    border-radius:10px; border:2px solid var(--line); background:#FFFFFF;
+    color:var(--ink-soft); cursor:pointer; transition:.15s;
+  }
+  .seg button:hover{color:var(--ink); border-color:#C8C8C8;}
+  .seg button.on{background:var(--blue-l); border-color:var(--blue); color:var(--blue-d);}
+
+  /* ============ GUIDE ============ */
+  .ghead{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .ghead b{font-size:10.5px; font-weight:900; letter-spacing:.16em; color:var(--muted);}
+  .ghead button{
+    font:inherit; font-size:10px; font-weight:900; letter-spacing:.08em;
+    text-transform:uppercase; background:#FFFFFF; border:2px solid var(--line);
+    color:var(--ink-soft); border-radius:9px; padding:5px 11px; cursor:pointer;
+  }
+  .ghead button:hover{color:var(--ink); border-color:#C8C8C8;}
+
+  ol.guide{list-style:none; display:flex; flex-direction:column; gap:7px;}
+  ol.guide li{
+    display:flex; gap:10px; font-size:11.5px; font-weight:800; line-height:1.45;
+    color:var(--ink-soft); padding:7px 9px; border-radius:10px;
+    border:2px solid transparent; transition:.25s;
+  }
+  ol.guide li .num{
+    flex:0 0 18px; height:18px; border-radius:50%;
+    border:2px solid var(--line); background:#FFFFFF;
+    display:flex; align-items:center; justify-content:center;
+    font-size:9.5px; font-weight:900; font-family:ui-monospace,Menlo,monospace;
+    color:var(--muted); transition:.25s; margin-top:1px; flex-shrink:0;
+  }
+  ol.guide li.done{color:var(--green-t); background:var(--green-l); border-color:#A5E88A;}
+  ol.guide li.done .num{background:var(--green); border-color:var(--green); color:#FFFFFF;}
+
+  /* ============ FOOTER ============ */
+  footer{
+    max-width:960px; margin:34px auto 0; padding:22px 18px 10px;
+    border-top:2px solid var(--line); text-align:center;
+    font-size:.75rem; font-weight:700; color:var(--muted); line-height:1.7;
+  }
+  footer strong{color:var(--ink-soft);}
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width:820px){
+    main{grid-template-columns:1fr; grid-template-rows:auto auto;}
+    .stage{aspect-ratio:4/3;}
+  }
+  @media (max-width:520px){
+    .topbar-inner{padding:8px 12px;}
+    .tabs-wrap{padding:8px 12px 2px;}
+    .tabs{gap:6px;}
+    .tabs button{padding:7px 11px; font-size:11.5px;}
+    main{padding:12px 8px 0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important; animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+    }
+    html{scroll-behavior:auto;}
+    svg *{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div><span class="accent">Physics</span> by Induction</div>
+    </div>
+    <div class="stat">4 modes · 20 lessons</div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <nav class="tabs" id="tabs">
+    <button data-mode="generator" class="on">Generator</button>
+    <button data-mode="transformer">Transformer</button>
+    <button data-mode="cooker">Induction Cooker</button>
+    <button data-mode="detector">Metal Detector</button>
+  </nav>
+</div>
+
+<main>
+  <section class="stage-wrap">
+    <div class="stage">
+      <canvas id="scene"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </section>
+
+  <aside class="panel">
+    <div class="card">
+      <div class="lawhead"><b>FARADAY'S LAW</b><span>ℰ = −N · ΔΦ/Δt</span></div>
+      <div class="lawgrid">
+        <div class="stat-box"><span class="k">Flux Φ</span><span class="v" id="pPhi">0.00</span><span class="u">mWb</span></div>
+        <div class="stat-box"><span class="k">dΦ/dt</span><span class="v" id="pDphi">0.00</span><span class="u">Wb/s</span></div>
+        <div class="stat-box"><span class="k">Turns N</span><span class="v" id="pN">20</span><span class="u">turns</span></div>
+        <div class="stat-box hl"><span class="k">EMF ℰ</span><span class="v" id="pEmf">0.00</span><span class="u">V</span></div>
+      </div>
+      <canvas id="scope"></canvas>
+    </div>
+
+    <div class="card" id="ctrlCard"></div>
+    <div class="card" id="guideCard"></div>
+  </aside>
+</main>
+
+<footer>
+  <p><strong>Physics by Induction</strong> — Faraday's Law interactive lab</p>
+  <p>Spin · transform · heat · detect — 20 guided experiments across 4 modes</p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   0. CANVAS SETUP
+   ============================================================ */
+const cv  = document.getElementById('scene');
+const ctx = cv.getContext('2d');
+const scv = document.getElementById('scope');
+const sctx= scv.getContext('2d');
+let SW=900, SH=560, SCW=340, SCH=76;
+
+function fitCanvas(c, g, w, h){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  c.width  = Math.round(w*dpr);
+  c.height = Math.round(h*dpr);
+  g.setTransform(dpr,0,0,dpr,0,0);
+}
+function fitAll(){
+  const r = cv.getBoundingClientRect();
+  SW = Math.max(320, r.width); SH = Math.max(240, r.height);
+  fitCanvas(cv, ctx, SW, SH);
+  const r2 = scv.getBoundingClientRect();
+  SCW = Math.max(120, r2.width); SCH = Math.max(40, r2.height);
+  fitCanvas(scv, sctx, SCW, SCH);
+}
+window.addEventListener('resize', ()=>{ fitAll(); });
+
+/* ============================================================
+   1. COLOR PALETTE — LIGHT THEME
+   ============================================================ */
+const C = {
+  ink:      '#3C3C3C',
+  inkSoft:  '#777777',
+  muted:    '#AFAFAF',
+  line:     '#E5E5E5',
+  bgTop:    '#FFFFFF',
+  bgBot:    '#F4F7FB',
+
+  blue:     '#1CB0F6',
+  blueD:    '#0B7BB0',
+  blueL:    '#DDF4FF',
+
+  orange:   '#FF9600',
+  orangeD:  '#B36A00',
+  orangeL:  '#FFF1DC',
+
+  red:      '#FF4B4B',
+  redD:     '#C42B2B',
+  redL:     '#FFECEC',
+
+  green:    '#58CC02',
+  greenD:   '#46A302',
+  greenT:   '#4B8B00',
+  greenL:   '#D7FFB8',
+
+  purple:   '#A855F7',
+  purpleD:  '#8B44B8',
+
+  teal:     '#00C2A8',
+  tealD:    '#007F6E',
+
+  poleN:    '#FF7C7C',
+  poleND:   '#C42B2B',
+  poleS:    '#7CC5F0',
+  poleSD:   '#0B7BB0',
+
+  iron:     '#F0E2C0',
+  ironDk:   '#B8A070',
+  ironEdge: 'rgba(140,120,80,.55)',
+
+  soil:     '#E8D8A8',
+  soilDk:   '#BFA870',
+  soilEdge: 'rgba(140,110,60,.55)',
+
+  copper:   '#E8944A',
+  copperD:  '#B36A00',
+
+  steel:    '#D8DEE8',
+  steelD:   '#8A93A6',
+
+  gold:     '#FFD060',
+  goldD:    '#B36A00'
+};
+
+/* ============================================================
+   2. HELPERS
+   ============================================================ */
+const clamp = (v,a,b)=> v<a?a:(v>b?b:v);
+const $ = id => document.getElementById(id);
+
+function rr(g,x,y,w,h,r){
+  g.beginPath();
+  if(g.roundRect){ g.roundRect(x,y,w,h,r); return; }
+  g.moveTo(x+r,y);
+  g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r);
+  g.arcTo(x,y+h,x,y,r);     g.arcTo(x,y,x+w,y,r);
+  g.closePath();
+}
+function arrow(g,x1,y1,x2,y2,size){
+  g.beginPath(); g.moveTo(x1,y1); g.lineTo(x2,y2); g.stroke();
+  const a = Math.atan2(y2-y1,x2-x1);
+  g.beginPath();
+  g.moveTo(x2,y2);
+  g.lineTo(x2-size*Math.cos(a-0.42), y2-size*Math.sin(a-0.42));
+  g.lineTo(x2-size*Math.cos(a+0.42), y2-size*Math.sin(a+0.42));
+  g.closePath(); g.fill();
+}
+
+/* ============================================================
+   3. STATE
+   ============================================================ */
+const S = {
+  mode:'generator',
+  t:0,
+  flags:{},
+  peak:{},
+
+  p:{
+    generator:   { speed:1.5, turns:20, field:1.0, spin:true },
+    transformer: { np:20, ns:40, vp:6, freq:30 },
+    cooker:      { power:60, freq:40, material:'steel', dist:2 },
+    detector:    { freq:40, size:0.6, material:'gold', depth:28 }
+  },
+
+  g : { theta:0, omega:0, drag:false, lastX:0, lastT:0, spinOn:true },
+  tr: { phase:0 },
+  ck: { temp:22, heat:0, potDrag:false, startY:0, startDist:2, phase:0 },
+  dt: { x:0, drag:false, lastX:0, sweepT:0, phase:0, auto:true }
+};
+
+/* scope buffer */
+const SCOPE = { buf:[], maxP:1e-6, maxE:1e-6 };
+function pushScope(phi, emf){
+  SCOPE.maxP = Math.max(SCOPE.maxP*0.9985, Math.abs(phi), 1e-5);
+  SCOPE.maxE = Math.max(SCOPE.maxE*0.9985, Math.abs(emf), 1e-4);
+  SCOPE.buf.push({p:phi, e:emf});
+  if(SCOPE.buf.length > 260) SCOPE.buf.shift();
+}
+function resetScope(){ SCOPE.buf.length = 0; SCOPE.maxP = 1e-6; SCOPE.maxE = 1e-4; }
+
+/* flags */
+function flag(k){
+  if(S.flags[k] !== true){ S.flags[k] = true; renderGuide(); }
+}
+function peak(k, v){ S.peak[k] = Math.max(S.peak[k]||0, v); }
+
+/* ============================================================
+   4. CONTROL SPECS
+   ============================================================ */
+const CTL = {
+  generator: [
+    {id:'speed', type:'range', label:'Rotation speed', min:0.2, max:5, step:0.1, fmt:v=>v.toFixed(1)+' rev/s'},
+    {id:'turns', type:'range', label:'Coil turns  N',  min:5, max:60, step:1, fmt:v=>v+' turns'},
+    {id:'field', type:'range', label:'Magnet strength  B', min:0.3, max:2, step:0.1, fmt:v=>v.toFixed(1)+' T'}
+  ],
+  transformer: [
+    {id:'np',  type:'range', label:'Primary turns  Np', min:10, max:60, step:1, fmt:v=>v},
+    {id:'ns',  type:'range', label:'Secondary turns  Ns', min:10, max:60, step:1, fmt:v=>v},
+    {id:'vp',  type:'range', label:'Input voltage  Vp', min:1, max:10, step:0.5, fmt:v=>v.toFixed(1)+' V'},
+    {id:'freq',type:'range', label:'Frequency  f', min:10, max:60, step:1, fmt:v=>v+' Hz'}
+  ],
+  cooker: [
+    {id:'power', type:'range', label:'Coil power', min:0, max:100, step:1, fmt:v=>v+' %'},
+    {id:'freq',  type:'range', label:'Frequency  f', min:20, max:80, step:1, fmt:v=>v+' kHz'},
+    {id:'material', type:'select', label:'Pot material',
+      opts:[['steel','Steel  (magnetic)'],['alu','Aluminium'],['copper','Copper'],['glass','Glass / ceramic']]},
+    {id:'dist',  type:'range', label:'Pot distance from coil', min:0, max:12, step:0.5, fmt:v=>v.toFixed(1)+' mm'}
+  ],
+  detector: [
+    {id:'freq', type:'range', label:'Search frequency', min:10, max:80, step:1, fmt:v=>v+' kHz'},
+    {id:'size', type:'range', label:'Target size', min:0.15, max:1, step:0.05, fmt:v=>Math.round(v*100)+' %'},
+    {id:'material', type:'select', label:'Target material',
+      opts:[['gold','Gold ring'],['iron','Iron nail'],['alu','Aluminium can']]},
+    {id:'depth', type:'range', label:'Buried depth', min:6, max:70, step:1, fmt:v=>v+' mm'}
+  ]
+};
+
+const CTRL_REFS = {};
+function buildControls(){
+  const host = $('ctrlCard');
+  host.innerHTML = '';
+  for(const k in CTRL_REFS) delete CTRL_REFS[k];
+  const list = CTL[S.mode];
+  const vals = S.p[S.mode];
+
+  list.forEach(c=>{
+    const row = document.createElement('div');
+    row.className = 'crow';
+
+    const lab = document.createElement('div');
+    lab.className = 'lab';
+    const a = document.createElement('span'); a.textContent = c.label;
+    const b = document.createElement('span'); b.id = 'cv_'+c.id;
+    lab.appendChild(a); lab.appendChild(b);
+    row.appendChild(lab);
+
+    let input;
+    if(c.type === 'range'){
+      input = document.createElement('input');
+      input.type = 'range';
+      input.min = c.min; input.max = c.max; input.step = c.step;
+      input.value = vals[c.id];
+      b.textContent = c.fmt(+input.value);
+      input.addEventListener('input', ()=>{
+        vals[c.id] = +input.value;
+        b.textContent = c.fmt(+input.value);
+        onControl(c.id, +input.value);
+      });
+    } else {
+      input = document.createElement('select');
+      c.opts.forEach(([v,t])=>{
+        const o = document.createElement('option'); o.value = v; o.textContent = t;
+        input.appendChild(o);
+      });
+      input.value = vals[c.id];
+      b.textContent = '';
+      input.addEventListener('change', ()=>{
+        vals[c.id] = input.value;
+        onControl(c.id, input.value);
+      });
+    }
+    row.appendChild(input);
+    host.appendChild(row);
+    CTRL_REFS[c.id] = {input, valEl:b, spec:c};
+  });
+
+  // extra toggle row
+  const seg = document.createElement('div');
+  seg.className = 'seg';
+  if(S.mode === 'generator'){
+    const btn = document.createElement('button');
+    btn.textContent = S.g.spinOn ? 'Auto-spin: ON' : 'Auto-spin: OFF';
+    btn.classList.toggle('on', S.g.spinOn);
+    btn.addEventListener('click', ()=>{
+      S.g.spinOn = !S.g.spinOn;
+      btn.textContent = S.g.spinOn ? 'Auto-spin: ON' : 'Auto-spin: OFF';
+      btn.classList.toggle('on', S.g.spinOn);
+    });
+    seg.appendChild(btn);
+  } else if(S.mode === 'detector'){
+    const btn = document.createElement('button');
+    btn.textContent = S.dt.auto ? 'Auto-sweep: ON' : 'Auto-sweep: OFF';
+    btn.classList.toggle('on', S.dt.auto);
+    btn.addEventListener('click', ()=>{
+      S.dt.auto = !S.dt.auto;
+      btn.textContent = S.dt.auto ? 'Auto-sweep: ON' : 'Auto-sweep: OFF';
+      btn.classList.toggle('on', S.dt.auto);
+    });
+    seg.appendChild(btn);
+
+    const mute = document.createElement('button');
+    mute.textContent = AUDIO.on ? 'Sound: ON' : 'Sound: OFF';
+    mute.classList.toggle('on', AUDIO.on);
+    mute.addEventListener('click', ()=>{
+      AUDIO.on = !AUDIO.on;
+      mute.textContent = AUDIO.on ? 'Sound: ON' : 'Sound: OFF';
+      mute.classList.toggle('on', AUDIO.on);
+      if(AUDIO.on) initAudio();
+    });
+    seg.appendChild(mute);
+  }
+  if(seg.children.length) host.appendChild(seg);
+}
+
+function onControl(id, v){
+  if(S.mode === 'generator'){
+    if(id === 'turns') flag('turnsChanged');
+    if(id === 'speed') flag('speedChanged');
+  }
+  if(S.mode === 'transformer'){
+    if(id === 'ns' || id === 'np') flag('ratioChanged');
+  }
+  if(S.mode === 'cooker'){
+    if(id === 'material'){
+      if(v === 'steel') flag('steelChosen');
+      if(v === 'glass') flag('glassChosen');
+    }
+    if(id === 'power' && v > 5) flag('powerUp');
+  }
+  if(S.mode === 'detector'){
+    if(id === 'material') flag('matChanged');
+    if(id === 'depth' && v > 40) flag('deepTarget');
+  }
+}
+
+/* ============================================================
+   5. GUIDE SPECS
+   ============================================================ */
+const GUIDES = {
+  generator: [
+    {t:'Spin the coil — drag left/right on the stage, or leave Auto-spin ON.', ok:f=>f.spun},
+    {t:'Watch the flux Φ rise and fall as the coil turns.', ok:f=>f.phiWave},
+    {t:'See that ℰ is biggest when Φ crosses zero — change is what matters.', ok:f=>f.peakE && S.peak.genE > 1.2},
+    {t:'Raise the turns N. The same flux change now gives more volts.', ok:f=>f.turnsChanged},
+    {t:'Raise the rotation speed. Faster change → bigger EMF again.', ok:f=>f.speedChanged}
+  ],
+  transformer: [
+    {t:'The primary coil makes a changing flux in the iron core.', ok:f=>f.seenFlux},
+    {t:'That same flux threads the secondary coil, inducing its own EMF.', ok:f=>f.seenSec},
+    {t:'Make Ns > Np — a step-up transformer. Volts go up.', ok:f=>f.steppedUp},
+    {t:'Make Ns < Np — a step-down transformer. Volts go down.', ok:f=>f.steppedDown},
+    {t:'Change the frequency. Higher f → smaller flux, but faster change.', ok:f=>f.freqChanged}
+  ],
+  cooker: [
+    {t:'Push the coil power up. The coil drives a changing magnetic field.', ok:f=>f.powerUp},
+    {t:'Choose a magnetic pot (Steel). Eddy currents form in its base.', ok:f=>f.steelChosen},
+    {t:'Watch the pot base heat up and the water reach 100 °C.', ok:f=>f.boiled},
+    {t:'Try Glass — no free electrons, no eddy currents, no heat.', ok:f=>f.glassChosen},
+    {t:'Lift the pot away from the coil. Coupling drops, heating fades.', ok:f=>f.lifted}
+  ],
+  detector: [
+    {t:'Sweep the search coil over the ground — drag it or use Auto-sweep.', ok:f=>f.swept},
+    {t:'Pass over the buried target. The signal spikes and the tone sounds.', ok:f=>f.hit},
+    {t:'Move the target deeper. Coupling falls off fast — signal drops.', ok:f=>f.deepTarget},
+    {t:'Try a different target material. Conductivity changes the response.', ok:f=>f.matChanged},
+    {t:'Raise the frequency. Faster flux change → stronger eddy currents.', ok:f=>f.freqChanged}
+  ]
+};
+
+function renderGuide(){
+  const ol = $('guideList');
+  if(!ol) return;
+  const list = GUIDES[S.mode];
+  ol.innerHTML = '';
+  list.forEach((g,i)=>{
+    const done = g.ok(S.flags);
+    const li = document.createElement('li');
+    if(done) li.classList.add('done');
+    const n = document.createElement('span'); n.className='num';
+    n.textContent = done ? '✓' : (i+1);
+    const t = document.createElement('span'); t.textContent = g.t;
+    li.appendChild(n); li.appendChild(t);
+    ol.appendChild(li);
+  });
+}
+function buildGuide(){
+  const host = $('guideCard');
+  host.innerHTML = '';
+  const head = document.createElement('div');
+  head.className = 'ghead';
+  const b = document.createElement('b'); b.textContent = 'GUIDE';
+  const btn = document.createElement('button'); btn.textContent = 'reset';
+  btn.addEventListener('click', ()=>{ S.flags = {}; S.peak = {}; renderGuide(); });
+  head.appendChild(b); head.appendChild(btn);
+  const ol = document.createElement('ol'); ol.className='guide'; ol.id='guideList';
+  host.appendChild(head); host.appendChild(ol);
+  renderGuide();
+}
+
+/* ============================================================
+   6. HUD
+   ============================================================ */
+const HUD = {};
+function buildHud(items){
+  const host = $('hud');
+  host.innerHTML = '';
+  for(const k in HUD) delete HUD[k];
+  items.forEach(it=>{
+    const d = document.createElement('div');
+    d.className = 'hitem' + (it.cls ? ' '+it.cls : '');
+    const a = document.createElement('span'); a.className='hk'; a.textContent = it.k;
+    const b = document.createElement('span'); b.className='hv'; b.id = 'hud_'+it.id;
+    d.appendChild(a); d.appendChild(b);
+    host.appendChild(d);
+    HUD[it.id] = b;
+  });
+}
+function hud(id, txt){ if(HUD[id]) HUD[id].textContent = txt; }
+
+/* ============================================================
+   7. AUDIO (metal detector)
+   ============================================================ */
+const AUDIO = { on:true, ctx:null, osc:null, gain:null };
+function initAudio(){
+  if(AUDIO.ctx) { if(AUDIO.ctx.state==='suspended') AUDIO.ctx.resume(); return; }
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if(!AC) return;
+  AUDIO.ctx = new AC();
+  AUDIO.osc = AUDIO.ctx.createOscillator();
+  AUDIO.gain = AUDIO.ctx.createGain();
+  AUDIO.osc.type = 'sine';
+  AUDIO.osc.frequency.value = 720;
+  AUDIO.gain.gain.value = 0;
+  AUDIO.osc.connect(AUDIO.gain);
+  AUDIO.gain.connect(AUDIO.ctx.destination);
+  AUDIO.osc.start();
+}
+function audioSig(level, t){
+  if(!AUDIO.ctx || !AUDIO.gain) return;
+  const on = AUDIO.on && S.mode === 'detector' && level > 0.06;
+  if(!on){ AUDIO.gain.gain.value = 0; return; }
+  const rate = 2 + level*16;
+  const gate = ((t*rate) % 1) < 0.5 ? 1 : 0;
+  AUDIO.gain.gain.value = level * 0.09 * gate;
+}
+
+/* ============================================================
+   8. MODE SWITCHING
+   ============================================================ */
+function setMode(m){
+  S.mode = m;
+  S.flags = {}; S.peak = {};
+  resetScope();
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.mode === m);
+  });
+
+  if(m === 'generator'){
+    buildHud([
+      {id:'phi', k:'Flux Φ', cls:'hot'},
+      {id:'omega', k:'Rotation', cls:''},
+      {id:'lamp', k:'Lamp output', cls:'warm'}
+    ]);
+    $('hint').textContent = 'Drag left / right to spin the coil';
+  }
+  if(m === 'transformer'){
+    buildHud([
+      {id:'vp', k:'Primary Vp', cls:''},
+      {id:'vs', k:'Secondary Vs', cls:'warm'},
+      {id:'ratio', k:'Ratio Ns/Np', cls:''},
+      {id:'mode', k:'Type', cls:'hot'}
+    ]);
+    $('hint').textContent = 'Adjust the sliders — watch Vs follow Ns/Np';
+  }
+  if(m === 'cooker'){
+    buildHud([
+      {id:'temp', k:'Pot base temp', cls:'warm'},
+      {id:'eddy', k:'Eddy current', cls:'hot'},
+      {id:'coup', k:'Coupling', cls:''}
+    ]);
+    $('hint').textContent = 'Drag the pot up and down';
+  }
+  if(m === 'detector'){
+    buildHud([
+      {id:'sig', k:'Rx signal', cls:'hot'},
+      {id:'dist', k:'Distance to target', cls:''},
+      {id:'eddy', k:'Target eddy current', cls:'warm'}
+    ]);
+    $('hint').textContent = 'Drag the search coil over the ground';
+  }
+
+  buildControls();
+  buildGuide();
+  fitAll();
+  $('hint').style.opacity = '1';
+  hintHidden = false;
+}
+
+/* ============================================================
+   9. POINTER
+   ============================================================ */
+let hintHidden = false;
+function hideHint(){
+  if(hintHidden) return;
+  hintHidden = true;
+  $('hint').style.opacity = '0';
+}
+
+cv.addEventListener('pointerdown', e=>{
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  hideHint();
+  initAudio();
+  cv.classList.add('grabbing');
+  try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+
+  if(S.mode === 'generator'){
+    S.g.drag = true; S.g.lastX = px; S.g.lastT = performance.now();
+    flag('spun');
+  } else if(S.mode === 'cooker'){
+    S.ck.potDrag = true; S.ck.startY = py; S.ck.startDist = S.p.cooker.dist;
+  } else if(S.mode === 'detector'){
+    S.dt.drag = true; S.dt.lastX = px;
+    S.dt.x = clamp(px - SW*0.5, -340, 340);
+    flag('swept');
+  }
+});
+
+cv.addEventListener('pointermove', e=>{
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+
+  if(S.mode === 'generator' && S.g.drag){
+    const now = performance.now();
+    const dtp = Math.max(0.001, (now - S.g.lastT)/1000);
+    const dth = (px - S.g.lastX) * 0.019;
+    S.g.theta += dth;
+    S.g.omega = clamp(0.65*S.g.omega + 0.35*(dth/dtp), -70, 70);
+    S.g.lastX = px; S.g.lastT = now;
+    flag('spun');
+  }
+  else if(S.mode === 'cooker' && S.ck.potDrag){
+    const dy = S.ck.startY - py;
+    const nd = clamp(S.ck.startDist + dy*0.06, 0, 12);
+    S.p.cooker.dist = Math.round(nd*2)/2;
+    syncSlider('dist', S.p.cooker.dist);
+  }
+  else if(S.mode === 'detector' && S.dt.drag){
+    S.dt.x = clamp(px - SW*0.5, -340, 340);
+    flag('swept');
+  }
+});
+
+function endPointer(e){
+  cv.classList.remove('grabbing');
+  S.g.drag = false; S.ck.potDrag = false; S.dt.drag = false;
+  try{ cv.releasePointerCapture(e.pointerId); }catch(_){}
+}
+cv.addEventListener('pointerup', endPointer);
+cv.addEventListener('pointercancel', endPointer);
+
+function syncSlider(id, val){
+  const ref = CTRL_REFS[id];
+  if(!ref) return;
+  ref.input.value = val;
+  ref.valEl.textContent = ref.spec.fmt(val);
+}
+
+/* ============================================================
+   10. UPDATE — GENERATOR
+   ============================================================ */
+function updateGen(dt){
+  const p = S.p.generator, g = S.g;
+
+  if(!g.drag){
+    const target = g.spinOn ? 2*Math.PI*p.speed : 0;
+    g.omega += (target - g.omega) * Math.min(1, dt*2.6);
+  }
+  g.theta += g.omega * dt;
+  if(g.theta > Math.PI*2) g.theta -= Math.PI*2;
+  if(g.theta < 0) g.theta += Math.PI*2;
+
+  const PHI_MAX = p.field * 3.0;
+  const phi = PHI_MAX * Math.cos(g.theta);
+  const dphidt = -PHI_MAX * Math.sin(g.theta) * g.omega / 1000;
+  const N = p.turns;
+  const emf = -N * dphidt;
+
+  if(Math.abs(g.omega) > 0.6) flag('phiWave');
+  peak('genE', Math.abs(emf));
+  if((S.peak.genE||0) > 1.2) flag('peakE');
+  if(Math.abs(g.omega) > 1) flag('spun');
+
+  const lamp = clamp(Math.abs(emf)/6, 0, 1);
+
+  hud('phi', phi.toFixed(2)+' mWb');
+  hud('omega', (g.omega/(2*Math.PI)).toFixed(2)+' rev/s');
+  hud('lamp', emf.toFixed(2)+' V');
+
+  return { phi, dphidt, N, emf, extra:{ lamp, theta:g.theta, omega:g.omega, field:p.field } };
+}
+
+/* ============================================================
+   11. UPDATE — TRANSFORMER
+   ============================================================ */
+function updateTr(dt){
+  const p = S.p.transformer;
+  const w = 2*Math.PI*p.freq;
+  S.tr.phase += w*dt;
+  if(S.tr.phase > Math.PI*2) S.tr.phase -= Math.PI*2;
+
+  const phiMax = p.vp / (p.np * w);
+  const phi    = phiMax * Math.sin(S.tr.phase);
+  const dphidt = phiMax * w * Math.cos(S.tr.phase);
+  const N      = p.np;
+  const emf    = -N * dphidt;
+
+  const vs = p.vp * (p.ns / p.np);
+
+  flag('seenFlux');
+  if(Math.abs(emf) > 0.05) flag('seenSec');
+  if(p.ns > p.np*1.05) flag('steppedUp');
+  if(p.ns < p.np*0.95) flag('steppedDown');
+  if(S.flags._lastF === undefined) S.flags._lastF = p.freq;
+  if(S.flags._lastF !== p.freq){ flag('freqChanged'); S.flags._lastF = p.freq; }
+
+  const vsLive = -p.ns * dphidt;
+
+  hud('vp', p.vp.toFixed(1)+' V');
+  hud('vs', vs.toFixed(1)+' V');
+  hud('ratio', (p.ns/p.np).toFixed(2)+'×');
+  hud('mode', p.ns > p.np ? 'STEP-UP' : (p.ns < p.np ? 'STEP-DOWN' : 'ISOLATION'));
+
+  return { phi: phi*1000, dphidt, N, emf,
+           extra:{ phiMax, phase:S.tr.phase, vs, vsLive, stepUp: p.ns>p.np } };
+}
+
+/* ============================================================
+   12. UPDATE — COOKER
+   ============================================================ */
+const MATS = { steel:{eff:1.00, name:'Steel'}, alu:{eff:0.35, name:'Aluminium'},
+               copper:{eff:0.25, name:'Copper'}, glass:{eff:0.0, name:'Glass'} };
+
+function updateCk(dt){
+  const p = S.p.cooker;
+  const pw = p.power/100;
+  const mat = MATS[p.material];
+
+  const coupling = Math.exp(-p.dist/8);
+  const freqF = 0.6 + 0.4*(p.freq/80);
+  const heat = 38 * Math.pow(pw,1.6) * mat.eff * coupling * freqF;
+
+  S.ck.heat = heat;
+  S.ck.temp += ((heat - (S.ck.temp-22)*0.35)/4) * dt;
+  S.ck.temp = clamp(S.ck.temp, 22, 135);
+
+  if(S.ck.temp >= 99.5) flag('boiled');
+  if(S.ck.temp > 45 && p.dist > 7) flag('lifted');
+  if(S.ck.temp > 45) flag('powerUp');
+
+  const w = 2*Math.PI*(p.freq/4000);
+  S.ck.phase += w*dt;
+  const phiMax = 0.9 * pw;
+  const phi = phiMax * Math.sin(S.ck.phase);
+  const dphidt = phiMax * w * Math.cos(S.ck.phase) / 1000;
+  const N = 18;
+  const emf = -N * dphidt;
+
+  hud('temp', S.ck.temp.toFixed(0)+' °C' + (S.ck.temp>=99.5?' 🔥':''));
+  hud('eddy', (mat.eff*pw*100).toFixed(0)+' %');
+  hud('coup', (coupling*100).toFixed(0)+' %');
+
+  return { phi, dphidt, N, emf,
+           extra:{ heat, coupling, eddy: mat.eff*pw, matName: mat.name,
+                   eff: mat.eff, temp: S.ck.temp, phase: S.ck.phase, dist:p.dist } };
+}
+
+/* ============================================================
+   13. UPDATE — DETECTOR
+   ============================================================ */
+const TMATS = { gold:{s:0.75, name:'Gold'}, iron:{s:1.0, name:'Iron'}, alu:{s:0.55, name:'Aluminium'} };
+
+function updateDt(dt){
+  const p = S.p.detector;
+  const mat = TMATS[p.material];
+
+  if(!S.dt.drag && S.dt.auto){
+    S.dt.sweepT += dt;
+    S.dt.x = 300 * Math.sin(2*Math.PI*0.22*S.dt.sweepT);
+    flag('swept');
+  }
+
+  const targetX = 40;
+  const dx = S.dt.x - targetX;
+  const dz = p.depth;
+  const r  = Math.hypot(dx, dz);
+
+  const coupling = 1 / (1 + Math.pow(r/58, 2.3));
+  const freqF = 0.35 + 0.65*(p.freq/80);
+  const signal = clamp(coupling * p.size * mat.s * freqF * 1.9, 0, 1);
+
+  if(signal > 0.35) flag('hit');
+  if(p.depth > 42) flag('deepTarget');
+  if(S.flags._lastF2 === undefined) S.flags._lastF2 = p.freq;
+  if(S.flags._lastF2 !== p.freq){ flag('freqChanged'); S.flags._lastF2 = p.freq; }
+
+  const w = 2*Math.PI*(p.freq/3000);
+  S.dt.phase += w*dt;
+  const phiMax = 0.7 * (p.freq/80);
+  const phi = phiMax * Math.sin(S.dt.phase);
+  const dphidt = phiMax * w * Math.cos(S.dt.phase) / 1000;
+  const N = 30;
+  const emf = -N * dphidt;
+
+  hud('sig', (signal*100).toFixed(0)+' %');
+  hud('dist', r.toFixed(0)+' mm');
+  hud('eddy', (signal*100).toFixed(0)+' %');
+
+  audioSig(signal, S.t);
+
+  return { phi, dphidt, N, emf,
+           extra:{ signal, coupling, r, phase:S.dt.phase, targetX, dz,
+                   matName: mat.name, wandX: S.dt.x } };
+}
+
+/* ============================================================
+   14. DRAW HELPERS
+   ============================================================ */
+function bg(){
+  const g = ctx.createLinearGradient(0,0,0,SH);
+  g.addColorStop(0, C.bgTop);
+  g.addColorStop(1, C.bgBot);
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,SW,SH);
+}
+function label(txt, x, y, col, size, align){
+  ctx.fillStyle = col || C.muted;
+  ctx.font = '800 ' + (size||11) + 'px Nunito, ui-sans-serif, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(txt, x, y);
+}
+function mono(txt, x, y, col, size, align){
+  ctx.fillStyle = col || C.ink;
+  ctx.font = '900 ' + (size||12) + 'px ui-monospace, Menlo, monospace';
+  ctx.textAlign = align || 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(txt, x, y);
+}
+
+/* ============================================================
+   15. DRAW — GENERATOR
+   ============================================================ */
+function drawGen(ex){
+  bg();
+  const cx = SW*0.5, cy = SH*0.47;
+  const gapHalf = Math.min(SW*0.30, 200);
+  const poleW = Math.max(44, Math.min(SW*0.075, 78));
+  const poleH = Math.min(SH*0.56, 230);
+
+  drawPole(cx-gapHalf-poleW, cy-poleH/2, poleW, poleH, 'N', C.poleN, C.poleND);
+  drawPole(cx+gapHalf,       cy-poleH/2, poleW, poleH, 'S', C.poleS, C.poleSD);
+
+  // field lines
+  ctx.strokeStyle = 'rgba(28,176,246,.42)';
+  ctx.fillStyle   = 'rgba(28,176,246,.6)';
+  ctx.lineWidth = 1.2;
+  const nL = 5;
+  for(let i=0;i<nL;i++){
+    const y = cy - poleH*0.34 + (i/(nL-1))*poleH*0.68;
+    const x1 = cx-gapHalf, x2 = cx+gapHalf;
+    ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2-8,y); ctx.stroke();
+    arrow(ctx, x2-30, y, x2-10, y, 6);
+  }
+
+  // coil
+  const cW = Math.min(SW*0.16, 105);
+  const cH = Math.min(poleH*0.62, 118);
+  const halfW = Math.max(5, cW * Math.abs(Math.sin(ex.theta)));
+  const drawnTurns = Math.min(S.p.generator.turns, 12);
+
+  const emf = ex.lamp;
+  const col = emf < 0.05 ? 'rgba(175,175,175,.65)' : C.blue;
+
+  ctx.save();
+  if(emf > 0.05){
+    ctx.shadowColor = 'rgba(28,176,246,'+(0.4+0.5*emf)+')';
+    ctx.shadowBlur = 6 + 20*emf;
+  }
+  for(let i=0;i<drawnTurns;i++){
+    const f = 1 - i/(drawnTurns+3);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, halfW*f, cH*f, 0, 0, Math.PI*2);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // axis
+  ctx.strokeStyle = 'rgba(175,175,175,.55)';
+  ctx.setLineDash([4,6]);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(cx, cy-cH-16); ctx.lineTo(cx, cy+cH+16); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // leads
+  ctx.strokeStyle = 'rgba(140,150,180,.75)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx-halfW, cy+cH*0.98);
+  ctx.lineTo(cx-halfW, cy+cH+34);
+  ctx.moveTo(cx+halfW, cy+cH*0.98);
+  ctx.lineTo(cx+halfW, cy+cH+34);
+  ctx.stroke();
+
+  // lamp
+  const lx = cx + Math.min(SW*0.28, 190), ly = cy + cH + 46;
+  ctx.beginPath();
+  ctx.moveTo(cx+halfW, cy+cH+34); ctx.lineTo(lx, cy+cH+34); ctx.lineTo(lx, ly-22);
+  ctx.moveTo(cx-halfW, cy+cH+34);
+  ctx.lineTo(cx-Math.min(SW*0.28,190), cy+cH+34);
+  ctx.lineTo(cx-Math.min(SW*0.28,190), ly-22); ctx.lineTo(lx-40, ly-22);
+  ctx.stroke();
+
+  const glow = emf;
+  if(glow > 0.03){
+    const rg = ctx.createRadialGradient(lx, ly, 2, lx, ly, 62);
+    rg.addColorStop(0, 'rgba(255,200,80,'+(0.45*glow)+')');
+    rg.addColorStop(1, 'rgba(255,200,80,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(lx, ly, 62, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(lx, ly, 15, 0, Math.PI*2);
+  ctx.fillStyle = glow>0.03
+      ? 'rgba(255,'+Math.round(210+30*glow)+','+Math.round(120+90*(1-glow))+','+(0.5+0.5*glow)+')'
+      : 'rgba(230,232,238,.9)';
+  ctx.fill();
+  ctx.strokeStyle = glow>0.03 ? 'rgba(255,180,80,.9)' : 'rgba(175,175,175,.55)';
+  ctx.lineWidth = 1.6; ctx.stroke();
+
+  label('LAMP', lx, ly+32, C.muted, 10);
+
+  // rotation indicator
+  const rx = cx, ry = cy - cH - 44;
+  ctx.strokeStyle = 'rgba(28,176,246,.6)';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.arc(rx, ry, 16, -Math.PI*0.9, Math.PI*0.5);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(28,176,246,.75)';
+  arrow(ctx, rx+16*Math.cos(0.4), ry+16*Math.sin(0.4),
+             rx+16*Math.cos(0.55), ry+16*Math.sin(0.55), 6);
+
+  label('N = '+S.p.generator.turns+' turns', cx, SH-24, C.blueD, 12);
+  label('B = '+S.p.generator.field.toFixed(1)+' T   ·   '
+        + (S.g.omega/(2*Math.PI)).toFixed(2) + ' rev/s', cx, SH-46, C.inkSoft, 11);
+}
+function drawPole(x,y,w,h,letter,c1,c2){
+  const g = ctx.createLinearGradient(x,y,x,y+h);
+  g.addColorStop(0,c1);
+  g.addColorStop(1,c2);
+  rr(ctx,x,y,w,h,10);
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.08)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.font = '900 22px ui-monospace, Menlo, monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(letter, x+w/2, y+h/2);
+}
+
+/* ============================================================
+   16. DRAW — TRANSFORMER
+   ============================================================ */
+function drawTr(ex){
+  bg();
+  const cx = SW*0.5, cy = SH*0.46;
+  const coreW = Math.min(SW*0.46, 300);
+  const coreH = Math.min(SH*0.56, 230);
+  const th = 30;
+
+  const x0 = cx-coreW/2, y0 = cy-coreH/2;
+
+  // iron core ring
+  rr(ctx, x0, y0, coreW, coreH, 12);
+  ctx.fillStyle = C.iron;
+  ctx.fill();
+  ctx.strokeStyle = C.ironEdge;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  rr(ctx, x0+th, y0+th, coreW-2*th, coreH-2*th, 6);
+  ctx.fillStyle = C.bgBot;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(140,120,80,.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // animated flux dashes
+  const speed = 60 + S.p.transformer.freq*2;
+  const off = (S.t*speed) % 26;
+  ctx.save();
+  ctx.strokeStyle = C.blue;
+  ctx.lineWidth = 3;
+  ctx.setLineDash([13,13]);
+  ctx.lineDashOffset = -off;
+  rr(ctx, x0+th/2, y0+th/2, coreW-th, coreH-th, 8);
+  ctx.stroke();
+  ctx.restore();
+
+  label('IRON CORE', cx, y0+th/2, C.inkSoft, 9.5);
+
+  const np = S.p.transformer.np;
+  const drawnP = Math.min(np, 14);
+  const legTop = y0+th+8, legBot = y0+coreH-th-8;
+  const legH = legBot - legTop;
+  drawCoilLeg(x0+th/2, legTop, legH, drawnP, C.blue, Math.abs(ex.vsLive)/20);
+  drawCoilLeg(x0+coreW-th/2, legTop, legH, Math.min(S.p.transformer.ns,14), C.orange, Math.abs(ex.vsLive)/20);
+
+  mono('Np = '+np, x0 - 46, cy - 6, C.blueD, 12);
+  mono('Ns = '+S.p.transformer.ns, x0+coreW + 46, cy - 6, C.orangeD, 12);
+  label('PRIMARY', x0 - 46, cy + 12, C.inkSoft, 9.5);
+  label('SECONDARY', x0+coreW + 46, cy + 12, C.inkSoft, 9.5);
+
+  // AC source
+  const sx = x0 - 12, sy = y0+coreH + 42;
+  ctx.strokeStyle = 'rgba(140,150,180,.75)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x0+th/2, legBot); ctx.lineTo(x0+th/2, sy); ctx.lineTo(sx-16, sy);
+  ctx.moveTo(x0+th/2, legTop);
+  ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(sx, sy, 15, 0, Math.PI*2);
+  ctx.fillStyle = '#FFFFFF'; ctx.fill();
+  ctx.strokeStyle = C.blue; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(sx-7, sy);
+  for(let i=-7;i<=7;i+=1){
+    ctx.lineTo(sx+i, sy - 6*Math.sin(i/7*Math.PI));
+  }
+  ctx.strokeStyle = C.blue; ctx.lineWidth = 1.6; ctx.stroke();
+  label('AC ' + S.p.transformer.vp.toFixed(1) + ' V', sx, sy+28, C.inkSoft, 10);
+
+  // lamp on secondary
+  const lx = x0+coreW + 60, ly = y0+coreH + 42;
+  ctx.strokeStyle = 'rgba(140,150,180,.75)';
+  ctx.beginPath();
+  ctx.moveTo(x0+coreW-th/2, legBot); ctx.lineTo(x0+coreW-th/2, ly); ctx.lineTo(lx-18, ly);
+  ctx.stroke();
+
+  const vsN = clamp(ex.vs/24, 0, 1);
+  if(vsN > 0.03){
+    const rg = ctx.createRadialGradient(lx, ly, 2, lx, ly, 60);
+    rg.addColorStop(0,'rgba(255,200,80,'+(0.45*vsN)+')');
+    rg.addColorStop(1,'rgba(255,200,80,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(lx, ly, 60, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(lx, ly, 15, 0, Math.PI*2);
+  ctx.fillStyle = vsN>0.03
+    ? 'rgba(255,'+Math.round(210+30*vsN)+',130,'+(0.55+0.45*vsN)+')'
+    : 'rgba(230,232,238,.9)';
+  ctx.fill();
+  ctx.strokeStyle = vsN>0.03 ? 'rgba(255,180,80,.9)' : 'rgba(175,175,175,.55)';
+  ctx.lineWidth = 1.6; ctx.stroke();
+
+  mono('Vs = '+ex.vs.toFixed(1)+' V', lx, ly+30, C.orangeD, 12);
+  label('LOAD', lx, ly+46, C.inkSoft, 9.5);
+
+  label('Vs / Vp  =  Ns / Np', cx, y0+coreH+96, C.inkSoft, 12);
+  label(ex.stepUp ? 'STEP-UP TRANSFORMER' : (S.p.transformer.ns < S.p.transformer.np ? 'STEP-DOWN TRANSFORMER' : 'ISOLATION'),
+        cx, SH-20, ex.stepUp ? C.greenT : C.orangeD, 11.5);
+}
+function drawCoilLeg(cxLeg, top, h, turns, col, intensity){
+  const sp = turns>1 ? h/(turns-1) : 0;
+  const rx = 11;
+  ctx.save();
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  if(intensity > 0.05){
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 5 + 12*Math.min(1,intensity);
+  }
+  for(let i=0;i<turns;i++){
+    ctx.beginPath();
+    ctx.ellipse(cxLeg, top + i*sp, rx, 5.5, 0, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ============================================================
+   17. DRAW — COOKER
+   ============================================================ */
+function drawCk(ex){
+  bg();
+  const cx = SW*0.5;
+  const glassY = SH*0.60;
+  const coilY = glassY + 42;
+
+  // counter
+  const cg = ctx.createLinearGradient(0, glassY, 0, SH);
+  cg.addColorStop(0,'#EEF2F8');
+  cg.addColorStop(1,'#F8FAFC');
+  ctx.fillStyle = cg;
+  ctx.fillRect(0, glassY, SW, SH-glassY);
+
+  // glass top line
+  ctx.strokeStyle = 'rgba(140,150,180,.55)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(SW*0.08, glassY); ctx.lineTo(SW*0.92, glassY); ctx.stroke();
+
+  // coil — copper rings
+  const coilW = Math.min(SW*0.20, 150);
+  const glow = ex.heat/30;
+  for(let i=0;i<7;i++){
+    const f = 1 - i*0.11;
+    const y = coilY + i*7;
+    ctx.beginPath();
+    ctx.ellipse(cx, y, coilW*f, 9*f, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(200,140,60,'+(0.5+0.4*Math.min(1,glow))+')';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+  }
+  if(glow > 0.02){
+    const rg = ctx.createRadialGradient(cx, glassY, 5, cx, glassY, coilW*1.6);
+    rg.addColorStop(0,'rgba(255,180,80,'+(0.20*Math.min(1,glow))+')');
+    rg.addColorStop(1,'rgba(255,180,80,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(cx, glassY, coilW*1.6, 0, Math.PI*2); ctx.fill();
+  }
+
+  // expanding field rings
+  const ph = ex.phase || 0;
+  for(let i=0;i<3;i++){
+    const k = ((ph/(Math.PI*2)) + i/3) % 1;
+    const rr2 = 20 + k*coilW*1.5;
+    const al = (1-k) * 0.4 * Math.min(1, S.p.cooker.power/60);
+    ctx.beginPath();
+    ctx.ellipse(cx, glassY-4, rr2, rr2*0.30, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(28,176,246,'+al+')';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // pot
+  const potW = Math.min(SW*0.20, 145);
+  const potH = 105;
+  const lift = S.p.cooker.dist * 3.2;
+  const potBaseY = glassY - 8 - lift;
+  const potTopY = potBaseY - potH;
+
+  const t = clamp((ex.temp-22)/100, 0, 1);
+
+  ctx.save();
+  rr(ctx, cx-potW/2, potTopY, potW, potH, 8);
+  const pg = ctx.createLinearGradient(0, potTopY, 0, potBaseY);
+  pg.addColorStop(0, C.steel);
+  pg.addColorStop(0.7, C.steelD);
+  pg.addColorStop(1, t > 0.15
+      ? 'rgba('+Math.round(200+55*t)+','+Math.round(150-40*t)+','+Math.round(90-40*t)+',.9)'
+      : C.steelD);
+  ctx.fillStyle = pg;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(80,90,120,.4)'; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.restore();
+
+  // water
+  const waterTop = potTopY + 26;
+  const boil = ex.temp >= 99.5;
+  ctx.save();
+  rr(ctx, cx-potW/2+7, potTopY, potW-14, potH, 6);
+  ctx.clip();
+  const wg = ctx.createLinearGradient(0, waterTop, 0, potBaseY);
+  wg.addColorStop(0,'rgba(28,176,246,.30)');
+  wg.addColorStop(1,'rgba(28,176,246,.55)');
+  ctx.fillStyle = wg;
+  ctx.fillRect(cx-potW/2+7, waterTop, potW-14, potH);
+  ctx.restore();
+
+  // eddy current loops
+  const eddy = ex.eddy;
+  if(eddy > 0.03){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,150,60,'+(0.5+0.5*Math.min(1,eddy))+')';
+    ctx.fillStyle   = 'rgba(255,150,60,'+(0.5+0.5*Math.min(1,eddy))+')';
+    ctx.lineWidth = 2;
+    const baseY = potBaseY - 9;
+    for(let i=-1;i<=1;i++){
+      const ex2 = cx + i*36;
+      ctx.beginPath();
+      ctx.ellipse(ex2, baseY, 13, 5, 0, 0, Math.PI*2);
+      ctx.stroke();
+      arrow(ctx, ex2+9, baseY-3, ex2+13, baseY-1, 4);
+    }
+    ctx.restore();
+  }
+
+  // bubbles & steam
+  if(boil){
+    for(let i=0;i<10;i++){
+      const s = (S.t*0.7 + i*0.37) % 1;
+      const bx = cx - potW*0.30 + ((i*53)%(potW*0.6));
+      const by = waterTop + s*(potBaseY-waterTop-10);
+      ctx.beginPath();
+      ctx.arc(bx, by, 2 + 2*s, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(28,176,246,'+(0.5*(1-s))+')';
+      ctx.fill();
+    }
+    for(let i=0;i<7;i++){
+      const s = (S.t*0.5 + i*0.29) % 1;
+      const sx2 = cx - 30 + i*10 + Math.sin(S.t*2+i)*8;
+      const sy2 = potTopY - s*60;
+      ctx.beginPath();
+      ctx.arc(sx2, sy2, 5 + 10*s, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(200,215,235,'+(0.22*(1-s))+')';
+      ctx.fill();
+    }
+  }
+
+  // distance marker
+  if(lift > 4){
+    ctx.strokeStyle = 'rgba(140,150,180,.6)';
+    ctx.setLineDash([4,5]);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(cx+potW/2+22, potBaseY); ctx.lineTo(cx+potW/2+22, glassY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    mono(S.p.cooker.dist.toFixed(1)+' mm', cx+potW/2+70, (potBaseY+glassY)/2, C.inkSoft, 11);
+  }
+
+  // labels
+  label('INDUCTION COIL — ' + S.p.cooker.freq + ' kHz', cx, SH-22, C.orangeD, 11.5);
+  label(ex.matName + ' pot   ·   eddy efficiency ' + Math.round(ex.eff*100) + '%',
+        cx, SH-44, C.inkSoft, 10.5);
+
+  // temp bar
+  const bx = SW - 54, by = SH*0.18, bw = 14, bh = SH*0.50;
+  rr(ctx, bx, by, bw, bh, 7);
+  ctx.fillStyle = '#F4F6FA'; ctx.fill();
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
+  const fillH = bh * clamp((ex.temp-20)/115, 0, 1);
+  rr(ctx, bx+2, by+bh-fillH+1, bw-4, Math.max(0,fillH-2), 5);
+  const tg = ctx.createLinearGradient(0, by+bh, 0, by);
+  tg.addColorStop(0, C.blue);
+  tg.addColorStop(0.55, C.orange);
+  tg.addColorStop(1, C.red);
+  ctx.fillStyle = tg; ctx.fill();
+  mono(Math.round(ex.temp)+'°', bx+bw/2, by-14, C.orangeD, 11);
+  label('100°', bx+bw/2, by+bh-((100-20)/115)*bh, C.muted, 8.5);
+}
+
+/* ============================================================
+   18. DRAW — DETECTOR
+   ============================================================ */
+function drawDt(ex){
+  bg();
+  const groundY = SH*0.62;
+  const cx = SW*0.5;
+
+  // ground
+  const gg = ctx.createLinearGradient(0, groundY, 0, SH);
+  gg.addColorStop(0, C.soil);
+  gg.addColorStop(1, C.soilDk);
+  ctx.fillStyle = gg;
+  ctx.fillRect(0, groundY, SW, SH-groundY);
+  ctx.strokeStyle = C.soilEdge;
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(SW, groundY); ctx.stroke();
+
+  // buried target
+  const tx = cx + ex.targetX;
+  const ty = groundY + ex.dz;
+  const sizeR = 7 + S.p.detector.size*13;
+
+  const s = ex.signal;
+  if(s > 0.02){
+    const rg = ctx.createRadialGradient(tx, ty, 1, tx, ty, sizeR*5);
+    rg.addColorStop(0,'rgba(255,180,60,'+(0.45*s)+')');
+    rg.addColorStop(1,'rgba(255,180,60,0)');
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(tx, ty, sizeR*5, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.beginPath(); ctx.arc(tx, ty, sizeR, 0, Math.PI*2);
+  ctx.fillStyle = s>0.05 ? 'rgba(255,205,90,'+(0.6+0.4*s)+')' : 'rgba(200,180,140,.6)';
+  ctx.fill();
+  ctx.strokeStyle = C.goldD; ctx.lineWidth = 1.6; ctx.stroke();
+
+  if(s > 0.05){
+    ctx.strokeStyle = 'rgba(28,176,246,'+(0.5+0.4*s)+')';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.ellipse(tx, ty, sizeR*1.5, sizeR*0.55, 0, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  label('TARGET: '+ex.matName, tx, ty + sizeR + 18, C.soilEdge, 10);
+
+  // wand
+  const wx = cx + ex.wandX;
+  const coilY = groundY - 34;
+  const topY  = SH*0.10;
+
+  // shaft
+  ctx.strokeStyle = 'rgba(90,100,120,.9)';
+  ctx.lineWidth = 7; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(wx+38, topY); ctx.lineTo(wx, coilY); ctx.stroke();
+  ctx.strokeStyle = 'rgba(180,190,210,.8)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(wx+38, topY); ctx.lineTo(wx, coilY); ctx.stroke();
+
+  // handle
+  rr(ctx, wx+14, topY-16, 60, 20, 10);
+  ctx.fillStyle = 'rgba(70,80,100,.95)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(200,210,230,.6)'; ctx.lineWidth = 1.3; ctx.stroke();
+
+  // search head
+  ctx.beginPath();
+  ctx.ellipse(wx, coilY, 42, 15, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#FFFFFF'; ctx.fill();
+  ctx.strokeStyle = s>0.3 ? C.orange : C.blue;
+  ctx.lineWidth = 2.4; ctx.stroke();
+
+  // Tx inner coil
+  ctx.beginPath();
+  ctx.ellipse(wx, coilY, 26, 9, 0, 0, Math.PI*2);
+  ctx.strokeStyle = C.blue;
+  ctx.lineWidth = 1.8; ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(wx, coilY, 13, 5, 0, 0, Math.PI*2);
+  ctx.strokeStyle = C.orange;
+  ctx.lineWidth = 1.6; ctx.stroke();
+
+  // expanding field rings
+  const ph = ex.phase || 0;
+  const fScale = 0.4 + 0.6*(S.p.detector.freq/80);
+  for(let i=0;i<3;i++){
+    const k = ((ph/(Math.PI*2)) + i/3) % 1;
+    const rr2 = 42 + k*110;
+    const al = (1-k)*0.42*fScale;
+    ctx.beginPath();
+    ctx.ellipse(wx, coilY, rr2, rr2*0.34, 0, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(28,176,246,'+al+')';
+    ctx.lineWidth = 2; ctx.stroke();
+  }
+  // coupling line
+  if(s > 0.06){
+    ctx.beginPath();
+    ctx.moveTo(wx, coilY);
+    ctx.lineTo(tx, ty);
+    ctx.strokeStyle = 'rgba(255,150,60,'+(0.35+0.45*s)+')';
+    ctx.setLineDash([5,6]);
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  mono('Tx', wx-60, coilY, C.blueD, 11);
+  mono('Rx', wx+60, coilY, C.orangeD, 11);
+
+  // signal meter
+  const mw = Math.min(SW*0.42, 300);
+  const mx = cx - mw/2, my = SH*0.055;
+  rr(ctx, mx, my, mw, 12, 6);
+  ctx.fillStyle = '#F4F6FA'; ctx.fill();
+  ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke();
+  rr(ctx, mx+2, my+2, Math.max(0,(mw-4)*s), 8, 4);
+  const mg = ctx.createLinearGradient(mx,0,mx+mw,0);
+  mg.addColorStop(0, C.blue);
+  mg.addColorStop(0.6, C.orange);
+  mg.addColorStop(1, C.red);
+  ctx.fillStyle = mg; ctx.fill();
+  label('RX SIGNAL', mx + mw/2, my - 12, C.muted, 10);
+
+  // beep indicator
+  if(s > 0.3){
+    const pulse = ((S.t*(2+s*14)) % 1) < 0.5;
+    if(pulse){
+      ctx.beginPath(); ctx.arc(SW-46, 40, 15, 0, Math.PI*2);
+      ctx.fillStyle = C.orange; ctx.fill();
+      ctx.strokeStyle = C.orangeD; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    label('BEEP', SW-46, 40, pulse ? '#FFFFFF' : C.orangeD, 9.5);
+  }
+
+  label('GROUND', 24, groundY+18, C.soilEdge, 10, 'left');
+}
+
+/* ============================================================
+   19. SHARED PANEL
+   ============================================================ */
+const pPhi = $('pPhi'), pDphi = $('pDphi'), pN = $('pN'), pEmf = $('pEmf');
+
+function updatePanel(r){
+  pPhi.textContent  = r.phi.toFixed(2);
+  pDphi.textContent = r.dphidt.toFixed(4);
+  pN.textContent    = r.N;
+  pEmf.textContent  = r.emf.toFixed(2);
+  pushScope(r.phi, r.emf);
+  drawScope();
+}
+
+function drawScope(){
+  sctx.clearRect(0,0,SCW,SCH);
+  sctx.fillStyle = '#FFFFFF';
+  sctx.fillRect(0,0,SCW,SCH);
+
+  const mid = SCH/2;
+  sctx.strokeStyle = C.line;
+  sctx.lineWidth = 1;
+  sctx.beginPath(); sctx.moveTo(0,mid); sctx.lineTo(SCW,mid); sctx.stroke();
+
+  const buf = SCOPE.buf;
+  if(buf.length < 2){
+    label2(sctx, 'live trace', SCW/2, mid, C.muted, 10);
+    return;
+  }
+  const n = buf.length;
+  const dx = SCW/(260-1);
+  const pad = 4;
+  const halfH = mid - pad;
+
+  sctx.beginPath();
+  for(let i=0;i<n;i++){
+    const x = i*dx;
+    const y = mid - (buf[i].p / SCOPE.maxP) * halfH * 0.9;
+    i ? sctx.lineTo(x,y) : sctx.moveTo(x,y);
+  }
+  sctx.strokeStyle = C.blue;
+  sctx.lineWidth = 1.8;
+  sctx.stroke();
+
+  sctx.beginPath();
+  for(let i=0;i<n;i++){
+    const x = i*dx;
+    const y = mid - (buf[i].e / SCOPE.maxE) * halfH * 0.9;
+    i ? sctx.lineTo(x,y) : sctx.moveTo(x,y);
+  }
+  sctx.strokeStyle = C.orange;
+  sctx.lineWidth = 1.8;
+  sctx.stroke();
+
+  label2(sctx, 'Φ', 8, 11, C.blueD, 10, 'left');
+  label2(sctx, 'ℰ', 26, 11, C.orangeD, 10, 'left');
+  label2(sctx, 'time →', SCW-8, 11, C.muted, 9, 'right');
+}
+function label2(g, txt, x, y, col, size, align){
+  g.fillStyle = col;
+  g.font = '900 ' + (size||11) + 'px Nunito, ui-sans-serif, system-ui, sans-serif';
+  g.textAlign = align || 'center';
+  g.textBaseline = 'middle';
+  g.fillText(txt, x, y);
+}
+
+/* ============================================================
+   20. MAIN LOOP
+   ============================================================ */
+let last = performance.now();
+
+function frame(now){
+  let dt = (now - last)/1000;
+  last = now;
+  dt = clamp(dt, 0.0005, 0.05);
+  S.t += dt;
+
+  let r;
+  if(S.mode === 'generator')        r = updateGen(dt);
+  else if(S.mode === 'transformer') r = updateTr(dt);
+  else if(S.mode === 'cooker')      r = updateCk(dt);
+  else                              r = updateDt(dt);
+
+  if(S.mode === 'generator')        drawGen(r.extra);
+  else if(S.mode === 'transformer') drawTr(r.extra);
+  else if(S.mode === 'cooker')      drawCk(r.extra);
+  else                              drawDt(r.extra);
+
+  updatePanel(r);
+
+  requestAnimationFrame(frame);
+}
+
+/* ============================================================
+   21. BOOT
+   ============================================================ */
+document.querySelectorAll('#tabs button').forEach(b=>{
+  b.addEventListener('click', ()=> setMode(b.dataset.mode));
+});
+
+setMode('generator');
+fitAll();
+requestAnimationFrame(()=>{
+  fitAll();
+  last = performance.now();
+  requestAnimationFrame(frame);
+});
+
+})();
+</script>
+
+</body>
+</html>
