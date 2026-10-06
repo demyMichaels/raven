@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics Mastery — Course Journey</title>
+<style>
+  :root{
+    --green:#58CC02; --green-dark:#58A700; --green-light:#D7FFB8;
+    --blue:#1CB0F6; --blue-dark:#1899D6; --blue-light:#DDF4FF;
+    --red:#FF4B4B; --red-dark:#EA2B2B; --red-light:#FFDFE0;
+    --yellow:#FFC800; --yellow-dark:#E6A700; --yellow-light:#FFF4C2;
+    --purple:#CE82FF; --purple-dark:#A560E8; --purple-light:#FBF0FF;
+    --orange:#FF9600; --orange-dark:#E08000;
+    --ink:#3C3C3C; --ink-soft:#777; --line:#E5E5E5; --bg:#FFF;
+    --locked:#E5E5E5; --locked-ink:#AFAFAF;
+    --cyan:#4fc3ff; --lab-bg:#0d1418; --lab-panel:#16212a; --lab-line:#1e2d38;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); font-weight:600;
+    display:flex; justify-content:center; overflow:hidden;
+  }
+  .app{width:100%; max-width:560px; display:flex; flex-direction:column;
+    height:100vh; position:relative; background:#fff;}
+
+  /* ===== HEADER ===== */
+  header{padding:14px 18px 10px; display:flex; align-items:center; gap:10px;
+    position:sticky; top:0; background:#fff; z-index:20; flex:0 0 auto;
+    border-bottom:2px solid transparent; transition:border-color .2s;}
+  header.scrolled{border-color:var(--line);}
+  .hud-left{flex:1; display:flex; align-items:center; gap:10px; min-width:0;}
+  .streak{display:flex; align-items:center; gap:3px; font-weight:800;
+    color:var(--orange); font-size:14px;}
+  .streak .flame{font-size:18px; line-height:1;}
+  .hearts{display:flex; align-items:center; gap:2px; font-weight:800;
+    color:var(--red); font-size:14px;}
+  .hearts .h{font-size:16px; line-height:1;}
+  .hearts .h.lost{opacity:.22;}
+  .xp{display:flex; align-items:center; gap:3px; font-weight:800;
+    color:var(--yellow-dark); font-size:14px;}
+  .xp .b{font-size:16px; line-height:1;}
+
+  /* ===== MAIN ===== */
+  main{flex:1; overflow-y:auto; overflow-x:hidden;
+    scrollbar-width:thin; scrollbar-color:var(--line) transparent;}
+  main::-webkit-scrollbar{width:6px}
+  main::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px}
+  .screen{display:none;}
+  .screen.active{display:block; animation:slide .32s cubic-bezier(.4,0,.2,1);}
+  @keyframes slide{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:translateY(0)}}
+
+  /* ===== PATH SCREEN ===== */
+  .path-hero{padding:14px 22px 6px;}
+  .path-hero h1{font-size:24px; font-weight:800; line-height:1.2; margin-bottom:6px;}
+  .path-hero p{font-size:14px; line-height:1.5; color:var(--ink-soft);
+    margin-bottom:0;}
+  .path-hero strong{color:var(--ink); font-weight:800;}
+
+  .chapter-block{padding:24px 22px 0;}
+  .chapter-head{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .chapter-badge{width:38px; height:38px; border-radius:12px; display:grid;
+    place-items:center; font-size:18px; font-weight:800; flex:0 0 auto;
+    color:#fff;}
+  .chapter-info{flex:1; min-width:0;}
+  .chapter-name{font-size:16px; font-weight:800; color:var(--ink); line-height:1.2;}
+  .chapter-sub{font-size:11px; font-weight:800; letter-spacing:.8px;
+    text-transform:uppercase; color:var(--ink-soft); margin-top:2px;}
+
+  /* Path nodes */
+  .path-wrap{position:relative; padding-bottom:16px;}
+  .path-wrap::before{content:''; position:absolute; left:50%; top:20px;
+    bottom:20px; width:6px; background:var(--line); transform:translateX(-50%);
+    border-radius:99px; z-index:0;}
+  .path-nodes{display:flex; flex-direction:column; align-items:center; gap:12px;
+    position:relative; z-index:1;}
+
+  .node-wrap{position:relative; display:flex; flex-direction:column;
+    align-items:center; cursor:pointer;}
+  .node-btn{
+    width:74px; height:74px; border-radius:50%; border:none; cursor:pointer;
+    display:grid; place-items:center; font-family:inherit; font-weight:800;
+    font-size:26px; position:relative; transition:transform .15s;
+    background:#fff; box-shadow:0 6px 0 rgba(0,0,0,0.12), inset 0 -4px 0 rgba(0,0,0,0.08);
+    border:3px solid var(--line);
+    color:var(--locked-ink);
+  }
+  .node-btn:active:not(.locked){transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.12), inset 0 -3px 0 rgba(0,0,0,0.08);}
+  .node-btn.done{background:var(--green); border-color:var(--green-dark);
+    color:#fff; box-shadow:0 6px 0 var(--green-dark);}
+  .node-btn.current{background:var(--blue); border-color:var(--blue-dark);
+    color:#fff; box-shadow:0 6px 0 var(--blue-dark);
+    animation:pulseBlue 2.2s infinite;}
+  .node-btn.locked{background:#F5F5F5; border-color:var(--line); cursor:not-allowed;}
+  @keyframes pulseBlue{
+    0%,100%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 0 rgba(28,176,246,0.5);}
+    50%{box-shadow:0 6px 0 var(--blue-dark), 0 0 0 14px rgba(28,176,246,0);}
+  }
+  .node-btn .crown{position:absolute; top:-10px; font-size:22px;}
+  .node-btn .icon{font-size:26px; line-height:1;}
+  .node-label{
+    margin-top:8px; font-size:11.5px; font-weight:800; color:var(--ink-soft);
+    text-align:center; max-width:140px; line-height:1.25;
+  }
+  .node-wrap.current .node-label{color:var(--blue-dark);}
+  .node-wrap.done .node-label{color:var(--green-dark);}
+
+  /* Stars row under completed nodes */
+  .node-stars{display:flex; gap:2px; margin-top:4px; height:11px;}
+  .node-stars .s{font-size:11px; color:#DDD; line-height:1;}
+  .node-stars .s.on{color:var(--yellow);}
+
+  /* Start flag */
+  .flag-start{width:42px; height:42px; border-radius:50%;
+    background:var(--yellow); border:3px solid var(--yellow-dark);
+    display:grid; place-items:center; font-size:20px;
+    box-shadow:0 4px 0 var(--yellow-dark); margin-bottom:2px;}
+
+  /* Crown milestone */
+  .milestone{display:flex; flex-direction:column; align-items:center; gap:4px;
+    margin:6px 0 2px;}
+  .milestone .trophy{font-size:34px;}
+  .milestone .lbl{font-size:10px; font-weight:800; letter-spacing:1px;
+    text-transform:uppercase; color:var(--orange);}
+
+  /* ===== LESSON SCREEN ===== */
+  .lesson-top{padding:10px 20px 0; position:sticky; top:0; background:#fff;
+    z-index:15;}
+  .lesson-bar-wrap{display:flex; align-items:center; gap:12px;}
+  .lesson-close{width:30px; height:30px; border-radius:50%; background:transparent;
+    border:none; color:var(--ink-soft); font-size:22px; font-weight:800;
+    cursor:pointer; font-family:inherit; flex:0 0 auto;}
+  .lesson-close:hover{color:var(--red);}
+  .lesson-progress{flex:1; height:14px; background:var(--line); border-radius:99px;
+    overflow:hidden;}
+  .lesson-progress-fill{height:100%; width:0%; background:var(--green);
+    border-radius:99px; transition:width .4s cubic-bezier(.4,0,.2,1);}
+
+  .lesson-body{padding:22px 22px 140px;}
+  .lesson-eyebrow{font-size:11px; font-weight:800; letter-spacing:1.3px;
+    text-transform:uppercase; color:var(--blue); margin-bottom:10px;}
+  .lesson-title{font-size:23px; font-weight:800; line-height:1.2; margin-bottom:14px;
+    color:var(--ink);}
+  .lesson-text{font-size:16px; line-height:1.6; color:var(--ink-soft);
+    margin-bottom:14px;}
+  .lesson-text strong{color:var(--ink); font-weight:800;}
+  .lesson-text em{color:var(--blue-dark); font-style:normal; font-weight:800;}
+
+  .card{border:2px solid var(--line); border-radius:16px; padding:16px;
+    margin-bottom:14px; background:#fff;}
+  .card.blue{border-color:var(--blue); background:var(--blue-light);}
+  .card.green{border-color:var(--green); background:var(--green-light);}
+  .card.yellow{border-color:var(--yellow); background:var(--yellow-light);}
+  .card.purple{border-color:var(--purple); background:var(--purple-light);}
+  .card .card-label{font-size:10px; font-weight:800; letter-spacing:1.2px;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:8px;}
+  .card .card-eq{font-family:ui-monospace,'SF Mono',monospace;
+    font-size:16px; font-weight:700; color:var(--ink); line-height:1.6;}
+  .card .card-body{font-size:14px; line-height:1.55; color:var(--ink);}
+
+  /* Simulation panel (lab) */
+  .lab{background:var(--lab-bg); border:2px solid var(--ink); border-radius:18px;
+    overflow:hidden; margin-bottom:16px;}
+  .lab-header{padding:9px 14px; background:var(--lab-panel); color:#fff;
+    display:flex; align-items:center; gap:9px; font-size:10px; font-weight:800;
+    letter-spacing:1px; text-transform:uppercase;}
+  .lab-header .dot{width:7px; height:7px; border-radius:50%; background:var(--green);
+    box-shadow:0 0 8px var(--green); animation:pulse 1.5s infinite; flex:0 0 auto;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .lab-header .title{flex:1; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis;}
+  .lab-header .readout{font-family:ui-monospace,'SF Mono',monospace;
+    color:var(--cyan); font-size:10px;}
+  .lab-body{padding:14px;}
+
+  /* Question styles */
+  .q-prompt{font-size:19px; font-weight:800; line-height:1.35; margin-bottom:18px;
+    color:var(--ink);}
+  .options{display:flex; flex-direction:column; gap:11px;}
+  .opt{display:flex; align-items:center; gap:13px; text-align:left;
+    padding:15px 16px; background:#fff; border:2px solid var(--line);
+    border-bottom-width:4px; border-radius:15px; font-family:inherit;
+    font-size:15px; font-weight:700; color:var(--ink); cursor:pointer;
+    transition:.12s; width:100%;}
+  .opt:hover:not(.locked){background:#FAFAFA;}
+  .opt:active:not(.locked){transform:translateY(2px); border-bottom-width:2px;}
+  .opt .num{flex:0 0 28px; height:28px; border-radius:9px; border:2px solid var(--line);
+    display:grid; place-items:center; font-size:13px; font-weight:800;
+    color:var(--ink-soft);}
+  .opt.correct{background:var(--green-light); border-color:var(--green);
+    color:var(--green-dark);}
+  .opt.correct .num{border-color:var(--green); color:var(--green-dark);}
+  .opt.wrong{background:var(--red-light); border-color:var(--red);
+    color:var(--red-dark);}
+  .opt.wrong .num{border-color:var(--red); color:var(--red-dark);}
+  .opt.locked{cursor:default;}
+  .shake{animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+  /* Multi-select / drag list */
+  .multi-hint{font-size:12px; color:var(--ink-soft); margin-bottom:12px;
+    font-weight:700;}
+
+  /* ===== FEEDBACK (bottom bar) ===== */
+  .feedback-bar{position:fixed; bottom:0; left:0; right:0; max-width:560px;
+    margin:0 auto; padding:16px 20px 22px; background:#fff;
+    border-top:2px solid var(--line); z-index:40; transform:translateY(140%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);}
+  .feedback-bar.show{transform:translateY(0);}
+  .feedback-bar.correct{background:var(--green-light); border-color:var(--green);}
+  .feedback-bar.wrong{background:var(--red-light); border-color:var(--red);}
+  .fb-head{display:flex; align-items:center; gap:10px; font-size:19px;
+    font-weight:800; margin-bottom:6px;}
+  .fb-head .fb-icon{width:34px; height:34px; border-radius:50%;
+    display:grid; place-items:center; color:#fff; font-size:19px; font-weight:800;
+    flex:0 0 auto;}
+  .feedback-bar.correct .fb-head{color:var(--green-dark);}
+  .feedback-bar.correct .fb-icon{background:var(--green);}
+  .feedback-bar.wrong .fb-head{color:var(--red-dark);}
+  .feedback-bar.wrong .fb-icon{background:var(--red);}
+  .fb-body{font-size:14px; line-height:1.5; color:var(--ink); margin-bottom:14px;
+    padding-left:44px; font-weight:600;}
+  .fb-body b{font-weight:800;}
+  .fb-btn{width:100%; padding:15px; border:none; border-radius:15px;
+    background:var(--green); border-bottom:4px solid var(--green-dark);
+    color:#fff; font-family:inherit; font-size:15px; font-weight:800;
+    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;}
+  .fb-btn:hover{filter:brightness(1.05);}
+  .fb-btn:active{transform:translateY(2px); border-bottom-width:2px;}
+  .feedback-bar.wrong .fb-btn{background:var(--red); border-color:var(--red-dark);}
+
+  /* ===== CTA (lesson bottom when content only) ===== */
+  .lesson-cta-wrap{position:fixed; bottom:0; left:0; right:0; max-width:560px;
+    margin:0 auto; padding:16px 20px 22px; background:#fff;
+    border-top:2px solid var(--line); z-index:40;}
+  .lesson-cta{width:100%; padding:16px; border:none; border-radius:16px;
+    background:var(--green); border-bottom:4px solid var(--green-dark);
+    color:#fff; font-family:inherit; font-size:16px; font-weight:800;
+    letter-spacing:.8px; text-transform:uppercase; cursor:pointer; transition:.12s;}
+  .lesson-cta:hover{filter:brightness(1.05);}
+  .lesson-cta:active{transform:translateY(2px); border-bottom-width:2px;}
+  .lesson-cta:disabled{background:var(--line); border-color:var(--line);
+    color:#AFAFAF; cursor:not-allowed;}
+
+  /* ===== LESSON COMPLETE SCREEN ===== */
+  .complete-wrap{text-align:center; padding:30px 22px 100px;}
+  .complete-star{font-size:90px; line-height:1; margin-bottom:10px;
+    animation:starPop .8s cubic-bezier(.34,1.56,.64,1); display:inline-block;}
+  @keyframes starPop{0%{transform:scale(0) rotate(-180deg)}100%{transform:scale(1) rotate(0)}}
+  .complete-title{font-size:28px; font-weight:800; margin-bottom:8px;}
+  .complete-sub{font-size:15px; color:var(--ink-soft); margin-bottom:26px;}
+  .complete-stats{display:flex; gap:10px; margin-bottom:26px;}
+  .cstat{flex:1; border:2px solid var(--line); border-radius:15px;
+    padding:14px 8px;}
+  .cstat .n{font-size:22px; font-weight:800; color:var(--green-dark);}
+  .cstat .l{font-size:10px; font-weight:800; letter-spacing:.8px;
+    text-transform:uppercase; color:var(--ink-soft); margin-top:4px;}
+
+  .stars-award{display:flex; justify-content:center; gap:14px; margin-bottom:24px;}
+  .stars-award .big{font-size:54px; line-height:1;
+    animation:starPop .5s cubic-bezier(.34,1.56,.64,1) both;}
+  .stars-award .big:nth-child(2){animation-delay:.15s;}
+  .stars-award .big:nth-child(3){animation-delay:.3s;}
+  .stars-award .big.off{color:#E5E5E5; animation:none;}
+
+  /* ===== MASTERY (course complete) ===== */
+  .mastery-wrap{text-align:center; padding:26px 22px 100px;}
+  .mastery-seal{font-size:100px; line-height:1; margin-bottom:12px;
+    animation:sealSpin 1s cubic-bezier(.34,1.56,.64,1); display:inline-block;}
+  @keyframes sealSpin{0%{transform:scale(0) rotate(-360deg)}100%{transform:scale(1) rotate(0)}}
+  .mastery-title{font-size:30px; font-weight:800; margin-bottom:8px;
+    background:linear-gradient(135deg, var(--yellow), var(--orange));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;}
+  .mastery-sub{font-size:15px; color:var(--ink-soft); margin-bottom:24px;
+    line-height:1.5;}
+  .mastery-badge{border:3px dashed var(--yellow); border-radius:20px;
+    padding:18px; margin-bottom:22px; background:var(--yellow-light);}
+  .mastery-badge .btitle{font-size:11px; font-weight:800; letter-spacing:1.4px;
+    text-transform:uppercase; color:var(--yellow-dark); margin-bottom:6px;}
+  .mastery-badge .bbody{font-size:15px; color:var(--ink); font-weight:800;
+    line-height:1.4;}
+  .mastery-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;
+    margin-bottom:22px;}
+  .mcell{border:2px solid var(--line); border-radius:14px; padding:14px 10px;
+    text-align:center;}
+  .mcell .n{font-size:20px; font-weight:800; color:var(--green-dark);}
+  .mcell .l{font-size:10px; font-weight:800; letter-spacing:.8px;
+    text-transform:uppercase; color:var(--ink-soft); margin-top:4px;}
+
+  /* ===== CONFETTI ===== */
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:100;}
+
+  /* ===== TOAST ===== */
+  .toast{position:fixed; top:70px; left:50%;
+    transform:translateX(-50%) translateY(-140px); background:var(--ink);
+    color:#fff; padding:11px 20px; border-radius:12px; font-weight:800;
+    font-size:13px; z-index:120; transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+    letter-spacing:.4px; box-shadow:0 8px 24px rgba(0,0,0,.25); white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:520px){
+    .node-btn{width:64px; height:64px; font-size:22px;}
+    .node-btn .icon{font-size:22px;}
+    .node-label{font-size:11px; max-width:120px;}
+    .lesson-title{font-size:20px;}
+    .q-prompt{font-size:17px;}
+    .chapter-block{padding:20px 18px 0;}
+    .path-hero{padding:12px 18px 6px;}
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header id="topHeader">
+    <div class="hud-left">
+      <div class="streak" title="Daily streak">
+        <span class="flame">🔥</span><span id="streakVal">1</span>
+      </div>
+      <div class="hearts" id="heartsHud" title="Lives">
+        <span class="h">❤</span><span class="h">❤</span><span class="h">❤</span>
+      </div>
+      <div class="xp" title="Experience points">
+        <span class="b">⚡</span><span id="xpVal">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main id="mainScroll">
+
+    <!-- === PATH SCREEN === -->
+    <section class="screen active" id="pathScreen">
+      <div class="path-hero">
+        <h1>Physics Mastery</h1>
+        <p>From <strong>units</strong> to <strong>modern physics</strong> — master every topic in the WAEC, NECO and JAMB syllabus, one lesson at a time.</p>
+      </div>
+      <div id="pathBody"></div>
+    </section>
+
+    <!-- === LESSON SCREEN === -->
+    <section class="screen" id="lessonScreen">
+      <div class="lesson-top">
+        <div class="lesson-bar-wrap">
+          <button class="lesson-close" id="lessonClose">×</button>
+          <div class="lesson-progress">
+            <div class="lesson-progress-fill" id="lessonProgressFill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-body" id="lessonBody"></div>
+    </section>
+
+    <!-- === LESSON COMPLETE === -->
+    <section class="screen" id="lessonCompleteScreen">
+      <div class="complete-wrap">
+        <div class="complete-star">⭐</div>
+        <div class="complete-title">Lesson Complete</div>
+        <div class="complete-sub" id="completeSub">You crushed it.</div>
+
+        <div class="stars-award" id="starsAward"></div>
+
+        <div class="complete-stats">
+          <div class="cstat">
+            <div class="n" id="cXp">+10</div>
+            <div class="l">XP Earned</div>
+          </div>
+          <div class="cstat">
+            <div class="n" id="cAcc">100%</div>
+            <div class="l">Accuracy</div>
+          </div>
+          <div class="cstat">
+            <div class="n" id="cStreak">1</div>
+            <div class="l">Streak</div>
+          </div>
+        </div>
+
+        <div class="card green" style="text-align:left;">
+          <div class="card-label" style="color:var(--green-dark);">Mastered</div>
+          <div class="card-body" id="masteredText">Topic name</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === COURSE COMPLETE (MASTERY) === -->
+    <section class="screen" id="masteryScreen">
+      <div class="mastery-wrap">
+        <div class="mastery-seal">🏆</div>
+        <div class="mastery-title">Full Mastery</div>
+        <div class="mastery-sub" id="masterySub">You've completed every lesson in the physics syllabus.</div>
+
+        <div class="mastery-badge">
+          <div class="btitle">Certificate of Completion</div>
+          <div class="bbody">Physics Mastery — WAEC · NECO · JAMB<br>All topics covered, all lessons passed.</div>
+        </div>
+
+        <div class="mastery-grid">
+          <div class="mcell"><div class="n" id="mXp">0</div><div class="l">Total XP</div></div>
+          <div class="mcell"><div class="n" id="mLessons">0</div><div class="l">Lessons</div></div>
+          <div class="mcell"><div class="n" id="mStars">0</div><div class="l">Stars</div></div>
+          <div class="mcell"><div class="n" id="mAcc">0%</div><div class="l">Avg Accuracy</div></div>
+        </div>
+
+        <div class="card yellow" style="text-align:left;">
+          <div class="card-label" style="color:var(--yellow-dark);">What's next</div>
+          <div class="card-body">Revisit any lesson to earn 3 stars, or jump into the exam practice bank to sharpen your speed.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== LESSON CTA (only for content steps) ===== -->
+  <div class="lesson-cta-wrap" id="lessonCtaWrap" style="display:none;">
+    <button class="lesson-cta" id="lessonCta">Continue</button>
+  </div>
+
+  <!-- ===== FEEDBACK BAR (only for question steps) ===== -->
+  <div class="feedback-bar" id="feedbackBar">
+    <div class="fb-head">
+      <div class="fb-icon" id="fbIcon">✓</div>
+      <div id="fbTitle">Correct!</div>
+    </div>
+    <div class="fb-body" id="fbBody">Well done.</div>
+    <button class="fb-btn" id="fbBtn">Continue</button>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============================================================
+// COURSE DATA — the full journey from units to modern physics
+// ============================================================
+const CHAPTERS = [
+  {
+    id:'foundations',
+    name:'Foundations',
+    icon:'📏',
+    color:'#4fc3ff',
+    lessons:[
+      {
+        id:'units', name:'Units & Measurement', icon:'📐',
+        steps:[
+          { type:'content', eyebrow:'Why units matter', title:'Physics Speaks in Units',
+            body:'Every measurement is a number <em>plus a unit</em>. "5" means nothing — "5 metres" means everything. SI has <strong>seven base units</strong>: metre (m), kilogram (kg), second (s), ampere (A), kelvin (K), mole (mol), candela (cd).' },
+          { type:'content', eyebrow:'Derived units', title:'Building from Base',
+            body:'Speed is m/s. Force is kg·m/s². Energy is kg·m²/s². Every derived unit is just base units combined with multiplication and division.' },
+          { type:'question', q:'Which of these is a fundamental (base) SI unit?',
+            options:['Newton (N)','Joule (J)','Kilogram (kg)','Watt (W)'],
+            correct:2,
+            explain:'Kilogram is one of the seven SI base units. Newton, Joule, and Watt are all derived from base units.' }
+        ]
+      },
+      {
+        id:'vectors', name:'Vectors & Scalars', icon:'➡️',
+        steps:[
+          { type:'content', eyebrow:'Two families of quantities', title:'Magnitude vs Direction',
+            body:'<strong>Scalars</strong> have magnitude only: mass, time, speed, energy. <strong>Vectors</strong> have both magnitude and direction: force, velocity, displacement, acceleration.' },
+          { type:'content', eyebrow:'Resolving vectors', title:'Splitting into Components',
+            body:'Any vector can be split into perpendicular parts: <em>Ax = A cos θ</em> and <em>Ay = A sin θ</em>. This is how you solve projectile, incline, and force problems.' },
+          { type:'question', q:'Which quantity is a vector?',
+            options:['Mass','Temperature','Velocity','Energy'],
+            correct:2,
+            explain:'Velocity has both magnitude (speed) and direction. Mass, temperature, and energy are all scalars.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'kinematics',
+    name:'Kinematics',
+    icon:'🚀',
+    color:'#58cc02',
+    lessons:[
+      {
+        id:'distance', name:'Distance & Displacement', icon:'📌',
+        steps:[
+          { type:'content', eyebrow:'A crucial distinction', title:'Path vs Straight Line',
+            body:'<strong>Distance</strong> is how far you travelled in total. <strong>Displacement</strong> is the straight-line change in position. If you walk 3 m east then 3 m west, distance = 6 m, but displacement = 0 m.' },
+          { type:'question', q:'You run one full lap around a 400 m track. What is your displacement?',
+            options:['400 m','0 m','800 m','200 m'],
+            correct:1,
+            explain:'You end where you started — displacement is the straight-line change in position, which is zero. Distance would be 400 m.' }
+        ]
+      },
+      {
+        id:'velocity', name:'Velocity', icon:'💨',
+        steps:[
+          { type:'content', eyebrow:'Speed vs velocity', title:'Direction Changes Everything',
+            body:'<strong>Speed</strong> is how fast you move (scalar). <strong>Velocity</strong> is how fast plus which way (vector). Formula: <em>v = Δx / Δt</em>.' },
+          { type:'question', q:'A car drives 150 m north in 10 s. What is its velocity?',
+            options:['15 m/s','1500 m/s','15 m/s north','10 m/s north'],
+            correct:2,
+            explain:'v = 150 m ÷ 10 s = 15 m/s. Since it moved north, the velocity is 15 m/s north — magnitude and direction.' }
+        ]
+      },
+      {
+        id:'acceleration', name:'Acceleration', icon:'⚡',
+        steps:[
+          { type:'content', eyebrow:'Change in velocity', title:'Speeding Up or Slowing Down',
+            body:'<strong>Acceleration</strong> is how fast velocity changes: <em>a = Δv / Δt</em>. Positive a means speeding up; negative a (deceleration) means slowing down. Unit: m/s².' },
+          { type:'question', q:'A car speeds up from 10 m/s to 30 m/s in 4 seconds. What is its acceleration?',
+            options:['5 m/s²','10 m/s²','2.5 m/s²','20 m/s²'],
+            correct:0,
+            explain:'a = (30 − 10) ÷ 4 = 20 ÷ 4 = 5 m/s². The car gains 5 m/s of speed every second.' }
+        ]
+      },
+      {
+        id:'eqns', name:'Equations of Motion', icon:'📊',
+        steps:[
+          { type:'content', eyebrow:'The Big Four', title:'Kinematic Equations',
+            body:'For uniform acceleration: <em>v = u + at</em>, <em>s = ut + ½at²</em>, <em>v² = u² + 2as</em>, <em>s = (u+v)t/2</em>. These four solve nearly every linear motion problem.' },
+          { type:'question', q:'A ball starts from rest and accelerates at 2 m/s² for 5 s. How far does it travel?',
+            options:['10 m','25 m','50 m','5 m'],
+            correct:1,
+            explain:'s = ut + ½at² = 0 + ½(2)(25) = 25 m. Starting from rest keeps it simple.' }
+        ]
+      },
+      {
+        id:'freefall', name:'Free Fall', icon:'🍎',
+        steps:[
+          { type:'content', eyebrow:'Gravity in charge', title:'All Objects Fall Together',
+            body:'In a vacuum, all objects fall with the same acceleration <em>g = 9.8 m/s²</em>, regardless of mass. A feather and a hammer land together on the Moon.' },
+          { type:'question', q:'A rock is dropped from rest. After 3 s, how fast is it falling? (g = 9.8 m/s²)',
+            options:['9.8 m/s','19.6 m/s','29.4 m/s','3 m/s'],
+            correct:2,
+            explain:'v = gt = 9.8 × 3 = 29.4 m/s. Gravity adds 9.8 m/s of speed every second.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'forces',
+    name:'Forces & Motion',
+    icon:'🧲',
+    color:'#ff5a4a',
+    lessons:[
+      {
+        id:'force', name:'Force & Net Force', icon:'💪',
+        steps:[
+          { type:'content', eyebrow:'Push or pull', title:'Force Changes Motion',
+            body:'A <strong>force</strong> is a push or pull measured in newtons (N). Forces add as vectors. The <em>net force</em> is the vector sum of all forces acting on an object.' },
+          { type:'question', q:'Two forces act on a box: 10 N east and 4 N west. What is the net force?',
+            options:['14 N east','6 N east','6 N west','0 N'],
+            correct:1,
+            explain:'10 N east − 4 N west = 6 N east. They partially cancel, leaving a net force of 6 N east.' }
+        ]
+      },
+      {
+        id:'newtons', name:"Newton's Laws", icon:'🍏',
+        steps:[
+          { type:'content', eyebrow:'Law 1 — Inertia', title:'Objects Resist Change',
+            body:'An object stays at rest or in uniform motion unless acted on by a net external force. This is <strong>inertia</strong> — mass is its measure.' },
+          { type:'content', eyebrow:'Law 2 — F = ma', title:'Force Causes Acceleration',
+            body:'Net force equals mass times acceleration: <em>F = ma</em>. Double the force → double the acceleration. Double the mass → half the acceleration.' },
+          { type:'content', eyebrow:'Law 3 — Action-Reaction', title:'Equal and Opposite',
+            body:'For every action there is an equal and opposite reaction: <em>F_AB = −F_BA</em>. The pairs act on <strong>different objects</strong> — that\'s why they don\'t cancel.' },
+          { type:'question', q:'A 5 kg object accelerates at 4 m/s². What net force acts on it?',
+            options:['9 N','1.25 N','20 N','0.8 N'],
+            correct:2,
+            explain:'F = ma = 5 × 4 = 20 N. Newton\'s second law in action.' }
+        ]
+      },
+      {
+        id:'friction', name:'Friction', icon:'🧱',
+        steps:[
+          { type:'content', eyebrow:'Resisting sliding', title:'Static vs Kinetic',
+            body:'<strong>Static friction</strong> prevents an object from starting to slide. <strong>Kinetic friction</strong> acts once it\'s moving. Both depend on the normal force: <em>f = μN</em>.' },
+          { type:'question', q:'A 20 kg box sits on a floor with μ = 0.4. What is the minimum force to start it sliding? (g = 10 m/s²)',
+            options:['80 N','8 N','200 N','40 N'],
+            correct:0,
+            explain:'N = mg = 200 N. f = μN = 0.4 × 200 = 80 N. That\'s the force needed to overcome static friction.' }
+        ]
+      },
+      {
+        id:'circular', name:'Circular Motion', icon:'🌀',
+        steps:[
+          { type:'content', eyebrow:'Constant speed, changing velocity', title:'Centripetal Force',
+            body:'An object moving in a circle at constant speed is still accelerating — its direction keeps changing. The force is <em>F = mv²/r</em>, always pointing to the center.' },
+          { type:'question', q:'A 2 kg ball moves in a 1 m circle at 4 m/s. What centripetal force is needed?',
+            options:['8 N','32 N','16 N','4 N'],
+            correct:1,
+            explain:'F = mv²/r = 2 × 16 / 1 = 32 N. Faster or tighter circles need more force.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'energy',
+    name:'Energy & Momentum',
+    icon:'⚡',
+    color:'#ffb347',
+    lessons:[
+      {
+        id:'work', name:'Work & Energy', icon:'🔧',
+        steps:[
+          { type:'content', eyebrow:'Energy in transit', title:'Work = Force × Distance',
+            body:'<strong>Work</strong> is done when a force moves an object: <em>W = Fd cos θ</em>. It transfers energy. Unit: joule (J).' },
+          { type:'content', eyebrow:'Two key stores', title:'Kinetic & Potential',
+            body:'<strong>Kinetic energy</strong> is energy of motion: <em>KE = ½mv²</em>. <strong>Gravitational potential energy</strong> is stored by height: <em>PE = mgh</em>.' },
+          { type:'question', q:'A 3 kg object moves at 4 m/s. What is its kinetic energy?',
+            options:['12 J','24 J','48 J','6 J'],
+            correct:1,
+            explain:'KE = ½mv² = ½ × 3 × 16 = 24 J. Note the velocity is squared — speed matters a lot.' }
+        ]
+      },
+      {
+        id:'consenergy', name:'Conservation of Energy', icon:'🔄',
+        steps:[
+          { type:'content', eyebrow:'The deepest rule', title:'Energy Never Disappears',
+            body:'Energy can be transferred or transformed, but the total in a closed system is constant. A coaster at the top has max PE; at the bottom, max KE. <em>PE₁ + KE₁ = PE₂ + KE₂</em>.' },
+          { type:'question', q:'A ball is dropped from 5 m. Ignoring air resistance, what is its speed just before hitting the ground? (g = 10 m/s²)',
+            options:['10 m/s','50 m/s','5 m/s','100 m/s'],
+            correct:0,
+            explain:'mgh = ½mv² → v = √(2gh) = √100 = 10 m/s. Mass cancels — all objects fall equally.' }
+        ]
+      },
+      {
+        id:'power', name:'Power', icon:'⚙️',
+        steps:[
+          { type:'content', eyebrow:'Rate of work', title:'How Fast Energy Moves',
+            body:'<strong>Power</strong> = work ÷ time. Unit: watt (W). <em>P = W/t = Fv</em>. A more powerful machine does the same work in less time.' },
+          { type:'question', q:'A motor does 600 J of work in 4 s. What is its power?',
+            options:['2400 W','150 W','600 W','4 W'],
+            correct:1,
+            explain:'P = W/t = 600 ÷ 4 = 150 W. Power tells you how fast energy is transferred.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'waves',
+    name:'Waves & Sound',
+    icon:'🌊',
+    color:'#c07aff',
+    lessons:[
+      {
+        id:'wavemotion', name:'Wave Motion', icon:'〰️',
+        steps:[
+          { type:'content', eyebrow:'Energy without matter', title:'Waves Transfer Energy',
+            body:'A wave transfers energy through a medium without transporting matter. Key quantities: <strong>wavelength</strong> λ, <strong>frequency</strong> f, <strong>period</strong> T. The universal relation is <em>v = fλ</em>.' },
+          { type:'question', q:'A wave has frequency 50 Hz and wavelength 2 m. What is its speed?',
+            options:['25 m/s','100 m/s','52 m/s','0.04 m/s'],
+            correct:1,
+            explain:'v = fλ = 50 × 2 = 100 m/s. Multiply frequency by wavelength.' }
+        ]
+      },
+      {
+        id:'sound', name:'Sound Waves', icon:'🔊',
+        steps:[
+          { type:'content', eyebrow:'Longitudinal pressure waves', title:'How Sound Travels',
+            body:'Sound is a <strong>longitudinal wave</strong> — particles vibrate parallel to the wave direction. It needs a <em>medium</em> and travels fastest in solids, slowest in gases.' },
+          { type:'question', q:'Why can\'t sound travel through a vacuum?',
+            options:['It\'s too quiet','There are no particles to vibrate','Gravity stops it','Light blocks it'],
+            correct:1,
+            explain:'Sound is a mechanical wave. Without particles to compress and expand, there\'s nothing to carry the wave.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'electricity',
+    name:'Electricity',
+    icon:'⚡',
+    color:'#ffe040',
+    lessons:[
+      {
+        id:'charge', name:'Electric Charge', icon:'➕',
+        steps:[
+          { type:'content', eyebrow:'Two types', title:'Positive & Negative',
+            body:'Charge comes in two kinds — positive (protons) and negative (electrons). Like charges repel; opposite charges attract. Charge is <strong>conserved</strong> and <strong>quantized</strong> in units of e = 1.6 × 10⁻¹⁹ C.' },
+          { type:'question', q:'Two positive charges are placed near each other. What happens?',
+            options:['They attract','They repel','Nothing','They merge'],
+            correct:1,
+            explain:'Like charges repel. Two positive charges push each other apart.' }
+        ]
+      },
+      {
+        id:'current', name:'Current & Ohm\'s Law', icon:'🔌',
+        steps:[
+          { type:'content', eyebrow:'Flow of charge', title:'What Current Really Is',
+            body:'<strong>Current</strong> is the rate of charge flow: <em>I = Q/t</em>. Unit: ampere (A). Conventional current flows from + to −, even though electrons flow the other way.' },
+          { type:'content', eyebrow:'Ohm\'s Law', title:'V = IR',
+            body:'Voltage pushes current; resistance opposes it. <em>V = IR</em>. Double the voltage → double the current. Double the resistance → half the current.' },
+          { type:'question', q:'A 12 V battery drives current through a 4 Ω resistor. What is the current?',
+            options:['48 A','0.33 A','3 A','16 A'],
+            correct:2,
+            explain:'I = V/R = 12 ÷ 4 = 3 A. Ohm\'s law directly gives the answer.' }
+        ]
+      },
+      {
+        id:'circuits', name:'Series & Parallel Circuits', icon:'🔋',
+        steps:[
+          { type:'content', eyebrow:'Two ways to connect', title:'Series vs Parallel',
+            body:'In <strong>series</strong>, resistors add: R = R₁ + R₂. Same current everywhere. In <strong>parallel</strong>, 1/R = 1/R₁ + 1/R₂. Same voltage everywhere, current splits.' },
+          { type:'question', q:'Two 6 Ω resistors are connected in parallel. What is the equivalent resistance?',
+            options:['12 Ω','6 Ω','3 Ω','1.5 Ω'],
+            correct:2,
+            explain:'1/R = 1/6 + 1/6 = 2/6 → R = 3 Ω. Parallel resistance is always less than the smallest resistor.' }
+        ]
+      }
+    ]
+  },
+  {
+    id:'modern',
+    name:'Modern Physics',
+    icon:'⚛️',
+    color:'#ff4fa3',
+    lessons:[
+      {
+        id:'atom', name:'Atomic Structure', icon:'⚛️',
+        steps:[
+          { type:'content', eyebrow:'Inside the atom', title:'Nucleus + Electrons',
+            body:'An atom has a tiny, dense <strong>nucleus</strong> of protons and neutrons surrounded by <strong>electrons</strong> in energy levels. Atomic number Z = protons; mass number A = protons + neutrons.' },
+          { type:'question', q:'An atom has 6 protons and 8 neutrons. What is its mass number?',
+            options:['6','8','14','2'],
+            correct:2,
+            explain:'Mass number A = protons + neutrons = 6 + 8 = 14. Atomic number would be 6 (carbon).' }
+        ]
+      },
+      {
+        id:'radioactivity', name:'Radioactivity', icon:'☢️',
+        steps:[
+          { type:'content', eyebrow:'Unstable nuclei decay', title:'Half-Life',
+            body:'Radioactive nuclei emit alpha, beta, or gamma radiation. <strong>Half-life</strong> is the time for half the nuclei to decay: <em>N = N₀ (½)^(t/t½)</em>. Half-life is constant for a given isotope.' },
+          { type:'question', q:'A sample starts with 80 g of a radioactive isotope with a half-life of 5 days. How much remains after 15 days?',
+            options:['40 g','20 g','10 g','5 g'],
+            correct:2,
+            explain:'15 days = 3 half-lives. 80 → 40 → 20 → 10 g. Halving three times leaves 10 g.' }
+        ]
+      },
+      {
+        id:'photoelectric', name:'Photoelectric Effect', icon:'💡',
+        steps:[
+          { type:'content', eyebrow:'Light as particles', title:'Photons Eject Electrons',
+            body:'When light hits a metal, electrons can be ejected. This only works if the light\'s frequency is high enough. Einstein\'s equation: <em>KE_max = hf − W</em>, where W is the work function.' },
+          { type:'question', q:'Which change will eject electrons from a metal with a higher kinetic energy?',
+            options:['Brighter light','Higher frequency light','Longer wavelength','More time'],
+            correct:1,
+            explain:'KE_max = hf − W. Only frequency (f) changes the energy per photon. Brighter light means more photons, not more energetic ones.' }
+        ]
+      }
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  xp: 0,
+  streak: 1,
+  hearts: 3,
+  completed: {},       // lessonId -> { stars, accuracy }
+  currentScreen: 'path',
+  // lesson session
+  lesson: null,
+  stepIdx: 0,
+  correctInLesson: 0,
+  questionsInLesson: 0,
+  answered: false
+};
+
+// Flatten lesson order
+const ALL_LESSONS = [];
+CHAPTERS.forEach(ch => ch.lessons.forEach(l => {
+  ALL_LESSONS.push({ ...l, chapterId: ch.id, chapterName: ch.name, chapterColor: ch.color });
+}));
+const LESSON_INDEX = {};
+ALL_LESSONS.forEach((l, i) => LESSON_INDEX[l.id] = i);
+
+// ============================================================
+// HELPERS
+// ============================================================
+function isLessonUnlocked(id){
+  const idx = LESSON_INDEX[id];
+  if (idx === 0) return true;
+  const prev = ALL_LESSONS[idx - 1];
+  return !!state.completed[prev.id];
+}
+
+function isChapterUnlocked(chId){
+  const chIdx = CHAPTERS.findIndex(c => c.id === chId);
+  if (chIdx === 0) return true;
+  // chapter unlocks when the previous chapter's last lesson is done
+  const prevCh = CHAPTERS[chIdx - 1];
+  const lastLesson = prevCh.lessons[prevCh.lessons.length - 1];
+  return !!state.completed[lastLesson.id];
+}
+
+function getCurrentLessonId(){
+  for (const l of ALL_LESSONS){
+    if (!state.completed[l.id]) return l.id;
+  }
+  return null;
+}
+
+function starsFor(id){
+  return state.completed[id] ? state.completed[id].stars : 0;
+}
+
+function totalStars(){
+  return Object.values(state.completed).reduce((s, c) => s + c.stars, 0);
+}
+
+function avgAccuracy(){
+  const vals = Object.values(state.completed);
+  if (!vals.length) return 0;
+  return Math.round(vals.reduce((s, c) => s + c.accuracy, 0) / vals.length);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function updateHud(){
+  document.getElementById('xpVal').textContent = state.xp;
+  document.getElementById('streakVal').textContent = state.streak;
+  const hearts = document.getElementById('heartsHud').querySelectorAll('.h');
+  hearts.forEach((h, i) => {
+    h.classList.toggle('lost', i >= state.hearts);
+  });
+}
+
+// ============================================================
+// SCREEN SWITCH
+// ============================================================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.toggle('active', s.id === id);
+  });
+  state.currentScreen = id;
+
+  // header + CTA visibility
+  const header = document.getElementById('topHeader');
+  const cta = document.getElementById('lessonCtaWrap');
+  const fb = document.getElementById('feedbackBar');
+
+  if (id === 'pathScreen' || id === 'masteryScreen'){
+    header.style.display = 'flex';
+    cta.style.display = 'none';
+    fb.classList.remove('show');
+  } else if (id === 'lessonScreen'){
+    header.style.display = 'none';
+    cta.style.display = 'none';
+    fb.classList.remove('show');
+  } else if (id === 'lessonCompleteScreen'){
+    header.style.display = 'none';
+    cta.style.display = 'none';
+    fb.classList.remove('show');
+  }
+
+  document.getElementById('mainScroll').scrollTop = 0;
+}
+
+// ============================================================
+// PATH SCREEN
+// ============================================================
+function renderPath(){
+  const body = document.getElementById('pathBody');
+  body.innerHTML = '';
+
+  CHAPTERS.forEach(ch => {
+    const unlocked = isChapterUnlocked(ch.id);
+    const lessonsDone = ch.lessons.filter(l => state.completed[l.id]).length;
+
+    const block = document.createElement('div');
+    block.className = 'chapter-block';
+
+    // Chapter header
+    block.innerHTML = `
+      <div class="chapter-head">
+        <div class="chapter-badge" style="background:${unlocked ? ch.color : '#E5E5E5'}; color:${unlocked ? '#fff' : '#AFAFAF'}">
+          ${ch.icon}
+        </div>
+        <div class="chapter-info">
+          <div class="chapter-name" style="color:${unlocked ? 'var(--ink)' : 'var(--locked-ink)'}">${ch.name}</div>
+          <div class="chapter-sub">${lessonsDone} / ${ch.lessons.length} lessons · ${ch.color === '#4fc3ff' ? 'WAEC · NECO · JAMB' : 'WAEC · NECO · JAMB'}</div>
+        </div>
+      </div>
+      <div class="path-wrap">
+        <div class="path-nodes" data-chapter="${ch.id}"></div>
+      </div>
+    `;
+
+    const nodesWrap = block.querySelector('.path-nodes');
+
+    // start flag
+    if (ch === CHAPTERS[0]){
+      const flag = document.createElement('div');
+      flag.className = 'flag-start';
+      flag.textContent = '🚀';
+      nodesWrap.appendChild(flag);
+    }
+
+    ch.lessons.forEach((lesson) => {
+      const l = { ...lesson, chapterId: ch.id, chapterName: ch.name, chapterColor: ch.color };
+      const unlockedNode = isLessonUnlocked(lesson.id) && unlocked;
+      const done = !!state.completed[lesson.id];
+      const isCurrent = !done && unlockedNode && getCurrentLessonId() === lesson.id;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'node-wrap ' + (done ? 'done' : isCurrent ? 'current' : 'locked');
+      wrap.style.marginLeft = (nodesWrap.children.length % 2 === 0) ? '-42px' : '42px';
+
+      const stars = starsFor(lesson.id);
+      const starsHtml = `
+        <div class="node-stars">
+          <span class="s ${stars>=1?'on':''}">★</span>
+          <span class="s ${stars>=2?'on':''}">★</span>
+          <span class="s ${stars>=3?'on':''}">★</span>
+        </div>`;
+
+      wrap.innerHTML = `
+        <button class="node-btn ${done?'done':isCurrent?'current':'locked'}" data-lesson="${lesson.id}">
+          <span class="icon">${done ? '✓' : unlockedNode ? lesson.icon : '🔒'}</span>
+        </button>
+        <div class="node-label">${lesson.name}</div>
+        ${done ? starsHtml : ''}
+      `;
+
+      wrap.querySelector('.node-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!unlockedNode){
+          showToast('Complete the previous lesson first');
+          return;
+        }
+        startLesson(lesson.id);
+      });
+
+      nodesWrap.appendChild(wrap);
+    });
+
+    // milestone at end of chapter
+    if (lessonsDone === ch.lessons.length){
+      const ms = document.createElement('div');
+      ms.className = 'milestone';
+      ms.innerHTML = `<div class="trophy">🏅</div><div class="lbl">${ch.name} complete</div>`;
+      nodesWrap.appendChild(ms);
+    }
+
+    body.appendChild(block);
+  });
+
+  // Add final mastery block
+  const masteryWrap = document.createElement('div');
+  masteryWrap.className = 'chapter-block';
+  masteryWrap.style.paddingBottom = '60px';
+  const allDone = Object.keys(state.completed).length === ALL_LESSONS.length;
+  masteryWrap.innerHTML = `
+    <div class="chapter-head" style="justify-content:center;">
+      <div class="chapter-badge" style="background:${allDone ? 'var(--yellow)' : '#E5E5E5'}; color:${allDone ? 'var(--yellow-dark)' : '#AFAFAF'}; font-size:22px;">🏆</div>
+    </div>
+    <div style="text-align:center; padding-bottom:20px;">
+      <div style="font-size:16px; font-weight:800; color:${allDone ? 'var(--yellow-dark)' : 'var(--locked-ink)'};">Full Mastery</div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-top:4px; font-weight:700;">
+        ${Object.keys(state.completed).length} / ${ALL_LESSONS.length} lessons complete
+      </div>
+      ${allDone ? '<button class="fb-btn" style="margin-top:16px; max-width:240px; margin-left:auto; margin-right:auto; display:block;" id="viewMasteryBtn">View Certificate</button>' : ''}
+    </div>
+  `;
+  body.appendChild(masteryWrap);
+
+  const viewBtn = document.getElementById('viewMasteryBtn');
+  if (viewBtn){
+    viewBtn.addEventListener('click', showMastery);
+  }
+
+  updateHud();
+  document.getElementById('mainScroll').scrollTop = 0;
+}
+
+// ============================================================
+// LESSON
+// ============================================================
+function startLesson(id){
+  const lesson = ALL_LESSONS.find(l => l.id === id);
+  if (!lesson) return;
+
+  state.lesson = lesson;
+  state.stepIdx = 0;
+  state.correctInLesson = 0;
+  state.questionsInLesson = lesson.steps.filter(s => s.type === 'question').length;
+  state.answered = false;
+
+  showScreen('lessonScreen');
+  renderStep();
+}
+
+function renderStep(){
+  const lesson = state.lesson;
+  const step = lesson.steps[state.stepIdx];
+  const body = document.getElementById('lessonBody');
+  const cta = document.getElementById('lessonCtaWrap');
+  const fb = document.getElementById('feedbackBar');
+
+  // progress
+  const total = lesson.steps.length;
+  const pct = (state.stepIdx / total) * 100;
+  document.getElementById('lessonProgressFill').style.width = pct + '%';
+
+  // content vs question
+  fb.classList.remove('show');
+  fb.classList.remove('correct', 'wrong');
+  cta.style.display = 'none';
+
+  if (step.type === 'content'){
+    body.innerHTML = `
+      <div class="lesson-eyebrow">${step.eyebrow}</div>
+      <div class="lesson-title">${step.title}</div>
+      <div class="lesson-text">${step.body}</div>
+    `;
+    cta.style.display = 'block';
+    document.getElementById('lessonCta').textContent =
+      state.stepIdx === total - 1 ? 'Finish' : 'Continue';
+  } else {
+    body.innerHTML = `
+      <div class="lesson-eyebrow">Quick check · ${state.stepIdx + 1} of ${total}</div>
+      <div class="q-prompt">${step.q}</div>
+      <div class="options" id="optionList"></div>
+    `;
+    const list = document.getElementById('optionList');
+    step.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt';
+      btn.dataset.idx = i;
+      btn.innerHTML = `<span class="num">${String.fromCharCode(65 + i)}</span>${opt}`;
+      btn.addEventListener('click', () => handleAnswer(i));
+      list.appendChild(btn);
+    });
+  }
+
+  document.getElementById('mainScroll').scrollTop = 0;
+}
+
+function handleAnswer(idx){
+  if (state.answered) return;
+  state.answered = true;
+  const step = state.lesson.steps[state.stepIdx];
+  const correct = step.correct;
+  const isCorrect = idx === correct;
+
+  const opts = document.querySelectorAll('#optionList .opt');
+  opts.forEach((o, i) => {
+    o.classList.add('locked');
+    if (i === correct) o.classList.add('correct');
+    if (i === idx && !isCorrect){
+      o.classList.add('wrong');
+      o.classList.add('shake');
+      setTimeout(() => o.classList.remove('shake'), 450);
+    }
+  });
+
+  if (isCorrect){
+    state.correctInLesson++;
+    state.xp += 10;
+    updateHud();
+  } else {
+    if (state.hearts > 0) state.hearts--;
+    updateHud();
+  }
+
+  showFeedback(isCorrect, step.explain);
+}
+
+function showFeedback(isCorrect, explain){
+  const fb = document.getElementById('feedbackBar');
+  const icon = document.getElementById('fbIcon');
+  const title = document.getElementById('fbTitle');
+  const body = document.getElementById('fbBody');
+  const btn = document.getElementById('fbBtn');
+
+  fb.classList.remove('correct', 'wrong');
+  fb.classList.add(isCorrect ? 'correct' : 'wrong');
+  icon.textContent = isCorrect ? '✓' : '✕';
+  title.textContent = isCorrect ? 'Correct!' : 'Not quite';
+  body.innerHTML = explain;
+  fb.classList.add('show');
+
+  btn.textContent = state.stepIdx === state.lesson.steps.length - 1 ? 'Finish' : 'Continue';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+document.getElementById('lessonCta').addEventListener('click', () => {
+  if (state.stepIdx < state.lesson.steps.length - 1){
+    state.stepIdx++;
+    state.answered = false;
+    renderStep();
+  } else {
+    finishLesson();
+  }
+});
+
+document.getElementById('fbBtn').addEventListener('click', () => {
+  if (state.stepIdx < state.lesson.steps.length - 1){
+    state.stepIdx++;
+    state.answered = false;
+    renderStep();
+  } else {
+    finishLesson();
+  }
+});
+
+document.getElementById('lessonClose').addEventListener('click', () => {
+  state.lesson = null;
+  renderPath();
+  showScreen('pathScreen');
+});
+
+function finishLesson(){
+  const lesson = state.lesson;
+  if (!lesson) return;
+
+  const totalQ = lesson.steps.filter(s => s.type === 'question').length;
+  const accuracy = totalQ > 0
+    ? Math.round((state.correctInLesson / totalQ) * 100)
+    : 100;
+
+  // stars: 1 for finishing, 2 for ≥ 75%, 3 for 100%
+  let stars = 1;
+  if (accuracy >= 75) stars = 2;
+  if (accuracy === 100) stars = 3;
+
+  // only update stars if this is a better run
+  const prev = state.completed[lesson.id];
+  const finalStars = prev ? Math.max(prev.stars, stars) : stars;
+
+  state.completed[lesson.id] = {
+    stars: finalStars,
+    accuracy: prev ? Math.max(prev.accuracy, accuracy) : accuracy
+  };
+
+  // XP bonus for stars
+  state.xp += finalStars * 5;
+  updateHud();
+
+  // show complete screen
+  document.getElementById('cXp').textContent = '+' + (10 * totalQ + finalStars * 5);
+  document.getElementById('cAcc').textContent = accuracy + '%';
+  document.getElementById('cStreak').textContent = state.streak;
+  document.getElementById('masteredText').textContent = lesson.name;
+
+  const starsAward = document.getElementById('starsAward');
+  starsAward.innerHTML = '';
+  for (let i = 0; i < 3; i++){
+    const s = document.createElement('div');
+    s.className = 'big ' + (i < finalStars ? '' : 'off');
+    s.textContent = '★';
+    starsAward.appendChild(s);
+  }
+
+  document.getElementById('completeSub').textContent =
+    finalStars === 3 ? 'Perfect score — you nailed it!' :
+    finalStars === 2 ? 'Great work — nearly perfect.' :
+    'Lesson complete — review and try for 3 stars.';
+
+  showScreen('lessonCompleteScreen');
+  launchConfetti();
+
+  // auto-return to path after 3.5s
+  setTimeout(() => {
+    if (state.currentScreen === 'lessonCompleteScreen'){
+      const allDone = Object.keys(state.completed).length === ALL_LESSONS.length;
+      if (allDone){
+        showMastery();
+      } else {
+        renderPath();
+        showScreen('pathScreen');
+      }
+    }
+  }, 3500);
+
+  state.lesson = null;
+}
+
+// ============================================================
+// MASTERY
+// ============================================================
+function showMastery(){
+  document.getElementById('mXp').textContent = state.xp;
+  document.getElementById('mLessons').textContent = Object.keys(state.completed).length;
+  document.getElementById('mStars').textContent = totalStars() + ' / ' + (ALL_LESSONS.length * 3);
+  document.getElementById('mAcc').textContent = avgAccuracy() + '%';
+  document.getElementById('masterySub').textContent =
+    `You've completed all ${ALL_LESSONS.length} lessons across the WAEC, NECO, and JAMB physics syllabus.`;
+  showScreen('masteryScreen');
+  launchConfetti(180);
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti(amount){
+  amount = amount || 120;
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const colors = ['#58CC02','#1CB0F6','#FFC800','#CE82FF','#FF4B4B','#ffb347','#ff4fa3'];
+  const particles = [];
+  for (let i = 0; i < amount; i++){
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * canvas.height * 0.5,
+      vx: (Math.random() - 0.5) * 4,
+      vy: 2 + Math.random() * 4,
+      size: 6 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.3,
+      life: 0
+    });
+  }
+
+  let frame = 0;
+  function tick(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.rot += p.rotV;
+      p.life++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(0, 1 - p.life / 220);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size * 0.6);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 260) requestAnimationFrame(tick);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  tick();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderPath();
+showScreen('pathScreen');
+updateHud();
+</script>
+</body>
+</html>
