@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemistry Course Flow — WAEC · NECO · JAMB</title>
+<style>
+  :root{
+    --bg:#0d1418; --panel:#16212a; --panel-2:#1a2733;
+    --line:#1e2d38; --line-2:#2b4356;
+    --ink:#c9dcef; --ink-soft:#7d8f9c; --ink-dim:#5d7284;
+    --cyan:#4fc3ff; --green:#58cc02; --amber:#ffb347;
+    --coral:#ff5a4a; --violet:#c07aff; --yellow:#ffe040;
+    --pink:#ff4fa3; --flow:#4fe0a8;
+    --waec:#58cc02; --neco:#4fc3ff; --jamb:#ffe040;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden}
+  body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); font-weight:600;}
+  .app{width:100%; height:100vh; display:flex; flex-direction:column;}
+
+  header{padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:12px; flex:0 0 auto; z-index:10;}
+  .title-block{flex:1; min-width:0;}
+  .eyebrow{font-size:9.5px; font-weight:800; letter-spacing:1.4px;
+    text-transform:uppercase; color:var(--cyan); margin-bottom:2px;}
+  h1{font-size:16px; font-weight:800; color:#e6f1fa; line-height:1.15;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .exam-pills{display:flex; gap:5px; flex:0 0 auto;}
+  .exam-pill{
+    font-size:9px; font-weight:800; letter-spacing:.8px; padding:4px 8px;
+    border-radius:99px; text-transform:uppercase; border:1.5px solid;
+    cursor:pointer; transition:.15s; background:transparent;
+    font-family:inherit; color:#7d8f9c; border-color:#2b4356;
+  }
+  .exam-pill.on[data-exam="WAEC"]{background:rgba(88,204,2,.18); color:#58cc02; border-color:rgba(88,204,2,.5);}
+  .exam-pill.on[data-exam="NECO"]{background:rgba(79,195,255,.18); color:#4fc3ff; border-color:rgba(79,195,255,.5);}
+  .exam-pill.on[data-exam="JAMB"]{background:rgba(255,224,64,.18); color:#ffe040; border-color:rgba(255,224,64,.5);}
+  .exam-pill.off{opacity:.35;}
+  .controls{display:flex; gap:5px; flex:0 0 auto;}
+  .ctrl{min-width:34px; height:34px; padding:0 11px; background:var(--panel-2);
+    border:1.5px solid var(--line); border-radius:9px; color:var(--ink-soft);
+    font-family:inherit; font-size:13px; font-weight:800; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:.15s;
+    letter-spacing:.5px;}
+  .ctrl:hover{border-color:var(--cyan); color:var(--cyan);}
+  .ctrl.mode-on{background:rgba(79,224,168,.15); border-color:var(--flow); color:var(--flow);}
+  .ctrl.wide{font-size:10px; letter-spacing:.8px; text-transform:uppercase; padding:0 12px;}
+
+  .legend-bar{padding:8px 18px; background:var(--panel); border-bottom:1px solid var(--line);
+    display:flex; gap:10px; overflow-x:auto; flex:0 0 auto; scrollbar-width:none; z-index:9;}
+  .legend-bar::-webkit-scrollbar{display:none}
+  .legend-item{display:flex; align-items:center; gap:5px; font-size:9.5px;
+    font-weight:800; letter-spacing:.9px; text-transform:uppercase;
+    color:var(--ink-soft); flex:0 0 auto; white-space:nowrap;}
+  .legend-swatch{width:10px; height:10px; border-radius:3px; flex:0 0 auto;}
+  .legend-divider{width:1px; background:var(--line-2); margin:0 4px; flex:0 0 auto;}
+  .legend-dot{width:10px; height:10px; border-radius:50%; flex:0 0 auto;}
+
+  .stage{flex:1; position:relative; overflow:hidden;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(79,195,255,.04), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(192,122,255,.04), transparent 40%),
+      var(--bg);}
+  #graph{width:100%; height:100%; display:block; cursor:grab; touch-action:none; user-select:none;}
+  #graph.dragging{cursor:grabbing;}
+
+  .hint{position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    font-size:9.5px; letter-spacing:1px; text-transform:uppercase;
+    color:var(--ink-dim); font-weight:800; pointer-events:none;
+    background:rgba(13,20,24,.85); padding:6px 14px; border-radius:99px;
+    border:1px solid var(--line); transition:opacity .4s;}
+  .hint.hide{opacity:0;}
+
+  /* Flow mode banner */
+  .flow-banner{position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    padding:8px 16px; border-radius:99px; background:rgba(79,224,168,.12);
+    border:1.5px solid var(--flow); color:var(--flow); font-size:10px;
+    font-weight:800; letter-spacing:1.2px; text-transform:uppercase;
+    pointer-events:none; opacity:0; transition:opacity .3s; z-index:5;
+    display:flex; align-items:center; gap:8px;}
+  .flow-banner.show{opacity:1;}
+  .flow-banner .pulse{width:7px; height:7px; border-radius:50%;
+    background:var(--flow); animation:flowPulse 1.4s infinite;}
+  @keyframes flowPulse{0%,100%{opacity:.4; transform:scale(.8)}50%{opacity:1; transform:scale(1.2)}}
+
+  /* ===== NODES ===== */
+  .node{cursor:pointer; transition:opacity .25s;}
+  .node rect.node-bg{transition:stroke-opacity .15s, fill .15s; fill:#16212a; stroke-width:1.4;}
+  .node:hover rect.node-bg{stroke-opacity:1; fill:#1c2c39;}
+  .node.selected rect.node-bg{stroke-opacity:1; stroke-width:2.4; fill:#1f3040;}
+  .node.dim{opacity:.10;}
+  .node text{pointer-events:none;}
+  .node .node-name{font-family:'Nunito',sans-serif; font-weight:800;
+    fill:#d0e2f0; pointer-events:none;}
+  .node .node-footer{font-family:ui-monospace,'SF Mono',monospace; font-weight:700;
+    letter-spacing:.5px; pointer-events:none;}
+  .node .mis-dot{fill:#ff4b4b;}
+  .node .exam-badge{font-family:'Nunito',sans-serif; font-weight:800; font-size:7px;
+    letter-spacing:.5px; pointer-events:none;}
+
+  /* Flow step number badge */
+  .node .step-badge{font-family:'Nunito',sans-serif; font-weight:900;
+    pointer-events:none; transition:opacity .3s; opacity:0;}
+  .node .step-badge circle{fill:var(--flow);}
+  .node .step-badge text{fill:#0d1418;}
+  .node.flow .step-badge{opacity:1;}
+
+  /* Mastery ring */
+  .node .mastery-ring{fill:none; stroke-width:2; pointer-events:none;}
+  .node.mastery-learning .mastery-ring{stroke:var(--amber); opacity:.9;}
+  .node.mastery-mastered .mastery-ring{stroke:var(--flow); opacity:1; stroke-width:2.5;}
+  .node.mastery-mastered rect.node-bg{fill:rgba(79,224,168,.10);}
+  .node.mastery-learning rect.node-bg{fill:rgba(255,179,71,.08);}
+
+  /* Start and end markers */
+  .node .role-marker{font-family:'Nunito',sans-serif; font-weight:900;
+    pointer-events:none; letter-spacing:1px;}
+  .node.flow.role-start .role-marker{fill:var(--flow);}
+  .node.flow.role-end .role-marker{fill:var(--yellow);}
+
+  /* ===== EDGES ===== */
+  .edge{fill:none; stroke-linecap:round; transition:stroke .2s, stroke-opacity .2s, stroke-width .2s;}
+  .edge.prereq{stroke:#3a5468; stroke-width:1.2; stroke-opacity:.4;}
+  .edge.cross{stroke:#c07aff; stroke-width:1; stroke-opacity:.28; stroke-dasharray:4 4;}
+  .edge.flow-path{stroke:var(--flow); stroke-width:2.4;
+    stroke-opacity:.55; stroke-linecap:round; fill:none;
+    filter:drop-shadow(0 0 4px rgba(79,224,168,.5));}
+  .edge.highlight{stroke-opacity:1 !important; stroke-width:2.4;}
+  .edge.highlight.prereq{stroke:#4fc3ff;}
+  .edge.highlight.cross{stroke:#c07aff;}
+  .edge.dim{stroke-opacity:.03 !important;}
+  .edge.flow-path.dim{stroke-opacity:.15 !important;}
+
+  /* ===== DETAIL PANEL ===== */
+  .detail{position:absolute; left:0; right:0; bottom:0; max-height:78vh;
+    background:var(--panel); border-top:2px solid var(--line-2);
+    border-radius:22px 22px 0 0; transform:translateY(105%);
+    transition:transform .4s cubic-bezier(.4,0,.2,1); z-index:20;
+    box-shadow:0 -12px 40px rgba(0,0,0,.55); display:flex; flex-direction:column;}
+  .detail.open{transform:translateY(0);}
+  .detail-inner{padding:20px 22px 28px; overflow-y:auto; flex:1;
+    scrollbar-width:thin; scrollbar-color:var(--line-2) transparent;}
+  .detail-inner::-webkit-scrollbar{width:6px}
+  .detail-inner::-webkit-scrollbar-thumb{background:var(--line-2); border-radius:3px}
+
+  .detail-close{position:absolute; top:12px; right:14px; width:34px; height:34px;
+    border-radius:10px; background:var(--panel-2); border:1.5px solid var(--line);
+    color:var(--ink-soft); font-size:18px; font-weight:800; cursor:pointer;
+    display:grid; place-items:center; transition:.15s; z-index:2; font-family:inherit;}
+  .detail-close:hover{border-color:var(--coral); color:var(--coral);}
+
+  .detail-layer{font-size:10px; font-weight:800; letter-spacing:1.3px;
+    text-transform:uppercase; margin-bottom:6px; display:flex;
+    align-items:center; gap:8px; flex-wrap:wrap;}
+  .detail h2{font-size:22px; font-weight:800; color:#e6f1fa; line-height:1.2;
+    margin-bottom:8px; padding-right:40px;}
+  .exam-chips{display:flex; gap:5px; margin-bottom:12px; flex-wrap:wrap;}
+  .exam-chip{font-size:9px; font-weight:800; letter-spacing:.8px; padding:3px 9px;
+    border-radius:99px; text-transform:uppercase; border:1.5px solid;}
+  .exam-chip[data-exam="WAEC"]{color:#58cc02; border-color:rgba(88,204,2,.5);
+    background:rgba(88,204,2,.08);}
+  .exam-chip[data-exam="NECO"]{color:#4fc3ff; border-color:rgba(79,195,255,.5);
+    background:rgba(79,195,255,.08);}
+  .exam-chip[data-exam="JAMB"]{color:#ffe040; border-color:rgba(255,224,64,.5);
+    background:rgba(255,224,64,.08);}
+
+  /* Mastery pill */
+  .mastery-row{display:flex; gap:6px; margin-bottom:14px;}
+  .mastery-pill{flex:1; padding:8px 10px; border-radius:9px;
+    background:var(--panel-2); border:1.5px solid var(--line);
+    color:var(--ink-soft); font-family:inherit; font-size:10px; font-weight:800;
+    letter-spacing:.7px; text-transform:uppercase; cursor:pointer;
+    transition:.15s; display:flex; align-items:center; justify-content:center; gap:5px;}
+  .mastery-pill:hover{border-color:var(--line-2);}
+  .mastery-pill.active[data-state="learning"]{background:rgba(255,179,71,.15);
+    border-color:var(--amber); color:var(--amber);}
+  .mastery-pill.active[data-state="mastered"]{background:rgba(79,224,168,.15);
+    border-color:var(--flow); color:var(--flow);}
+  .mastery-pill.active[data-state="new"]{background:rgba(79,195,255,.12);
+    border-color:var(--cyan); color:var(--cyan);}
+
+  .detail-desc{font-size:14px; line-height:1.55; color:var(--ink-soft); margin-bottom:18px;}
+  .detail-section{margin-bottom:16px;}
+  .detail-section:last-child{margin-bottom:0;}
+  .detail-label{font-size:10px; font-weight:800; letter-spacing:1.3px;
+    text-transform:uppercase; color:var(--ink-dim); margin-bottom:8px;
+    display:flex; align-items:center; gap:8px;}
+  .detail-label .count{background:var(--panel-2); border:1px solid var(--line);
+    padding:1px 7px; border-radius:99px; font-size:9px; color:var(--ink-soft);
+    font-family:ui-monospace,monospace;}
+  .detail-label.flow-label{color:var(--flow);}
+  .detail-label.flow-label .count{color:var(--flow);
+    border-color:rgba(79,224,168,.4); background:rgba(79,224,168,.08);}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:5px;}
+  .chip{display:inline-flex; align-items:center; gap:6px;
+    background:var(--panel-2); border:1.5px solid var(--line);
+    border-radius:8px; padding:7px 10px; font-size:11.5px; font-weight:700;
+    color:var(--ink); font-family:inherit; cursor:pointer; transition:.15s; text-align:left;}
+  .chip:hover{border-color:var(--cyan); color:var(--cyan); transform:translateY(-1px);}
+  .chip .cdot{width:6px; height:6px; border-radius:50%; flex:0 0 auto;}
+  .chip.empty{background:transparent; border:none; color:var(--ink-dim);
+    font-style:italic; cursor:default; padding:4px 0; font-weight:600;}
+  .chip.empty:hover{color:var(--ink-dim); transform:none;}
+
+  .detail-list{list-style:none; display:flex; flex-direction:column; gap:6px;}
+  .detail-list li{font-size:12.5px; line-height:1.5; color:var(--ink);
+    display:flex; gap:9px; align-items:flex-start; font-weight:600;}
+  .detail-list li::before{content:''; width:5px; height:5px; border-radius:50%;
+    flex:0 0 auto; margin-top:8px; background:var(--cyan);}
+  .detail-list.warn li::before{background:var(--coral);}
+  .detail-list.code li{font-family:ui-monospace,'SF Mono',monospace;
+    background:var(--panel-2); border:1px solid var(--line);
+    padding:7px 10px; border-radius:7px; font-size:11.5px; color:var(--amber);
+    display:block;}
+  .detail-list.code li::before{display:none;}
+
+  @media (max-width:600px){
+    header{padding:8px 12px; gap:8px;}
+    h1{font-size:14px;}
+    .exam-pill{font-size:8px; padding:3px 6px;}
+    .legend-bar{padding:6px 12px;}
+    .detail-inner{padding:18px 18px 24px;}
+    .detail h2{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="title-block">
+      <div class="eyebrow">Chemistry · WAEC · NECO · JAMB</div>
+      <h1>Course Flow Map</h1>
+    </div>
+    <div class="exam-pills" id="examPills">
+      <button class="exam-pill on" data-exam="WAEC">WAEC</button>
+      <button class="exam-pill on" data-exam="NECO">NECO</button>
+      <button class="exam-pill on" data-exam="JAMB">JAMB</button>
+    </div>
+    <div class="controls">
+      <button class="ctrl" id="flowToggle" title="Toggle flow mode">◉ Flow</button>
+      <button class="ctrl" id="zoomOut" title="Zoom out">−</button>
+      <button class="ctrl wide" id="zoomReset">Fit</button>
+      <button class="ctrl" id="zoomIn" title="Zoom in">+</button>
+    </div>
+  </header>
+
+  <div class="legend-bar" id="legendBar"></div>
+
+  <main class="stage">
+    <svg id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="flow-banner" id="flowBanner">
+      <div class="pulse"></div>
+      <span>Flow mode · Follow the numbered path</span>
+    </div>
+    <div class="hint" id="hint">Click any node to cycle mastery · Toggle Flow to see the path</div>
+  </main>
+
+  <div class="detail" id="detail">
+    <button class="detail-close" id="detailClose">×</button>
+    <div class="detail-inner" id="detailInner"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// LAYERS
+// ============================================================
+const LAYERS = [
+  { id:0,  name:'Foundations & Lab',            color:'#4fc3ff' },
+  { id:1,  name:'Matter & Atomic Structure',    color:'#3fb8f0' },
+  { id:2,  name:'Separation & Purification',    color:'#58cc02' },
+  { id:3,  name:'Periodic Table',               color:'#7ac020' },
+  { id:4,  name:'Chemical Bonding',             color:'#a3e635' },
+  { id:5,  name:'Stoichiometry & Equations',    color:'#ff8c40' },
+  { id:6,  name:'States of Matter & Gases',     color:'#ffb347' },
+  { id:7,  name:'Solutions & Solubility',       color:'#ffe040' },
+  { id:8,  name:'Energy & Enthalpy',            color:'#ff5a4a' },
+  { id:9,  name:'Acids, Bases & Salts',         color:'#ff4fa3' },
+  { id:10, name:'Kinetics & Equilibrium',       color:'#c07aff' },
+  { id:11, name:'Redox & Electrochemistry',     color:'#a85fe0' },
+  { id:12, name:'Non-Metals & Compounds',       color:'#40e0d0' },
+  { id:13, name:'Metals & Compounds',           color:'#20c0b0' },
+  { id:14, name:'Organic Chemistry',            color:'#40a0e0' },
+  { id:15, name:'Industry & Environment',       color:'#6a80e0' },
+  { id:16, name:'Practical Chemistry',          color:'#a050e0' }
+];
+
+// ============================================================
+// NODES — full chemistry syllabus
+// ============================================================
+const NODES = [
+  /* L0 */
+  { id:'scientific-method', name:'Scientific Method', layer:0, pre:[], exams:['WAEC','NECO','JAMB'],
+    desc:'Observation, hypothesis, experiment, theory — the framework for all chemistry inquiry.',
+    formulas:['Observation → Hypothesis → Experiment → Theory'],
+    misc:['Theory is final truth','One experiment proves a law'] },
+  { id:'measurement', name:'Measurement', layer:0, pre:['scientific-method'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mass, volume, temperature, pressure, time — the quantities measured in the chemistry lab.',
+    formulas:['mass (kg)','volume (dm³)','temperature (K)'],
+    misc:['All measurements are exact','Same instrument gives same reading'] },
+  { id:'si-units', name:'SI Units', layer:0, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'The seven SI base units and how they combine to form derived units used in chemistry.',
+    formulas:['mol = amount','kg = mass','K = temperature','dm³ = volume'],
+    misc:['Units are optional','Any unit system works'] },
+  { id:'accuracy-precision', name:'Accuracy & Precision', layer:0, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Accuracy is closeness to true value; precision is reproducibility.',
+    formulas:['% error = (|true − meas|/true) × 100'],
+    misc:['Accuracy and precision mean the same','More readings always better'] },
+  { id:'sigfig-standard', name:'Sig Figs & Standard Form', layer:0, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'How many digits matter; writing very small/large numbers as a × 10ⁿ.',
+    formulas:['0.0025 → 2 s.f.','6.02 × 10²³'],
+    misc:['Trailing zeros never count','All digits are significant'] },
+  { id:'graphing-data', name:'Graphing & Data', layer:0, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Plotting measured values, drawing lines of best fit, reading slopes and intercepts.',
+    formulas:['y = mx + c','slope = Δy/Δx'],
+    misc:['Always connect the dots','Slope has no meaning'] },
+  { id:'math-tools', name:'Mathematical Tools', layer:0, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Logarithms, exponents, proportional reasoning, and algebra used throughout chemistry.',
+    formulas:['pH = −log[H⁺]','C₁V₁ = C₂V₂'],
+    misc:['Logs are only for large numbers','Exponents multiply'] },
+  { id:'lab-safety', name:'Lab Safety & Apparatus', layer:0, pre:['scientific-method'], exams:['WAEC','NECO','JAMB'],
+    desc:'Bunsen burner, titration setup, fume cupboard, safety rules.',
+    formulas:['Never pipette by mouth','Acid into water'],
+    misc:['Safety rules are optional','All chemicals are safe'] },
+
+  /* L1 */
+  { id:'concepts-matter', name:'Concepts of Matter', layer:1, pre:['measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Matter occupies space and has mass. Made of particles; exists in three states.',
+    formulas:['matter → atoms → molecules'],
+    misc:['Matter is continuous','All matter is visible'] },
+  { id:'elements-compounds', name:'Elements, Compounds & Mixtures', layer:1, pre:['concepts-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Elements = one atom type; compounds = chemically combined; mixtures = physically combined.',
+    formulas:['Element: O, H, C','Compound: H₂O'],
+    misc:['Compounds separate easily','Mixtures have fixed composition'] },
+  { id:'phys-chem-changes', name:'Physical & Chemical Changes', layer:1, pre:['elements-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Physical changes are reversible; chemical changes create new substances.',
+    formulas:['Physical: melting','Chemical: burning'],
+    misc:['Boiling is chemical change','Burning is physical change'] },
+  { id:'pure-impure', name:'Pure & Impure Substances', layer:1, pre:['elements-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pure substances melt and boil at sharp fixed temperatures; impurities lower mp and raise bp.',
+    formulas:['Pure: sharp mp/bp','Impure: range of mp/bp'],
+    misc:['Pure = clean','Impurities raise melting point'] },
+  { id:'atomic-structure', name:'Atomic Structure', layer:1, pre:['concepts-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Atoms have a nucleus of protons and neutrons, surrounded by electrons in shells.',
+    formulas:['Z = protons','A = protons + neutrons'],
+    misc:['Atom is mostly empty space','Electrons orbit like planets'] },
+  { id:'atomic-models', name:'Atomic Models', layer:1, pre:['atomic-structure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Dalton, Thomson, Rutherford, Bohr — evolving models of atomic structure.',
+    formulas:['Dalton → Thomson → Rutherford → Bohr'],
+    misc:['Bohr model is final truth','All models are equal'] },
+  { id:'atomic-number-mass', name:'Atomic & Mass Number', layer:1, pre:['atomic-structure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Atomic number Z = number of protons; mass number A = protons + neutrons.',
+    formulas:['A = Z + N','ᴬZ X notation'],
+    misc:['Atomic number = neutron count','Mass number = atomic number'] },
+  { id:'isotopes', name:'Isotopes', layer:1, pre:['atomic-number-mass'], exams:['WAEC','NECO','JAMB'],
+    desc:'Atoms of the same element with different neutron numbers.',
+    formulas:['¹²C, ¹³C, ¹⁴C','Cl-35, Cl-37'],
+    misc:['Isotopes have different chemistry','Isotopes have different atomic number'] },
+  { id:'relative-atomic-mass', name:'Relative Atomic Mass', layer:1, pre:['isotopes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Weighted average of isotope masses relative to carbon-12.',
+    formulas:['Aᵣ = Σ(abundance × mass)/100'],
+    misc:['RAM is the mass number','All isotopes equally abundant'] },
+  { id:'electron-config', name:'Electron Configuration', layer:1, pre:['atomic-structure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Electrons fill orbitals by Aufbau principle, Pauli exclusion, and Hund\'s rule.',
+    formulas:['1s² 2s² 2p⁶ 3s² 3p⁶','2n² rule'],
+    misc:['Electrons fill randomly','4s fills before 3d'] },
+  { id:'orbitals-shapes', name:'Shapes of Orbitals', layer:1, pre:['electron-config'], exams:['WAEC','NECO','JAMB'],
+    desc:'s orbitals are spherical; p orbitals are dumbbell-shaped.',
+    formulas:['s: spherical','p: three orientations'],
+    misc:['Orbitals are 2D circles','All p orbitals identical'] },
+  { id:'radioactivity', name:'Radioactivity', layer:1, pre:['atomic-structure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Unstable nuclei emit alpha, beta, or gamma radiation.',
+    formulas:['N = N₀e^(−λt)','t½ = 0.693/λ'],
+    misc:['Half-life changes with amount','All radiation is harmful'] },
+  { id:'nuclear-reactions', name:'Nuclear Reactions', layer:1, pre:['radioactivity'], exams:['WAEC','NECO','JAMB'],
+    desc:'Natural and artificial radioactivity; uses in medicine, dating, energy.',
+    formulas:['E = Δmc²','Fission: ²³⁵U + n'],
+    misc:['Mass conserved in nuclear rxns','Fission and fusion are same'] },
+
+  /* L2 */
+  { id:'classification-mixtures', name:'Classification of Mixtures', layer:2, pre:['elements-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Homogeneous vs heterogeneous. Solutions, colloids, suspensions.',
+    formulas:['Homogeneous: saltwater','Heterogeneous: sand + iron'],
+    misc:['All mixtures are homogeneous','Colloids settle out quickly'] },
+  { id:'filtration', name:'Filtration', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Separates insoluble solid from liquid using filter paper and funnel.',
+    formulas:['Residue on paper','Filtrate passes through'],
+    misc:['Filtration separates solutions','Filter paper has no pores'] },
+  { id:'distillation', name:'Distillation', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Separates liquids by boiling point. Simple vs fractional.',
+    formulas:['Simple: one volatile liquid','Fractional: crude oil fractions'],
+    misc:['Distillation separates solids','Fractional = simple'] },
+  { id:'evaporation', name:'Evaporation', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Removes solvent by heating to leave dissolved solid behind.',
+    formulas:['Solvent evaporates','Solute remains'],
+    misc:['Evaporation = boiling','Works for all mixtures'] },
+  { id:'sublimation', name:'Sublimation', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Solid → gas directly. Purifies iodine, ammonium chloride, naphthalene.',
+    formulas:['Solid ⇌ gas','I₂, NH₄Cl, naphthalene'],
+    misc:['All solids sublime','Sublimation is melting'] },
+  { id:'decantation', name:'Decantation', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pouring off liquid from settled solid, or separating immiscible liquids.',
+    formulas:['Separating funnel','Settling for solids'],
+    misc:['Decantation is filtration','Works for solutions'] },
+  { id:'chromatography', name:'Chromatography', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Separates dissolved substances by differential migration.',
+    formulas:['Rf = distance spot / distance solvent'],
+    misc:['Works for all mixtures','Rf is constant'] },
+  { id:'crystallization', name:'Crystallization', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Purifies solids by dissolving in hot solvent, then cooling to form pure crystals.',
+    formulas:['Dissolve hot → cool slow'],
+    misc:['Works for all substances','Purifies liquids'] },
+  { id:'criteria-purity', name:'Criteria for Purity', layer:2, pre:['pure-impure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Sharp melting and boiling points, fixed density, single chromatography spot.',
+    formulas:['Pure: sharp mp','Impure: wide mp range'],
+    misc:['Clear = pure','Color indicates purity'] },
+  { id:'solvent-extraction', name:'Solvent Extraction', layer:2, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Uses two immiscible solvents to transfer solute based on solubility differences.',
+    formulas:['Partition coefficient Kd'],
+    misc:['Works with any two liquids','Extraction = distillation'] },
+
+  /* L3 */
+  { id:'periodic-law', name:'Periodic Law', layer:3, pre:['atomic-structure'], exams:['WAEC','NECO','JAMB'],
+    desc:'Properties of elements are periodic functions of their atomic numbers.',
+    formulas:['Modern: by atomic number','Mendeleev: by atomic mass'],
+    misc:['Ordered by mass in modern PT','Mendeleev used atomic number'] },
+  { id:'groups-periods', name:'Groups & Periods', layer:3, pre:['periodic-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Groups (vertical) share electron configuration; periods (horizontal) show trends.',
+    formulas:['8 main groups','7 periods'],
+    misc:['Groups = horizontal','Periods = vertical'] },
+  { id:'periodic-trends', name:'Periodic Trends', layer:3, pre:['groups-periods'], exams:['WAEC','NECO','JAMB'],
+    desc:'Ionization energy, atomic radius, electron affinity, electronegativity.',
+    formulas:['IE ↑ across, ↓ down','Radius ↓ across, ↑ down'],
+    misc:['All trends are random','No pattern exists'] },
+  { id:'alkali-metals', name:'Alkali Metals (Group 1)', layer:3, pre:['groups-periods'], exams:['WAEC','NECO','JAMB'],
+    desc:'Soft, reactive, 1 valence electron. React with water to form alkaline hydroxides.',
+    formulas:['2Na + 2H₂O → 2NaOH + H₂'],
+    misc:['Alkali metals are inert','They sink in water'] },
+  { id:'halogens', name:'Halogens (Group 17)', layer:3, pre:['groups-periods'], exams:['WAEC','NECO','JAMB'],
+    desc:'Highly reactive non-metals with 7 valence electrons.',
+    formulas:['Cl₂ + 2KI → 2KCl + I₂'],
+    misc:['Halogens are metals','Reactivity increases down'] },
+  { id:'noble-gases', name:'Noble Gases (Group 18)', layer:3, pre:['groups-periods'], exams:['WAEC','NECO','JAMB'],
+    desc:'Unreactive due to full outer shells. Used in lighting and welding.',
+    formulas:['He, Ne, Ar, Kr, Xe'],
+    misc:['Noble gases react easily','They have valence vacancies'] },
+  { id:'transition-metals', name:'Transition Metals', layer:3, pre:['groups-periods'], exams:['WAEC','NECO','JAMB'],
+    desc:'Variable oxidation states, coloured compounds, complex formation, catalysis.',
+    formulas:['Fe: +2, +3','Cu: +1, +2'],
+    misc:['All metals are transition','Transition metals colourless'] },
+  { id:'period3-elements', name:'Period 3 Elements (Na–Ar)', layer:3, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Gradual change from metal (Na) → amphoteric (Al) → non-metal (Cl) → noble (Ar).',
+    formulas:['Na metal','Al amphoteric','Cl non-metal'],
+    misc:['All period 3 are metals','No property changes'] },
+
+  /* L4 */
+  { id:'interatomic-bonding', name:'Interatomic Bonding', layer:4, pre:['electron-config'], exams:['WAEC','NECO','JAMB'],
+    desc:'Atoms bond to achieve stable electron configuration.',
+    formulas:['Octet rule','Duet rule for H'],
+    misc:['All atoms obey octet','Bonding increases energy'] },
+  { id:'ionic-bonding', name:'Ionic Bonding', layer:4, pre:['interatomic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Transfer of electrons from metal to non-metal; electrostatic attraction holds ions.',
+    formulas:['Na → Na⁺ + e⁻','NaCl lattice'],
+    misc:['Ionic compounds are gases','Ionic = covalent'] },
+  { id:'covalent-bonding', name:'Covalent Bonding', layer:4, pre:['interatomic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Sharing of electron pairs between non-metals.',
+    formulas:['H₂: H–H','O₂: O=O','N₂: N≡N'],
+    misc:['Covalent compounds conduct','Covalent = ionic'] },
+  { id:'coordinate-bonding', name:'Coordinate Bonding', layer:4, pre:['covalent-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Both electrons come from one atom. Common in NH₄⁺ and complex ions.',
+    formulas:['NH₃ + H⁺ → NH₄⁺','[Cu(NH₃)₄]²⁺'],
+    misc:['Coordinate = ionic','No shared electrons'] },
+  { id:'metallic-bonding', name:'Metallic Bonding', layer:4, pre:['interatomic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Sea of delocalized electrons surrounding positive metal ions.',
+    formulas:['Metal cations + e⁻ sea'],
+    misc:['Metals share electron pairs','Metallic bonds are weak'] },
+  { id:'hydrogen-bonding', name:'Hydrogen Bonding', layer:4, pre:['covalent-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Strong dipole attraction between H (bonded to N, O, F) and lone pair.',
+    formulas:['H₂O ↔ H₂O','HF ↔ HF'],
+    misc:['Hydrogen bond = covalent','Not important in water'] },
+  { id:'vanderwaals', name:'Van der Waals Forces', layer:4, pre:['covalent-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Weak intermolecular forces including London dispersion and dipole-dipole.',
+    formulas:['London: temporary dipoles'],
+    misc:['As strong as covalent','Don\'t affect boiling point'] },
+  { id:'molecular-shapes', name:'Shapes of Molecules', layer:4, pre:['covalent-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Linear (CO₂), non-linear (H₂O), tetrahedral (CH₄), pyramidal (NH₃).',
+    formulas:['Linear: 180°','Tetrahedral: 109.5°'],
+    misc:['All molecules linear','Shape doesn\'t matter'] },
+  { id:'bond-properties', name:'Bond Type & Properties', layer:4, pre:['ionic-bonding','covalent-bonding','metallic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Bond type predicts melting point, solubility, conductivity, hardness.',
+    formulas:['Ionic: high mp','Covalent: low mp'],
+    misc:['All compounds conduct','Solubility has no pattern'] },
+
+  /* L5 */
+  { id:'laws-combination', name:'Laws of Chemical Combination', layer:5, pre:['elements-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Fundamental laws governing how elements react to form compounds.',
+    formulas:['Definite proportion','Multiple proportion'],
+    misc:['Laws are approximations','Modern chemistry ignores them'] },
+  { id:'definite-proportions', name:'Law of Definite Proportion', layer:5, pre:['laws-combination'], exams:['WAEC','NECO','JAMB'],
+    desc:'A given compound always has the same elements in the same mass ratio.',
+    formulas:['H₂O always 1:8 H:O'],
+    misc:['Composition varies','Water composition changes'] },
+  { id:'multiple-proportions', name:'Law of Multiple Proportions', layer:5, pre:['laws-combination'], exams:['WAEC','NECO','JAMB'],
+    desc:'When two elements form multiple compounds, mass ratios are small whole numbers.',
+    formulas:['CO vs CO₂: 1:2'],
+    misc:['Ratios are arbitrary','No pattern exists'] },
+  { id:'conservation-mass', name:'Conservation of Mass', layer:5, pre:['laws-combination'], exams:['WAEC','NECO','JAMB'],
+    desc:'Matter is neither created nor destroyed in a chemical reaction.',
+    formulas:['Σ mass(reactants) = Σ mass(products)'],
+    misc:['Mass increases in reactions','Closed systems only'] },
+  { id:'chemical-symbols', name:'Chemical Symbols & Formulae', layer:5, pre:['elements-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Symbols from Latin names; formulae show atom ratios; valency determines formula.',
+    formulas:['Na, K, Fe, Cu','H₂O, H₂SO₄'],
+    misc:['Symbols = English names','Valency doesn\'t matter'] },
+  { id:'chemical-equations', name:'Chemical Equations', layer:5, pre:['chemical-symbols'], exams:['WAEC','NECO','JAMB'],
+    desc:'Represent reactions with formulae; balance atoms on both sides.',
+    formulas:['2H₂ + O₂ → 2H₂O'],
+    misc:['Coefficients can be fractions','Subscripts change to balance'] },
+  { id:'mole-concept', name:'Mole Concept', layer:5, pre:['chemical-equations','math-tools','sigfig-standard'], exams:['WAEC','NECO','JAMB'],
+    desc:'1 mole = 6.02 × 10²³ particles = molar mass in grams = 22.4 dm³ at STP.',
+    formulas:['n = m/M','n = N/N_A','N_A = 6.02 × 10²³'],
+    misc:['Mole is a mass unit','Molar mass varies'] },
+  { id:'empirical-molecular', name:'Empirical & Molecular Formulae', layer:5, pre:['mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'Empirical = simplest ratio; molecular = actual formula.',
+    formulas:['% → moles → ratio','Mᵣ = n × empirical'],
+    misc:['Empirical = molecular','Molecular is simpler'] },
+  { id:'concentration-calc', name:'Concentration Calculations', layer:5, pre:['mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'Molarity, molality, mass concentration, and dilution.',
+    formulas:['C = n/V','C₁V₁ = C₂V₂'],
+    misc:['Concentration in grams only','Dilution changes moles'] },
+  { id:'solution-prep', name:'Preparation of Solutions', layer:5, pre:['concentration-calc'], exams:['WAEC','NECO','JAMB'],
+    desc:'Weigh, dissolve, transfer to volumetric flask, make up to mark.',
+    formulas:['n = CV','Mass = n × M'],
+    misc:['Any flask works','Volume doesn\'t matter'] },
+  { id:'gas-volume-calc', name:'Gas Volume Calculations', layer:5, pre:['mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'Molar volume at STP (22.4 dm³/mol) and at RTP (24 dm³/mol).',
+    formulas:['V = n × 22.4 (STP)'],
+    misc:['All gases same volume','Molar volume constant'] },
+  { id:'iupac-nomenclature', name:'IUPAC Nomenclature', layer:5, pre:['chemical-symbols'], exams:['WAEC','NECO','JAMB'],
+    desc:'Systematic naming of inorganic and organic compounds.',
+    formulas:['Prefix + root + suffix'],
+    misc:['Common names are IUPAC','Naming is arbitrary'] },
+
+  /* L6 */
+  { id:'kinetic-theory', name:'Kinetic Theory of Matter', layer:6, pre:['concepts-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'All matter is made of particles in constant motion.',
+    formulas:['PV = ⅓Nm<c²>','KE_avg = (3/2)kT'],
+    misc:['Particles are stationary','Motion depends on mass'] },
+  { id:'states-matter', name:'States of Matter', layer:6, pre:['kinetic-theory'], exams:['WAEC','NECO','JAMB'],
+    desc:'Solid, liquid, gas. Distinguished by particle arrangement.',
+    formulas:['Solid > Liquid > Gas density'],
+    misc:['All states same energy','Gases are heaviest'] },
+  { id:'brownian-motion', name:'Brownian Motion', layer:6, pre:['kinetic-theory'], exams:['WAEC','NECO','JAMB'],
+    desc:'Random jiggling of small particles due to molecular collisions.',
+    formulas:['Observed by Robert Brown'],
+    misc:['Motion is deterministic','Only in gases'] },
+  { id:'diffusion', name:'Diffusion & Graham\'s Law', layer:6, pre:['kinetic-theory'], exams:['WAEC','NECO','JAMB'],
+    desc:'Spreading of particles due to random motion; lighter gases diffuse faster.',
+    formulas:['Rate₁/Rate₂ = √(M₂/M₁)'],
+    misc:['Heavier gases diffuse faster','Diffusion needs energy'] },
+  { id:'changes-state', name:'Changes of State', layer:6, pre:['states-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Melting, boiling, freezing, condensation, sublimation.',
+    formulas:['Melting: solid → liquid'],
+    misc:['Temperature rises during melting','State changes are chemical'] },
+  { id:'boyles-law', name:'Boyle\'s Law', layer:6, pre:['states-matter','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pressure and volume are inversely proportional at constant temperature.',
+    formulas:['P₁V₁ = P₂V₂','PV = k'],
+    misc:['P ∝ V','Applies at constant pressure'] },
+  { id:'charles-law', name:"Charles' Law", layer:6, pre:['states-matter','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Volume and absolute temperature are directly proportional at constant pressure.',
+    formulas:['V₁/T₁ = V₂/T₂'],
+    misc:['Uses Celsius','V ∝ 1/T'] },
+  { id:'avogadros-law', name:"Avogadro's Law", layer:6, pre:['states-matter','mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'Equal volumes of gases at same T and P contain equal numbers of molecules.',
+    formulas:['V ∝ n','V_m = 22.4 dm³'],
+    misc:['Volume depends on mass','Only applies to solids'] },
+  { id:'gaylussac-law', name:"Gay-Lussac's Law", layer:6, pre:['states-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Pressure and absolute temperature are directly proportional at constant volume.',
+    formulas:['P₁/T₁ = P₂/T₂'],
+    misc:['Uses Celsius','P ∝ 1/T'] },
+  { id:'daltons-law', name:"Dalton's Partial Pressure", layer:6, pre:['boyles-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Total pressure = sum of partial pressures of individual gases.',
+    formulas:['P_total = P₁ + P₂ + P₃'],
+    misc:['Gases interact','Partial pressure = zero'] },
+  { id:'ideal-gas-eqn', name:'Ideal Gas Equation', layer:6, pre:['boyles-law','charles-law','avogadros-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Combines all gas laws. R = 8.314 J/(mol·K).',
+    formulas:['PV = nRT'],
+    misc:['Applies to real gases always','R has no units'] },
+  { id:'vapour-density', name:'Vapour Density & Mr', layer:6, pre:['avogadros-law'], exams:['WAEC','NECO','JAMB'],
+    desc:'Vapour density = mass of vapour / mass of equal volume of H₂. Mᵣ = 2 × VD.',
+    formulas:['VD = Mᵣ/2','Mᵣ = 2 × VD'],
+    misc:['VD = Mᵣ','Only for solids'] },
+  { id:'ideal-real-gases', name:'Ideal vs Real Gases', layer:6, pre:['ideal-gas-eqn'], exams:['WAEC','NECO','JAMB'],
+    desc:'Real gases deviate from ideal behaviour at high pressure and low temperature.',
+    formulas:['Van der Waals equation'],
+    misc:['All gases ideal','Real gases never deviate'] },
+
+  /* L7 */
+  { id:'solubility-basics', name:'Solubility Concepts', layer:7, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'Maximum solute that dissolves in a given solvent at a given temperature.',
+    formulas:['g solute/100 g solvent'],
+    misc:['Solubility is fixed','Solubility T-independent'] },
+  { id:'saturation-types', name:'Saturated/Unsaturated/Supersaturated', layer:7, pre:['solubility-basics'], exams:['WAEC','NECO','JAMB'],
+    desc:'Unsaturated = more can dissolve; saturated = at limit; supersaturated = beyond limit.',
+    formulas:['Unsaturated < saturated < supersaturated'],
+    misc:['Saturated = concentrated','Supersaturated is stable'] },
+  { id:'solubility-curves', name:'Solubility Curves', layer:7, pre:['solubility-basics','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Graph of solubility vs temperature. Most solids increase; gases decrease.',
+    formulas:['Read solubility at any T'],
+    misc:['All salts same curve','Gases more soluble hot'] },
+  { id:'solvents-uses', name:'Solvents for Fats & Paints', layer:7, pre:['solubility-basics'], exams:['WAEC','NECO','JAMB'],
+    desc:'Organic solvents dissolve non-polar substances; water dissolves polar.',
+    formulas:['Like dissolves like'],
+    misc:['Water dissolves everything','All solvents polar'] },
+  { id:'true-false-solutions', name:'True Solutions vs Colloids vs Suspensions', layer:7, pre:['classification-mixtures'], exams:['WAEC','NECO','JAMB'],
+    desc:'True: <1 nm; colloid: 1-1000 nm; suspension: >1000 nm.',
+    formulas:['True: transparent','Colloid: Tyndall'],
+    misc:['Colloids are true solutions','Suspensions are transparent'] },
+  { id:'colloids-suspensions', name:'Colloids & Suspensions Real Life', layer:7, pre:['true-false-solutions'], exams:['WAEC','NECO','JAMB'],
+    desc:'Fog, milk, aerosol sprays (colloids); harmattan haze, muddy water (suspensions).',
+    formulas:['Fog = liquid in gas','Milk = liquid in liquid'],
+    misc:['Milk is true solution','Fog is suspension'] },
+
+  /* L8 */
+  { id:'enthalpy', name:'Enthalpy & Energy Changes', layer:8, pre:['states-matter'], exams:['WAEC','NECO','JAMB'],
+    desc:'Heat change at constant pressure. ΔH = H(products) − H(reactants).',
+    formulas:['ΔH = H_p − H_r'],
+    misc:['Enthalpy is a form of heat','ΔH always positive'] },
+  { id:'endo-exo', name:'Endothermic & Exothermic', layer:8, pre:['enthalpy'], exams:['WAEC','NECO','JAMB'],
+    desc:'Endothermic absorbs heat (ΔH > 0); exothermic releases (ΔH < 0).',
+    formulas:['Exo: burning','Endo: photosynthesis'],
+    misc:['All reactions release heat','Bond breaking releases'] },
+  { id:'energy-diagrams', name:'Energy Level Diagrams', layer:8, pre:['endo-exo'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reactant and product energy levels; ΔH = energy difference.',
+    formulas:['ΔH = E_p − E_r','Ea = peak − reactant'],
+    misc:['No activation energy','ΔH = activation energy'] },
+  { id:'heat-reaction', name:'Heat of Reaction', layer:8, pre:['enthalpy'], exams:['WAEC','NECO','JAMB'],
+    desc:'Standard heats: neutralization, combustion, formation, solution.',
+    formulas:['ΔH_neutral = −57.3 kJ/mol'],
+    misc:['All same ΔH','Heat of formation = 0'] },
+  { id:'entropy', name:'Entropy & Disorder', layer:8, pre:['endo-exo'], exams:['WAEC','NECO','JAMB'],
+    desc:'Measure of disorder. Solid < liquid < gas. Increases with temperature.',
+    formulas:['ΔS > 0 = more disorder'],
+    misc:['Entropy decreases spontaneously','Solids highest entropy'] },
+  { id:'spontaneity-gibbs', name:'Gibbs Free Energy', layer:8, pre:['entropy'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reaction is spontaneous when ΔG < 0. At equilibrium ΔG = 0.',
+    formulas:['ΔG = ΔH − TΔS'],
+    misc:['All exothermic spontaneous','ΔG = ΔH always'] },
+
+  /* L9 */
+  { id:'acid-base-definitions', name:'Acid-Base Definitions', layer:9, pre:['chemical-equations'], exams:['WAEC','NECO','JAMB'],
+    desc:'Arrhenius, Bronsted-Lowry (proton donor/acceptor), Lewis (electron pair).',
+    formulas:['HCl → H⁺ + Cl⁻'],
+    misc:['Only one definition','All acids same'] },
+  { id:'acid-base-properties', name:'Properties of Acids, Bases & Salts', layer:9, pre:['acid-base-definitions'], exams:['WAEC','NECO','JAMB'],
+    desc:'Acids: sour, turn litmus red. Bases: bitter, slippery, turn litmus blue.',
+    formulas:['Acid + metal → salt + H₂'],
+    misc:['All acids dangerous','Bases taste sour'] },
+  { id:'strong-weak-acids', name:'Strong vs Weak Acids', layer:9, pre:['acid-base-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Strong: fully ionize. Weak: partially ionize.',
+    formulas:['Strong: α ≈ 1','Weak: α << 1'],
+    misc:['Strong = concentrated','Weak acids have no H⁺'] },
+  { id:'basicity-acids', name:'Basicity of Acids', layer:9, pre:['acid-base-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Number of replaceable H⁺ ions: monobasic, dibasic, tribasic.',
+    formulas:['Monobasic: 1 H⁺','Dibasic: 2 H⁺'],
+    misc:['All acids monobasic','Basicity = strength'] },
+  { id:'ph-poh', name:'pH and pOH Scale', layer:9, pre:['strong-weak-acids','math-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'pH = −log[H⁺]. Acidic < 7; neutral = 7; basic > 7.',
+    formulas:['pH = −log[H⁺]','pH + pOH = 14'],
+    misc:['pH 0 = neutral','pH is linear'] },
+  { id:'indicators', name:'Acid-Base Indicators', layer:9, pre:['acid-base-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Substances that change colour at specific pH.',
+    formulas:['Methyl orange','Phenolphthalein'],
+    misc:['All indicators same','Colorless in acid'] },
+  { id:'neutralization', name:'Neutralization', layer:9, pre:['acid-base-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Acid + base → salt + water. Exothermic. Basis of titration.',
+    formulas:['HCl + NaOH → NaCl + H₂O'],
+    misc:['Neutralization endothermic','No salt formed'] },
+  { id:'titration', name:'Acid-Base Titration', layer:9, pre:['neutralization','concentration-calc','measurement'], exams:['WAEC','NECO','JAMB'],
+    desc:'Determines unknown concentration using a standard solution.',
+    formulas:['C_aV_a/C_bV_b = n_a/n_b'],
+    misc:['Endpoint = equivalence','Any indicator works'] },
+  { id:'salt-preparation', name:'Preparation of Salts', layer:9, pre:['neutralization'], exams:['WAEC','NECO','JAMB'],
+    desc:'By neutralization, precipitation, or metal + acid.',
+    formulas:['Acid + base → salt','Acid + metal → salt'],
+    misc:['All salts soluble','Only one method'] },
+  { id:'salt-types', name:'Types of Salts', layer:9, pre:['salt-preparation'], exams:['WAEC','NECO','JAMB'],
+    desc:'Normal, acidic, basic, double (alums).',
+    formulas:['Normal: all H⁺ replaced','Double: two cations'],
+    misc:['All salts neutral','Double = complexes'] },
+  { id:'salt-hydrolysis', name:'Hydrolysis of Salts', layer:9, pre:['salt-types','ph-poh'], exams:['WAEC','NECO','JAMB'],
+    desc:'Salts of weak acid/base hydrolyze to give acidic or basic solutions.',
+    formulas:['NH₄Cl → acidic','CH₃COONa → basic'],
+    misc:['All salts neutral','pH always 7'] },
+  { id:'oxides-types', name:'Oxides Classification', layer:9, pre:['acid-base-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Acidic, basic, amphoteric, neutral oxides.',
+    formulas:['Acidic: CO₂, SO₂','Basic: Na₂O','Amphoteric: Al₂O₃'],
+    misc:['All oxides basic','No classification'] },
+  { id:'alums', name:'Alums & Complex Salts', layer:9, pre:['salt-types'], exams:['WAEC','NECO','JAMB'],
+    desc:'Double sulfates M⁺M³⁺(SO₄)₂·12H₂O.',
+    formulas:['KAl(SO₄)₂·12H₂O'],
+    misc:['Alums simple salts','Formula varies'] },
+
+  /* L10 */
+  { id:'rate-reaction', name:'Rate of Reaction', layer:10, pre:['mole-concept','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Change in concentration per unit time.',
+    formulas:['Rate = Δ[conc]/Δt'],
+    misc:['Rate is constant','Rate = amount of product'] },
+  { id:'rate-factors', name:'Factors Affecting Rate', layer:10, pre:['rate-reaction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Temperature, concentration, surface area, pressure, catalyst.',
+    formulas:['Higher T → faster','Higher conc → faster'],
+    misc:['Temperature doesn\'t matter','Surface area no effect'] },
+  { id:'collision-theory', name:'Collision Theory', layer:10, pre:['rate-reaction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reactions occur when molecules collide with sufficient energy and orientation.',
+    formulas:['Rate ∝ collisions × orientation'],
+    misc:['All collisions react','Orientation doesn\'t matter'] },
+  { id:'activation-energy', name:'Activation Energy', layer:10, pre:['collision-theory'], exams:['WAEC','NECO','JAMB'],
+    desc:'Minimum energy needed for a reaction. Catalysts lower it.',
+    formulas:['Lower Ea → faster'],
+    misc:['Ea constant','Catalysts increase Ea'] },
+  { id:'arrhenius-law', name:"Arrhenius' Law", layer:10, pre:['activation-energy','math-tools'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rate constant depends exponentially on temperature.',
+    formulas:['k = Ae^(−Ea/RT)'],
+    misc:['Rate decreases with T','Ea has no effect'] },
+  { id:'rate-curves', name:'Reaction Rate Curves', layer:10, pre:['rate-reaction','graphing-data'], exams:['WAEC','NECO','JAMB'],
+    desc:'Concentration vs time curves; slope = rate.',
+    formulas:['Reactant: decreasing','Product: increasing'],
+    misc:['Reactant increases','Slope is not rate'] },
+  { id:'reversible-reactions', name:'Reversible Reactions', layer:10, pre:['chemical-equations'], exams:['WAEC','NECO','JAMB'],
+    desc:'Reactions that proceed in both directions: ⇌.',
+    formulas:['N₂ + 3H₂ ⇌ 2NH₃'],
+    misc:['All reactions complete','Reversible = forward only'] },
+  { id:'dynamic-equilibrium', name:'Dynamic Equilibrium', layer:10, pre:['reversible-reactions'], exams:['WAEC','NECO','JAMB'],
+    desc:'Forward and reverse rates equal; concentrations constant.',
+    formulas:['Rate_f = Rate_r'],
+    misc:['Reaction stops','Concentrations equal'] },
+  { id:'lechatelier', name:"Le Chatelier's Principle", layer:10, pre:['dynamic-equilibrium'], exams:['WAEC','NECO','JAMB'],
+    desc:'When stress is applied, equilibrium shifts to counteract the stress.',
+    formulas:['↑T → shift endothermic'],
+    misc:['No shift occurs','Catalyst shifts equilibrium'] },
+  { id:'equilibrium-constant', name:'Equilibrium Constant K', layer:10, pre:['dynamic-equilibrium','mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'K = [products]/[reactants]. Constant at given T.',
+    formulas:['K_c = [C][D]/[A][B]'],
+    misc:['K changes with conc','K = 1 always'] },
+
+  /* L11 */
+  { id:'oxidation-reduction', name:'Oxidation & Reduction', layer:11, pre:['chemical-equations'], exams:['WAEC','NECO','JAMB'],
+    desc:'Oxidation = loss of electrons; Reduction = gain of electrons.',
+    formulas:['OIL RIG'],
+    misc:['Oxidation = gain e⁻','Reduction = loss'] },
+  { id:'oxidation-numbers', name:'Oxidation Numbers', layer:11, pre:['oxidation-reduction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Charge an atom would have if electrons were fully transferred.',
+    formulas:['Free element = 0','O = −2 usually'],
+    misc:['All have ox state 0','Ox state = charge'] },
+  { id:'redox-agents', name:'Oxidizing & Reducing Agents', layer:11, pre:['oxidation-reduction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Oxidizing agent gains electrons; reducing agent loses electrons.',
+    formulas:['KMnO₄: oxidizer','H₂, CO: reducers'],
+    misc:['Ox agent is oxidized','Red agent is reduced'] },
+  { id:'balancing-redox', name:'Balancing Redox Equations', layer:11, pre:['oxidation-numbers'], exams:['WAEC','NECO','JAMB'],
+    desc:'Balance atoms, then electrons lost = electrons gained.',
+    formulas:['Half-reaction method'],
+    misc:['Charge doesn\'t balance','Electrons unbalanced'] },
+  { id:'electrolytes', name:'Electrolytes & Non-electrolytes', layer:11, pre:['ionic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Electrolytes conduct electricity in solution/melt.',
+    formulas:['Strong: fully ionize','Weak: partial'],
+    misc:['All solutions conduct','Only liquids conduct'] },
+  { id:'faraday-electrolysis', name:"Faraday's Laws of Electrolysis", layer:11, pre:['electrolytes','mole-concept'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mass deposited ∝ charge. 1 mole of e⁻ = 96,500 C.',
+    formulas:['m = ZIt','F = 96,500 C/mol'],
+    misc:['Mass depends on voltage','F = 1000'] },
+  { id:'electrolysis-solutions', name:'Electrolysis of Solutions', layer:11, pre:['faraday-electrolysis'], exams:['WAEC','NECO','JAMB'],
+    desc:'Electrolysis of CuSO₄, NaCl, dilute H₂SO₄.',
+    formulas:['CuSO₄: Cu at cathode'],
+    misc:['H₂ always at anode','Cu always at anode'] },
+  { id:'electrochemical-cells', name:'Electrochemical Cells', layer:11, pre:['oxidation-reduction'], exams:['WAEC','NECO','JAMB'],
+    desc:'Galvanic (spontaneous) vs electrolytic (non-spontaneous).',
+    formulas:['Galvanic: chemical → electrical'],
+    misc:['All cells electrolytic','No redox involved'] },
+  { id:'electrochemical-series', name:'Electrochemical Series', layer:11, pre:['electrochemical-cells'], exams:['WAEC','NECO','JAMB'],
+    desc:'Order of reactivity: K, Ca, Na, Mg, Al, Zn, Fe, Sn, Pb, H, Cu, Hg, Ag, Au.',
+    formulas:['Higher metal displaces lower'],
+    misc:['Series is random','Cu more reactive than Fe'] },
+  { id:'electrode-potentials', name:'Standard Electrode Potentials', layer:11, pre:['electrochemical-series'], exams:['WAEC','NECO','JAMB'],
+    desc:'Voltage of half-cell relative to standard H₂ electrode.',
+    formulas:['E°cell = E°red − E°ox'],
+    misc:['Potentials absolute','E°cell always negative'] },
+  { id:'corrosion', name:'Corrosion & Prevention', layer:11, pre:['electrochemical-cells'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rusting is electrochemical oxidation of iron.',
+    formulas:['4Fe + 3O₂ + 6H₂O → 4Fe(OH)₃'],
+    misc:['Rusting chemical only','Only oxygen causes rust'] },
+  { id:'electroplating', name:'Electroplating', layer:11, pre:['electrolysis-solutions'], exams:['WAEC','NECO','JAMB'],
+    desc:'Depositing a metal layer on a surface using electrolysis.',
+    formulas:['Object = cathode','Plating = anode'],
+    misc:['Object is anode','Any metal can be plated'] },
+
+  /* L12 */
+  { id:'hydrogen', name:'Hydrogen & Compounds', layer:12, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Lightest element. Used in Haber process, fuel cells.',
+    formulas:['Zn + 2HCl → ZnCl₂ + H₂'],
+    misc:['Hydrogen heavier than air','It supports combustion'] },
+  { id:'halogens-chlorine', name:'Chlorine & Halogen Compounds', layer:12, pre:['halogens'], exams:['WAEC','NECO','JAMB'],
+    desc:'Chlorine: yellow-green, bleaching, disinfectant.',
+    formulas:['2NaCl + 2H₂O → 2NaOH + Cl₂ + H₂'],
+    misc:['Chlorine colourless','Only water treatment'] },
+  { id:'hcl-chlorides', name:'HCl & Chlorides', layer:12, pre:['halogens-chlorine'], exams:['WAEC','NECO','JAMB'],
+    desc:'HCl gas from NaCl + H₂SO₄. Tests for Cl⁻.',
+    formulas:['NaCl + H₂SO₄ → NaHSO₄ + HCl'],
+    misc:['HCl = HCl(aq)','All chlorides soluble'] },
+  { id:'oxygen-oxides', name:'Oxygen & Oxides', layer:12, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Oxygen: 21% of air. Oxides: acidic, basic, amphoteric, neutral.',
+    formulas:['2KClO₃ → 2KCl + 3O₂'],
+    misc:['Oxygen combustible','All oxides gases'] },
+  { id:'ozone', name:'Ozone (O₃)', layer:12, pre:['oxygen-oxides'], exams:['WAEC','NECO','JAMB'],
+    desc:'Allotrope of oxygen; protective layer in stratosphere.',
+    formulas:['O₂ + O → O₃'],
+    misc:['Ozone = oxygen','Ozone layer at ground'] },
+  { id:'sulphur-allotropes', name:'Sulphur & Allotropes', layer:12, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Rhombic and monoclinic allotropes.',
+    formulas:['Rhombic ⇌ monoclinic at 96°C'],
+    misc:['Only one allotrope','Sulphur is metal'] },
+  { id:'so2-h2s', name:'SO₂ & H₂S', layer:12, pre:['sulphur-allotropes'], exams:['WAEC','NECO','JAMB'],
+    desc:'SO₂: bleaching, reducing agent. H₂S: rotten egg smell.',
+    formulas:['S + O₂ → SO₂','FeS + 2HCl → FeCl₂ + H₂S'],
+    misc:['SO₂ odorless','H₂S pleasant smell'] },
+  { id:'h2so4-contact', name:'H₂SO₄ (Contact Process)', layer:12, pre:['so2-h2s'], exams:['WAEC','NECO','JAMB'],
+    desc:'Industrial H₂SO₄ via Contact Process. Strong acid, oxidizing, dehydrating.',
+    formulas:['2SO₂ + O₂ ⇌ 2SO₃'],
+    misc:['H₂SO₄ weak acid','Only one method'] },
+  { id:'nitrogen', name:'Nitrogen & Compounds', layer:12, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'78% of air; inert due to strong N≡N.',
+    formulas:['N₂ + 3H₂ ⇌ 2NH₃'],
+    misc:['Nitrogen reactive','N₂ is compound'] },
+  { id:'ammonia-haber', name:'Ammonia & Haber Process', layer:12, pre:['nitrogen'], exams:['WAEC','NECO','JAMB'],
+    desc:'N₂ + 3H₂ ⇌ 2NH₃ (Fe catalyst, 450°C, 200 atm).',
+    formulas:['N₂ + 3H₂ ⇌ 2NH₃'],
+    misc:['NH₃ acidic','Reaction completes'] },
+  { id:'hno3', name:'HNO₃ (Ostwald Process)', layer:12, pre:['ammonia-haber'], exams:['WAEC','NECO','JAMB'],
+    desc:'Made from NH₃ via Ostwald process. Strong oxidizing acid.',
+    formulas:['4NH₃ + 5O₂ → 4NO + 6H₂O'],
+    misc:['HNO₃ weak acid','Only dilute oxidizes'] },
+  { id:'nitrogen-oxides', name:'Oxides of Nitrogen', layer:12, pre:['hno3'], exams:['WAEC','NECO','JAMB'],
+    desc:'N₂O, NO, NO₂ (brown, toxic), N₂O₄.',
+    formulas:['2NO + O₂ → 2NO₂'],
+    misc:['All oxides colourless','NO nontoxic'] },
+  { id:'nitrogen-cycle', name:'Nitrogen Cycle', layer:12, pre:['nitrogen'], exams:['WAEC','NECO','JAMB'],
+    desc:'Circulation of nitrogen through atmosphere, soil, organisms.',
+    formulas:['N₂ → NH₃ (fixation)'],
+    misc:['Nitrogen doesn\'t cycle','Only bacteria involved'] },
+  { id:'carbon-allotropes', name:'Carbon & Allotropes', layer:12, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Diamond, graphite, fullerene.',
+    formulas:['Diamond: tetrahedral','Graphite: layered'],
+    misc:['All allotropes identical','Carbon always black'] },
+  { id:'co2', name:'Carbon(IV) Oxide (CO₂)', layer:12, pre:['carbon-allotropes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Produced by combustion and respiration. Test: lime water.',
+    formulas:['CO₂ + Ca(OH)₂ → CaCO₃ + H₂O'],
+    misc:['CO₂ supports combustion','CO₂ is basic oxide'] },
+  { id:'co', name:'Carbon(II) Oxide (CO)', layer:12, pre:['carbon-allotropes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Colourless, odourless, poisonous gas from incomplete combustion.',
+    formulas:['2C + O₂ → 2CO'],
+    misc:['CO is safe','CO has smell'] },
+  { id:'coal-coke', name:'Coal, Coke & Synthesis Gas', layer:12, pre:['carbon-allotropes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Destructive distillation of coal gives coke, coal tar, ammonia.',
+    formulas:['C + H₂O → CO + H₂'],
+    misc:['Coke is pure carbon','Coal and coke same'] },
+
+  /* L13 */
+  { id:'metals-properties', name:'General Properties of Metals', layer:13, pre:['metallic-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Malleable, ductile, conductive, lustrous. Form positive ions.',
+    formulas:['Metal + acid → salt + H₂'],
+    misc:['All metals solid','Metals unreactive'] },
+  { id:'sodium-compounds', name:'Sodium & Compounds', layer:13, pre:['alkali-metals'], exams:['WAEC','NECO','JAMB'],
+    desc:'Na from molten NaCl (Downs process). NaOH, Na₂CO₃, NaCl.',
+    formulas:['2Na + 2H₂O → 2NaOH + H₂'],
+    misc:['Na stored in water','Na stable in air'] },
+  { id:'naoh', name:'Sodium Hydroxide', layer:13, pre:['sodium-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Strong base. Made by electrolysis of brine.',
+    formulas:['2NaCl + 2H₂O → 2NaOH + Cl₂ + H₂'],
+    misc:['NaOH weak base','NaOH is safe'] },
+  { id:'na2co3-solvay', name:'Na₂CO₃ & Solvay Process', layer:13, pre:['sodium-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Na₂CO₃ made via Solvay process.',
+    formulas:['NaCl + NH₃ + CO₂ → NaHCO₃'],
+    misc:['No byproducts','Solvay is simple'] },
+  { id:'nacl', name:'Sodium Chloride', layer:13, pre:['sodium-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'From sea water. Raw material for Cl₂, NaOH, Na₂CO₃.',
+    formulas:['Electrolysis of brine'],
+    misc:['NaCl is rare','Sea water no salt'] },
+  { id:'calcium-compounds', name:'Calcium & Compounds', layer:13, pre:['periodic-trends'], exams:['WAEC','NECO','JAMB'],
+    desc:'Ca from electrolysis of CaCl₂. Used in cement, water treatment.',
+    formulas:['CaCO₃ → CaO + CO₂'],
+    misc:['Ca is halogen','CaCO₃ soluble'] },
+  { id:'cement-mortar', name:'Cement & Mortar', layer:13, pre:['calcium-compounds'], exams:['WAEC','NECO','JAMB'],
+    desc:'Cement: CaO + SiO₂ + Al₂O₃; mortar = cement + sand + water.',
+    formulas:['Cement + sand + H₂O → mortar'],
+    misc:['Cement = mortar','Concrete is compound'] },
+  { id:'aluminium', name:'Aluminium & Compounds', layer:13, pre:['metals-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Extracted from bauxite via Hall-Héroult electrolysis.',
+    formulas:['Al₂O₃ → 2Al + 3/2O₂'],
+    misc:['Al is heavy','Al reacts with water'] },
+  { id:'tin', name:'Tin & Extraction', layer:13, pre:['metals-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Extracted from cassiterite (SnO₂) by carbon reduction.',
+    formulas:['SnO₂ + 2C → Sn + 2CO'],
+    misc:['Tin abundant','Used for utensils alone'] },
+  { id:'iron', name:'Iron & Compounds', layer:13, pre:['metals-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Extracted in blast furnace from haematite (Fe₂O₃).',
+    formulas:['Fe₂O₃ + 3CO → 2Fe + 3CO₂'],
+    misc:['Iron is non-metal','Fe has one oxidation state'] },
+  { id:'copper', name:'Copper & Compounds', layer:13, pre:['metals-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Extracted from copper pyrites. Used in wiring, alloys.',
+    formulas:['Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag'],
+    misc:['Cu non-conductive','Cu is dull'] },
+  { id:'alloys', name:'Alloys', layer:13, pre:['metals-properties'], exams:['WAEC','NECO','JAMB'],
+    desc:'Steel (Fe+C), brass (Cu+Zn), bronze (Cu+Sn), duralumin (Al+Cu).',
+    formulas:['Steel: Fe + C','Brass: Cu + Zn'],
+    misc:['Alloys are compounds','Alloys are pure metals'] },
+
+  /* L14 */
+  { id:'carbon-tetravalency', name:'Tetravalency & Catenation', layer:14, pre:['covalent-bonding'], exams:['WAEC','NECO','JAMB'],
+    desc:'Carbon forms 4 bonds and can chain indefinitely.',
+    formulas:['4 valence electrons','C–C, C=C, C≡C'],
+    misc:['Carbon forms 2 bonds','Only ionic bonds'] },
+  { id:'organic-nomenclature', name:'Organic Nomenclature', layer:14, pre:['carbon-tetravalency'], exams:['WAEC','NECO','JAMB'],
+    desc:'IUPAC naming: prefix + root + suffix. Isomers.',
+    formulas:['-ol: alcohol','-al: aldehyde'],
+    misc:['All molecules linear','Isomers different formulas'] },
+  { id:'homologous-series', name:'Homologous Series', layer:14, pre:['organic-nomenclature'], exams:['WAEC','NECO','JAMB'],
+    desc:'Family with same functional group, differ by CH₂.',
+    formulas:['Alkanes: CₙH₂ₙ₊₂','Alkenes: CₙH₂ₙ'],
+    misc:['Members different properties','No pattern in props'] },
+  { id:'alkanes', name:'Alkanes', layer:14, pre:['homologous-series'], exams:['WAEC','NECO','JAMB'],
+    desc:'Saturated hydrocarbons. Substitution reactions.',
+    formulas:['CH₄, C₂H₆, C₃H₈','CₙH₂ₙ₊₂'],
+    misc:['Alkanes reactive','Undergo addition'] },
+  { id:'alkenes', name:'Alkenes', layer:14, pre:['alkanes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contain C=C double bond. Addition and polymerization.',
+    formulas:['C₂H₄, C₃H₆','Decolourize Br₂ water'],
+    misc:['Alkenes saturated','No polymerization'] },
+  { id:'alkynes', name:'Alkynes', layer:14, pre:['alkenes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contain C≡C triple bond. Ethyne from calcium carbide.',
+    formulas:['C₂H₂','CaC₂ + 2H₂O → Ca(OH)₂ + C₂H₂'],
+    misc:['Alkynes saturated','Only one alkyne'] },
+  { id:'benzene', name:'Benzene', layer:14, pre:['alkenes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Six-membered ring with delocalized π electrons.',
+    formulas:['C₆H₆','Substitution: C₆H₅Cl'],
+    misc:['Benzene fixed double bonds','Undergoes addition'] },
+  { id:'petroleum-cracking', name:'Petroleum & Cracking', layer:14, pre:['alkanes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Crude oil separated by fractional distillation. Cracking breaks large alkanes.',
+    formulas:['C₁₀H₂₂ → C₈H₁₈ + C₂H₄'],
+    misc:['Petroleum renewable','Cracking makes larger'] },
+  { id:'alkanols', name:'Alkanols (Alcohols)', layer:14, pre:['alkanes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contain –OH. Ethanol by fermentation. Lucas test.',
+    formulas:['CₙH₂ₙ₊₁OH','C₂H₅OH'],
+    misc:['All alcohols same','Ethanol poisonous'] },
+  { id:'alkanals-ketones', name:'Alkanals & Alkanones', layer:14, pre:['alkanols'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contain C=O. Aldehydes oxidized (Tollens, Fehling).',
+    formulas:['Aldehyde: RCHO','Ketone: RCOR'],
+    misc:['Aldehydes = ketones','Both oxidize easily'] },
+  { id:'alkanoic-acids', name:'Alkanoic Acids', layer:14, pre:['alkanals-ketones'], exams:['WAEC','NECO','JAMB'],
+    desc:'Contain –COOH. Weak acids. Form esters.',
+    formulas:['RCOOH','CH₃COOH'],
+    misc:['Strong acids','No esters formed'] },
+  { id:'alkanoates-esters', name:'Esters & Saponification', layer:14, pre:['alkanoic-acids','alkanols'], exams:['WAEC','NECO','JAMB'],
+    desc:'From acid + alcohol. Saponification = ester + base → soap.',
+    formulas:['RCOOH + R\'OH ⇌ RCOOR\''],
+    misc:['Esters are acids','Saponification = esterification'] },
+  { id:'amines', name:'Amines', layer:14, pre:['ammonia-haber'], exams:['WAEC','NECO','JAMB'],
+    desc:'Organic derivatives of ammonia. Basic due to lone pair.',
+    formulas:['RNH₂, R₂NH, R₃N'],
+    misc:['Amines acidic','No lone pair'] },
+  { id:'carbohydrates', name:'Carbohydrates', layer:14, pre:['alkanals-ketones'], exams:['WAEC','NECO','JAMB'],
+    desc:'Mono-, di-, polysaccharides. Benedict\'s test.',
+    formulas:['Glucose: C₆H₁₂O₆'],
+    misc:['All sugars sweet','Polysaccharides reducing'] },
+  { id:'proteins-amino', name:'Proteins & Amino Acids', layer:14, pre:['alkanoic-acids','amines'], exams:['WAEC','NECO','JAMB'],
+    desc:'Polymers of amino acids. Ninhydrin, Biuret tests.',
+    formulas:['–CO–NH– peptide bond'],
+    misc:['Proteins carbohydrates','No nitrogen'] },
+  { id:'fats-oils', name:'Fats & Oils', layer:14, pre:['alkanoates-esters'], exams:['WAEC','NECO','JAMB'],
+    desc:'Esters of glycerol and fatty acids. Fats solid, oils liquid.',
+    formulas:['Triglyceride + 3NaOH → soap'],
+    misc:['Fats carbohydrates','Fats not esters'] },
+  { id:'polymers', name:'Polymers', layer:14, pre:['alkenes'], exams:['WAEC','NECO','JAMB'],
+    desc:'Addition (polythene, PVC) vs condensation (nylon).',
+    formulas:['n CH₂=CH₂ → (–CH₂–CH₂–)ₙ'],
+    misc:['All polymers synthetic','Addition = condensation'] },
+  { id:'soap-detergents', name:'Soap & Detergents', layer:14, pre:['alkanoates-esters'], exams:['WAEC','NECO','JAMB'],
+    desc:'Soap from saponification of fats. Detergents synthetic.',
+    formulas:['Soap: RCOO⁻Na⁺','Detergent: RSO₃⁻Na⁺'],
+    misc:['Soap works hard water','Detergents have one end'] },
+
+  /* L15 */
+  { id:'chemical-industries', name:'Chemical Industries', layer:15, pre:['h2so4-contact','ammonia-haber'], exams:['WAEC','NECO','JAMB'],
+    desc:'Heavy vs fine chemicals. Raw materials and processes.',
+    formulas:['Contact: H₂SO₄','Haber: NH₃'],
+    misc:['All industries heavy','No chemistry link'] },
+  { id:'environmental-pollution', name:'Environmental Pollution', layer:15, pre:['chemical-industries'], exams:['WAEC','NECO','JAMB'],
+    desc:'Air (CO, SO₂, NOₓ, CFCs), water, soil pollution.',
+    formulas:['SO₂ + H₂O → H₂SO₃'],
+    misc:['Pollution natural','All pollutants biodegradable'] },
+  { id:'biotechnology', name:'Biotechnology', layer:15, pre:['chemical-industries'], exams:['WAEC','NECO','JAMB'],
+    desc:'Use of living systems for industrial processes.',
+    formulas:['Fermentation: glucose → ethanol'],
+    misc:['Biotech is new','Only in medicine'] },
+  { id:'water-treatment', name:'Water Treatment', layer:15, pre:['solubility-basics'], exams:['WAEC','NECO','JAMB'],
+    desc:'Sedimentation, filtration, chlorination, aeration.',
+    formulas:['Al₂(SO₄)₃ coagulation'],
+    misc:['Water naturally pure','Only filtration'] },
+  { id:'hard-soft-water', name:'Hard & Soft Water', layer:15, pre:['water-treatment'], exams:['WAEC','NECO','JAMB'],
+    desc:'Temporary hardness removed by boiling; permanent by ion exchange.',
+    formulas:['Ca(HCO₃)₂ → CaCO₃ + H₂O + CO₂'],
+    misc:['Hard water unsafe','All removable by boiling'] },
+  { id:'water-of-crystallization', name:'Water of Crystallization', layer:15, pre:['salt-types'], exams:['WAEC','NECO','JAMB'],
+    desc:'CuSO₄·5H₂O; efflorescence; deliquescence; hygroscopy.',
+    formulas:['CuSO₄·5H₂O blue crystals'],
+    misc:['All salts have water','Efflorescence = hygroscopy'] },
+
+  /* L16 */
+  { id:'qualitative-cations', name:'Qualitative Analysis — Cations', layer:16, pre:['salt-preparation','accuracy-precision'], exams:['WAEC','NECO','JAMB'],
+    desc:'Identify metal ions by colour and reactions with NaOH and NH₃.',
+    formulas:['Cu²⁺: blue ppt','Fe²⁺: green ppt','Fe³⁺: brown ppt'],
+    misc:['All cations same','NaOH no info'] },
+  { id:'qualitative-anions', name:'Qualitative Analysis — Anions', layer:16, pre:['salt-preparation','accuracy-precision'], exams:['WAEC','NECO','JAMB'],
+    desc:'Identify anions: Cl⁻ (AgNO₃), SO₄²⁻ (BaCl₂), CO₃²⁻ (acid → CO₂).',
+    formulas:['Cl⁻ + AgNO₃ → white ppt'],
+    misc:['All anions same','No specific tests'] },
+  { id:'gas-tests', name:'Gas Tests', layer:16, pre:['co2','ammonia-haber'], exams:['WAEC','NECO','JAMB'],
+    desc:'O₂ (glowing splint), H₂ (pop), CO₂ (lime water), NH₃ (red litmus).',
+    formulas:['CO₂: lime water milky','NH₃: litmus blue'],
+    misc:['All gases same smell','Lime water tests H₂'] },
+  { id:'organic-tests', name:'Organic Compound Tests', layer:16, pre:['alkanals-ketones','alkanols'], exams:['WAEC','NECO','JAMB'],
+    desc:'Tollens (aldehyde), Fehling (sugar), Lucas (alcohol), Br₂ water.',
+    formulas:['Tollens: silver mirror'],
+    misc:['All react same','One test for all'] }
+];
+
+// ============================================================
+// CROSS-LINKS
+// ============================================================
+const CROSS_LINKS = [
+  ['boyles-law','charles-law'],['charles-law','gaylussac-law'],
+  ['kinetic-theory','rate-reaction'],['collision-theory','activation-energy'],
+  ['dynamic-equilibrium','lechatelier'],['oxidation-reduction','electrochemical-cells'],
+  ['electrochemical-cells','corrosion'],['electrolysis-solutions','electroplating'],
+  ['alkanes','petroleum-cracking'],['alkenes','polymers'],
+  ['alkanols','alkanals-ketones'],['alkanals-ketones','alkanoic-acids'],
+  ['alkanoic-acids','alkanoates-esters'],['alkanoates-esters','soap-detergents'],
+  ['alkanoates-esters','fats-oils'],['carbohydrates','alkanols'],
+  ['proteins-amino','amines'],['proteins-amino','alkanoic-acids'],
+  ['hydrogen-bonding','water-treatment'],['hydrogen-bonding','hard-soft-water'],
+  ['ph-poh','salt-hydrolysis'],['ph-poh','indicators'],
+  ['periodic-trends','period3-elements'],['metals-properties','alloys'],
+  ['metals-properties','electrochemical-series'],['transition-metals','electrode-potentials'],
+  ['halogens','hcl-chlorides'],['sulphur-allotropes','so2-h2s'],
+  ['so2-h2s','h2so4-contact'],['nitrogen','nitrogen-cycle'],
+  ['nitrogen','ammonia-haber'],['ammonia-haber','hno3'],
+  ['carbon-allotropes','co2'],['carbon-allotropes','co'],
+  ['carbon-allotropes','coal-coke'],['solubility-basics','hard-soft-water'],
+  ['solubility-basics','water-treatment'],['solubility-curves','saturation-types'],
+  ['true-false-solutions','colloids-suspensions'],['atomic-models','isotopes'],
+  ['isotopes','radioactivity'],['enthalpy','activation-energy'],
+  ['entropy','spontaneity-gibbs'],['organic-nomenclature','iupac-nomenclature'],
+  ['acid-base-definitions','ph-poh'],['salt-types','water-of-crystallization'],
+  ['cement-mortar','calcium-compounds'],['naoh','soap-detergents'],
+  ['na2co3-solvay','nacl'],['chemical-industries','environmental-pollution'],
+  ['mole-concept','gas-volume-calc'],['mole-concept','concentration-calc'],
+  ['covalent-bonding','carbon-tetravalency'],['ionic-bonding','salt-types'],
+  ['mole-concept','equilibrium-constant'],['redox-agents','electrochemical-series'],
+  ['electrode-potentials','faraday-electrolysis'],['periodic-trends','electron-config'],
+  ['electron-config','atomic-structure'],['chemical-equations','conservation-mass']
+];
+
+const byId = {};
+NODES.forEach(n => byId[n.id] = n);
+
+function isPrereq(a, b){
+  return (byId[a]?.pre || []).includes(b) || (byId[b]?.pre || []).includes(a);
+}
+const CLEAN_CROSS = CROSS_LINKS.filter(([a,b]) => byId[a] && byId[b] && !isPrereq(a,b));
+
+// Successors
+const NEXT = {};
+NODES.forEach(n => { NEXT[n.id] = []; });
+NODES.forEach(n => n.pre.forEach(p => { if (NEXT[p]) NEXT[p].push(n.id); }));
+
+// Cross map
+const CROSS_MAP = {};
+NODES.forEach(n => { CROSS_MAP[n.id] = []; });
+CLEAN_CROSS.forEach(([a,b]) => {
+  CROSS_MAP[a].push(b);
+  CROSS_MAP[b].push(a);
+});
+
+// ============================================================
+// FLOW COMPUTATION — topological sort with layer priority
+// ============================================================
+function computeFlowOrder(examFilter){
+  const available = NODES.filter(n => (n.exams || []).some(ex => examFilter.has(ex)));
+  const availableIds = new Set(available.map(n => n.id));
+  const remaining = new Map(); // id -> { pre: [...], layer }
+  available.forEach(n => {
+    const pre = n.pre.filter(p => availableIds.has(p));
+    remaining.set(n.id, { node: n, pre: pre.slice() });
+  });
+
+  const ordered = [];
+  const done = new Set();
+
+  while (ordered.length < available.length){
+    // find ready nodes (all prereqs done)
+    const ready = [...remaining.values()].filter(item =>
+      item.pre.every(p => done.has(p))
+    );
+
+    if (!ready.length) break; // cycle or missing prereq
+
+    // sort: layer asc, then prereq count asc, then name
+    ready.sort((a, b) => {
+      if (a.node.layer !== b.node.layer) return a.node.layer - b.node.layer;
+      if (a.node.pre.length !== b.node.pre.length) return a.node.pre.length - b.node.pre.length;
+      return a.node.name.localeCompare(b.node.name);
+    });
+
+    const next = ready[0];
+    ordered.push(next.node.id);
+    done.add(next.node.id);
+    remaining.delete(next.node.id);
+  }
+
+  return ordered;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'chem_flow_v1';
+const state = {
+  selected: null,
+  examFilter: new Set(['WAEC','NECO','JAMB']),
+  flowMode: false,
+  flowOrder: [],
+  stepByNode: {},
+  mastery: {}
+};
+
+// Load mastery
+try {
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  if (saved.mastery) state.mastery = saved.mastery;
+} catch(e){}
+
+function saveMastery(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ mastery: state.mastery }));
+  } catch(e){}
+}
+
+function getMastery(id){ return state.mastery[id] || 'new'; }
+function setMastery(id, st){
+  state.mastery[id] = st;
+  saveMastery();
+  updateNodeMasteryVisual(id);
+}
+
+function cycleMastery(id){
+  const cur = getMastery(id);
+  const next = cur === 'new' ? 'learning' : cur === 'learning' ? 'mastered' : 'new';
+  setMastery(id, next);
+}
+
+// ============================================================
+// LAYOUT
+// ============================================================
+const NODE_W = 175;
+const NODE_H = 60;
+const COL_GAP = 55;
+const COL_SPACING = NODE_W + COL_GAP;
+const COL_X = LAYERS.map((_, i) => 40 + i * COL_SPACING);
+const CANVAS_W = COL_X[LAYERS.length-1] + NODE_W + 60;
+const CANVAS_H = 1400;
+const CENTER_Y = CANVAS_H / 2;
+
+// Compute flow order
+state.flowOrder = computeFlowOrder(state.examFilter);
+state.flowOrder.forEach((id, i) => { state.stepByNode[id] = i + 1; });
+
+// Group by layer, ordered by flow step
+const byLayer = LAYERS.map(() => []);
+NODES.forEach(n => byLayer[n.layer].push(n));
+
+// In flow mode, order within layer by flow step
+function orderLayerNodes(){
+  byLayer.forEach((list, layerId) => {
+    list.sort((a, b) => {
+      if (state.flowMode){
+        return (state.stepByNode[a.id] || 9999) - (state.stepByNode[b.id] || 9999);
+      }
+      return 0;
+    });
+  });
+}
+
+orderLayerNodes();
+
+byLayer.forEach(list => {
+  const gap = 18;
+  const totalH = list.length * NODE_H + (list.length - 1) * gap;
+  const startY = Math.max(80, CENTER_Y - totalH / 2);
+  list.forEach((n, i) => {
+    n.x = COL_X[n.layer];
+    n.y = startY + i * (NODE_H + gap);
+  });
+});
+
+// Barycenter in graph mode (uses prereqs)
+function runBarycenter(){
+  for (let iter = 0; iter < 6; iter++){
+    NODES.forEach(n => {
+      if (n.pre.length === 0){ n._want = n.y; return; }
+      const avg = n.pre.reduce((s, p) => s + (byId[p]?.y ?? n.y), 0) / n.pre.length;
+      n._want = avg;
+    });
+    byLayer.forEach(list => {
+      list.sort((a, b) => (a._want ?? a.y) - (b._want ?? b.y));
+      const gap = 18;
+      const totalH = list.length * NODE_H + (list.length - 1) * gap;
+      const startY = Math.max(80, CENTER_Y - totalH / 2);
+      list.forEach((n, i) => {
+        n.y = startY + i * (NODE_H + gap);
+      });
+    });
+  }
+}
+
+if (!state.flowMode) runBarycenter();
+
+// ============================================================
+// SVG HELPERS
+// ============================================================
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs = {}){
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function splitName(name){
+  if (name.length <= 16) return [name];
+  const words = name.split(' ');
+  if (words.length === 1) return [name];
+  let best = 1, bestDiff = Infinity;
+  for (let i = 1; i < words.length; i++){
+    const a = words.slice(0, i).join(' ');
+    const b = words.slice(i).join(' ');
+    const diff = Math.abs(a.length - b.length);
+    if (diff < bestDiff){ bestDiff = diff; best = i; }
+  }
+  return [words.slice(0, best).join(' '), words.slice(best).join(' ')];
+}
+
+const svgEl = document.getElementById('graph');
+let viewport, edgesGroup, nodesGroup, flowGroup;
+const nodeEls = {};
+const edgeEls = [];
+let flowEdgeEls = [];
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  svgEl.innerHTML = '';
+
+  const defs = svg('defs');
+  const grid = svg('pattern', { id:'grid', width:40, height:40, patternUnits:'userSpaceOnUse' });
+  grid.appendChild(svg('circle', { cx:1, cy:1, r:0.7, fill:'#1a2733' }));
+  defs.appendChild(grid);
+
+  const marker = svg('marker', {
+    id:'arrow', viewBox:'0 0 10 10', refX:'9', refY:'5',
+    markerWidth:'5', markerHeight:'5', orient:'auto-start-reverse'
+  });
+  marker.appendChild(svg('path', { d:'M 0 0 L 10 5 L 0 10 Z', fill:'#3a5468' }));
+  defs.appendChild(marker);
+  svgEl.appendChild(defs);
+
+  svgEl.appendChild(svg('rect', { x:0, y:0, width:CANVAS_W, height:CANVAS_H, fill:'url(#grid)' }));
+
+  viewport = svg('g', { id:'viewport' });
+  svgEl.appendChild(viewport);
+
+  // Layer headers
+  const headerG = svg('g');
+  LAYERS.forEach((layer, i) => {
+    // Phase label in flow mode
+    if (state.flowMode){
+      const phaseLabel = svg('text', {
+        x: COL_X[i] + NODE_W / 2, y: 14,
+        'text-anchor':'middle',
+        'font-family':"'Nunito',sans-serif",
+        'font-size':8.5,
+        'font-weight':800,
+        'letter-spacing':1.8,
+        fill: layer.color, opacity:0.6
+      });
+      phaseLabel.textContent = `PHASE ${i + 1}`;
+      headerG.appendChild(phaseLabel);
+    }
+
+    const t = svg('text', {
+      x: COL_X[i] + NODE_W / 2, y: state.flowMode ? 32 : 28,
+      'text-anchor':'middle',
+      'font-family':"'Nunito',sans-serif",
+      'font-size':10,
+      'font-weight':800,
+      'letter-spacing':1.5,
+      fill: layer.color, opacity:0.75
+    });
+    t.textContent = layer.name.toUpperCase();
+    headerG.appendChild(t);
+
+    headerG.appendChild(svg('line', {
+      x1: COL_X[i] + 8, y1: state.flowMode ? 44 : 40,
+      x2: COL_X[i] + NODE_W - 8, y2: state.flowMode ? 44 : 40,
+      stroke: layer.color, 'stroke-width':1, opacity:0.2
+    }));
+  });
+  viewport.appendChild(headerG);
+
+  // Flow path group (behind all edges)
+  flowGroup = svg('g');
+  viewport.appendChild(flowGroup);
+
+  edgesGroup = svg('g');
+  viewport.appendChild(edgesGroup);
+  nodesGroup = svg('g');
+  viewport.appendChild(nodesGroup);
+
+  // Draw flow path (only in flow mode)
+  if (state.flowMode){
+    drawFlowPath();
+  }
+
+  // Draw prereq + cross edges (in flow mode, they become very faint)
+  NODES.forEach(n => {
+    n.pre.forEach(pid => {
+      const p = byId[pid];
+      if (p) drawEdge(p, n, 'prereq');
+    });
+  });
+  CLEAN_CROSS.forEach(([a, b]) => {
+    const A = byId[a], B = byId[b];
+    const [left, right] = A.x <= B.x ? [A, B] : [B, A];
+    drawEdge(left, right, 'cross');
+  });
+
+  // Draw nodes
+  NODES.forEach(n => drawNode(n));
+
+  applyExamFilter();
+  fitToView();
+}
+
+function drawFlowPath(){
+  // Connect each node to the next in flow order
+  const order = state.flowOrder;
+  for (let i = 0; i < order.length - 1; i++){
+    const from = byId[order[i]];
+    const to = byId[order[i + 1]];
+    if (!from || !to) continue;
+
+    const x1 = from.x + NODE_W / 2;
+    const y1 = from.y + NODE_H;
+    const x2 = to.x + NODE_W / 2;
+    const y2 = to.y;
+    const midY = (y1 + y2) / 2;
+
+    let d;
+    if (Math.abs(from.x - to.x) < 1){
+      // Same column — simple vertical
+      d = `M ${x1} ${y1} L ${x2} ${y2}`;
+    } else if (from.x < to.x){
+      // Moving right — arc from bottom to top
+      d = `M ${x1} ${y1} C ${x1} ${midY + 20}, ${x2} ${midY - 20}, ${x2} ${y2}`;
+    } else {
+      // Moving left (rare)
+      d = `M ${x1} ${y1} C ${x1 + 60} ${y1 + 30}, ${x2 - 60} ${y2 - 30}, ${x2} ${y2}`;
+    }
+
+    const path = svg('path', {
+      d, class:'edge flow-path',
+      'data-from': from.id, 'data-to': to.id
+    });
+    flowEdgeEls.push({ el: path, from: from.id, to: to.id });
+    flowGroup.appendChild(path);
+  }
+}
+
+function drawEdge(from, to, type){
+  const x1 = from.x + NODE_W;
+  const y1 = from.y + NODE_H / 2;
+  const x2 = to.x;
+  const y2 = to.y + NODE_H / 2;
+  const dx = Math.max(40, (x2 - x1) * 0.5);
+  const d = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+
+  const path = svg('path', {
+    d, class:`edge ${type}`,
+    'data-from': from.id, 'data-to': to.id
+  });
+  if (type === 'prereq') path.setAttribute('marker-end', 'url(#arrow)');
+  edgeEls.push({ el: path, from: from.id, to: to.id, type });
+  edgesGroup.appendChild(path);
+}
+
+function drawNode(n){
+  const layer = LAYERS[n.layer];
+  const step = state.stepByNode[n.id];
+  const flowStep = state.flowOrder[0] === n.id ? 1 :
+    state.flowOrder.indexOf(n.id) + 1;
+
+  const g = svg('g', {
+    class:'node', 'data-id': n.id,
+    transform:`translate(${n.x} ${n.y})`
+  });
+
+  // Mastery ring (outer)
+  g.appendChild(svg('rect', {
+    class:'mastery-ring',
+    x:-4, y:-4, width:NODE_W + 8, height:NODE_H + 8, rx:15, ry:15,
+    opacity:0
+  }));
+
+  const rect = svg('rect', {
+    class:'node-bg',
+    x:0, y:0, width:NODE_W, height:NODE_H, rx:12, ry:12,
+    stroke: layer.color, 'stroke-opacity':0.7
+  });
+  g.appendChild(rect);
+
+  g.appendChild(svg('rect', {
+    x:0, y:0, width:3.5, height:NODE_H, rx:1.7, ry:1.7,
+    fill: layer.color, opacity:0.9
+  }));
+
+  // Name
+  const lines = splitName(n.name);
+  if (lines.length === 1){
+    const t = svg('text', {
+      x:13, y:32, class:'node-name', 'font-size':12.5
+    });
+    t.textContent = lines[0];
+    g.appendChild(t);
+  } else {
+    const t1 = svg('text', { x:13, y:25, class:'node-name', 'font-size':11.5 });
+    t1.textContent = lines[0];
+    g.appendChild(t1);
+    const t2 = svg('text', { x:13, y:40, class:'node-name', 'font-size':11.5 });
+    t2.textContent = lines[1];
+    g.appendChild(t2);
+  }
+
+  // Exam badges
+  const exams = n.exams || [];
+  const badgeY = NODE_H - 9;
+  let badgeX = 13;
+  exams.forEach(ex => {
+    const col = ex === 'WAEC' ? '#58cc02' : ex === 'NECO' ? '#4fc3ff' : '#ffe040';
+    const label = ex[0];
+    const badge = svg('text', {
+      x: badgeX, y: badgeY,
+      class:'exam-badge', fill: col, opacity:0.85
+    });
+    badge.textContent = label;
+    g.appendChild(badge);
+    badgeX += 10;
+  });
+
+  // Footer
+  const preCount = n.pre.length;
+  const footer = svg('text', {
+    x: NODE_W - 10, y: badgeY,
+    class:'node-footer', 'font-size':7,
+    'text-anchor':'end',
+    fill: layer.color, opacity:0.6
+  });
+  footer.textContent = preCount === 0 ? 'ENTRY' : `${preCount} PRE`;
+  g.appendChild(footer);
+
+  // Misconception dot
+  if (n.misc && n.misc.length){
+    g.appendChild(svg('circle', { cx: NODE_W - 10, cy: 11, r: 3, class:'mis-dot' }));
+  }
+
+  // Step badge (flow mode)
+  const stepGroup = svg('g', { class:'step-badge' });
+  stepGroup.appendChild(svg('circle', { cx: -10, cy: -10, r: 13 }));
+  const stepText = svg('text', {
+    x: -10, y: -6,
+    'text-anchor':'middle',
+    'font-size': 11,
+    'font-weight': 900
+  });
+  stepText.textContent = flowStep;
+  stepGroup.appendChild(stepText);
+  g.appendChild(stepGroup);
+
+  // Start/end markers (flow mode)
+  if (state.flowMode){
+    const isStart = state.flowOrder[0] === n.id;
+    const isEnd = state.flowOrder[state.flowOrder.length - 1] === n.id;
+    if (isStart || isEnd){
+      const marker = svg('text', {
+        class:'role-marker',
+        x: NODE_W + 8,
+        y: NODE_H / 2 + 4,
+        'font-size': 10
+      });
+      marker.textContent = isStart ? 'START' : 'END';
+      g.appendChild(marker);
+      if (isStart) g.classList.add('role-start');
+      if (isEnd) g.classList.add('role-end');
+    }
+  }
+
+  // Click
+  g.addEventListener('click', (e) => {
+    e.stopPropagation();
+    cycleMastery(n.id);
+    selectNode(n.id);
+  });
+  g.addEventListener('mouseenter', () => hoverNode(n.id));
+  g.addEventListener('mouseleave', unhoverNode);
+
+  nodesGroup.appendChild(g);
+  nodeEls[n.id] = g;
+  updateNodeMasteryVisual(n.id);
+}
+
+function updateNodeMasteryVisual(id){
+  const g = nodeEls[id];
+  if (!g) return;
+  const m = getMastery(id);
+  g.classList.remove('mastery-new','mastery-learning','mastery-mastered');
+  g.classList.add('mastery-' + m);
+  g.classList.toggle('flow', state.flowMode);
+}
+
+// ============================================================
+// EXAM FILTER
+// ============================================================
+function applyExamFilter(){
+  const visibleSet = new Set();
+  NODES.forEach(n => {
+    const visible = (n.exams || []).some(ex => state.examFilter.has(ex));
+    if (visible) visibleSet.add(n.id);
+    nodeEls[n.id].style.display = visible ? '' : 'none';
+  });
+  edgeEls.forEach(e => {
+    const show = visibleSet.has(e.from) && visibleSet.has(e.to);
+    e.el.style.display = show ? '' : 'none';
+  });
+  flowEdgeEls.forEach(e => {
+    const show = state.flowMode && visibleSet.has(e.from) && visibleSet.has(e.to);
+    e.el.style.display = show ? '' : 'none';
+  });
+  if (state.selected && !visibleSet.has(state.selected)){
+    clearSelection();
+  }
+}
+
+// ============================================================
+// HOVER
+// ============================================================
+function hoverNode(id){
+  const connected = new Set([id]);
+  edgeEls.forEach(e => {
+    if (e.from === id || e.to === id){
+      connected.add(e.from); connected.add(e.to);
+    }
+  });
+  NODES.forEach(n => {
+    nodeEls[n.id].classList.toggle('dim', !connected.has(n.id));
+  });
+  edgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    e.el.classList.toggle('dim', !on);
+  });
+  flowEdgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    if (state.flowMode) e.el.classList.toggle('dim', !on);
+  });
+}
+
+function unhoverNode(){
+  if (state.selected) return;
+  NODES.forEach(n => nodeEls[n.id].classList.remove('dim'));
+  edgeEls.forEach(e => e.el.classList.remove('highlight','dim'));
+  flowEdgeEls.forEach(e => e.el.classList.remove('highlight','dim'));
+}
+
+// ============================================================
+// SELECT
+// ============================================================
+function selectNode(id){
+  state.selected = id;
+  const connected = new Set([id]);
+  edgeEls.forEach(e => {
+    if (e.from === id || e.to === id){
+      connected.add(e.from); connected.add(e.to);
+    }
+  });
+  NODES.forEach(n => {
+    const g = nodeEls[n.id];
+    g.classList.toggle('selected', n.id === id);
+    g.classList.toggle('dim', !connected.has(n.id));
+  });
+  edgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    e.el.classList.toggle('dim', !on);
+  });
+  flowEdgeEls.forEach(e => {
+    const on = e.from === id || e.to === id;
+    e.el.classList.toggle('highlight', on);
+    if (state.flowMode) e.el.classList.toggle('dim', !on);
+  });
+  showDetail(byId[id]);
+}
+
+function clearSelection(){
+  state.selected = null;
+  NODES.forEach(n => nodeEls[n.id].classList.remove('dim','selected'));
+  edgeEls.forEach(e => e.el.classList.remove('highlight','dim'));
+  flowEdgeEls.forEach(e => e.el.classList.remove('highlight','dim'));
+  closeDetail();
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+const detailEl = document.getElementById('detail');
+const detailInner = document.getElementById('detailInner');
+
+function chipHTML(id){
+  const n = byId[id];
+  if (!n) return '';
+  const layer = LAYERS[n.layer];
+  const visible = (n.exams || []).some(ex => state.examFilter.has(ex));
+  if (!visible) return '';
+  return `<button class="chip" data-jump="${id}">
+    <span class="cdot" style="background:${layer.color}"></span>${n.name}
+  </button>`;
+}
+
+function section(label, count, html, extraClass){
+  return `<div class="detail-section">
+    <div class="detail-label ${extraClass || ''}">${label}${count != null ? `<span class="count">${count}</span>` : ''}</div>
+    ${html}
+  </div>`;
+}
+
+function listSection(label, items, cls=''){
+  if (!items || !items.length) return '';
+  return section(label, items.length,
+    `<ul class="detail-list ${cls}">${items.map(i => `<li>${i}</li>`).join('')}</ul>`);
+}
+
+function showDetail(node){
+  const layer = LAYERS[node.layer];
+  const nexts = NEXT[node.id] || [];
+  const crosses = CROSS_MAP[node.id] || [];
+  const exams = node.exams || [];
+  const step = state.flowOrder.indexOf(node.id) + 1;
+  const m = getMastery(node.id);
+
+  let html = `
+    <div class="detail-layer" style="color:${layer.color}">
+      Phase ${node.layer + 1} · ${layer.name}
+      <span style="color:var(--flow); margin-left:6px;">· Step ${step} of ${state.flowOrder.length}</span>
+    </div>
+    <h2>${node.name}</h2>
+    <div class="exam-chips">
+      ${exams.map(ex => `<span class="exam-chip" data-exam="${ex}">${ex}</span>`).join('')}
+    </div>
+
+    <div class="mastery-row">
+      <button class="mastery-pill ${m==='new'?'active':''}" data-state="new" data-mid="${node.id}">◯ Not started</button>
+      <button class="mastery-pill ${m==='learning'?'active':''}" data-state="learning" data-mid="${node.id}">◐ Learning</button>
+      <button class="mastery-pill ${m==='mastered'?'active':''}" data-state="mastered" data-mid="${node.id}">✓ Mastered</button>
+    </div>
+
+    <p class="detail-desc">${node.desc}</p>
+  `;
+
+  html += section('Prerequisites', node.pre.length,
+    node.pre.length
+      ? `<div class="chip-row">${node.pre.map(chipHTML).join('')}</div>`
+      : `<span class="chip empty">None — this is an entry point.</span>`);
+
+  html += section('Leads to', nexts.length,
+    nexts.length
+      ? `<div class="chip-row">${nexts.map(chipHTML).join('')}</div>`
+      : `<span class="chip empty">Terminal node.</span>`);
+
+  const crossChips = crosses.map(chipHTML).join('');
+  if (crosses.length){
+    html += section('Cross-links', crosses.length,
+      `<div class="chip-row">${crossChips}</div>`);
+  }
+
+  html += listSection('Key formulas', node.formulas, 'code');
+  html += listSection('Common misconceptions', node.misc, 'warn');
+
+  detailInner.innerHTML = html;
+
+  detailInner.querySelectorAll('[data-jump]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.jump;
+      centerOn(id);
+      selectNode(id);
+    });
+  });
+
+  // Mastery pill clicks
+  detailInner.querySelectorAll('.mastery-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.mid;
+      const st = btn.dataset.state;
+      setMastery(id, st);
+      showDetail(byId[id]);
+    });
+  });
+
+  detailEl.classList.add('open');
+}
+
+function closeDetail(){ detailEl.classList.remove('open'); }
+document.getElementById('detailClose').addEventListener('click', clearSelection);
+
+// ============================================================
+// PAN / ZOOM
+// ============================================================
+const view = { tx:0, ty:0, scale:1 };
+function applyTransform(){
+  viewport.setAttribute('transform',
+    `translate(${view.tx} ${view.ty}) scale(${view.scale})`);
+}
+function fitToView(){
+  const rect = svgEl.getBoundingClientRect();
+  const cw = rect.width, ch = rect.height;
+  const scale = Math.min(cw / CANVAS_W, ch / CANVAS_H) * 0.92;
+  view.scale = scale;
+  view.tx = (cw - CANVAS_W * scale) / 2;
+  view.ty = (ch - CANVAS_H * scale) / 2;
+  applyTransform();
+}
+function centerOn(id){
+  const n = byId[id];
+  if (!n) return;
+  const rect = svgEl.getBoundingClientRect();
+  const cw = rect.width, ch = rect.height;
+  view.tx = cw / 2 - (n.x + NODE_W/2) * view.scale;
+  view.ty = ch / 2 - (n.y + NODE_H/2) * view.scale;
+  applyTransform();
+}
+document.getElementById('zoomIn').onclick = () => zoomAt(svgEl.clientWidth/2, svgEl.clientHeight/2, 1.25);
+document.getElementById('zoomOut').onclick = () => zoomAt(svgEl.clientWidth/2, svgEl.clientHeight/2, 0.8);
+document.getElementById('zoomReset').onclick = fitToView;
+function zoomAt(px, py, factor){
+  const newScale = Math.max(0.12, Math.min(4, view.scale * factor));
+  const wx = (px - view.tx) / view.scale;
+  const wy = (py - view.ty) / view.scale;
+  view.scale = newScale;
+  view.tx = px - wx * newScale;
+  view.ty = py - wy * newScale;
+  applyTransform();
+}
+
+let isDragging = false, dragStart = null, moved = false;
+svgEl.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.node')) return;
+  isDragging = true; moved = false;
+  dragStart = { x:e.clientX, y:e.clientY, tx:view.tx, ty:view.ty };
+  svgEl.classList.add('dragging');
+  svgEl.setPointerCapture(e.pointerId);
+});
+svgEl.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+  view.tx = dragStart.tx + dx;
+  view.ty = dragStart.ty + dy;
+  applyTransform();
+});
+function endDrag(e){
+  if (!isDragging) return;
+  isDragging = false;
+  svgEl.classList.remove('dragging');
+  try { svgEl.releasePointerCapture(e.pointerId); } catch(_){}
+  if (!moved && !e.target.closest('.node')) clearSelection();
+}
+svgEl.addEventListener('pointerup', endDrag);
+svgEl.addEventListener('pointercancel', endDrag);
+svgEl.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const rect = svgEl.getBoundingClientRect();
+  zoomAt(e.clientX - rect.left, e.clientY - rect.top, e.deltaY < 0 ? 1.12 : 0.89);
+}, { passive:false });
+
+// ============================================================
+// FLOW TOGGLE
+// ============================================================
+const flowBanner = document.getElementById('flowBanner');
+const flowToggle = document.getElementById('flowToggle');
+
+flowToggle.addEventListener('click', () => {
+  state.flowMode = !state.flowMode;
+  flowToggle.classList.toggle('mode-on', state.flowMode);
+  flowToggle.textContent = state.flowMode ? '◉ Flow ON' : '◉ Flow';
+  flowBanner.classList.toggle('show', state.flowMode);
+
+  // Recompute layout
+  orderLayerNodes();
+
+  if (state.flowMode){
+    // Flow mode: strict flow-step order within each layer
+    // (already ordered by orderLayerNodes)
+  } else {
+    // Graph mode: barycenter
+    runBarycenter();
+  }
+
+  // Reposition nodes
+  byLayer.forEach(list => {
+    const gap = 18;
+    const totalH = list.length * NODE_H + (list.length - 1) * gap;
+    const startY = Math.max(80, CENTER_Y - totalH / 2);
+    list.forEach((n, i) => {
+      n.y = startY + i * (NODE_H + gap);
+    });
+  });
+
+  render();
+});
+
+// ============================================================
+// LEGEND
+// ============================================================
+function buildLegend(){
+  const bar = document.getElementById('legendBar');
+  bar.innerHTML = '';
+
+  // Mastery legend
+  const mg = document.createElement('div');
+  mg.className = 'legend-item';
+  mg.innerHTML = `
+    <span class="legend-dot" style="background:#58cc02;"></span>
+    <span>Mastered</span>`;
+  bar.appendChild(mg);
+
+  const lg = document.createElement('div');
+  lg.className = 'legend-item';
+  lg.innerHTML = `
+    <span class="legend-dot" style="background:#ffb347;"></span>
+    <span>Learning</span>`;
+  bar.appendChild(lg);
+
+  const ng = document.createElement('div');
+  ng.className = 'legend-item';
+  ng.innerHTML = `
+    <span class="legend-dot" style="background:#5d7284;"></span>
+    <span>Not started</span>`;
+  bar.appendChild(ng);
+
+  const div = document.createElement('div');
+  div.className = 'legend-divider';
+  bar.appendChild(div);
+
+  // Layer legend (abbreviated)
+  LAYERS.forEach(layer => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `
+      <span class="legend-swatch" style="background:${layer.color}"></span>
+      <span>${layer.name}</span>`;
+    bar.appendChild(item);
+  });
+}
+
+// ============================================================
+// EXAM FILTER PILLS
+// ============================================================
+document.querySelectorAll('.exam-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const ex = pill.dataset.exam;
+    if (state.examFilter.has(ex)){
+      if (state.examFilter.size === 1) return;
+      state.examFilter.delete(ex);
+      pill.classList.remove('on');
+      pill.classList.add('off');
+    } else {
+      state.examFilter.add(ex);
+      pill.classList.add('on');
+      pill.classList.remove('off');
+    }
+    // Recompute flow order
+    state.flowOrder = computeFlowOrder(state.examFilter);
+    state.stepByNode = {};
+    state.flowOrder.forEach((id, i) => { state.stepByNode[id] = i + 1; });
+    // Re-render
+    orderLayerNodes();
+    byLayer.forEach(list => {
+      const gap = 18;
+      const totalH = list.length * NODE_H + (list.length - 1) * gap;
+      const startY = Math.max(80, CENTER_Y - totalH / 2);
+      list.forEach((n, i) => {
+        n.y = startY + i * (NODE_H + gap);
+      });
+    });
+    render();
+  });
+});
+
+// ============================================================
+// HINT
+// ============================================================
+setTimeout(() => document.getElementById('hint').classList.add('hide'), 5000);
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+buildLegend();
+
+window.addEventListener('resize', () => { if (!state.selected) fitToView(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') clearSelection();
+});
+</script>
+</body>
+</html>
